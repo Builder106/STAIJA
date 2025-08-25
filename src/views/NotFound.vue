@@ -1,0 +1,8 @@
+<template>
+  <section>
+    <h1>Page Not Found</h1>
+    <p>The page you’re looking for doesn’t exist. <a href="/">Go home</a>.</p>
+  </section>
+</template>
+
+
