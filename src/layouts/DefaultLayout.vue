@@ -7,7 +7,7 @@ import SiteFooter from '../components/SiteFooter.vue'
 <template>
   <div class="layout">
     <NavBar />
-    <main class="container">
+    <main class="main-content">
       <RouterView />
     </main>
     <SiteFooter />
@@ -15,10 +15,15 @@ import SiteFooter from '../components/SiteFooter.vue'
 </template>
 
 <style scoped>
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
 }
 </style>
 

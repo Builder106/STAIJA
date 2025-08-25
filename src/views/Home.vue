@@ -136,13 +136,14 @@ import ProgramCard from '../components/ProgramCard.vue'
 
 <style scoped>
 .home {
-  min-height: 100vh;
+  width: 100%;
 }
 
 /* Programs Section */
 .programs-section {
   padding: var(--space-20) 0;
   background: white;
+  width: 100%;
 }
 
 .section-header {
@@ -177,6 +178,7 @@ import ProgramCard from '../components/ProgramCard.vue'
 .impact-section {
   padding: var(--space-20) 0;
   background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
+  width: 100%;
 }
 
 .impact-content {
@@ -277,6 +279,7 @@ import ProgramCard from '../components/ProgramCard.vue'
   padding: var(--space-20) 0;
   background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
   color: white;
+  width: 100%;
 }
 
 .cta-content {
