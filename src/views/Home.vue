@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Hero from '../components/Hero.vue'
 import ProgramCard from '../components/ProgramCard.vue'
+import ImpactStrip from '../components/ImpactStrip.vue'
 </script>
 
 <template>
@@ -14,6 +15,8 @@ import ProgramCard from '../components/ProgramCard.vue'
       secondaryCtaText="Explore Programs"
       secondaryCtaHref="/programs"
     />
+
+    <ImpactStrip />
 
     <!-- Programs Section -->
     <section class="programs-section">
@@ -49,64 +52,6 @@ import ProgramCard from '../components/ProgramCard.vue'
       </div>
     </section>
 
-    <!-- Impact Section -->
-    <section class="impact-section">
-      <div class="container">
-        <div class="impact-content">
-          <div class="impact-text">
-            <h2 class="impact-title">Making a Real Impact</h2>
-            <p class="impact-description">
-              Through our programs, we're building a network of scientist-leaders who are driving innovation 
-              and economic growth across Africa. Our alumni go on to pursue advanced degrees, lead research 
-              projects, and create solutions to real-world challenges.
-            </p>
-            <div class="impact-highlights">
-              <div class="highlight">
-                <div class="highlight-icon">🎓</div>
-                <div class="highlight-content">
-                  <h3 class="highlight-title">Alumni Success</h3>
-                  <p class="highlight-text">85% of our alumni pursue advanced STEM degrees</p>
-                </div>
-              </div>
-              <div class="highlight">
-                <div class="highlight-icon">🔬</div>
-                <div class="highlight-content">
-                  <h3 class="highlight-title">Research Excellence</h3>
-                  <p class="highlight-text">50+ peer-reviewed publications by program participants</p>
-                </div>
-              </div>
-              <div class="highlight">
-                <div class="highlight-icon">🌍</div>
-                <div class="highlight-content">
-                  <h3 class="highlight-title">Continental Reach</h3>
-                  <p class="highlight-text">Students from 15+ African countries</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="impact-visual">
-            <div class="impact-card">
-              <div class="impact-stat">
-                <div class="stat-number">500+</div>
-                <div class="stat-label">Students Mentored</div>
-              </div>
-              <div class="impact-stat">
-                <div class="stat-number">50+</div>
-                <div class="stat-label">Research Projects</div>
-              </div>
-              <div class="impact-stat">
-                <div class="stat-number">25+</div>
-                <div class="stat-label">Partner Organizations</div>
-              </div>
-              <div class="impact-stat">
-                <div class="stat-number">15+</div>
-                <div class="stat-label">Countries Represented</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- CTA Section -->
     <section class="cta-section">

@@ -1,17 +1,39 @@
 <script setup lang="ts">
-defineProps<{ 
+import { onMounted, ref } from 'vue'
+
+const props = defineProps<{ 
   title: string
   subtitle?: string
   ctaText?: string
   ctaHref?: string
   secondaryCtaText?: string
   secondaryCtaHref?: string
+  backgroundImageUrl?: string
 }>()
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const heroRef = ref<HTMLElement | null>(null)
+const parallaxY = ref(0)
+
+onMounted(() => {
+  if (prefersReducedMotion) return
+  const onScroll = () => {
+    if (!heroRef.value) return
+    const rect = heroRef.value.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const visible = Math.max(0, Math.min(rect.height, viewportHeight - rect.top))
+    parallaxY.value = -(rect.top * 0.2)
+    heroRef.value.style.setProperty('--parallax-y', `${parallaxY.value}px`)
+  }
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
 </script>
 
 <template>
-  <section class="hero">
-    <div class="hero-background">
+  <section class="hero" ref="heroRef">
+    <div class="hero-background" :style="props.backgroundImageUrl ? { backgroundImage: `url(${props.backgroundImageUrl})` } : {}">
+      <div class="hero-overlay"></div>
       <div class="hero-pattern"></div>
     </div>
     <div class="container">
@@ -33,17 +55,13 @@ defineProps<{
           </a>
         </div>
         <div class="hero-stats">
-          <div class="stat">
-            <div class="stat-number">500+</div>
-            <div class="stat-label">Students Mentored</div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">50+</div>
-            <div class="stat-label">Research Projects</div>
-          </div>
-          <div class="stat">
-            <div class="stat-number">25+</div>
-            <div class="stat-label">Partner Organizations</div>
+          <div class="stat" v-for="(s, i) in [
+            { n: 500, suffix: '+', label: 'Students Mentored' },
+            { n: 50, suffix: '+', label: 'Research Projects' },
+            { n: 25, suffix: '+', label: 'Partner Organizations' }
+          ]" :key="i">
+            <div class="stat-number" :data-target="s.n">0</div>
+            <div class="stat-label">{{ s.label }}</div>
           </div>
         </div>
       </div>
@@ -56,37 +74,47 @@ defineProps<{
   position: relative;
   padding: var(--space-20) 0 var(--space-16);
   overflow: hidden;
-  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  background: var(--neutral-100);
 }
 
 .hero-background {
   position: absolute;
   inset: 0;
   z-index: 0;
+  background-position: center;
+  background-size: cover;
+  will-change: transform;
+  transform: translateY(var(--parallax-y, 0px));
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11, 26, 26, 0.55), rgba(11, 26, 26, 0.35));
 }
 
 .hero-pattern {
   position: absolute;
   inset: 0;
-  background-image: 
-    radial-gradient(circle at 25% 25%, var(--primary-100) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, var(--secondary-100) 0%, transparent 50%);
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(183, 219, 217, 0.35) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(252, 227, 179, 0.35) 0%, transparent 50%);
   opacity: 0.6;
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  text-align: center;
+  text-align: left;
   max-width: 900px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
   padding: var(--space-2) var(--space-4);
-  background: white;
+  background: rgba(255,255,255,0.9);
   border: 1px solid var(--primary-200);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
@@ -103,29 +131,25 @@ defineProps<{
   font-size: var(--text-4xl);
   font-weight: 800;
   line-height: var(--leading-tight);
-  color: var(--neutral-900);
+  color: white;
   margin-bottom: var(--space-6);
-  background: linear-gradient(135deg, var(--neutral-900), var(--primary-700));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .hero-subtitle {
   font-size: var(--text-xl);
-  color: var(--neutral-600);
+  color: rgba(255,255,255,0.9);
   line-height: var(--leading-relaxed);
   margin-bottom: var(--space-8);
   max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .hero-actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--space-12);
 }
 
@@ -134,7 +158,7 @@ defineProps<{
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-8);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .stat {
@@ -144,7 +168,7 @@ defineProps<{
 .stat-number {
   font-size: var(--text-3xl);
   font-weight: 800;
-  color: var(--primary-600);
+  color: var(--secondary-600);
   line-height: 1;
   margin-bottom: var(--space-1);
 }
@@ -177,7 +201,7 @@ defineProps<{
   
   .hero-actions {
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
   }
 }
 
