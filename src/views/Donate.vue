@@ -211,7 +211,9 @@
                       type="text" 
                       class="form-input" 
                       required
+                      :class="{ 'error': !form.firstName && showValidation }"
                     />
+                    <span v-if="!form.firstName && showValidation" class="error-message">First name is required</span>
                   </div>
                   <div class="form-group">
                     <label for="lastName" class="form-label">Last Name *</label>
@@ -221,7 +223,9 @@
                       type="text" 
                       class="form-input" 
                       required
+                      :class="{ 'error': !form.lastName && showValidation }"
                     />
+                    <span v-if="!form.lastName && showValidation" class="error-message">Last name is required</span>
                   </div>
                 </div>
                 <div class="form-group">
@@ -232,7 +236,9 @@
                     type="email" 
                     class="form-input" 
                     required
+                    :class="{ 'error': !form.email && showValidation }"
                   />
+                  <span v-if="!form.email && showValidation" class="error-message">Email address is required</span>
                 </div>
                 <div class="form-group">
                   <label for="phone" class="form-label">Phone Number</label>
@@ -296,7 +302,10 @@
                   :disabled="isSubmitting || !canProceed"
                   @click="initializePaystack"
                 >
-                  <span v-if="isSubmitting">Processing...</span>
+                  <span v-if="isSubmitting">
+                    <div class="loading-spinner"></div>
+                    Processing...
+                  </span>
                   <span v-else>
                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -475,7 +484,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 
 const isSubmitting = ref(false)
 const selectedTier = ref('workshop')
@@ -484,6 +493,7 @@ const paystackLoaded = ref(false)
 const showBankDetails = ref(false)
 const showMobileMoney = ref(false)
 const showConfirmation = ref(false)
+const showValidation = ref(false)
 
 const form = reactive({
   firstName: '',
@@ -514,6 +524,13 @@ const canProceed = computed(() => {
   return form.firstName && form.lastName && form.email && selectedAmount.value > 0
 })
 
+// Watch for form changes to hide validation errors
+watch([() => form.firstName, () => form.lastName, () => form.email], () => {
+  if (showValidation.value && canProceed.value) {
+    showValidation.value = false
+  }
+})
+
 const selectTier = (tier: string) => {
   selectedTier.value = tier
   if (tier !== 'custom') {
@@ -539,7 +556,7 @@ const generateReference = () => {
 
 const initializePaystack = async () => {
   if (!canProceed.value) {
-    alert('Please fill in all required fields and select a donation amount.')
+    showValidation.value = true
     return
   }
 
@@ -610,6 +627,7 @@ const handlePaymentSuccess = async (response: any) => {
     })
     selectedTier.value = 'workshop'
     customAmount.value = ''
+    showValidation.value = false
     
   } catch (error) {
     console.error('Error processing payment success:', error)
@@ -659,7 +677,7 @@ onMounted(() => {
 /* Hero Section */
 .hero-section {
   padding: var(--space-20) 0 var(--space-16);
-  background: linear-gradient(135deg, var(--accent-500) 0%, var(--primary-600) 100%);
+  background: linear-gradient(135deg, var(--secondary-500) 0%, var(--primary-600) 100%);
   text-align: center;
   color: white;
 }
@@ -671,8 +689,9 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glow);
   margin-bottom: var(--space-6);
+  backdrop-filter: blur(10px);
 }
 
 .badge-text {
@@ -686,6 +705,7 @@ onMounted(() => {
   font-weight: 800;
   margin-bottom: var(--space-6);
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .hero-subtitle {
@@ -694,6 +714,7 @@ onMounted(() => {
   max-width: 600px;
   margin: 0 auto var(--space-8);
   color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .hero-stats {
@@ -709,7 +730,14 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.1);
   padding: var(--space-4);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all var(--transition-normal);
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .stat-number {
@@ -718,12 +746,44 @@ onMounted(() => {
   color: white;
   line-height: 1;
   margin-bottom: var(--space-1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .stat-label {
   font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
+}
+
+/* Form validation styles */
+.form-input.error,
+.form-select.error,
+.form-textarea.error {
+  border-color: var(--error-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-message {
+  color: var(--error-500);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+  display: block;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: var(--space-2);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Impact Section */
@@ -763,6 +823,14 @@ onMounted(() => {
   display: flex;
   gap: var(--space-4);
   align-items: flex-start;
+  transition: all var(--transition-normal);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+}
+
+.impact-item:hover {
+  background: var(--primary-50);
+  transform: translateX(8px);
 }
 
 .impact-icon {
@@ -775,6 +843,12 @@ onMounted(() => {
   background: var(--primary-100);
   border-radius: var(--radius-xl);
   flex-shrink: 0;
+  transition: all var(--transition-normal);
+}
+
+.impact-item:hover .impact-icon {
+  background: var(--primary-200);
+  transform: scale(1.1);
 }
 
 .impact-title {
@@ -801,6 +875,12 @@ onMounted(() => {
   border: 1px solid var(--neutral-200);
   max-width: 400px;
   width: 100%;
+  transition: all var(--transition-normal);
+}
+
+.impact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }
 
 .card-title {
@@ -823,6 +903,12 @@ onMounted(() => {
   background: white;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.impact-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Donation Section */
@@ -861,17 +947,39 @@ onMounted(() => {
   cursor: pointer;
   transition: all var(--transition-normal);
   text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.tier-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
+  transform: scaleX(0);
+  transition: transform var(--transition-normal);
 }
 
 .tier-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-6px);
+}
+
+.tier-card:hover::before {
+  transform: scaleX(1);
 }
 
 .tier-card--selected {
   border-color: var(--primary-500);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-hover);
   background: var(--primary-50);
+}
+
+.tier-card--selected::before {
+  transform: scaleX(1);
 }
 
 .tier-header {
@@ -1042,6 +1150,12 @@ onMounted(() => {
   border-radius: var(--radius-xl);
   margin-bottom: var(--space-6);
   border: 1px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.donation-summary:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .summary-item {
@@ -1148,6 +1262,18 @@ onMounted(() => {
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
@@ -1255,6 +1381,19 @@ onMounted(() => {
 .confirmation-icon {
   font-size: var(--text-4xl);
   margin-bottom: var(--space-4);
+  animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
 }
 
 .confirmation-amount {
@@ -1296,6 +1435,12 @@ onMounted(() => {
   padding: var(--space-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.faq-item:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
 }
 
 .faq-question {
@@ -1314,7 +1459,8 @@ onMounted(() => {
 /* CTA Section */
 .cta-section {
   padding: var(--space-20) 0;
-  background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+  background: linear-gradient(135deg, var(--primary-600), var(--secondary-500));
+  text-align: center;
   color: white;
 }
 
@@ -1329,6 +1475,7 @@ onMounted(() => {
   font-weight: 800;
   margin-bottom: var(--space-6);
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .cta-description {
@@ -1336,6 +1483,7 @@ onMounted(() => {
   line-height: var(--leading-relaxed);
   margin-bottom: var(--space-8);
   color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .cta-actions {
@@ -1399,6 +1547,32 @@ onMounted(() => {
 
 .mr-2 {
   margin-right: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat:hover,
+  .impact-item:hover,
+  .impact-card:hover,
+  .impact-stat:hover,
+  .tier-card:hover,
+  .donation-summary:hover,
+  .payment-method-btn:hover,
+  .modal-close:hover,
+  .faq-item:hover {
+    transform: none;
+  }
+  
+  .confirmation-icon {
+    animation: none;
+  }
+  
+  .modal-content {
+    animation: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
 }
 </style>
 

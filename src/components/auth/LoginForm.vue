@@ -14,7 +14,9 @@
             required
             placeholder="Enter your email"
             :disabled="loading"
+            :class="{ 'error': !email && showValidation }"
           />
+          <span v-if="!email && showValidation" class="error-message">Email is required</span>
         </div>
         
         <div class="form-group">
@@ -26,7 +28,9 @@
             required
             placeholder="Enter your password"
             :disabled="loading"
+            :class="{ 'error': !password && showValidation }"
           />
+          <span v-if="!password && showValidation" class="error-message">Password is required</span>
         </div>
         
         <div class="form-actions">
@@ -35,7 +39,10 @@
             :disabled="loading || !email || !password"
             class="btn-primary"
           >
-            <span v-if="loading">Signing In...</span>
+            <span v-if="loading">
+              <div class="loading-spinner"></div>
+              Signing In...
+            </span>
             <span v-else>Sign In</span>
           </button>
           
@@ -87,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthService } from '../../services/firebase'
 
@@ -98,13 +105,25 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+const showValidation = ref(false)
+
+// Watch for form changes to hide validation errors
+watch([email, password], () => {
+  if (showValidation.value && email.value && password.value) {
+    showValidation.value = false
+  }
+})
 
 // Methods
 const handleLogin = async () => {
-  if (!email.value || !password.value) return
+  if (!email.value || !password.value) {
+    showValidation.value = true
+    return
+  }
   
   loading.value = true
   error.value = ''
+  showValidation.value = false
   
   try {
     await AuthService.signIn(email.value, password.value)
@@ -161,18 +180,25 @@ const forgotPassword = async () => {
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.form-container:hover {
+  box-shadow: var(--shadow-2xl);
+  transform: translateY(-2px);
 }
 
 h2 {
   text-align: center;
   margin-bottom: 0.5rem;
-  color: var(--color-primary);
+  color: var(--primary-600);
 }
 
 .subtitle {
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--neutral-600);
   margin-bottom: 2rem;
 }
 
@@ -190,25 +216,53 @@ h2 {
 
 label {
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--neutral-700);
 }
 
 input {
   padding: 0.75rem;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--neutral-300);
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  transition: all var(--transition-normal);
 }
 
 input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  transform: scale(1.02);
 }
 
 input:disabled {
-  background-color: var(--color-background-secondary);
+  background-color: var(--neutral-100);
   cursor: not-allowed;
+}
+
+input.error {
+  border-color: var(--error-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-message {
+  color: var(--error-500);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .form-actions {
@@ -218,7 +272,7 @@ input:disabled {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
   color: white;
   border: none;
   padding: 0.75rem;
@@ -226,11 +280,30 @@ input:disabled {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn-primary:hover::before {
+  left: 100%;
 }
 
 .btn-primary:disabled {
@@ -241,14 +314,16 @@ input:disabled {
 .btn-link {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--primary-600);
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.9rem;
+  transition: all var(--transition-fast);
 }
 
 .btn-link:hover:not(:disabled) {
-  color: var(--color-primary-dark);
+  color: var(--primary-500);
+  transform: scale(1.05);
 }
 
 .divider {
@@ -264,13 +339,13 @@ input:disabled {
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--color-border);
+  background: var(--neutral-300);
 }
 
 .divider span {
   background: white;
   padding: 0 1rem;
-  color: var(--color-text-secondary);
+  color: var(--neutral-600);
 }
 
 .social-login {
@@ -284,15 +359,17 @@ input:disabled {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--neutral-300);
   border-radius: 8px;
   background: white;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .btn-social:hover:not(:disabled) {
-  background: var(--color-background-secondary);
+  background: var(--neutral-50);
+  border-color: var(--primary-300);
+  transform: translateY(-1px);
 }
 
 .btn-social:disabled {
@@ -311,12 +388,14 @@ input:disabled {
 }
 
 .signup-link a {
-  color: var(--color-primary);
+  color: var(--primary-600);
   text-decoration: none;
+  transition: all var(--transition-fast);
 }
 
 .signup-link a:hover {
   text-decoration: underline;
+  color: var(--primary-500);
 }
 
 .error-modal {
@@ -330,6 +409,7 @@ input:disabled {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .error-content {
@@ -338,24 +418,62 @@ input:disabled {
   border-radius: 12px;
   max-width: 400px;
   text-align: center;
+  box-shadow: var(--shadow-2xl);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .error-content h3 {
-  color: #dc2626;
+  color: var(--error-500);
   margin-bottom: 1rem;
 }
 
 .btn-secondary {
-  background: var(--color-secondary);
+  background: var(--secondary-600);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   margin-top: 1rem;
+  transition: all var(--transition-normal);
 }
 
 .btn-secondary:hover {
-  background: var(--color-secondary-dark);
+  background: var(--secondary-700);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-container:hover,
+  input:focus,
+  .btn-primary:hover:not(:disabled),
+  .btn-link:hover:not(:disabled),
+  .btn-social:hover:not(:disabled),
+  .btn-secondary:hover {
+    transform: none;
+  }
+  
+  .btn-primary:hover::before {
+    left: -100%;
+  }
+  
+  .error-content {
+    animation: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
 }
 </style>
