@@ -1,0 +1,35 @@
+{
+  "importMap": "./import_map.json",
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["src/", "scripts/"]
+    },
+    "options": {
+      "useTabs": false,
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "semiColons": true,
+      "singleQuote": true,
+      "proseWrap": "preserve"
+    }
+  },
+  "tasks": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "setup": "deno run --allow-read --allow-write --allow-env scripts/setup-env.ts",
+    "cache": "deno run --allow-net --allow-read scripts/cache-deps.ts",
+    "lint": "deno lint",
+    "fmt": "deno fmt"
+  }
+}

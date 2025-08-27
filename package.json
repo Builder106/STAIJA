@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup": "deno run --allow-read --allow-write --allow-env scripts/setup-env.ts"
   },
   "dependencies": {
     "vue": "^3.5.18",
