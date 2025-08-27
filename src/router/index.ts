@@ -11,6 +11,13 @@ const routes: RouteRecordRaw[] = [
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories — STAIJA' } },
   { path: '/contact', name: 'contact', component: () => import('../views/Contact.vue'), meta: { title: 'Contact — STAIJA' } },
+  
+  // Authentication routes (Phase 3A)
+  { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { title: 'Sign In — STAIJA' } },
+  { path: '/signup', name: 'signup', component: () => import('../views/SignUp.vue'), meta: { title: 'Sign Up — STAIJA' } },
+  { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { title: 'Dashboard — STAIJA', requiresAuth: true } },
+  { path: '/admin', name: 'admin', component: () => import('../views/Admin.vue'), meta: { title: 'Admin — STAIJA', requiresAuth: true } },
+  
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFound.vue'), meta: { title: 'Page Not Found — STAIJA' } },
 ]
 
