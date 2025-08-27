@@ -44,11 +44,14 @@ defineProps<{
   flex-direction: column;
   background: white;
   border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-normal);
   overflow: hidden;
   height: 100%;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeInUp 700ms ease forwards;
 }
 
 .program-card:hover {
@@ -81,7 +84,7 @@ defineProps<{
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+  background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600));
   color: white;
   border-radius: var(--radius-xl);
   font-size: var(--text-xl);
@@ -138,6 +141,25 @@ defineProps<{
   color: var(--primary-500);
   gap: var(--space-3);
   text-decoration: none;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .program-card {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 .program-card__link:focus {

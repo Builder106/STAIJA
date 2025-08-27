@@ -105,6 +105,21 @@
           </p>
           
           <div class="donation-tiers">
+            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'starter' }" @click="selectTier('starter')">
+              <div class="tier-header">
+                <div class="tier-amount">₦2,500</div>
+                <div class="tier-badge">Starter</div>
+              </div>
+              <h3 class="tier-title">Research Materials</h3>
+              <p class="tier-description">Provides essential research materials and supplies for one student</p>
+              <ul class="tier-benefits">
+                <li>Lab supplies and equipment</li>
+                <li>Research methodology guide</li>
+                <li>Digital learning resources</li>
+                <li>Certificate of support</li>
+              </ul>
+            </div>
+            
             <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'workshop' }" @click="selectTier('workshop')">
               <div class="tier-header">
                 <div class="tier-amount">₦5,000</div>
@@ -147,7 +162,7 @@
                 <li>International conference attendance</li>
                 <li>Research publication support</li>
                 <li>Career development guidance</li>
-    </ul>
+              </ul>
             </div>
             
             <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'custom' }" @click="selectTier('custom')">
@@ -274,15 +289,37 @@
             </div>
 
             <div class="form-actions">
-              <button 
-                type="button" 
-                class="btn btn-primary btn-lg" 
-                :disabled="isSubmitting || !canProceed"
-                @click="initializePaystack"
-              >
-                <span v-if="isSubmitting">Processing...</span>
-                <span v-else>Donate ₦{{ formatAmount(selectedAmount) }} via Paystack</span>
-              </button>
+              <div class="payment-options">
+                <button 
+                  type="button" 
+                  class="btn btn-primary btn-lg payment-btn" 
+                  :disabled="isSubmitting || !canProceed"
+                  @click="initializePaystack"
+                >
+                  <span v-if="isSubmitting">Processing...</span>
+                  <span v-else>
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Donate ₦{{ formatAmount(selectedAmount) }} via Paystack
+                  </span>
+                </button>
+                
+                <div class="payment-alternatives">
+                  <p class="payment-note">Other payment methods:</p>
+                  <div class="payment-methods">
+                    <button type="button" class="payment-method-btn" @click="showBankDetails = true">
+                      <span>🏦</span>
+                      Bank Transfer
+                    </button>
+                    <button type="button" class="payment-method-btn" @click="showMobileMoney = true">
+                      <span>📱</span>
+                      Mobile Money
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
               <p class="form-note">
                 Your donation is secure and tax-deductible. You'll receive a receipt via email.
               </p>
@@ -356,7 +393,83 @@
           </div>
         </div>
       </div>
-  </section>
+    </section>
+
+    <!-- Bank Transfer Modal -->
+    <div v-if="showBankDetails" class="modal-overlay" @click="showBankDetails = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">Bank Transfer Details</h3>
+          <button class="modal-close" @click="showBankDetails = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="bank-details">
+            <div class="bank-item">
+              <span class="bank-label">Bank Name:</span>
+              <span class="bank-value">First Bank of Nigeria</span>
+            </div>
+            <div class="bank-item">
+              <span class="bank-label">Account Name:</span>
+              <span class="bank-value">STAIJA Foundation</span>
+            </div>
+            <div class="bank-item">
+              <span class="bank-label">Account Number:</span>
+              <span class="bank-value">1234567890</span>
+            </div>
+            <div class="bank-item">
+              <span class="bank-label">Amount:</span>
+              <span class="bank-value">₦{{ formatAmount(selectedAmount) }}</span>
+            </div>
+          </div>
+          <p class="bank-note">
+            Please include your name as reference when making the transfer. 
+            You'll receive a confirmation email once the payment is verified.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Money Modal -->
+    <div v-if="showMobileMoney" class="modal-overlay" @click="showMobileMoney = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">Mobile Money Payment</h3>
+          <button class="modal-close" @click="showMobileMoney = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="mobile-note">
+            Mobile money payments are processed through our secure payment partners. 
+            Please contact us directly for mobile money payment instructions.
+          </p>
+          <div class="contact-info">
+            <p><strong>Email:</strong> donations@staija.org</p>
+            <p><strong>Phone:</strong> +234 123 456 7890</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showConfirmation" class="modal-overlay">
+      <div class="modal-content confirmation-modal" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">Thank You for Your Donation! 🎉</h3>
+        </div>
+        <div class="modal-body">
+          <div class="confirmation-content">
+            <div class="confirmation-icon">✅</div>
+            <h4 class="confirmation-amount">₦{{ formatAmount(selectedAmount) }}</h4>
+            <p class="confirmation-message">
+              Your donation has been processed successfully. You will receive a receipt via email within 24 hours.
+            </p>
+            <div class="confirmation-actions">
+              <button class="btn btn-primary" @click="showConfirmation = false">Close</button>
+              <a href="/" class="btn btn-outline">Return to Home</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -368,6 +481,9 @@ const isSubmitting = ref(false)
 const selectedTier = ref('workshop')
 const customAmount = ref('')
 const paystackLoaded = ref(false)
+const showBankDetails = ref(false)
+const showMobileMoney = ref(false)
+const showConfirmation = ref(false)
 
 const form = reactive({
   firstName: '',
@@ -380,6 +496,7 @@ const form = reactive({
 })
 
 const tierAmounts = {
+  starter: 2500,
   workshop: 5000,
   stipend: 25000,
   program: 100000,
@@ -478,8 +595,8 @@ const handlePaymentSuccess = async (response: any) => {
     // For now, we'll simulate a successful donation
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Show success message
-    alert(`Thank you for your donation of ₦${formatAmount(selectedAmount.value)}! Your payment has been processed successfully. You will receive a receipt via email.`)
+    // Show confirmation modal
+    showConfirmation.value = true
     
     // Reset form
     Object.assign(form, {
@@ -956,10 +1073,208 @@ onMounted(() => {
   border-top: 1px solid var(--neutral-200);
 }
 
+.payment-options {
+  margin-bottom: var(--space-6);
+}
+
+.payment-btn {
+  margin-bottom: var(--space-6);
+}
+
+.payment-alternatives {
+  border-top: 1px solid var(--neutral-200);
+  padding-top: var(--space-6);
+}
+
+.payment-note {
+  font-size: var(--text-sm);
+  color: var(--neutral-600);
+  margin-bottom: var(--space-4);
+}
+
+.payment-methods {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.payment-method-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--neutral-700);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.payment-method-btn:hover {
+  background: var(--neutral-200);
+  border-color: var(--neutral-400);
+}
+
 .form-note {
   font-size: var(--text-sm);
   color: var(--neutral-600);
   margin-top: var(--space-4);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.modal-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: var(--text-2xl);
+  color: var(--neutral-500);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+
+.modal-body {
+  padding: var(--space-6);
+}
+
+.bank-details {
+  background: var(--neutral-50);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-6);
+}
+
+.bank-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.bank-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.bank-label {
+  font-weight: 600;
+  color: var(--neutral-700);
+}
+
+.bank-value {
+  font-weight: 700;
+  color: var(--primary-600);
+}
+
+.bank-note {
+  font-size: var(--text-sm);
+  color: var(--neutral-600);
+  margin: 0;
+}
+
+.mobile-note {
+  font-size: var(--text-lg);
+  color: var(--neutral-700);
+  margin-bottom: var(--space-6);
+}
+
+.contact-info {
+  background: var(--neutral-50);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.contact-info p {
+  margin: var(--space-2) 0;
+  color: var(--neutral-700);
+}
+
+.confirmation-modal {
+  text-align: center;
+}
+
+.confirmation-content {
+  padding: var(--space-4) 0;
+}
+
+.confirmation-icon {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-4);
+}
+
+.confirmation-amount {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  color: var(--primary-600);
+  margin-bottom: var(--space-4);
+}
+
+.confirmation-message {
+  font-size: var(--text-lg);
+  color: var(--neutral-600);
+  margin-bottom: var(--space-6);
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* FAQ Section */
@@ -1072,6 +1387,18 @@ onMounted(() => {
   .hero-title {
     font-size: var(--text-6xl);
   }
+}
+
+.w-5 {
+  width: 1.25rem;
+}
+
+.h-5 {
+  height: 1.25rem;
+}
+
+.mr-2 {
+  margin-right: var(--space-2);
 }
 </style>
 

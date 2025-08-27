@@ -1,5 +1,14 @@
 <template>
   <div class="stepup">
+    <!-- Sticky Apply Box -->
+    <StickyApplyBox
+      programName="StepUp Scholars"
+      deadline="May 1st, 2025"
+      timeCommitment="2-4 hours/week"
+      applyUrl="#apply"
+      :isOpen="true"
+    />
+    
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="container">
@@ -186,9 +195,21 @@
           </p>
           
           <form class="application-form" @submit.prevent="handleApplicationSubmit">
+            <!-- Progress Bar -->
+            <div class="apply-progress" role="progressbar" :aria-valuenow="currentStep" :aria-valuemin="1" :aria-valuemax="totalSteps">
+              <div class="apply-progress__track">
+                <div class="apply-progress__bar" :style="{ width: Math.round((currentStep/totalSteps)*100) + '%' }"></div>
+              </div>
+              <div class="apply-progress__labels">
+                <span :class="{ 'is-active': currentStep === 1 }">Details</span>
+                <span :class="{ 'is-active': currentStep === 2 }">Interests</span>
+                <span :class="{ 'is-active': currentStep === 3 }">Review</span>
+              </div>
+            </div>
+
             <div class="form-grid">
               <!-- Personal Information -->
-              <div class="form-section">
+              <div class="form-section" v-if="currentStep === 1">
                 <h3 class="form-section-title">Personal Information</h3>
                 <div class="form-row">
                   <div class="form-group">
@@ -246,7 +267,7 @@
               </div>
 
               <!-- Academic Information -->
-              <div class="form-section">
+              <div class="form-section" v-if="currentStep === 1">
                 <h3 class="form-section-title">Academic Information</h3>
                 <div class="form-group">
                   <label for="school" class="form-label">Current School *</label>
@@ -292,7 +313,7 @@
               </div>
 
               <!-- Research Interests -->
-              <div class="form-section">
+              <div class="form-section" v-if="currentStep === 2">
                 <h3 class="form-section-title">Research Interests</h3>
                 <div class="form-group">
                   <label for="interests" class="form-label">Areas of Interest *</label>
@@ -328,7 +349,7 @@
               </div>
 
               <!-- Additional Information -->
-              <div class="form-section">
+              <div class="form-section" v-if="currentStep === 2">
                 <h3 class="form-section-title">Additional Information</h3>
                 <div class="form-group">
                   <label for="experience" class="form-label">Previous Research Experience</label>
@@ -380,8 +401,34 @@
               </div>
             </div>
 
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">
+            <!-- Review Step -->
+            <div class="review-section" v-if="currentStep === 3">
+              <h3 class="form-section-title">Review Your Application</h3>
+              <div class="review-grid">
+                <div class="review-item"><strong>Name:</strong> {{ form.firstName }} {{ form.lastName }}</div>
+                <div class="review-item"><strong>Email:</strong> {{ form.email }}</div>
+                <div class="review-item"><strong>Phone:</strong> {{ form.phone || '—' }}</div>
+                <div class="review-item"><strong>Location:</strong> {{ form.location }}</div>
+                <div class="review-item"><strong>School:</strong> {{ form.school }}</div>
+                <div class="review-item"><strong>Grade:</strong> {{ form.grade }}</div>
+                <div class="review-item"><strong>GPA:</strong> {{ form.gpa || '—' }}</div>
+                <div class="review-item"><strong>Interest:</strong> {{ form.interests }}</div>
+                <div class="review-item"><strong>Motivation:</strong> {{ form.motivation }}</div>
+                <div class="review-item"><strong>Availability:</strong>
+                  <span v-if="form.availability.weekdays">Weekdays</span>
+                  <span v-if="form.availability.weekends">, Weekends</span>
+                  <span v-if="form.availability.virtual">, Virtual</span>
+                  <span v-if="form.availability.inperson">, In-person</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions form-actions--wizard">
+              <button v-if="currentStep > 1" type="button" class="btn btn-outline" @click="prevStep">Back</button>
+              <button v-if="currentStep < totalSteps" type="button" class="btn btn-primary" @click="nextStep" :disabled="!canGoNext">
+                Next
+              </button>
+              <button v-if="currentStep === totalSteps" type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">
                 <span v-if="isSubmitting">Submitting...</span>
                 <span v-else>Submit Application</span>
               </button>
@@ -466,8 +513,29 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import StickyApplyBox from '../components/StickyApplyBox.vue'
 
 const isSubmitting = ref(false)
+const currentStep = ref(1)
+const totalSteps = 3
+
+const canGoNext = computed(() => {
+  if (currentStep.value === 1) {
+    return Boolean(form.firstName && form.lastName && form.email && form.location && form.school && form.grade)
+  }
+  if (currentStep.value === 2) {
+    return Boolean(form.interests && form.motivation)
+  }
+  return true
+})
+
+const nextStep = () => {
+  if (currentStep.value < totalSteps) currentStep.value += 1
+}
+
+const prevStep = () => {
+  if (currentStep.value > 1) currentStep.value -= 1
+}
 
 const form = reactive({
   firstName: '',
@@ -600,7 +668,9 @@ const handleApplicationSubmit = async () => {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-12);
-  align-items: center;
+  align-items: start;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .section-title {
@@ -835,6 +905,38 @@ const handleApplicationSubmit = async () => {
   margin: 0 auto;
 }
 
+.apply-progress {
+  margin-bottom: var(--space-8);
+}
+
+.apply-progress__track {
+  height: 8px;
+  background: var(--neutral-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.apply-progress__bar {
+  height: 8px;
+  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
+  border-radius: var(--radius-full);
+  width: 33%;
+  transition: width var(--transition-normal);
+}
+
+.apply-progress__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--neutral-600);
+  margin-top: var(--space-2);
+}
+
+.apply-progress__labels .is-active {
+  color: var(--primary-600);
+  font-weight: 600;
+}
+
 .form-grid {
   display: grid;
   gap: var(--space-8);
@@ -924,6 +1026,20 @@ const handleApplicationSubmit = async () => {
   margin-top: var(--space-8);
   padding-top: var(--space-8);
   border-top: 1px solid var(--neutral-200);
+}
+
+.form-actions--wizard {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
 }
 
 .form-note {
@@ -1062,6 +1178,11 @@ const handleApplicationSubmit = async () => {
   
   .hero-title {
     font-size: var(--text-6xl);
+  }
+  
+  /* Add right margin for sticky apply box */
+  .stepup {
+    margin-right: 320px;
   }
 }
 </style>

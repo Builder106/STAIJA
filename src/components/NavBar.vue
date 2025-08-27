@@ -28,7 +28,10 @@ const closeMenu = () => {
           <RouterLink to="/get-involved" class="nav-link">Get Involved</RouterLink>
           <RouterLink to="/about" class="nav-link">About</RouterLink>
           <RouterLink to="/blog" class="nav-link">Stories</RouterLink>
-          <RouterLink to="/donate" class="btn btn-primary btn-sm">Donate</RouterLink>
+          <div class="navbar-ctas">
+            <RouterLink to="/programs" class="btn btn-outline btn-sm">Apply</RouterLink>
+            <RouterLink to="/donate" class="btn btn-secondary btn-sm">Donate</RouterLink>
+          </div>
         </nav>
 
         <!-- Mobile Menu Button -->
@@ -60,7 +63,10 @@ const closeMenu = () => {
           <RouterLink to="/about" class="mobile-nav-link" @click="closeMenu">About</RouterLink>
           <RouterLink to="/blog" class="mobile-nav-link" @click="closeMenu">Stories</RouterLink>
           <div class="mobile-nav-cta">
-            <RouterLink to="/donate" class="btn btn-primary" @click="closeMenu">Donate</RouterLink>
+            <div class="mobile-cta-row">
+              <RouterLink to="/programs" class="btn btn-outline" @click="closeMenu">Apply</RouterLink>
+              <RouterLink to="/donate" class="btn btn-secondary" @click="closeMenu">Donate</RouterLink>
+            </div>
           </div>
         </div>
       </nav>
@@ -116,6 +122,12 @@ const closeMenu = () => {
   display: none;
   align-items: center;
   gap: var(--space-6);
+}
+
+.navbar-ctas {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .nav-link {
@@ -243,6 +255,12 @@ const closeMenu = () => {
 .mobile-nav-cta {
   padding-top: var(--space-4);
   border-top: 1px solid var(--neutral-200);
+}
+
+.mobile-cta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }
 
 /* Desktop Navigation */
