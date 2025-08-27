@@ -49,25 +49,40 @@ defineProps<{
   transition: all var(--transition-normal);
   overflow: hidden;
   height: 100%;
-  opacity: 0;
-  transform: translateY(12px);
-  animation: fadeInUp 700ms ease forwards;
+  position: relative;
+}
+
+.program-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
+  transform: scaleX(0);
+  transition: transform var(--transition-normal);
+  transform-origin: left;
 }
 
 .program-card:hover {
-  box-shadow: var(--shadow-xl);
-  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-6px);
   border-color: var(--primary-300);
+}
+
+.program-card:hover::before {
+  transform: scaleX(1);
 }
 
 .program-card--featured {
   border-color: var(--primary-400);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-hover);
   background: linear-gradient(135deg, white 0%, var(--primary-50) 100%);
 }
 
-.program-card--featured:hover {
-  box-shadow: var(--shadow-2xl);
+.program-card--featured::before {
+  transform: scaleX(1);
 }
 
 .program-card__header {
@@ -88,7 +103,13 @@ defineProps<{
   color: white;
   border-radius: var(--radius-xl);
   font-size: var(--text-xl);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-glow);
+  transition: all var(--transition-normal);
+}
+
+.program-card:hover .program-card__icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--shadow-hover);
 }
 
 .program-card__badge {
@@ -101,6 +122,16 @@ defineProps<{
   letter-spacing: 0.05em;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .program-card__content {
@@ -134,7 +165,20 @@ defineProps<{
   font-weight: 600;
   font-size: var(--text-sm);
   text-decoration: none;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.program-card__link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-500);
+  transition: width var(--transition-normal);
 }
 
 .program-card__link:hover {
@@ -143,21 +187,17 @@ defineProps<{
   text-decoration: none;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.program-card__link:hover::before {
+  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .program-card {
-    opacity: 1;
+  .program-card:hover,
+  .program-card:hover .program-card__icon {
     transform: none;
+  }
+  
+  .program-card__badge {
     animation: none;
   }
 }

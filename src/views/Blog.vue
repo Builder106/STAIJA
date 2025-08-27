@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 type Post = {
   id: string
@@ -32,6 +32,25 @@ const filteredPosts = computed(() => {
 const setFilter = (key: 'program' | 'topic', value: string) => {
   ;(filters.value as any)[key] = value
 }
+
+// Scroll animation
+onMounted(() => {
+  const observeElements = () => {
+    const elements = document.querySelectorAll('.fade-in-up')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible')
+        }
+      })
+    }, { threshold: 0.1 })
+    
+    elements.forEach((el) => observer.observe(el))
+  }
+  
+  // Delay to ensure DOM is ready
+  setTimeout(observeElements, 100)
+})
 </script>
 
 <template>
@@ -67,7 +86,7 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
       </header>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 blog-grid">
-        <article v-for="post in filteredPosts" :key="post.id" class="card blog-card">
+        <article v-for="post in filteredPosts" :key="post.id" class="card blog-card fade-in-up">
           <div class="card-body">
             <div class="blog-meta">
               <span class="badge">{{ post.program }}</span>
@@ -85,6 +104,15 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
             </div>
           </div>
         </article>
+        
+        <!-- Empty State -->
+        <div v-if="filteredPosts.length === 0" class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-icon">📝</div>
+          <h3 class="empty-state-title">No stories found</h3>
+          <p class="empty-state-text">
+            Try adjusting your filters or check back later for new content from our community.
+          </p>
+        </div>
       </div>
     </div>
   </section>
@@ -145,13 +173,15 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
 }
 
 .pill.active, .pill:hover {
   background: var(--primary-600);
   border-color: var(--primary-600);
   color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-box input[type="search"] {
@@ -159,6 +189,13 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--neutral-300);
   border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+}
+
+.search-box input[type="search"]:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  transform: scale(1.02);
 }
 
 .blog-grid {
@@ -166,7 +203,7 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
 }
 
 .blog-card {
-  animation: fadeInUp 600ms ease both;
+  transition: all var(--transition-normal);
 }
 
 .blog-meta {
@@ -204,19 +241,10 @@ const setFilter = (key: 'program' | 'topic', value: string) => {
 
 .blog-actions { display: flex; gap: var(--space-3); }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @media (min-width: 768px) {
   .blog-controls {
     grid-template-columns: auto auto 1fr;
     align-items: center;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .blog-card { animation: none; }
 }
 </style>

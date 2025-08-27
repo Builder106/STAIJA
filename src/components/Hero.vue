@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 
 const props = defineProps<{ 
   title: string
@@ -14,6 +14,13 @@ const props = defineProps<{
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const heroRef = ref<HTMLElement | null>(null)
 const parallaxY = ref(0)
+
+const defaultBackgroundImage = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop'
+
+const backgroundImageStyle = computed(() => {
+  const imageUrl = props.backgroundImageUrl || defaultBackgroundImage
+  return { backgroundImage: `url(${imageUrl})` }
+})
 
 onMounted(() => {
   if (prefersReducedMotion) return
@@ -32,7 +39,7 @@ onMounted(() => {
 
 <template>
   <section class="hero" ref="heroRef">
-    <div class="hero-background" :style="props.backgroundImageUrl ? { backgroundImage: `url(${props.backgroundImageUrl})` } : {}">
+    <div class="hero-background" :style="backgroundImageStyle">
       <div class="hero-overlay"></div>
       <div class="hero-pattern"></div>
     </div>
@@ -70,11 +77,12 @@ onMounted(() => {
 </template>
 
 <style scoped>
+  
 .hero {
   position: relative;
   padding: var(--space-20) 0 var(--space-16);
   overflow: hidden;
-  background: var(--neutral-100);
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
 }
 
 .hero-background {
@@ -83,6 +91,7 @@ onMounted(() => {
   z-index: 0;
   background-position: center;
   background-size: cover;
+  background-attachment: fixed;
   will-change: transform;
   transform: translateY(var(--parallax-y, 0px));
 }
@@ -90,16 +99,16 @@ onMounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(11, 26, 26, 0.55), rgba(11, 26, 26, 0.35));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.8), rgba(234, 88, 12, 0.6));
 }
 
 .hero-pattern {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 25% 25%, rgba(183, 219, 217, 0.35) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(252, 227, 179, 0.35) 0%, transparent 50%);
-  opacity: 0.6;
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  opacity: 0.8;
 }
 
 .hero-content {
@@ -108,6 +117,7 @@ onMounted(() => {
   text-align: left;
   max-width: 900px;
   margin: 0;
+  animation: fadeInUp 1s ease-out;
 }
 
 .hero-badge {
@@ -117,8 +127,9 @@ onMounted(() => {
   background: rgba(255,255,255,0.9);
   border: 1px solid var(--primary-200);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glow);
   margin-bottom: var(--space-6);
+  backdrop-filter: blur(10px);
 }
 
 .badge-text {
@@ -133,6 +144,7 @@ onMounted(() => {
   line-height: var(--leading-tight);
   color: white;
   margin-bottom: var(--space-6);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .hero-subtitle {
@@ -143,6 +155,7 @@ onMounted(() => {
   max-width: 600px;
   margin-left: 0;
   margin-right: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .hero-actions {
@@ -163,22 +176,39 @@ onMounted(() => {
 
 .stat {
   text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stat-number {
   font-size: var(--text-3xl);
   font-weight: 800;
-  color: var(--secondary-600);
+  color: white;
   line-height: 1;
   margin-bottom: var(--space-1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .stat-label {
   font-size: var(--text-sm);
-  color: var(--neutral-600);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .w-5 {
@@ -194,11 +224,11 @@ onMounted(() => {
   .hero {
     padding: var(--space-24) 0 var(--space-20);
   }
-  
+
   .hero-title {
     font-size: var(--text-5xl);
   }
-  
+
   .hero-actions {
     flex-direction: row;
     justify-content: flex-start;
@@ -209,9 +239,19 @@ onMounted(() => {
   .hero-title {
     font-size: var(--text-6xl);
   }
-  
+
   .hero-subtitle {
     font-size: var(--text-2xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-content {
+    animation: none;
+  }
+
+  .hero-background {
+    background-attachment: scroll;
   }
 }
 </style>

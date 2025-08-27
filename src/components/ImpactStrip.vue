@@ -58,12 +58,16 @@ onMounted(() => {
         <div class="divider"></div>
         <div class="partners" aria-label="Partner logos">
           <div class="track">
-            <img src="/vite.svg" alt="Partner" class="logo" />
-            <img src="/staija-logo.svg" alt="Partner" class="logo" />
-            <img src="/vite.svg" alt="Partner" class="logo" />
-            <img src="/staija-logo.svg" alt="Partner" class="logo" />
-            <img src="/vite.svg" alt="Partner" class="logo" />
-            <img src="/staija-logo.svg" alt="Partner" class="logo" />
+            <div class="partner-logo">🎓 Universities</div>
+            <div class="partner-logo">🔬 Research Labs</div>
+            <div class="partner-logo">🏢 Tech Companies</div>
+            <div class="partner-logo">🌍 NGOs</div>
+            <div class="partner-logo">💼 Foundations</div>
+            <div class="partner-logo">🏛️ Government</div>
+            <div class="partner-logo">🎓 Universities</div>
+            <div class="partner-logo">🔬 Research Labs</div>
+            <div class="partner-logo">🏢 Tech Companies</div>
+            <div class="partner-logo">🌍 NGOs</div>
           </div>
         </div>
       </div>
@@ -128,10 +132,26 @@ onMounted(() => {
   animation: scroll 24s linear infinite;
 }
 
-.logo {
-  height: 28px;
-  width: auto;
-  filter: grayscale(1) contrast(1.2) opacity(0.8);
+.partner-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--neutral-100);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-600);
+  white-space: nowrap;
+  border: 1px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.partner-logo:hover {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border-color: var(--primary-200);
+  transform: translateY(-2px);
 }
 
 @keyframes scroll {
@@ -159,6 +179,7 @@ onMounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .track { animation: none; }
+  .partner-logo:hover { transform: none; }
 }
 </style>
 
