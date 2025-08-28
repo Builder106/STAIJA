@@ -5,7 +5,6 @@
         <!-- Brand Section -->
         <div class="footer-brand">
           <div class="footer-logo">
-            <img src="/staija-logo.svg" alt="STAIJA" class="footer-logo-img" />
             <span class="footer-title">STAIJA</span>
           </div>
           <p class="footer-description">
@@ -36,7 +35,6 @@
           <nav class="footer-nav" aria-label="Programs">
             <RouterLink to="/programs/stepup-scholars" class="footer-link">StepUp Scholars</RouterLink>
             <RouterLink to="/programs/dynamerge" class="footer-link">Dynamerge</RouterLink>
-            <RouterLink to="/programs" class="footer-link">All Programs</RouterLink>
           </nav>
         </div>
 
@@ -141,7 +139,7 @@ const handleNewsletterSubmit = () => {
 }
 
 .footer-title {
-  font-family: var(--font-display);
+  font-family: 'Cairo', sans-serif;
   font-size: var(--text-xl);
   font-weight: 700;
   color: white;

@@ -12,14 +12,14 @@
   --primary-50: #eff6ff;
 
   /* Secondary/Accent: Purple */
-  --secondary-700: #7c2d12;
-  --secondary-600: #ea580c;
-  --secondary-500: #f97316;
-  --secondary-400: #fb923c;
-  --secondary-300: #fdba74;
-  --secondary-200: #fed7aa;
-  --secondary-100: #ffedd5;
-  --secondary-50: #fff7ed;
+  --secondary-700: #6d28d9;
+  --secondary-600: #7c3aed;
+  --secondary-500: #8b5cf6;
+  --secondary-400: #a78bfa;
+  --secondary-300: #c4b5fd;
+  --secondary-200: #ddd6fe;
+  --secondary-100: #ede9fe;
+  --secondary-50: #f5f3ff;
 
   /* Accent aliases (if needed) */
   --accent-600: var(--secondary-600);
