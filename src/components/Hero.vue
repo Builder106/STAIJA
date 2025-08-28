@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { Motion } from 'https://esm.sh/motion-v@1.7.0'
+// Use ESM import for lottie-web to keep compatibility across bundlers
+// If local dependency exists, this can be changed to: import lottie from 'lottie-web'
+import lottie from 'https://esm.sh/lottie-web@5.12.2'
+// Import the hero Lottie animation JSON
+// Vite supports JSON imports; TS will infer type as any
+import heroAnimation from '../assets/hero.json'
+
 const props = defineProps<{ 
   title: string
   subtitle?: string
@@ -8,18 +17,79 @@ const props = defineProps<{
   secondaryCtaHref?: string
   backgroundImageUrl?: string
 }>()
+
+const lottieContainer = ref<HTMLDivElement | null>(null)
+
+onMounted(() => {
+  if (lottieContainer.value) {
+    lottie.loadAnimation({
+      container: lottieContainer.value,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      animationData: heroAnimation as unknown as Record<string, unknown>
+    })
+  }
+})
 </script>
 
 <template>
   <section class="hero" :style="props.backgroundImageUrl ? { backgroundImage: `linear-gradient(rgba(10,14,23,0.55), rgba(10,14,23,0.55)), url(${props.backgroundImageUrl})` } : {}">
     <div class="container">
       <div class="hero-inner" aria-labelledby="hero-heading">
-        <h1 id="hero-heading" class="hero-title">{{ props.title || "Nurturing Africa's next generation of scientist‑leaders" }}</h1>
-        <p v-if="subtitle" class="hero-subtitle">{{ subtitle }}</p>
-        <div class="hero-actions">
-          <RouterLink class="btn btn-primary" :to="ctaHref || '/apply'">{{ ctaText || 'Apply' }}</RouterLink>
-          <RouterLink class="btn btn-secondary" :to="secondaryCtaHref || '/donate'">{{ secondaryCtaText || 'Donate' }}</RouterLink>
-        </div>
+        <Motion
+          :initial="{ opacity: 0, scale: 0.8 }"
+          :animate="{ opacity: 1, scale: 1 }"
+          :transition="{ duration: 0.8, ease: 'easeOut' }"
+          class="hero-animation"
+          aria-hidden="true"
+        >
+          <div ref="lottieContainer" class="hero-animation__canvas"></div>
+        </Motion>
+
+        <Motion
+          :initial="{ opacity: 0, y: 30 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.8, delay: 0.3, ease: 'easeOut' }"
+        >
+          <h1 id="hero-heading" class="hero-title">{{ props.title || "Nurturing Africa's next generation of scientist‑leaders" }}</h1>
+        </Motion>
+
+        <Motion
+          v-if="subtitle"
+          :initial="{ opacity: 0, y: 20 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.6, delay: 0.5, ease: 'easeOut' }"
+        >
+          <p class="hero-subtitle">{{ subtitle }}</p>
+        </Motion>
+
+        <Motion
+          :initial="{ opacity: 0, y: 20 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.6, delay: 0.7, ease: 'easeOut' }"
+          class="hero-actions"
+        >
+          <Motion
+            :initial="{ opacity: 0, x: -20 }"
+            :animate="{ opacity: 1, x: 0 }"
+            :transition="{ duration: 0.5, delay: 0.8, ease: 'easeOut' }"
+            :whileHover="{ scale: 1.05 }"
+            :whileTap="{ scale: 0.95 }"
+          >
+            <RouterLink class="btn btn-primary" :to="ctaHref || '/apply'">{{ ctaText || 'Apply' }}</RouterLink>
+          </Motion>
+
+          <Motion
+            :initial="{ opacity: 0, x: 20 }"
+            :animate="{ opacity: 1, x: 0 }"
+            :transition="{ duration: 0.5, delay: 0.9, ease: 'easeOut' }"
+            :whileHover="{ scale: 1.05 }"
+            :whileTap="{ scale: 0.95 }"
+          >
+            <RouterLink class="btn btn-secondary" :to="secondaryCtaHref || '/donate'">{{ secondaryCtaText || 'Donate' }}</RouterLink>
+          </Motion>
+        </Motion>
       </div>
     </div>
   </section>
@@ -29,7 +99,7 @@ const props = defineProps<{
 .hero {
   position: relative;
   width: 100%;
-  min-height: 72vh;
+  min-height: 92vh;
   display: flex;
   align-items: center;
   background: linear-gradient(135deg, var(--primary-50), var(--secondary-50));
@@ -50,6 +120,19 @@ const props = defineProps<{
   margin: 0 auto;
   padding: 0 var(--space-6);
   text-align: center;
+}
+
+.hero-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto var(--space-8);
+  max-width: 520px;
+}
+
+.hero-animation__canvas {
+  width: 100%;
+  height: 260px;
 }
 
 .hero-title {
@@ -111,12 +194,12 @@ const props = defineProps<{
 }
 
 @media (min-width: 1024px) {
-  .hero { min-height: 82vh; }
+  .hero { min-height: 95vh; }
   .hero-title { font-size: clamp(3rem, 5.5vw, 4.25rem); }
   .hero-subtitle { font-size: clamp(1.125rem, 1.8vw, 1.5rem); }
 }
 
 @media (max-width: 639px) {
-  .hero { min-height: 64vh; }
+  .hero { min-height: 80vh; }
 }
 </style>
