@@ -12,6 +12,7 @@
     "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@^6.0.1",
     "vite": "npm:vite@^7.1.2",
     "typescript": "npm:typescript@~5.8.3",
-    "vue-tsc": "npm:vue-tsc@^3.0.5"
+    "vue-tsc": "npm:vue-tsc@^3.0.5",
+    "motion-v": "npm:motion-v@^0.1.4"
   }
 }

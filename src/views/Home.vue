@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Hero from '../components/Hero.vue'
 import ProgramCard from '../components/ProgramCard.vue'
+import { Motion } from 'https://esm.sh/motion-v@1.7.0'
 </script>
 
 <template>
@@ -15,66 +16,160 @@ import ProgramCard from '../components/ProgramCard.vue'
       secondaryCtaHref="/get-involved"
     />
 
-    
-
     <!-- Programs Section -->
-    <section class="programs-section">
+    <Motion
+      :initial="{ opacity: 0, y: 50 }"
+      :whileInView="{ opacity: 1, y: 0 }"
+      :transition="{ duration: 0.8, ease: 'easeOut' }"
+      :viewport="{ once: true, margin: '-100px' }"
+      class="programs-section"
+    >
       <div class="container">
-        <div class="section-header">
+        <Motion
+          :initial="{ opacity: 0, y: 30 }"
+          :whileInView="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.6, delay: 0.2, ease: 'easeOut' }"
+          :viewport="{ once: true }"
+          class="section-header"
+        >
           <h2 class="section-title">Our Programs</h2>
           <p class="section-subtitle">
             Empowering the next generation through innovative research and mentorship opportunities
           </p>
-        </div>
-        
+        </Motion>
+
         <div class="programs-grid">
-          <ProgramCard 
-            title="StepUp Scholars" 
-            text="Hands-on research training and mentorship for students. Join a supportive cohort community and develop critical scientific skills."
-            href="/programs/stepup-scholars"
-            icon="🔬"
-            :featured="true"
-          />
-          <ProgramCard 
-            title="Dynamerge" 
-            text="Collaboration and innovation for emerging researchers. Foster interdisciplinary connections and breakthrough discoveries."
-            href="/programs/dynamerge"
-            icon="⚡"
-          />
-          <ProgramCard 
-            title="Get Involved" 
-            text="Volunteer, partner or intern with the STAIJA community. Make a meaningful impact on scientific education in Africa."
-            href="/get-involved"
-            icon="🤝"
-          />
+          <Motion
+            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
+            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
+            :transition="{ duration: 0.6, delay: 0.1, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+            :whileHover="{ y: -8, scale: 1.02 }"
+            class="program-card-wrapper"
+          >
+            <ProgramCard
+              title="StepUp Scholars"
+              text="Hands-on research training and mentorship for students. Join a supportive cohort community and develop critical scientific skills."
+              href="/programs/stepup-scholars"
+              icon="🔬"
+              :featured="true"
+            />
+          </Motion>
+
+          <Motion
+            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
+            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
+            :transition="{ duration: 0.6, delay: 0.3, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+            :whileHover="{ y: -8, scale: 1.02 }"
+            class="program-card-wrapper"
+          >
+            <ProgramCard
+              title="Dynamerge"
+              text="Collaboration and innovation for emerging researchers. Foster interdisciplinary connections and breakthrough discoveries."
+              href="/programs/dynamerge"
+              icon="⚡"
+            />
+          </Motion>
+
+          <Motion
+            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
+            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
+            :transition="{ duration: 0.6, delay: 0.5, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+            :whileHover="{ y: -8, scale: 1.02 }"
+            class="program-card-wrapper"
+          >
+            <ProgramCard
+              title="Get Involved"
+              text="Volunteer, partner or intern with the STAIJA community. Make a meaningful impact on scientific education in Africa."
+              href="/get-involved"
+              icon="🤝"
+            />
+          </Motion>
         </div>
       </div>
-    </section>
+    </Motion>
 
 
     <!-- CTA Section -->
-    <section class="cta-section">
+    <Motion
+      :initial="{ opacity: 0, y: 50 }"
+      :whileInView="{ opacity: 1, y: 0 }"
+      :transition="{ duration: 0.8, ease: 'easeOut' }"
+      :viewport="{ once: true, margin: '-100px' }"
+      class="cta-section"
+    >
       <div class="container">
         <div class="cta-content">
-          <h2 class="cta-title">Ready to Shape the Future of Science in Africa?</h2>
-          <p class="cta-description">
-            Join our community of passionate researchers, mentors, and innovators. Whether you're a student 
-            looking to develop your skills or a professional wanting to give back, there's a place for you at STAIJA.
-          </p>
-          <div class="cta-actions">
-            <a href="/programs/stepup-scholars" class="btn btn-primary btn-lg">
-              Apply Now
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </a>
-            <a href="/donate" class="btn btn-secondary btn-lg">
-              Support Our Mission
-            </a>
-          </div>
+          <Motion
+            :initial="{ opacity: 0, y: 30 }"
+            :whileInView="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.6, delay: 0.2, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+          >
+            <h2 class="cta-title">Ready to Shape the Future of Science in Africa?</h2>
+          </Motion>
+
+          <Motion
+            :initial="{ opacity: 0, y: 20 }"
+            :whileInView="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.6, delay: 0.4, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+          >
+            <p class="cta-description">
+              Join our community of passionate researchers, mentors, and innovators. Whether you're a student
+              looking to develop your skills or a professional wanting to give back, there's a place for you at STAIJA.
+            </p>
+          </Motion>
+
+          <Motion
+            :initial="{ opacity: 0, y: 20 }"
+            :whileInView="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.6, delay: 0.6, ease: 'easeOut' }"
+            :viewport="{ once: true }"
+            class="cta-actions"
+          >
+            <Motion
+              :initial="{ opacity: 0, x: -30 }"
+              :whileInView="{ opacity: 1, x: 0 }"
+              :transition="{ duration: 0.5, delay: 0.7, ease: 'easeOut' }"
+              :viewport="{ once: true }"
+              :whileHover="{ scale: 1.05, y: -2 }"
+              :whileTap="{ scale: 0.98 }"
+            >
+              <a href="/programs/stepup-scholars" class="btn btn-primary btn-lg">
+                Apply Now
+                <Motion
+                  :initial="{ x: -5, opacity: 0 }"
+                  :whileInView="{ x: 0, opacity: 1 }"
+                  :transition="{ duration: 0.4, delay: 1.0, ease: 'easeOut' }"
+                  :viewport="{ once: true }"
+                  class="inline-block"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Motion>
+              </a>
+            </Motion>
+
+            <Motion
+              :initial="{ opacity: 0, x: 30 }"
+              :whileInView="{ opacity: 1, x: 0 }"
+              :transition="{ duration: 0.5, delay: 0.8, ease: 'easeOut' }"
+              :viewport="{ once: true }"
+              :whileHover="{ scale: 1.05, y: -2 }"
+              :whileTap="{ scale: 0.98 }"
+            >
+              <a href="/donate" class="btn btn-secondary btn-lg">
+                Support Our Mission
+              </a>
+            </Motion>
+          </Motion>
         </div>
       </div>
-    </section>
+    </Motion>
   </div>
 </template>
 
@@ -116,6 +211,15 @@ import ProgramCard from '../components/ProgramCard.vue'
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-8);
+}
+
+.program-card-wrapper {
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
 /* Impact Section */

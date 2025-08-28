@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import Hero from '../components/Hero.vue'
 </script>
 
 <template>
   <div>
-    <!-- Hero -->
-    <Hero
-      title="Get involved with STAIJA"
-      subtitle="Volunteer, partner, or intern to empower the next generation of scientist‑leaders across Africa."
-      ctaText="Become a volunteer"
-      ctaHref="/get-involved#volunteer"
-      secondaryCtaText="Partner with us"
-      secondaryCtaHref="/get-involved#partner"
-    />
+    <!-- Hero Section -->
+    <section class="get-involved-hero">
+      <div class="container">
+        <div class="hero-content">
+          <h1 class="hero-title">Get involved with STAIJA</h1>
+          <p class="hero-subtitle">
+            Volunteer, partner, or intern to empower the next generation of scientist‑leaders across Africa.
+          </p>
+        </div>
+      </div>
+    </section>
 
     <!-- Ways to Get Involved -->
     <section class="section">
@@ -82,7 +83,7 @@ import Hero from '../components/Hero.vue'
 
     <!-- Impact / Benefits -->
     <section class="section section-alt">
-      <div class="container">
+      <div class="container-wide">
         <div class="impact">
           <div class="impact-text">
             <h2 class="section-title">Your involvement multiplies impact</h2>
@@ -114,6 +115,48 @@ import Hero from '../components/Hero.vue'
 </template>
 
 <style scoped>
+/* Hero Section */
+.get-involved-hero {
+  padding: var(--space-20) 0 var(--space-16);
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  text-align: center;
+}
+
+.hero-title {
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-6);
+}
+
+.hero-subtitle {
+  font-size: var(--text-xl);
+  color: var(--neutral-600);
+  line-height: var(--leading-relaxed);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Wide container for impact section */
+.container-wide {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: var(--text-5xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: var(--text-6xl);
+  }
+}
+
 .section {
   padding: var(--space-16) 0;
 }
@@ -191,11 +234,19 @@ import Hero from '../components/Hero.vue'
   grid-template-columns: 1fr;
   gap: var(--space-8);
   align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
+.impact-text {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 @media (min-width: 900px) {
   .impact {
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -225,6 +276,7 @@ import Hero from '../components/Hero.vue'
   gap: var(--space-3);
   margin-top: var(--space-6);
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .impact-stats {

@@ -38,17 +38,6 @@
           </nav>
         </div>
 
-        <!-- Get Involved -->
-        <div class="footer-section">
-          <h3 class="footer-heading">Get Involved</h3>
-          <nav class="footer-nav" aria-label="Get Involved">
-            <RouterLink to="/get-involved" class="footer-link">Volunteer</RouterLink>
-            <RouterLink to="/get-involved" class="footer-link">Partner</RouterLink>
-            <RouterLink to="/get-involved" class="footer-link">Internships</RouterLink>
-            <RouterLink to="/donate" class="footer-link">Donate</RouterLink>
-          </nav>
-        </div>
-
         <!-- Organization -->
         <div class="footer-section">
           <h3 class="footer-heading">Organization</h3>
@@ -305,7 +294,7 @@ const handleNewsletterSubmit = () => {
 /* Responsive Design */
 @media (min-width: 640px) {
   .footer-content {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
   }
   
   .newsletter-input-group {

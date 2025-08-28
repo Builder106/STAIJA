@@ -30,69 +30,7 @@
       </div>
     </section>
 
-    <!-- Impact Section -->
-    <section class="impact-section">
-      <div class="container">
-        <div class="impact-content">
-          <div class="impact-text">
-            <h2 class="section-title">Your Impact</h2>
-            <p class="impact-description">
-              Every donation makes a real difference in the lives of young scientists and researchers across Africa. 
-              Here's how your contribution creates lasting change:
-            </p>
-            <div class="impact-breakdown">
-              <div class="impact-item">
-                <div class="impact-icon">🎓</div>
-                <div class="impact-content">
-                  <h3 class="impact-title">Student Scholarships</h3>
-                  <p class="impact-text">Fund full program participation for talented students who otherwise couldn't afford it</p>
-                </div>
-              </div>
-              <div class="impact-item">
-                <div class="impact-icon">🔬</div>
-                <div class="impact-content">
-                  <h3 class="impact-title">Research Equipment</h3>
-                  <p class="impact-text">Provide essential tools and technology for hands-on research projects</p>
-                </div>
-              </div>
-              <div class="impact-item">
-                <div class="impact-icon">🤝</div>
-                <div class="impact-content">
-                  <h3 class="impact-title">Mentorship Programs</h3>
-                  <p class="impact-text">Connect students with experienced researchers and industry professionals</p>
-                </div>
-              </div>
-              <div class="impact-item">
-                <div class="impact-icon">🌍</div>
-                <div class="impact-content">
-                  <h3 class="impact-title">Community Building</h3>
-                  <p class="impact-text">Create networks and opportunities for collaboration across Africa</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="impact-visual">
-            <div class="impact-card">
-              <h3 class="card-title">Recent Impact</h3>
-              <div class="impact-stats">
-                <div class="impact-stat">
-                  <div class="stat-number">500+</div>
-                  <div class="stat-label">Students Supported</div>
-                </div>
-                <div class="impact-stat">
-                  <div class="stat-number">50+</div>
-                  <div class="stat-label">Research Projects Funded</div>
-                </div>
-                <div class="impact-stat">
-                  <div class="stat-number">₦10M+</div>
-                  <div class="stat-label">Total Impact Generated</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+
 
     <!-- Donation Options -->
     <section class="donation-section">
@@ -313,20 +251,6 @@
                     Donate ₦{{ formatAmount(selectedAmount) }} via Paystack
                   </span>
                 </button>
-                
-                <div class="payment-alternatives">
-                  <p class="payment-note">Other payment methods:</p>
-                  <div class="payment-methods">
-                    <button type="button" class="payment-method-btn" @click="showBankDetails = true">
-                      <span>🏦</span>
-                      Bank Transfer
-                    </button>
-                    <button type="button" class="payment-method-btn" @click="showMobileMoney = true">
-                      <span>📱</span>
-                      Mobile Money
-                    </button>
-                  </div>
-                </div>
               </div>
               
               <p class="form-note">
@@ -786,18 +710,7 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
-/* Impact Section */
-.impact-section {
-  padding: var(--space-20) 0;
-  background: white;
-}
 
-.impact-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: start;
-}
 
 .section-title {
   font-size: var(--text-3xl);
@@ -806,110 +719,9 @@ onMounted(() => {
   margin-bottom: var(--space-6);
 }
 
-.impact-description {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-}
 
-.impact-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
 
-.impact-item {
-  display: flex;
-  gap: var(--space-4);
-  align-items: flex-start;
-  transition: all var(--transition-normal);
-  padding: var(--space-3);
-  border-radius: var(--radius-lg);
-}
 
-.impact-item:hover {
-  background: var(--primary-50);
-  transform: translateX(8px);
-}
-
-.impact-icon {
-  font-size: var(--text-2xl);
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-100);
-  border-radius: var(--radius-xl);
-  flex-shrink: 0;
-  transition: all var(--transition-normal);
-}
-
-.impact-item:hover .impact-icon {
-  background: var(--primary-200);
-  transform: scale(1.1);
-}
-
-.impact-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-1);
-}
-
-.impact-text {
-  color: var(--neutral-600);
-  margin: 0;
-}
-
-.impact-visual {
-  display: flex;
-  justify-content: center;
-}
-
-.impact-card {
-  background: var(--neutral-50);
-  padding: var(--space-8);
-  border-radius: var(--radius-2xl);
-  border: 1px solid var(--neutral-200);
-  max-width: 400px;
-  width: 100%;
-  transition: all var(--transition-normal);
-}
-
-.impact-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
-}
-
-.card-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-  text-align: center;
-}
-
-.impact-stats {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-.impact-stat {
-  text-align: center;
-  padding: var(--space-4);
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
-}
-
-.impact-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
 
 /* Donation Section */
 .donation-section {
@@ -1195,43 +1007,7 @@ onMounted(() => {
   margin-bottom: var(--space-6);
 }
 
-.payment-alternatives {
-  border-top: 1px solid var(--neutral-200);
-  padding-top: var(--space-6);
-}
 
-.payment-note {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin-bottom: var(--space-4);
-}
-
-.payment-methods {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.payment-method-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--neutral-100);
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--neutral-700);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.payment-method-btn:hover {
-  background: var(--neutral-200);
-  border-color: var(--neutral-400);
-}
 
 .form-note {
   font-size: var(--text-sm);
@@ -1524,9 +1300,6 @@ onMounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .impact-content {
-    grid-template-columns: 1fr 1fr;
-  }
   
   .donation-tiers {
     grid-template-columns: repeat(2, 1fr);
@@ -1551,12 +1324,9 @@ onMounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .stat:hover,
-  .impact-item:hover,
-  .impact-card:hover,
-  .impact-stat:hover,
+
   .tier-card:hover,
   .donation-summary:hover,
-  .payment-method-btn:hover,
   .modal-close:hover,
   .faq-item:hover {
     transform: none;
