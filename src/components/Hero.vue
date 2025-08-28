@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import MoleculeField from './MoleculeField.vue'
-
 const props = defineProps<{ 
   title: string
   subtitle?: string
@@ -11,323 +8,115 @@ const props = defineProps<{
   secondaryCtaHref?: string
   backgroundImageUrl?: string
 }>()
-
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const heroRef = ref<HTMLElement | null>(null)
-const parallaxY = ref(0)
-const pointerX = ref(0)
-const pointerY = ref(0)
-
-onMounted(() => {
-  if (prefersReducedMotion) return
-  const onScroll = () => {
-    if (!heroRef.value) return
-    const rect = heroRef.value.getBoundingClientRect()
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-    const visible = Math.max(0, Math.min(rect.height, viewportHeight - rect.top))
-
-    // Background parallax
-    parallaxY.value = -(rect.top * 0.2)
-    heroRef.value.style.setProperty('--parallax-y', `${parallaxY.value}px`)
-
-    // Molecule parallax (lighter movement)
-    const moleculeParallax = -(rect.top * 0.08)
-    heroRef.value.style.setProperty('--molecule-parallax', `${moleculeParallax}px`)
-  }
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
-
-  const onPointerMove = (e: PointerEvent) => {
-    if (!heroRef.value) return
-    const rect = heroRef.value.getBoundingClientRect()
-    const px = ((e.clientX - rect.left) / rect.width - 0.5) * 6 // -3..3deg
-    const py = ((e.clientY - rect.top) / rect.height - 0.5) * 6
-    heroRef.value.style.setProperty('--parallax-rot-x', `${-py}deg`)
-    heroRef.value.style.setProperty('--parallax-rot-y', `${px}deg`)
-  }
-  heroRef.value?.addEventListener('pointermove', onPointerMove, { passive: true })
-})
 </script>
 
 <template>
-  <section class="hero" ref="heroRef">
-    <div class="hero-background">
-      <!-- background layer only; molecule moved into grid for layout control -->
-    </div>
+  <section class="hero" :style="props.backgroundImageUrl ? { backgroundImage: `linear-gradient(rgba(10,14,23,0.55), rgba(10,14,23,0.55)), url(${props.backgroundImageUrl})` } : {}">
     <div class="container">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span class="badge-text">🧬 Science • Technology • Innovation</span>
-        </div>
-
-        <!-- 3-column grid for headline and molecule -->
-        <div class="hero-grid">
-          <div class="headline-left">
-            <span class="headline-text">Nurturing Africa's next</span>
-          </div>
-          <div class="molecule-container">
-            <MoleculeField />
-          </div>
-          <div class="headline-right">
-            <span class="headline-text">generation of scientist‑leaders</span>
-          </div>
-          <div class="subheading-container">
+      <div class="hero-inner" aria-labelledby="hero-heading">
+        <h1 id="hero-heading" class="hero-title">{{ props.title || "Nurturing Africa's next generation of scientist‑leaders" }}</h1>
         <p v-if="subtitle" class="hero-subtitle">{{ subtitle }}</p>
-          </div>
+        <div class="hero-actions">
+          <RouterLink class="btn btn-primary" :to="ctaHref || '/apply'">{{ ctaText || 'Apply' }}</RouterLink>
+          <RouterLink class="btn btn-secondary" :to="secondaryCtaHref || '/donate'">{{ secondaryCtaText || 'Donate' }}</RouterLink>
         </div>
-
-        <!-- CTAs temporarily removed to spotlight molecule field -->
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-  
 .hero {
   position: relative;
-  padding: var(--space-24) 0 var(--space-20);
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
-  min-height: 80vh;
+  width: 100%;
+  min-height: 72vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-50), var(--secondary-50));
+  background-size: cover;
+  background-position: center;
 }
 
-.hero-background {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  will-change: transform;
-  transform: translateY(var(--parallax-y, 0px)) rotateX(var(--parallax-rot-x, 0deg)) rotateY(var(--parallax-rot-y, 0deg));
-  pointer-events: none;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  text-align: left;
-  max-width: 1400px;
-  margin: 0;
-  animation: fadeInUp 1s ease-out;
-}
-
-/* soft vignette around content for readability */
 .hero::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(1100px 420px at 50% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0) 70%);
   pointer-events: none;
 }
 
-.hero-badge {
+.hero-inner {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  text-align: center;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--neutral-900);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.0625rem, 2.2vw, 1.375rem);
+  color: var(--neutral-700);
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+.hero-actions {
+  margin-top: var(--space-8);
   display: inline-flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-4);
-  background: rgba(255,255,255,0.9);
-  border: 1px solid var(--primary-200);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-glow);
-  margin-bottom: var(--space-8);
-  backdrop-filter: blur(10px);
-}
-
-.badge-text {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--primary-700);
-}
-
-/* 3-column grid layout */
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "headline-left molecule headline-right"
-    ". subheading .";
-  gap: calc(var(--space-16) / 2);
-  align-items: center;
-  justify-items: center;
-  position: relative;
-  min-height: 200px;
-}
-
-.headline-left {
-  grid-area: headline-left;
-  text-align: right;
-  justify-self: end;
-}
-
-.headline-right {
-  grid-area: headline-right;
-  text-align: left;
-  justify-self: start;
-}
-
-.molecule-container {
-  grid-area: molecule;
-  position: relative;
-  width: 420px;
-  height: 315px;
-  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
 }
 
-.subheading-container {
-  grid-area: subheading;
-  text-align: center;
-  margin-top: var(--space-4);
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
 }
 
-/* Headline text styling */
-.headline-text {
-  font-size: var(--text-4xl);
-  font-weight: 800;
-  line-height: var(--leading-tight);
-  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: none;
-  display: inline-block;
-  position: relative;
+.btn-primary {
+  background: var(--primary-700);
+  color: white;
+  border-color: var(--primary-800);
 }
 
-/* remove extra blur layer behind headline to avoid hazy look */
+.btn-primary:hover { background: var(--primary-800); }
 
-.hero-subtitle {
-  font-size: var(--text-xl);
-  color: rgba(255,255,255,0.9);
-  line-height: var(--leading-relaxed);
-  margin: 0;
-  max-width: 500px;
-  text-shadow: none;
+.btn-secondary {
+  background: white;
+  color: var(--primary-800);
+  border-color: var(--primary-200);
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.btn-secondary:hover { background: var(--primary-50); }
+
+.btn:focus-visible {
+  outline: 3px solid var(--secondary-400);
+  outline-offset: 2px;
 }
 
-/* Responsive Design */
-
-/* Large desktop: ≥1024px */
 @media (min-width: 1024px) {
-  .hero {
-    min-height: 90vh;
-    padding: var(--space-28) 0 var(--space-24);
-  }
-
-  .hero-grid {
-    gap: var(--space-16);
-  }
-
-  .molecule-container {
-    width: 520px;
-    height: 390px;
-  }
-
-  .headline-text {
-    font-size: var(--text-5xl);
-  }
-
-  .hero-subtitle {
-    font-size: var(--text-2xl);
-    margin-top: var(--space-6);
-  }
+  .hero { min-height: 82vh; }
+  .hero-title { font-size: clamp(3rem, 5.5vw, 4.25rem); }
+  .hero-subtitle { font-size: clamp(1.125rem, 1.8vw, 1.5rem); }
 }
 
-/* Medium screens: 640px - 1024px */
-@media (min-width: 640px) and (max-width: 1023px) {
-  .hero {
-    min-height: 80vh;
-    padding: var(--space-20) 0 var(--space-16);
-  }
-
-  .hero-grid {
-    gap: var(--space-8);
-  }
-
-  .molecule-container {
-    width: 380px;
-    height: 285px;
-  }
-
-  .headline-text {
-    font-size: var(--text-4xl);
-  }
-}
-
-/* Small screens: <640px */
 @media (max-width: 639px) {
-  .hero {
-    padding: var(--space-16) 0 var(--space-12);
-    min-height: 70vh;
-  }
-
-  .hero-badge {
-    margin-bottom: var(--space-6);
-  }
-
-  /* Stack layout for mobile */
-  .hero-grid {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-    text-align: center;
-  }
-
-  .headline-left,
-  .headline-right {
-    text-align: center;
-    justify-self: center;
-  }
-
-  .molecule-container {
-    width: 280px;
-    height: 210px;
-    order: 2;
-  }
-
-  .subheading-container {
-    order: 3;
-    margin-top: var(--space-2);
-  }
-
-  .headline-text {
-    font-size: var(--text-3xl);
-    display: block;
-  }
-}
-
-/* Micro-motion: Light parallax scroll for molecule */
-@media (min-width: 640px) {
-  .molecule-container {
-    transform: translateY(var(--molecule-parallax, 0px));
-    transition: transform var(--transition-slow);
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .hero-content {
-    animation: none;
-  }
-
-  .hero-background {
-    transform: none;
-  }
-
-  .molecule-container {
-    transform: none;
-    transition: none;
-  }
+  .hero { min-height: 64vh; }
 }
 </style>
