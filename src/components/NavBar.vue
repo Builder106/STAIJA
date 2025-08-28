@@ -18,18 +18,16 @@ const closeMenu = () => {
       <div class="navbar-content">
         <!-- Logo -->
         <RouterLink to="/" class="navbar-brand" @click="closeMenu">
-          <img src="/staija-logo.svg" alt="STAIJA" class="navbar-logo" />
           <span class="navbar-title">STAIJA</span>
         </RouterLink>
 
         <!-- Desktop Navigation -->
         <nav class="navbar-nav" aria-label="Primary navigation">
-          <RouterLink to="/programs" class="nav-link">Programs</RouterLink>
           <RouterLink to="/get-involved" class="nav-link">Get Involved</RouterLink>
           <RouterLink to="/about" class="nav-link">About</RouterLink>
           <RouterLink to="/blog" class="nav-link">Stories</RouterLink>
           <div class="navbar-ctas">
-            <RouterLink to="/programs" class="btn btn-outline btn-sm">Apply</RouterLink>
+            <RouterLink to="/programs/stepup-scholars" class="btn btn-outline btn-sm">Apply</RouterLink>
             <RouterLink to="/donate" class="btn btn-secondary btn-sm">Donate</RouterLink>
           </div>
         </nav>
@@ -58,13 +56,12 @@ const closeMenu = () => {
         aria-label="Mobile navigation"
       >
         <div class="mobile-nav-content">
-          <RouterLink to="/programs" class="mobile-nav-link" @click="closeMenu">Programs</RouterLink>
           <RouterLink to="/get-involved" class="mobile-nav-link" @click="closeMenu">Get Involved</RouterLink>
           <RouterLink to="/about" class="mobile-nav-link" @click="closeMenu">About</RouterLink>
           <RouterLink to="/blog" class="mobile-nav-link" @click="closeMenu">Stories</RouterLink>
           <div class="mobile-nav-cta">
             <div class="mobile-cta-row">
-              <RouterLink to="/programs" class="btn btn-outline" @click="closeMenu">Apply</RouterLink>
+              <RouterLink to="/programs/stepup-scholars" class="btn btn-outline" @click="closeMenu">Apply</RouterLink>
               <RouterLink to="/donate" class="btn btn-secondary" @click="closeMenu">Donate</RouterLink>
             </div>
           </div>
@@ -114,7 +111,7 @@ const closeMenu = () => {
 }
 
 .navbar-title {
-  font-family: var(--font-display);
+  font-family: 'Cairo', sans-serif;
   letter-spacing: -0.025em;
 }
 

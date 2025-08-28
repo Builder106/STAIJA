@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
+import MoleculeField from './MoleculeField.vue'
 
 const props = defineProps<{ 
   title: string
@@ -14,13 +15,8 @@ const props = defineProps<{
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const heroRef = ref<HTMLElement | null>(null)
 const parallaxY = ref(0)
-
-const defaultBackgroundImage = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop'
-
-const backgroundImageStyle = computed(() => {
-  const imageUrl = props.backgroundImageUrl || defaultBackgroundImage
-  return { backgroundImage: `url(${imageUrl})` }
-})
+const pointerX = ref(0)
+const pointerY = ref(0)
 
 onMounted(() => {
   if (prefersReducedMotion) return
@@ -29,48 +25,58 @@ onMounted(() => {
     const rect = heroRef.value.getBoundingClientRect()
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const visible = Math.max(0, Math.min(rect.height, viewportHeight - rect.top))
+
+    // Background parallax
     parallaxY.value = -(rect.top * 0.2)
     heroRef.value.style.setProperty('--parallax-y', `${parallaxY.value}px`)
+
+    // Molecule parallax (lighter movement)
+    const moleculeParallax = -(rect.top * 0.08)
+    heroRef.value.style.setProperty('--molecule-parallax', `${moleculeParallax}px`)
   }
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (!heroRef.value) return
+    const rect = heroRef.value.getBoundingClientRect()
+    const px = ((e.clientX - rect.left) / rect.width - 0.5) * 6 // -3..3deg
+    const py = ((e.clientY - rect.top) / rect.height - 0.5) * 6
+    heroRef.value.style.setProperty('--parallax-rot-x', `${-py}deg`)
+    heroRef.value.style.setProperty('--parallax-rot-y', `${px}deg`)
+  }
+  heroRef.value?.addEventListener('pointermove', onPointerMove, { passive: true })
 })
 </script>
 
 <template>
   <section class="hero" ref="heroRef">
-    <div class="hero-background" :style="backgroundImageStyle">
-      <div class="hero-overlay"></div>
-      <div class="hero-pattern"></div>
+    <div class="hero-background">
+      <!-- background layer only; molecule moved into grid for layout control -->
     </div>
     <div class="container">
       <div class="hero-content">
         <div class="hero-badge">
           <span class="badge-text">🧬 Science • Technology • Innovation</span>
         </div>
-        <h1 class="hero-title">{{ title }}</h1>
+
+        <!-- 3-column grid for headline and molecule -->
+        <div class="hero-grid">
+          <div class="headline-left">
+            <span class="headline-text">Nurturing Africa's next</span>
+          </div>
+          <div class="molecule-container">
+            <MoleculeField />
+          </div>
+          <div class="headline-right">
+            <span class="headline-text">generation of scientist‑leaders</span>
+          </div>
+          <div class="subheading-container">
         <p v-if="subtitle" class="hero-subtitle">{{ subtitle }}</p>
-        <div v-if="ctaText && ctaHref" class="hero-actions">
-          <a :href="ctaHref" class="btn btn-primary btn-lg">
-            {{ ctaText }}
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </a>
-          <a v-if="secondaryCtaText && secondaryCtaHref" :href="secondaryCtaHref" class="btn btn-outline btn-lg">
-            {{ secondaryCtaText }}
-          </a>
-        </div>
-        <div class="hero-stats">
-          <div class="stat" v-for="(s, i) in [
-            { n: 500, suffix: '+', label: 'Students Mentored' },
-            { n: 50, suffix: '+', label: 'Research Projects' },
-            { n: 25, suffix: '+', label: 'Partner Organizations' }
-          ]" :key="i">
-            <div class="stat-number" :data-target="s.n">0</div>
-            <div class="stat-label">{{ s.label }}</div>
           </div>
         </div>
+
+        <!-- CTAs temporarily removed to spotlight molecule field -->
       </div>
     </div>
   </section>
@@ -80,44 +86,37 @@ onMounted(() => {
   
 .hero {
   position: relative;
-  padding: var(--space-20) 0 var(--space-16);
+  padding: var(--space-24) 0 var(--space-20);
   overflow: hidden;
   background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  min-height: 80vh;
 }
 
 .hero-background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-position: center;
-  background-size: cover;
-  background-attachment: fixed;
   will-change: transform;
-  transform: translateY(var(--parallax-y, 0px));
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.8), rgba(234, 88, 12, 0.6));
-}
-
-.hero-pattern {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-  opacity: 0.8;
+  transform: translateY(var(--parallax-y, 0px)) rotateX(var(--parallax-rot-x, 0deg)) rotateY(var(--parallax-rot-y, 0deg));
+  pointer-events: none;
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
   text-align: left;
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0;
   animation: fadeInUp 1s ease-out;
+}
+
+/* soft vignette around content for readability */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1100px 420px at 50% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0) 70%);
+  pointer-events: none;
 }
 
 .hero-badge {
@@ -128,7 +127,7 @@ onMounted(() => {
   border: 1px solid var(--primary-200);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-glow);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
   backdrop-filter: blur(10px);
 }
 
@@ -138,66 +137,72 @@ onMounted(() => {
   color: var(--primary-700);
 }
 
-.hero-title {
+/* 3-column grid layout */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "headline-left molecule headline-right"
+    ". subheading .";
+  gap: calc(var(--space-16) / 2);
+  align-items: center;
+  justify-items: center;
+  position: relative;
+  min-height: 200px;
+}
+
+.headline-left {
+  grid-area: headline-left;
+  text-align: right;
+  justify-self: end;
+}
+
+.headline-right {
+  grid-area: headline-right;
+  text-align: left;
+  justify-self: start;
+}
+
+.molecule-container {
+  grid-area: molecule;
+  position: relative;
+  width: 420px;
+  height: 315px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subheading-container {
+  grid-area: subheading;
+  text-align: center;
+  margin-top: var(--space-4);
+}
+
+/* Headline text styling */
+.headline-text {
   font-size: var(--text-4xl);
   font-weight: 800;
   line-height: var(--leading-tight);
-  color: white;
-  margin-bottom: var(--space-6);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  display: inline-block;
+  position: relative;
 }
+
+/* remove extra blur layer behind headline to avoid hazy look */
 
 .hero-subtitle {
   font-size: var(--text-xl);
   color: rgba(255,255,255,0.9);
   line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-  max-width: 600px;
-  margin-left: 0;
-  margin-right: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.hero-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: flex-start;
-  margin-bottom: var(--space-12);
-}
-
-.hero-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-8);
-  max-width: 600px;
   margin: 0;
-}
-
-.stat {
-  text-align: center;
-  background: rgba(255, 255, 255, 0.1);
-  padding: var(--space-4);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stat-number {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: white;
-  line-height: 1;
-  margin-bottom: var(--space-1);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  max-width: 500px;
+  text-shadow: none;
 }
 
 @keyframes fadeInUp {
@@ -211,47 +216,118 @@ onMounted(() => {
   }
 }
 
-.w-5 {
-  width: 1.25rem;
-}
-
-.h-5 {
-  height: 1.25rem;
-}
-
 /* Responsive Design */
-@media (min-width: 640px) {
-  .hero {
-    padding: var(--space-24) 0 var(--space-20);
-  }
 
-  .hero-title {
-    font-size: var(--text-5xl);
-  }
-
-  .hero-actions {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-}
-
+/* Large desktop: ≥1024px */
 @media (min-width: 1024px) {
-  .hero-title {
-    font-size: var(--text-6xl);
+  .hero {
+    min-height: 90vh;
+    padding: var(--space-28) 0 var(--space-24);
+  }
+
+  .hero-grid {
+    gap: var(--space-16);
+  }
+
+  .molecule-container {
+    width: 520px;
+    height: 390px;
+  }
+
+  .headline-text {
+    font-size: var(--text-5xl);
   }
 
   .hero-subtitle {
     font-size: var(--text-2xl);
+    margin-top: var(--space-6);
   }
 }
 
+/* Medium screens: 640px - 1024px */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero {
+    min-height: 80vh;
+    padding: var(--space-20) 0 var(--space-16);
+  }
+
+  .hero-grid {
+    gap: var(--space-8);
+  }
+
+  .molecule-container {
+    width: 380px;
+    height: 285px;
+  }
+
+  .headline-text {
+    font-size: var(--text-4xl);
+  }
+}
+
+/* Small screens: <640px */
+@media (max-width: 639px) {
+  .hero {
+    padding: var(--space-16) 0 var(--space-12);
+    min-height: 70vh;
+  }
+
+  .hero-badge {
+    margin-bottom: var(--space-6);
+  }
+
+  /* Stack layout for mobile */
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    text-align: center;
+  }
+
+  .headline-left,
+  .headline-right {
+    text-align: center;
+    justify-self: center;
+  }
+
+  .molecule-container {
+    width: 280px;
+    height: 210px;
+    order: 2;
+  }
+
+  .subheading-container {
+    order: 3;
+    margin-top: var(--space-2);
+  }
+
+  .headline-text {
+    font-size: var(--text-3xl);
+    display: block;
+  }
+}
+
+/* Micro-motion: Light parallax scroll for molecule */
+@media (min-width: 640px) {
+  .molecule-container {
+    transform: translateY(var(--molecule-parallax, 0px));
+    transition: transform var(--transition-slow);
+  }
+}
+
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .hero-content {
     animation: none;
   }
 
   .hero-background {
-    background-attachment: scroll;
+    transform: none;
+  }
+
+  .molecule-container {
+    transform: none;
+    transition: none;
   }
 }
 </style>

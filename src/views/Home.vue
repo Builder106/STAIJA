@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Hero from '../components/Hero.vue'
 import ProgramCard from '../components/ProgramCard.vue'
-import ImpactStrip from '../components/ImpactStrip.vue'
 </script>
 
 <template>
@@ -12,11 +11,11 @@ import ImpactStrip from '../components/ImpactStrip.vue'
       subtitle="Hands-on research programs, mentorship and community for ambitious students across Nigeria and beyond."
       ctaText="Apply to StepUp Scholars"
       ctaHref="/programs/stepup-scholars"
-      secondaryCtaText="Explore Programs"
-      secondaryCtaHref="/programs"
+      secondaryCtaText="Get Involved"
+      secondaryCtaHref="/get-involved"
     />
 
-    <ImpactStrip />
+    
 
     <!-- Programs Section -->
     <section class="programs-section">

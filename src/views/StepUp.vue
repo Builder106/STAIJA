@@ -1,13 +1,5 @@
 <template>
   <div class="stepup">
-    <!-- Sticky Apply Box -->
-    <StickyApplyBox
-      programName="StepUp Scholars"
-      deadline="May 1st, 2025"
-      timeCommitment="2-4 hours/week"
-      applyUrl="#apply"
-      :isOpen="true"
-    />
     
     <!-- Hero Section -->
     <section class="hero-section">
@@ -64,29 +56,6 @@
                 <div class="highlight-content">
                   <h3 class="highlight-title">Community</h3>
                   <p class="highlight-text">Join a supportive cohort of like-minded students across Nigeria</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="overview-visual">
-            <div class="stats-card">
-              <h3 class="card-title">Program Impact</h3>
-              <div class="stats-grid">
-                <div class="stat">
-                  <div class="stat-number">500+</div>
-                  <div class="stat-label">Students Mentored</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-number">50+</div>
-                  <div class="stat-label">Research Projects</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-number">85%</div>
-                  <div class="stat-label">Pursue STEM Degrees</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-number">15+</div>
-                  <div class="stat-label">Countries Represented</div>
                 </div>
               </div>
             </div>
@@ -512,7 +481,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import StickyApplyBox from '../components/StickyApplyBox.vue'
 
 const isSubmitting = ref(false)
@@ -1157,7 +1126,7 @@ const handleApplicationSubmit = async () => {
 
 @media (min-width: 1024px) {
   .overview-content {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   
   .eligibility-grid {
@@ -1181,9 +1150,6 @@ const handleApplicationSubmit = async () => {
   }
   
   /* Add right margin for sticky apply box */
-  .stepup {
-    margin-right: 320px;
-  }
 }
 </style>
 
