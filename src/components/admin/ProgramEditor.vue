@@ -3,175 +3,193 @@
     <div class="editor-header">
       <h2>{{ isEditing ? 'Edit Program' : 'Create New Program' }}</h2>
       <div class="header-actions">
-        <button @click="saveProgram" class="btn btn-primary" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Save Program' }}
+        <button @click="saveProgram" :disabled="saving" class="btn btn-primary">
+          {{ saving ? 'Saving...' : (isEditing ? 'Update' : 'Create') }}
         </button>
-        <button @click="cancel" class="btn btn-outline" :disabled="saving">
-          Cancel
-        </button>
+        <button @click="cancelEdit" class="btn btn-outline">Cancel</button>
       </div>
     </div>
 
-    <form @submit.prevent="saveProgram" class="editor-form">
-      <div class="form-group">
-        <label for="title" class="form-label">Title *</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
-          class="form-input"
-          placeholder="Enter program title"
-          required
-          :disabled="saving"
-        />
+    <form @submit.prevent="saveProgram" class="program-form">
+      <!-- Basic Info -->
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Program Name *</label>
+            <input v-model="program.name" type="text" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>URL Slug *</label>
+            <input v-model="program.slug" type="text" class="form-input" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea v-model="program.description" class="form-textarea" rows="3" required></textarea>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="slug" class="form-label">Slug *</label>
-        <input
-          id="slug"
-          v-model="form.slug"
-          type="text"
-          class="form-input"
-          placeholder="program-slug"
-          required
-          :disabled="saving"
-        />
+      <!-- Program Dates -->
+      <div class="form-section">
+        <h3>Program Dates</h3>
+        <div class="dates-grid">
+          <div class="form-group">
+            <label>Application Start *</label>
+            <input v-model="program.dates.applicationStart" type="date" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Application End *</label>
+            <input v-model="program.dates.applicationEnd" type="date" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Program Start *</label>
+            <input v-model="program.dates.programStart" type="date" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Program End *</label>
+            <input v-model="program.dates.programEnd" type="date" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Decisions By *</label>
+            <input v-model="program.dates.decisionsBy" type="date" class="form-input" required />
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="summary" class="form-label">Summary</label>
-        <textarea
-          id="summary"
-          v-model="form.summary"
-          class="form-textarea"
-          rows="3"
-          placeholder="Brief summary of the program"
-          :disabled="saving"
-        ></textarea>
+      <!-- Contact Info -->
+      <div class="form-section">
+        <h3>Contact Information</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Email *</label>
+            <input v-model="program.contact.email" type="email" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input v-model="program.contact.phone" type="tel" class="form-input" />
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="content" class="form-label">Content</label>
-        <textarea
-          id="content"
-          v-model="form.content"
-          class="form-textarea"
-          rows="10"
-          placeholder="Detailed program description"
-          :disabled="saving"
-        ></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="heroImage" class="form-label">Hero Image URL</label>
-        <input
-          id="heroImage"
-          v-model="form.heroImage"
-          type="url"
-          class="form-input"
-          placeholder="https://example.com/hero-image.jpg"
-          :disabled="saving"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="status" class="form-label">Status *</label>
-        <select
-          id="status"
-          v-model="form.status"
-          class="form-input"
-          required
-          :disabled="saving"
-        >
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-        </select>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary" :disabled="saving || !canSave">
-          {{ saving ? 'Saving...' : 'Save Program' }}
-        </button>
-        <button type="button" @click="cancel" class="btn btn-outline" :disabled="saving">
-          Cancel
-        </button>
+      <!-- Status -->
+      <div class="form-section">
+        <h3>Program Status</h3>
+        <div class="form-group">
+          <label>Status</label>
+          <select v-model="program.status" class="form-select">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
       </div>
     </form>
+
+    <div v-if="message" :class="['message', messageType]">
+      {{ message }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { contentfulManagement } from '../../services/contentful-management'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { DatabaseService, AuthService, type Program } from '../../services/firebase'
 
-// Props
-interface Props {
-  program?: {
-    id?: string
-    title: string
-    slug: string
-    summary?: string
-    content?: string
-    heroImage?: string
-    status: 'draft' | 'published'
-  }
-}
+const props = defineProps<{
+  programId?: string
+}>()
 
-const props = withDefaults(defineProps<Props>(), {
-  program: undefined
-})
-
-// Emits
 const emit = defineEmits<{
-  saved: [program: any]
+  saved: [programId: string]
   cancelled: []
 }>()
 
-// State
 const saving = ref(false)
-const form = ref({
-  title: props.program?.title || '',
-  slug: props.program?.slug || '',
-  summary: props.program?.summary || '',
-  content: props.program?.content || '',
-  heroImage: props.program?.heroImage || '',
-  status: props.program?.status || 'draft'
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
+
+const isEditing = computed(() => !!props.programId)
+
+const program = reactive({
+  name: '',
+  slug: '',
+  description: '',
+  dates: {
+    applicationStart: '',
+    applicationEnd: '',
+    programStart: '',
+    programEnd: '',
+    decisionsBy: ''
+  },
+  contact: {
+    email: '',
+    phone: ''
+  },
+  status: 'draft' as 'active' | 'inactive' | 'draft'
 })
 
-// Computed
-const isEditing = computed(() => !!props.program?.id)
-const canSave = computed(() => form.value.title.trim() && form.value.slug.trim())
-
-// Methods
 const saveProgram = async () => {
-  if (!canSave.value) return
-
   saving.value = true
+  message.value = ''
+  
   try {
-    const result = await contentfulManagement.createProgram({
-      title: form.value.title,
-      slug: form.value.slug,
-      summary: form.value.summary,
-      content: form.value.content,
-      heroImage: form.value.heroImage,
-      status: form.value.status
-    })
-    
-    if (result.success) {
-      emit('saved', { id: result.entryId, ...form.value })
+    const currentUser = AuthService.getCurrentUser()
+    if (!currentUser) throw new Error('User not authenticated')
+
+    const programData = {
+      ...program,
+      updatedBy: currentUser.uid
+    }
+
+    if (isEditing.value && props.programId) {
+      await DatabaseService.updateProgram(props.programId, programData)
+      showMessage('Program updated successfully!', 'success')
     } else {
-      throw new Error(result.message)
+      const programId = await DatabaseService.createProgram(programData)
+      showMessage('Program created successfully!', 'success')
+      emit('saved', programId)
     }
   } catch (error: any) {
-    console.error('Error saving program:', error)
+    showMessage(error.message || 'Failed to save program', 'error')
   } finally {
     saving.value = false
   }
 }
 
-const cancel = () => {
+const cancelEdit = () => {
   emit('cancelled')
+}
+
+const showMessage = (msg: string, type: 'success' | 'error') => {
+  message.value = msg
+  messageType.value = type
+  setTimeout(() => message.value = '', 5000)
+}
+
+onMounted(() => {
+  if (props.programId) {
+    loadProgram()
+  }
+})
+
+const loadProgram = async () => {
+  try {
+    const programs = await DatabaseService.getAllPrograms()
+    const programData = programs.find(p => p.id === props.programId)
+    if (programData) {
+      Object.assign(program, {
+        name: programData.name,
+        slug: programData.slug,
+        description: programData.description,
+        dates: programData.dates,
+        contact: programData.contact,
+        status: programData.status
+      })
+    }
+  } catch (error) {
+    showMessage('Failed to load program', 'error')
+  }
 }
 </script>
 
@@ -179,6 +197,7 @@ const cancel = () => {
 .program-editor {
   max-width: 800px;
   margin: 0 auto;
+  padding: 2rem;
 }
 
 .editor-header {
@@ -187,52 +206,52 @@ const cancel = () => {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--neutral-200);
 }
 
-.editor-header h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.editor-form {
+.form-section {
   background: white;
   padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+  margin-bottom: 2rem;
+}
+
+.form-section h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--neutral-900);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.dates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.form-label {
-  display: block;
+.form-group label {
+  font-weight: 600;
+  color: var(--neutral-700);
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #495057;
 }
 
 .form-input,
-.form-textarea {
-  width: 100%;
+.form-textarea,
+.form-select {
   padding: 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s ease;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #1976d2;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
 }
 
 .form-textarea {
@@ -240,57 +259,29 @@ const cancel = () => {
   min-height: 100px;
 }
 
-.form-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e9ecef;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
+.message {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.btn-primary {
-  background-color: #1976d2;
-  color: white;
+.message.success {
+  background: var(--success-50);
+  color: var(--success-700);
+  border: 1px solid var(--success-200);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #1565c0;
+.message.error {
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-200);
 }
 
-.btn-primary:disabled {
-  background-color: #bdbdbd;
-  cursor: not-allowed;
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.btn-outline:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.btn-outline:disabled {
-  color: #bdbdbd;
-  border-color: #e9ecef;
-  cursor: not-allowed;
+@media (max-width: 768px) {
+  .form-row,
+  .dates-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

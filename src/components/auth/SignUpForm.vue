@@ -26,6 +26,7 @@
             required
             placeholder="Enter your email"
             :disabled="loading"
+            autocomplete="username"
           />
         </div>
         
@@ -39,6 +40,7 @@
             placeholder="Create a password"
             :disabled="loading"
             minlength="8"
+            autocomplete="new-password"
           />
           <small class="password-hint">Password must be at least 8 characters long</small>
         </div>
@@ -52,6 +54,7 @@
             required
             placeholder="Confirm your password"
             :disabled="loading"
+            autocomplete="new-password"
           />
         </div>
         
@@ -64,10 +67,9 @@
             :disabled="loading"
           >
             <option value="">Select your role</option>
-            <option value="student">Student</option>
+            <option value="applicant">Program Applicant</option>
+            <option value="staff">Staff Member</option>
             <option value="alumni">Alumni</option>
-            <option value="content_editor">Content Editor</option>
-            <option value="admin">Administrator</option>
           </select>
         </div>
         
@@ -141,6 +143,89 @@
         <button @click="error = ''" class="btn-secondary">Close</button>
       </div>
     </div>
+    
+    <!-- Google Sign Up Modal -->
+    <div v-if="showGoogleModal" class="google-modal">
+      <div class="google-modal-content">
+        <div class="modal-header">
+          <h3>Complete Your Profile</h3>
+          <p>Please set a password and select your role to complete your registration</p>
+        </div>
+        
+        <form @submit.prevent="completeGoogleSignUp" class="modal-form">
+          <div class="form-group">
+            <label for="googlePassword">Password</label>
+            <input
+              id="googlePassword"
+              v-model="googlePassword"
+              type="password"
+              required
+              placeholder="Create a password"
+              minlength="8"
+              autocomplete="new-password"
+            />
+            <small class="password-hint">Password must be at least 8 characters long</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="googleConfirmPassword">Confirm Password</label>
+            <input
+              id="googleConfirmPassword"
+              v-model="googleConfirmPassword"
+              type="password"
+              required
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="googleRole">I am a:</label>
+            <select
+              id="googleRole"
+              v-model="googleRole"
+              required
+            >
+              <option value="">Select your role</option>
+              <option value="applicant">Program Applicant</option>
+              <option value="staff">Staff Member</option>
+              <option value="alumni">Alumni</option>
+            </select>
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                v-model="googleAgreeToTerms"
+                required
+              />
+              <span class="checkmark"></span>
+              I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+            </label>
+          </div>
+          
+          <div class="modal-actions">
+            <button
+              type="submit"
+              :disabled="loading || !googlePassword || !googleConfirmPassword || !googleRole || !googleAgreeToTerms"
+              class="btn-primary"
+            >
+              <span v-if="loading">Completing...</span>
+              <span v-else>Complete Registration</span>
+            </button>
+            <button
+              type="button"
+              @click="showGoogleModal = false"
+              class="btn-secondary"
+              :disabled="loading"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -186,15 +271,16 @@ const handleSignUp = async () => {
   error.value = ''
   
   try {
-    await AuthService.signUp(email.value, password.value, displayName.value)
+    await AuthService.signUp(email.value, password.value, displayName.value, role.value as 'applicant' | 'staff')
     
-    // Update user role if not default
-    if (role.value !== 'student') {
-      // TODO: Update user role in Firestore
-      console.log('Role update not implemented yet')
+    // Redirect based on role
+    if (role.value === 'applicant') {
+      router.push('/applicant')
+    } else if (role.value === 'staff') {
+      router.push('/admin')
+    } else {
+      router.push('/dashboard')
     }
-    
-    router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message || 'Failed to create account. Please try again.'
   } finally {
@@ -202,15 +288,114 @@ const handleSignUp = async () => {
   }
 }
 
+const showGoogleModal = ref(false)
+const googlePassword = ref('')
+const googleConfirmPassword = ref('')
+const googleRole = ref('')
+const googleAgreeToTerms = ref(false)
+
 const signUpWithGoogle = async () => {
   loading.value = true
   error.value = ''
   
   try {
-    // TODO: Implement Google sign-up
-    console.log('Google sign-up not implemented yet')
+    const result = await AuthService.signInWithGoogle()
+    
+    // Check if this is a new user (first time signing up)
+    if (result?.additionalUserInfo?.isNewUser) {
+      // Show modal to collect additional info
+      showGoogleModal.value = true
+    } else {
+      // Existing user, redirect to appropriate dashboard
+      const user = AuthService.getCurrentUser()
+      if (user) {
+        try {
+          const profile = await AuthService.getUserProfile()
+          if (profile) {
+            switch (profile.role) {
+              case 'applicant':
+                router.push('/applicant')
+                break
+              case 'admin':
+              case 'staff':
+                router.push('/admin')
+                break
+              case 'alumni':
+                router.push('/alumni')
+                break
+              default:
+                router.push('/dashboard')
+            }
+          } else {
+            router.push('/dashboard')
+          }
+        } catch {
+          router.push('/dashboard')
+        }
+      } else {
+        router.push('/dashboard')
+      }
+    }
   } catch (err: any) {
     error.value = err.message || 'Failed to sign up with Google.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const completeGoogleSignUp = async () => {
+  if (!googlePassword.value || !googleConfirmPassword.value || !googleRole.value || !googleAgreeToTerms.value) {
+    error.value = 'Please fill in all required fields.'
+    return
+  }
+  
+  if (googlePassword.value !== googleConfirmPassword.value) {
+    error.value = 'Passwords do not match.'
+    return
+  }
+  
+  if (googlePassword.value.length < 8) {
+    error.value = 'Password must be at least 8 characters long.'
+    return
+  }
+  
+  loading.value = true
+  error.value = ''
+  
+  try {
+    const user = AuthService.getCurrentUser()
+    if (!user) {
+      error.value = 'No user found. Please try signing in again.'
+      return
+    }
+    
+    // Update user profile with role and set password
+    await AuthService.updatePassword(googlePassword.value)
+    await AuthService.createUserProfile({
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || '',
+      role: googleRole.value as 'applicant' | 'staff' | 'alumni',
+      createdAt: new Date()
+    })
+    
+    // Close modal and redirect
+    showGoogleModal.value = false
+    googlePassword.value = ''
+    googleConfirmPassword.value = ''
+    googleRole.value = ''
+    googleAgreeToTerms.value = false
+    
+    // Redirect based on role
+    if (googleRole.value === 'applicant') {
+      router.push('/applicant')
+    } else if (googleRole.value === 'staff') {
+      router.push('/admin')
+    } else {
+      router.push('/dashboard')
+    }
+  } catch (err: any) {
+    error.value = err.message || 'Failed to complete sign up. Please try again.'
   } finally {
     loading.value = false
   }
@@ -225,22 +410,52 @@ const signUpWithGoogle = async () => {
 }
 
 .form-container {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 20px 20px 0 0;
+}
+
+.form-container:hover {
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
 }
 
 h2 {
   text-align: center;
   margin-bottom: 0.5rem;
-  color: var(--color-primary);
+  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
   text-align: center;
-  color: var(--color-text-secondary);
+  color: #6b7280;
   margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .form {
@@ -257,30 +472,37 @@ h2 {
 
 label {
   font-weight: 500;
-  color: var(--color-text);
+  color: #374151;
 }
 
 input, select {
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 input:focus, select:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+  background: white;
 }
 
 input:disabled, select:disabled {
-  background-color: var(--color-background-secondary);
+  background-color: #f9fafb;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .password-hint {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
 }
 
 .checkbox-group {
@@ -304,12 +526,14 @@ input:disabled, select:disabled {
 }
 
 .checkbox-label a {
-  color: var(--color-primary);
+  color: #667eea;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .checkbox-label a:hover {
   text-decoration: underline;
+  color: #5a67d8;
 }
 
 .form-actions {
@@ -319,19 +543,39 @@ input:disabled, select:disabled {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 1rem;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover::before {
+  left: 100%;
 }
 
 .btn-primary:disabled {
@@ -352,13 +596,13 @@ input:disabled, select:disabled {
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--color-border);
+  background: #e5e7eb;
 }
 
 .divider span {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   padding: 0 1rem;
-  color: var(--color-text-secondary);
+  color: #6b7280;
 }
 
 .social-login {
@@ -370,17 +614,23 @@ input:disabled, select:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
-  background: white;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #374151;
 }
 
 .btn-social:hover:not(:disabled) {
-  background: var(--color-background-secondary);
+  background: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .btn-social:disabled {
@@ -399,12 +649,14 @@ input:disabled, select:disabled {
 }
 
 .login-link a {
-  color: var(--color-primary);
+  color: #667eea;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .login-link a:hover {
   text-decoration: underline;
+  color: #5a67d8;
 }
 
 .error-modal {
@@ -418,6 +670,7 @@ input:disabled, select:disabled {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .error-content {
@@ -426,6 +679,8 @@ input:disabled, select:disabled {
   border-radius: 12px;
   max-width: 400px;
   text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
 }
 
 .error-content h3 {
@@ -433,17 +688,123 @@ input:disabled, select:disabled {
   margin-bottom: 1rem;
 }
 
+.google-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.google-modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+  position: relative;
+}
+
+.google-modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 20px 20px 0 0;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header h3 {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.modal-header p {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.modal-actions .btn-primary {
+  flex: 1;
+}
+
+.modal-actions .btn-secondary {
+  flex: 1;
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-actions .btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-2px);
+}
+
 .btn-secondary {
-  background: var(--color-secondary);
+  background: #6b7280;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   margin-top: 1rem;
+  transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-  background: var(--color-secondary-dark);
+  background: #4b5563;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

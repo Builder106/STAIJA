@@ -13,12 +13,12 @@
             Hands-on research training, mentorship and a supportive cohort community for high school and gap year students in Nigeria.
           </p>
           <div class="hero-actions">
-            <a href="#apply" class="btn btn-primary btn-lg">
+            <RouterLink to="/signup" class="btn btn-primary btn-lg">
               Apply Now
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </a>
+            </RouterLink>
             <a href="#learn-more" class="btn btn-outline btn-lg">Learn More</a>
           </div>
         </div>
@@ -112,300 +112,186 @@
     <section class="application-section">
       <div class="container">
         <div class="application-content">
+          <div class="section-header">
           <h2 class="section-title">Application Process</h2>
+            <p class="section-subtitle">Your journey to becoming a StepUp Scholar in 5 simple steps</p>
+          </div>
+          <div class="process-timeline">
+            <div class="timeline-line"></div>
           <div class="process-steps">
             <div class="step">
+                <div class="step-icon">
               <div class="step-number">1</div>
+                  <svg class="step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                </div>
               <div class="step-content">
+                  <div class="step-badge">Step 1</div>
                 <h3 class="step-title">Online Application</h3>
-                <p class="step-description">Complete the online form with personal information and academic background</p>
+                  <p class="step-description">Complete our comprehensive online form with your personal information, academic background, and research interests</p>
+                  <div class="step-duration">
+                    <svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>15-20 minutes</span>
               </div>
             </div>
+              </div>
+              
             <div class="step">
+                <div class="step-icon">
               <div class="step-number">2</div>
+                  <svg class="step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                </div>
               <div class="step-content">
+                  <div class="step-badge">Step 2</div>
                 <h3 class="step-title">Optional Essays</h3>
-                <p class="step-description">Submit optional essays to showcase your research interests and motivation</p>
+                  <p class="step-description">Showcase your passion and motivation through optional essays that highlight your research interests and goals</p>
+                  <div class="step-duration">
+                    <svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>30-45 minutes</span>
               </div>
             </div>
+              </div>
+              
             <div class="step">
+                <div class="step-icon">
               <div class="step-number">3</div>
+                  <svg class="step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                </div>
               <div class="step-content">
+                  <div class="step-badge">Step 3</div>
                 <h3 class="step-title">Reading Assessment</h3>
-                <p class="step-description">Complete required reading passages and comprehension exercises</p>
+                  <p class="step-description">Complete our reading comprehension assessment to demonstrate your analytical and critical thinking skills</p>
+                  <div class="step-duration">
+                    <svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>45-60 minutes</span>
               </div>
             </div>
+              </div>
+              
             <div class="step">
+                <div class="step-icon">
               <div class="step-number">4</div>
+                  <svg class="step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                  </svg>
+                </div>
               <div class="step-content">
-                <h3 class="step-title">Interview</h3>
-                <p class="step-description">Participate in a virtual interview with program mentors</p>
+                  <div class="step-badge">Step 4</div>
+                  <h3 class="step-title">Virtual Interview</h3>
+                  <p class="step-description">Meet with our program mentors in a virtual interview to discuss your interests and answer questions</p>
+                  <div class="step-duration">
+                    <svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>30 minutes</span>
               </div>
             </div>
+              </div>
+              
             <div class="step">
+                <div class="step-icon">
               <div class="step-number">5</div>
+                </div>
               <div class="step-content">
+                  <div class="step-badge">Step 5</div>
                 <h3 class="step-title">Final Selection</h3>
-                <p class="step-description">Receive notification of acceptance and program details</p>
+                  <p class="step-description">Receive your acceptance notification and detailed program information to begin your research journey</p>
+                  <div class="step-duration">
+                    <svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Within 1 week</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+          
+          <div class="process-summary">
+            <div class="summary-card">
+              <div class="summary-icon">📋</div>
+              <h4>Total Time</h4>
+              <p>2-3 hours across multiple sessions</p>
+              </div>
+            <div class="summary-card">
+              <div class="summary-icon">🎯</div>
+              <h4>Success Rate</h4>
+              <p>25% of applicants are selected</p>
+              </div>
+            <div class="summary-card">
+              <div class="summary-icon">⚡</div>
+              <h4>Response Time</h4>
+              <p>Decisions within 1 week of interview</p>
+            </div>
+                  </div>
+                  </div>
+                </div>
     </section>
 
-    <!-- Application Form -->
+    <!-- Apply Now Section -->
     <section id="apply" class="apply-section">
       <div class="container">
         <div class="apply-content">
-          <h2 class="section-title">Apply Now</h2>
+          <h2 class="section-title">Ready to Apply?</h2>
           <p class="apply-description">
-            Ready to join the next generation of scientist-leaders? Complete your application for the 2025 StepUp Scholars program.
+            Join the next generation of scientist-leaders! Create your account and submit your application for the 2025 StepUp Scholars program.
           </p>
           
-          <form class="application-form" @submit.prevent="handleApplicationSubmit">
-            <!-- Progress Bar -->
-            <div class="apply-progress" role="progressbar" :aria-valuenow="currentStep" :aria-valuemin="1" :aria-valuemax="totalSteps">
-              <div class="apply-progress__track">
-                <div class="apply-progress__bar" :style="{ width: Math.round((currentStep/totalSteps)*100) + '%' }"></div>
-              </div>
-              <div class="apply-progress__labels">
-                <span :class="{ 'is-active': currentStep === 1 }">Details</span>
-                <span :class="{ 'is-active': currentStep === 2 }">Interests</span>
-                <span :class="{ 'is-active': currentStep === 3 }">Review</span>
-              </div>
-            </div>
-
-            <div class="form-grid">
-              <!-- Personal Information -->
-              <div class="form-section" v-if="currentStep === 1">
-                <h3 class="form-section-title">Personal Information</h3>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="firstName" class="form-label">First Name *</label>
-                    <input 
-                      id="firstName"
-                      v-model="form.firstName"
-                      type="text" 
-                      class="form-input" 
-                      required
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="lastName" class="form-label">Last Name *</label>
-                    <input 
-                      id="lastName"
-                      v-model="form.lastName"
-                      type="text" 
-                      class="form-input" 
-                      required
-                    />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="email" class="form-label">Email Address *</label>
-                    <input 
-                      id="email"
-                      v-model="form.email"
-                      type="email" 
-                      class="form-input" 
-                      required
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="phone" class="form-label">Phone Number</label>
-                    <input 
-                      id="phone"
-                      v-model="form.phone"
-                      type="tel" 
-                      class="form-input"
-                    />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="location" class="form-label">City/State *</label>
-                  <input 
-                    id="location"
-                    v-model="form.location"
-                    type="text" 
-                    class="form-input" 
-                    required
-                  />
-                </div>
-              </div>
-
-              <!-- Academic Information -->
-              <div class="form-section" v-if="currentStep === 1">
-                <h3 class="form-section-title">Academic Information</h3>
-                <div class="form-group">
-                  <label for="school" class="form-label">Current School *</label>
-                  <input 
-                    id="school"
-                    v-model="form.school"
-                    type="text" 
-                    class="form-input" 
-                    required
-                  />
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="grade" class="form-label">Current Grade/Year *</label>
-                    <select 
-                      id="grade"
-                      v-model="form.grade"
-                      class="form-select" 
-                      required
-                    >
-                      <option value="">Select Grade</option>
-                      <option value="SS1">SS1 (Senior Secondary 1)</option>
-                      <option value="SS2">SS2 (Senior Secondary 2)</option>
-                      <option value="SS3">SS3 (Senior Secondary 3)</option>
-                      <option value="gap-year">Gap Year</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="gpa" class="form-label">GPA (if available)</label>
-                    <input 
-                      id="gpa"
-                      v-model="form.gpa"
-                      type="number" 
-                      step="0.1"
-                      min="0"
-                      max="5"
-                      class="form-input"
-                      placeholder="e.g., 4.0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Research Interests -->
-              <div class="form-section" v-if="currentStep === 2">
-                <h3 class="form-section-title">Research Interests</h3>
-                <div class="form-group">
-                  <label for="interests" class="form-label">Areas of Interest *</label>
-                  <select 
-                    id="interests"
-                    v-model="form.interests"
-                    class="form-select" 
-                    required
-                  >
-                    <option value="">Select Primary Interest</option>
-                    <option value="biology">Biology & Life Sciences</option>
-                    <option value="chemistry">Chemistry</option>
-                    <option value="physics">Physics</option>
-                    <option value="mathematics">Mathematics</option>
-                    <option value="computer-science">Computer Science</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="medicine">Medicine & Health Sciences</option>
-                    <option value="environmental">Environmental Science</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="motivation" class="form-label">Why do you want to join StepUp Scholars? *</label>
-                  <textarea 
-                    id="motivation"
-                    v-model="form.motivation"
-                    class="form-textarea" 
-                    rows="4"
-                    placeholder="Tell us about your interest in research and what you hope to gain from this program..."
-                    required
-                  ></textarea>
-                </div>
-              </div>
-
-              <!-- Additional Information -->
-              <div class="form-section" v-if="currentStep === 2">
-                <h3 class="form-section-title">Additional Information</h3>
-                <div class="form-group">
-                  <label for="experience" class="form-label">Previous Research Experience</label>
-                  <textarea 
-                    id="experience"
-                    v-model="form.experience"
-                    class="form-textarea" 
-                    rows="3"
-                    placeholder="Describe any previous research experience, science projects, or relevant activities..."
-                  ></textarea>
-                </div>
-                <div class="form-group">
-                  <label for="availability" class="form-label">Availability *</label>
-                  <div class="checkbox-group">
-                    <label class="checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="form.availability.weekdays"
-                        class="checkbox-input"
-                      />
-                      Weekdays (2-4 hours/week)
-                    </label>
-                    <label class="checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="form.availability.weekends"
-                        class="checkbox-input"
-                      />
-                      Weekends
-                    </label>
-                    <label class="checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="form.availability.virtual"
-                        class="checkbox-input"
-                      />
-                      Virtual sessions
-                    </label>
-                    <label class="checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="form.availability.inperson"
-                        class="checkbox-input"
-                      />
-                      In-person sessions (if available)
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Review Step -->
-            <div class="review-section" v-if="currentStep === 3">
-              <h3 class="form-section-title">Review Your Application</h3>
-              <div class="review-grid">
-                <div class="review-item"><strong>Name:</strong> {{ form.firstName }} {{ form.lastName }}</div>
-                <div class="review-item"><strong>Email:</strong> {{ form.email }}</div>
-                <div class="review-item"><strong>Phone:</strong> {{ form.phone || '—' }}</div>
-                <div class="review-item"><strong>Location:</strong> {{ form.location }}</div>
-                <div class="review-item"><strong>School:</strong> {{ form.school }}</div>
-                <div class="review-item"><strong>Grade:</strong> {{ form.grade }}</div>
-                <div class="review-item"><strong>GPA:</strong> {{ form.gpa || '—' }}</div>
-                <div class="review-item"><strong>Interest:</strong> {{ form.interests }}</div>
-                <div class="review-item"><strong>Motivation:</strong> {{ form.motivation }}</div>
-                <div class="review-item"><strong>Availability:</strong>
-                  <span v-if="form.availability.weekdays">Weekdays</span>
-                  <span v-if="form.availability.weekends">, Weekends</span>
-                  <span v-if="form.availability.virtual">, Virtual</span>
-                  <span v-if="form.availability.inperson">, In-person</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-actions form-actions--wizard">
-              <button v-if="currentStep > 1" type="button" class="btn btn-outline" @click="prevStep">Back</button>
-              <button v-if="currentStep < totalSteps" type="button" class="btn btn-primary" @click="nextStep" :disabled="!canGoNext">
-                Next
-              </button>
-              <button v-if="currentStep === totalSteps" type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">
-                <span v-if="isSubmitting">Submitting...</span>
-                <span v-else>Submit Application</span>
-              </button>
-              <p class="form-note">
-                Applications close on May 1st, 2025. You'll receive a confirmation email within 24 hours.
+          <div class="apply-options">
+            <div class="apply-card">
+              <div class="apply-card-icon">👤</div>
+              <h3 class="apply-card-title">New Applicants</h3>
+              <p class="apply-card-description">
+                Create your account and start your application journey. You'll be able to save your progress and return later.
               </p>
+              <RouterLink to="/signup" class="btn btn-primary btn-lg">
+                Create Account & Apply
+              </RouterLink>
+              </div>
+
+            <div class="apply-card">
+              <div class="apply-card-icon">🔐</div>
+              <h3 class="apply-card-title">Returning Users</h3>
+              <p class="apply-card-description">
+                Already have an account? Sign in to continue your application or check your status.
+              </p>
+              <RouterLink to="/login" class="btn btn-outline btn-lg">
+                Sign In
+              </RouterLink>
+              </div>
             </div>
-          </form>
+
+          <div class="apply-info">
+            <div class="info-item">
+              <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Applications close on May 1st, 2025</span>
+                </div>
+            <div class="info-item">
+              <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Save your progress and return anytime</span>
+              </div>
+            <div class="info-item">
+              <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              <span>Receive confirmation within 24 hours</span>
+            </div>
+            </div>
         </div>
       </div>
     </section>
@@ -471,7 +357,7 @@
             Applications are now open for the 2025 cohort.
           </p>
           <div class="cta-actions">
-            <a href="#apply" class="btn btn-primary btn-lg">Apply Now</a>
+            <RouterLink to="/signup" class="btn btn-primary btn-lg">Create Account & Apply</RouterLink>
             <RouterLink to="/contact" class="btn btn-outline btn-lg">Contact Us</RouterLink>
           </div>
         </div>
@@ -481,91 +367,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
-import StickyApplyBox from '../components/StickyApplyBox.vue'
-
-const isSubmitting = ref(false)
-const currentStep = ref(1)
-const totalSteps = 3
-
-const canGoNext = computed(() => {
-  if (currentStep.value === 1) {
-    return Boolean(form.firstName && form.lastName && form.email && form.location && form.school && form.grade)
-  }
-  if (currentStep.value === 2) {
-    return Boolean(form.interests && form.motivation)
-  }
-  return true
-})
-
-const nextStep = () => {
-  if (currentStep.value < totalSteps) currentStep.value += 1
-}
-
-const prevStep = () => {
-  if (currentStep.value > 1) currentStep.value -= 1
-}
-
-const form = reactive({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  location: '',
-  school: '',
-  grade: '',
-  gpa: '',
-  interests: '',
-  motivation: '',
-  experience: '',
-  availability: {
-    weekdays: false,
-    weekends: false,
-    virtual: false,
-    inperson: false
-  }
-})
-
-const handleApplicationSubmit = async () => {
-  isSubmitting.value = true
-  
-  try {
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Here you would typically send the data to your backend
-    console.log('Application submitted:', form)
-    
-    // Show success message (you could use a toast notification here)
-    alert('Application submitted successfully! You will receive a confirmation email within 24 hours.')
-    
-    // Reset form
-    Object.assign(form, {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      location: '',
-      school: '',
-      grade: '',
-      gpa: '',
-      interests: '',
-      motivation: '',
-      experience: '',
-      availability: {
-        weekdays: false,
-        weekends: false,
-        virtual: false,
-        inperson: false
-      }
-    })
-  } catch (error) {
-    console.error('Error submitting application:', error)
-    alert('There was an error submitting your application. Please try again.')
-  } finally {
-    isSubmitting.value = false
-  }
-}
+// No additional logic needed for this page
 </script>
 
 <style scoped>
@@ -799,50 +601,224 @@ const handleApplicationSubmit = async () => {
 /* Application Process */
 .application-section {
   padding: var(--space-20) 0;
-  background: white;
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.application-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
 .application-content {
   text-align: center;
   margin-bottom: var(--space-12);
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  margin-bottom: var(--space-16);
+}
+
+.section-subtitle {
+  font-size: var(--text-lg);
+  color: var(--neutral-600);
+  margin-top: var(--space-4);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.process-timeline {
+  position: relative;
+  margin-bottom: var(--space-16);
+}
+
+.timeline-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
+  border-radius: var(--radius-full);
+  transform: translateX(-50%);
+  z-index: 0;
 }
 
 .process-steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-12);
+  position: relative;
+  z-index: 1;
 }
 
 .step {
   display: flex;
-  gap: var(--space-6);
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  gap: var(--space-8);
+  position: relative;
+  background: white;
+  padding: var(--space-8);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+  border: 1px solid var(--neutral-100);
+}
+
+.step:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary-200);
+}
+
+.step:nth-child(even) {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.step-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .step-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  background: var(--primary-600);
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
   color: white;
   border-radius: var(--radius-full);
-  font-weight: 700;
-  font-size: var(--text-lg);
-  flex-shrink: 0;
+  font-weight: 800;
+  font-size: var(--text-xl);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 2;
+}
+
+.step-arrow {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--primary-600);
+  animation: bounce 2s infinite;
+}
+
+.step-arrow:last-child {
+  display: none;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
+.step-content {
+  flex: 1;
+  text-align: left;
+}
+
+.step:nth-child(even) .step-content {
+  text-align: right;
+}
+
+.step-badge {
+  display: inline-block;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
 }
 
 .step-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
+  font-size: var(--text-xl);
+  font-weight: 700;
   color: var(--neutral-900);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
 }
 
 .step-description {
   color: var(--neutral-600);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-base);
+}
+
+.step-duration {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--neutral-500);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.duration-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.process-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.summary-card {
+  background: white;
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-100);
+  transition: all var(--transition-normal);
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.summary-icon {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+}
+
+.summary-card h4 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-2);
+}
+
+.summary-card p {
+  color: var(--neutral-600);
+  font-size: var(--text-base);
   margin: 0;
 }
 
@@ -862,159 +838,74 @@ const handleApplicationSubmit = async () => {
   color: var(--neutral-600);
   line-height: var(--leading-relaxed);
   max-width: 600px;
-  margin: 0 auto var(--space-8);
+  margin: 0 auto var(--space-12);
 }
 
-.application-form {
+.apply-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  max-width: 800px;
+  margin: 0 auto var(--space-12);
+}
+
+.apply-card {
   background: white;
   padding: var(--space-8);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-lg);
-  max-width: 800px;
-  margin: 0 auto;
+  text-align: center;
+  border: 1px solid var(--neutral-100);
+  transition: all var(--transition-normal);
 }
 
-.apply-progress {
-  margin-bottom: var(--space-8);
+.apply-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary-200);
 }
 
-.apply-progress__track {
-  height: 8px;
-  background: var(--neutral-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.apply-progress__bar {
-  height: 8px;
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
-  border-radius: var(--radius-full);
-  width: 33%;
-  transition: width var(--transition-normal);
-}
-
-.apply-progress__labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-xs);
-  color: var(--neutral-600);
-  margin-top: var(--space-2);
-}
-
-.apply-progress__labels .is-active {
-  color: var(--primary-600);
-  font-weight: 600;
-}
-
-.form-grid {
-  display: grid;
-  gap: var(--space-8);
-}
-
-.form-section {
-  border-bottom: 1px solid var(--neutral-200);
-  padding-bottom: var(--space-8);
-}
-
-.form-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.form-section-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-.form-group {
+.apply-card-icon {
+  font-size: var(--text-4xl);
   margin-bottom: var(--space-4);
 }
 
-.form-label {
-  display: block;
-  font-weight: 600;
-  color: var(--neutral-700);
-  margin-bottom: var(--space-2);
+.apply-card-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-3);
 }
 
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-lg);
+.apply-card-description {
+  color: var(--neutral-600);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-6);
   font-size: var(--text-base);
-  transition: all var(--transition-fast);
 }
 
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.checkbox-group {
+.apply-info {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.checkbox-label {
+.info-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--neutral-700);
+  color: var(--neutral-600);
+  font-size: var(--text-base);
+  justify-content: center;
 }
 
-.checkbox-input {
+.info-icon {
   width: 1.25rem;
   height: 1.25rem;
-  accent-color: var(--primary-600);
-}
-
-.form-actions {
-  text-align: center;
-  margin-top: var(--space-8);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--neutral-200);
-}
-
-.form-actions--wizard {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.review-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
-}
-
-.form-note {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin-top: var(--space-4);
+  color: var(--primary-600);
+  flex-shrink: 0;
 }
 
 /* FAQ Section */
@@ -1092,13 +983,21 @@ const handleApplicationSubmit = async () => {
     justify-content: center;
   }
   
-  .form-row {
-    grid-template-columns: 1fr 1fr;
-  }
-  
   .cta-actions {
     flex-direction: row;
     justify-content: center;
+  }
+}
+
+@media (min-width: 768px) {
+  .apply-options {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .apply-info {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -1133,16 +1032,8 @@ const handleApplicationSubmit = async () => {
     grid-template-columns: repeat(3, 1fr);
   }
   
-  .process-steps {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .step {
-    flex: 1;
-    min-width: 200px;
-    max-width: 250px;
+  .process-summary {
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .hero-title {
@@ -1150,6 +1041,56 @@ const handleApplicationSubmit = async () => {
   }
   
   /* Add right margin for sticky apply box */
+}
+
+@media (min-width: 768px) {
+  .step {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .step:nth-child(even) {
+    margin-left: auto;
+    margin-right: 0;
+  }
+  
+  .step:nth-child(odd) {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  
+  .timeline-line {
+    left: 50%;
+  }
+}
+
+@media (max-width: 767px) {
+  .step {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: var(--space-6);
+  }
+  
+  .step:nth-child(even) {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  .step:nth-child(even) .step-content {
+    text-align: center !important;
+  }
+  
+  .timeline-line {
+    display: none;
+  }
+  
+  .step-arrow {
+    display: none;
+  }
+  
+  .process-summary {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 

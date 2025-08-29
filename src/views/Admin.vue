@@ -140,11 +140,8 @@
 
           <!-- Programs Tab -->
           <div v-if="activeTab === 'programs'" class="tab-content">
-            <ProgramEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Programs</h3>
-              <p>No programs found. Create your first program!</p>
-            </div>
+            <ProgramEditor v-if="showEditor" @saved="handleProgramSaved" @cancelled="showEditor = false" />
+            <ProgramList v-else @create="showEditor = true" @edit="handleProgramEdit" />
           </div>
 
           <!-- Events Tab -->
