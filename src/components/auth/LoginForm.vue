@@ -15,6 +15,7 @@
             placeholder="Enter your email"
             :disabled="loading"
             :class="{ 'error': !email && showValidation }"
+            autocomplete="username"
           />
           <span v-if="!email && showValidation" class="error-message">Email is required</span>
         </div>
@@ -27,6 +28,7 @@
             type="password"
             required
             placeholder="Enter your password"
+            autocomplete="current-password"
             :disabled="loading"
             :class="{ 'error': !password && showValidation }"
           />
@@ -75,6 +77,17 @@
           </svg>
           Continue with Google
         </button>
+        
+        <button
+          @click="signInWithEmailLink"
+          :disabled="loading"
+          class="btn-social email-link"
+        >
+          <svg viewBox="0 0 24 24" class="icon">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          Sign in with Email Link
+        </button>
       </div>
       
       <div class="signup-link">
@@ -96,7 +109,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { AuthService } from '../../services/firebase'
+import { AuthService, DatabaseService } from '../../services/firebase'
 
 const router = useRouter()
 
@@ -127,7 +140,36 @@ const handleLogin = async () => {
   
   try {
     await AuthService.signIn(email.value, password.value)
-    router.push('/dashboard')
+    
+    // Get user profile to determine redirect
+    const user = AuthService.getCurrentUser()
+    if (user) {
+      try {
+        const profile = await DatabaseService.getUserProfile(user.uid)
+        if (profile) {
+          switch (profile.role) {
+            case 'applicant':
+              router.push('/applicant')
+              break
+            case 'admin':
+            case 'staff':
+              router.push('/admin')
+              break
+            case 'alumni':
+              router.push('/alumni')
+              break
+            default:
+              router.push('/dashboard')
+          }
+        } else {
+          router.push('/dashboard')
+        }
+      } catch {
+        router.push('/dashboard')
+      }
+    } else {
+      router.push('/dashboard')
+    }
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in. Please try again.'
   } finally {
@@ -140,13 +182,48 @@ const signInWithGoogle = async () => {
   error.value = ''
   
   try {
-    // TODO: Implement Google sign-in
-    console.log('Google sign-in not implemented yet')
+    await AuthService.signInWithGoogle()
+    router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with Google.'
   } finally {
     loading.value = false
   }
+}
+
+const signInWithEmailLink = async () => {
+  if (!email.value) {
+    error.value = 'Please enter your email address first.'
+    return
+  }
+  
+  loading.value = true
+  error.value = ''
+  
+  try {
+    // Determine role based on email domain
+    const isStaff = email.value.endsWith('@staija.org')
+    const role = isStaff ? 'staff' : 'applicant'
+    
+    await AuthService.sendSignInLink(email.value, role)
+    
+    // Show success message
+    error.value = ''
+    showSuccessMessage('Check your email! We\'ve sent you a sign-in link.')
+    
+    // Clear email field
+    email.value = ''
+    
+  } catch (err: any) {
+    error.value = err.message || 'Failed to send sign-in link. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const showSuccessMessage = (message: string) => {
+  // You can implement a toast notification here
+  alert(message) // Simple implementation - replace with proper toast
 }
 
 const forgotPassword = async () => {
@@ -171,35 +248,58 @@ const forgotPassword = async () => {
 
 <style scoped>
 .login-form {
-  max-width: 400px;
+  max-width: 500px;
   margin: 0 auto;
   padding: 2rem;
 }
 
 .form-container {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--neutral-200);
-  transition: all var(--transition-normal);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 20px 20px 0 0;
 }
 
 .form-container:hover {
-  box-shadow: var(--shadow-2xl);
-  transform: translateY(-2px);
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
 }
 
 h2 {
   text-align: center;
   margin-bottom: 0.5rem;
-  color: var(--primary-600);
+  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
   text-align: center;
-  color: var(--neutral-600);
+  color: #6b7280;
   margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .form {
@@ -220,18 +320,21 @@ label {
 }
 
 input {
-  padding: 0.75rem;
-  border: 2px solid var(--neutral-300);
-  border-radius: 8px;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 input:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  transform: scale(1.02);
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+  background: white;
 }
 
 input:disabled {
@@ -272,17 +375,18 @@ input.error {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 1rem;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .btn-primary::before {
@@ -297,9 +401,9 @@ input.error {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .btn-primary:hover::before {
@@ -357,19 +461,35 @@ input.error {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 2px solid var(--neutral-300);
-  border-radius: 8px;
-  background: white;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #374151;
 }
 
 .btn-social:hover:not(:disabled) {
-  background: var(--neutral-50);
-  border-color: var(--primary-300);
-  transform: translateY(-1px);
+  background: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-social.email-link {
+  background: var(--primary-600);
+  color: white;
+  border-color: var(--primary-600);
+}
+
+.btn-social.email-link:hover:not(:disabled) {
+  background: var(--primary-700);
+  border-color: var(--primary-700);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
 }
 
 .btn-social:disabled {
@@ -452,6 +572,17 @@ input.error {
 .btn-secondary:hover {
   background: var(--secondary-700);
   transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .login-form {
+    max-width: 100%;
+    padding: 1rem;
+  }
+  
+  .form-container {
+    padding: 2rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

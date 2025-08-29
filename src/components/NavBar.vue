@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { AuthService } from '../services/firebase'
 
 const isMenuOpen = ref(false)
+const currentUser = ref<any>(null)
+const loading = ref(true)
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
@@ -10,6 +14,105 @@ const toggleMenu = () => {
 const closeMenu = () => {
   isMenuOpen.value = false
 }
+
+const router = useRouter()
+
+const goAlumni = () => { 
+  router.push({ name: 'alumni-home' }) 
+}
+
+const goLogin = () => {
+  router.push('/login')
+}
+
+const goDashboard = () => {
+  if (currentUser.value) {
+    // Check if user is staff based on email domain
+    const isStaff = currentUser.value.email?.endsWith('@staija.org')
+    
+    // Redirect based on user role or email domain
+    const role = currentUser.value.role || (isStaff ? 'staff' : 'applicant')
+    
+    switch (role) {
+      case 'applicant':
+        router.push('/applicant')
+        break
+      case 'admin':
+      case 'staff':
+        router.push('/admin')
+        break
+      case 'alumni':
+        router.push('/alumni')
+        break
+      default:
+        // Fallback: check email domain for staff
+        if (isStaff) {
+          router.push('/admin')
+        } else {
+          router.push('/applicant')
+        }
+    }
+  }
+}
+
+const logout = async () => {
+  try {
+    await AuthService.signOut()
+    currentUser.value = null
+    router.push('/')
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+}
+
+const isAuthenticated = computed(() => {
+  return currentUser.value !== null
+})
+
+const userDisplayName = computed(() => {
+  if (!currentUser.value) return ''
+  
+  // Check if user is staff based on email domain
+  const isStaff = currentUser.value.email?.endsWith('@staija.org')
+  
+  // For staff members, show "Staff" instead of email
+  if (isStaff) {
+    return currentUser.value.displayName || 'Staff'
+  }
+  
+  return currentUser.value.displayName || currentUser.value.email || 'User'
+})
+
+const loadUser = async () => {
+  try {
+    const user = AuthService.getCurrentUser()
+    if (user) {
+      // Get user profile from Firestore
+      const profile = await AuthService.getUserProfile()
+      currentUser.value = {
+        ...user,
+        role: profile?.role || 'applicant'
+      }
+    }
+  } catch (error) {
+    console.error('Error loading user:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadUser()
+  
+  // Listen for auth state changes
+  AuthService.onAuthStateChanged((user) => {
+    if (user) {
+      loadUser()
+    } else {
+      currentUser.value = null
+    }
+  })
+})
 </script>
 
 <template>
@@ -27,7 +130,15 @@ const closeMenu = () => {
           <RouterLink to="/about" class="nav-link">About</RouterLink>
           <RouterLink to="/blog" class="nav-link">Stories</RouterLink>
           <div class="navbar-ctas">
-            <RouterLink to="/programs/stepup-scholars" class="btn btn-outline btn-sm">Apply</RouterLink>
+            <div v-if="!loading">
+              <button v-if="!isAuthenticated" @click="goLogin" class="btn btn-outline btn-sm">Login</button>
+              <div v-else class="user-menu">
+                <button @click="goDashboard" class="btn btn-primary btn-sm">
+                  {{ userDisplayName }}
+                </button>
+                <button @click="logout" class="btn btn-outline btn-sm">Logout</button>
+              </div>
+            </div>
             <RouterLink to="/donate" class="btn btn-secondary btn-sm">Donate</RouterLink>
           </div>
         </nav>
@@ -60,9 +171,18 @@ const closeMenu = () => {
           <RouterLink to="/about" class="mobile-nav-link" @click="closeMenu">About</RouterLink>
           <RouterLink to="/blog" class="mobile-nav-link" @click="closeMenu">Stories</RouterLink>
           <div class="mobile-nav-cta">
-            <div class="mobile-cta-row">
-              <RouterLink to="/programs/stepup-scholars" class="btn btn-outline" @click="closeMenu">Apply</RouterLink>
-              <RouterLink to="/donate" class="btn btn-secondary" @click="closeMenu">Donate</RouterLink>
+            <div v-if="!loading">
+              <div v-if="!isAuthenticated" class="mobile-cta-row">
+                <button @click="goLogin; closeMenu()" class="btn btn-outline">Login</button>
+                <RouterLink to="/donate" class="btn btn-secondary" @click="closeMenu">Donate</RouterLink>
+              </div>
+              <div v-else class="mobile-user-menu">
+                <button @click="goDashboard; closeMenu()" class="btn btn-primary">
+                  {{ userDisplayName }}
+                </button>
+                <button @click="logout; closeMenu()" class="btn btn-outline">Logout</button>
+                <RouterLink to="/donate" class="btn btn-secondary" @click="closeMenu">Donate</RouterLink>
+              </div>
             </div>
           </div>
         </div>
@@ -125,6 +245,22 @@ const closeMenu = () => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mobile-user-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mobile-user-menu .btn {
+  width: 100%;
 }
 
 .nav-link {
