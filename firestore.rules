@@ -1,1 +1,117 @@
-rules_version = "2";nservice cloud.firestore {n  match /databases/{database}/documents {n    // Allow authenticated users to read/write their own datan    match /users/{userId} {n      allow read, write: if request.auth != null && request.auth.uid == userId;n    }n    n    // Allow staff to read all applicationsn    match /applications/{applicationId} {n      allow read, write: if request.auth != null && n        (request.auth.uid == resource.data.userId || n         request.auth.token.email.matches(".*@staija\.org"));n    }n    n    // Allow staff to read/write programsn    match /programs/{programId} {n      allow read: if true;n      allow write: if request.auth != null && n        request.auth.token.email.matches(".*@staija\.org");n    }n    n    // Allow authenticated users to create contact messagesn    match /contact_messages/{messageId} {n      allow read: if request.auth != null && n        request.auth.token.email.matches(".*@staija\.org");n      allow create: if true;n    }n  }n}
+rules_version = "2";
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function hasAnyRole(roles) {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+    }
+
+    function canAssignRole(targetRole) {
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      // Only admins can assign any role
+      return userRole == 'admin' ||
+             // Staff can assign applicant, staff, alumni, and student roles
+             (userRole == 'staff' && targetRole in ['applicant', 'staff', 'alumni', 'student']);
+    }
+
+    function isValidRoleTransition(currentRole, newRole) {
+      // Define allowed role transitions
+      let allowedTransitions = {
+        'applicant': ['student', 'alumni'],
+        'student': ['alumni', 'applicant'],
+        'alumni': ['applicant', 'student'],
+        'staff': ['admin', 'applicant'],
+        'admin': ['staff', 'applicant', 'alumni']
+      };
+      return newRole in allowedTransitions[currentRole] || currentRole == newRole;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId);
+
+      // Users can update their own profile (except role)
+      allow update: if isOwner(userId) &&
+                   request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['displayName', 'photoURL', 'program', 'applicationStatus']);
+
+      // Only admins can create users with roles
+      allow create: if hasRole('admin') ||
+                   // Allow self-registration for applicant/alumni roles
+                   (request.auth.uid == userId &&
+                    request.resource.data.role in ['applicant', 'alumni']);
+
+      // Role assignment validation
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+                   canAssignRole(request.resource.data.role) &&
+                   isValidRoleTransition(resource.data.role, request.resource.data.role);
+    }
+
+    // Applications collection rules
+    match /applications/{applicationId} {
+      // Applicants can read/write their own applications
+      allow read, write: if isOwner(resource.data.userId);
+
+      // Staff and admins can read all applications
+      allow read: if hasAnyRole(['staff', 'admin']);
+
+      // Staff and admins can update applications for review
+      allow update: if hasAnyRole(['staff', 'admin']) &&
+                   request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'feedback']);
+    }
+
+    // Programs collection rules
+    match /programs/{programId} {
+      // Everyone can read programs
+      allow read: if true;
+
+      // Only staff and admins can create/update programs
+      allow write: if hasAnyRole(['staff', 'admin']);
+    }
+
+    // Content collection rules
+    match /content/{contentId} {
+      // Everyone can read published content
+      allow read: if resource.data.status == 'published' || hasAnyRole(['content_editor', 'admin']);
+
+      // Content editors and admins can manage content
+      allow write: if hasAnyRole(['content_editor', 'admin']);
+    }
+
+    // Contact messages collection rules
+    match /contact_messages/{messageId} {
+      // Anyone can create contact messages
+      allow create: if isAuthenticated();
+
+      // Only staff and admins can read contact messages
+      allow read: if hasAnyRole(['staff', 'admin']);
+    }
+
+    // Audit logs collection rules (for tracking role changes)
+    match /audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if hasRole('admin');
+
+      // System can create audit logs
+      allow create: if hasRole('admin') || hasRole('staff');
+    }
+  }
+}

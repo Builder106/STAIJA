@@ -1,10 +1,10 @@
 <template>
   <div class="login-form">
     <div class="form-container">
-      <h2>Sign In to STAIJA</h2>
+      <h2 id="login-heading">Sign In to STAIJA</h2>
       <p class="subtitle">Access your account to manage content and connect with the community</p>
       
-      <form @submit.prevent="handleLogin" class="form">
+      <form @submit.prevent="handleLogin" class="form" role="form" aria-labelledby="login-heading">
         <div class="form-group">
           <label for="email">Email Address</label>
           <input
@@ -17,22 +17,41 @@
             :class="{ 'error': !email && showValidation }"
             autocomplete="username"
           />
-          <span v-if="!email && showValidation" class="error-message">Email is required</span>
+          <span v-if="!email && showValidation" class="error-message" role="alert">
+            <Icon icon="mdi:alert-circle" class="error-icon" />
+            Email is required
+          </span>
         </div>
         
         <div class="form-group">
           <label for="password">Password</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            required
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            :disabled="loading"
-            :class="{ 'error': !password && showValidation }"
-          />
-          <span v-if="!password && showValidation" class="error-message">Password is required</span>
+          <div class="password-input-container">
+            <input
+              id="password"
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              required
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              :disabled="loading"
+              :class="{ 'error': !password && showValidation }"
+              @input="clearValidation"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              @click="showPassword = !showPassword"
+              :disabled="loading"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <Icon v-if="showPassword" icon="mdi:eye-off" class="icon" />
+              <Icon v-else icon="mdi:eye" class="icon" />
+            </button>
+          </div>
+          <span v-if="!password && showValidation" class="error-message" role="alert">
+            <Icon icon="mdi:alert-circle" class="error-icon" />
+            Password is required
+          </span>
         </div>
         
         <div class="form-actions">
@@ -40,11 +59,12 @@
             type="submit"
             :disabled="loading || !email || !password"
             class="btn-primary"
+            :class="{ 'loading': loading }"
           >
-            <span v-if="loading">
+            <div v-if="loading" class="loading-content">
               <div class="loading-spinner"></div>
-              Signing In...
-            </span>
+              <span>Signing In...</span>
+            </div>
             <span v-else>Sign In</span>
           </button>
           
@@ -68,25 +88,24 @@
           @click="signInWithGoogle"
           :disabled="loading"
           class="btn-social google"
+          aria-label="Sign in with Google account"
         >
-          <svg viewBox="0 0 24 24" class="icon">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
+          <div class="social-icon">
+            <Icon icon="logos:google-icon" class="icon" aria-hidden="true" />
+          </div>
+          <span class="social-text">Continue with Google</span>
         </button>
-        
+
         <button
           @click="signInWithEmailLink"
           :disabled="loading"
           class="btn-social email-link"
+          aria-label="Sign in with email link"
         >
-          <svg viewBox="0 0 24 24" class="icon">
-            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-          </svg>
-          Sign in with Email Link
+          <div class="social-icon">
+            <Icon icon="mdi:email" class="icon" aria-hidden="true" />
+          </div>
+          <span class="social-text">Sign in with Email Link</span>
         </button>
       </div>
       
@@ -107,9 +126,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService } from '../../services/firebase'
+import { Icon } from 'https://esm.sh/@iconify/vue@4.1.1'
 
 const router = useRouter()
 
@@ -119,6 +139,7 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 const showValidation = ref(false)
+const showPassword = ref(false)
 
 // Watch for form changes to hide validation errors
 watch([email, password], () => {
@@ -176,6 +197,29 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+const clearValidation = () => {
+  if (showValidation.value && email.value && password.value) {
+    showValidation.value = false
+  }
+}
+
+// Keyboard navigation and accessibility helpers
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Close error modal with Escape key
+  if (event.key === 'Escape' && error.value) {
+    error.value = ''
+  }
+}
+
+// Add event listeners for keyboard navigation
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+})
 
 const signInWithGoogle = async () => {
   loading.value = true
@@ -247,10 +291,19 @@ const forgotPassword = async () => {
 </script>
 
 <style scoped>
+/* Iconify Icon Styling */
+iconify-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
 .login-form {
   max-width: 500px;
   margin: 0 auto;
   padding: 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-container {
@@ -327,6 +380,8 @@ input {
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 input:focus {
@@ -345,6 +400,84 @@ input:disabled {
 input.error {
   border-color: var(--error-500);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--error-500);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 6px;
+  animation: slideInError 0.3s ease-out;
+}
+
+.error-icon {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--error-500);
+  flex-shrink: 0;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.password-toggle:hover:not(:disabled) {
+  color: #374151;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.password-toggle .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: currentColor;
 }
 
 .error-message {
@@ -413,6 +546,34 @@ input.error {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary.loading {
+  pointer-events: none;
+}
+
+.loading-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-link {
@@ -436,7 +597,7 @@ input.error {
   position: relative;
 }
 
-.divider::before {
+/* .divider::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -444,7 +605,7 @@ input.error {
   right: 0;
   height: 1px;
   background: var(--neutral-300);
-}
+} */
 
 .divider span {
   background: white;
@@ -456,28 +617,102 @@ input.error {
   margin-bottom: 1.5rem;
 }
 
+.social-login-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.social-login-header::before,
+.social-login-header::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 3rem);
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.social-login-header::before {
+  left: 0;
+}
+
+.social-login-header::after {
+  right: 0;
+}
+
+.social-login-header span {
+  background: white;
+  padding: 0 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 .btn-social {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
   color: #374151;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.75rem;
+}
+
+.btn-social:last-child {
+  margin-bottom: 0;
+}
+
+.btn-social::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+  transition: left 0.5s;
 }
 
 .btn-social:hover:not(:disabled) {
   background: white;
   border-color: #667eea;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.btn-social:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-social:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.social-text {
+  font-weight: 500;
+  letter-spacing: 0.025em;
 }
 
 .btn-social.email-link {
@@ -605,6 +840,156 @@ input.error {
   
   .loading-spinner {
     animation: none;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .login-form {
+    padding: 1rem;
+    max-width: 100%;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form {
+    gap: 1rem;
+  }
+
+  .form-group {
+    gap: 0.375rem;
+  }
+
+  input {
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+
+  .password-toggle {
+    right: 0.75rem;
+  }
+
+  .social-login-header::before,
+  .social-login-header::after {
+    width: calc(50% - 2rem);
+  }
+
+  .social-login-header span {
+    font-size: 0.8rem;
+  }
+
+  .btn-link {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form {
+    padding: 0.5rem;
+  }
+
+  .form-container {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+  }
+
+  .form-group {
+    gap: 0.25rem;
+  }
+
+  input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .error-modal {
+    margin: 1rem;
+  }
+
+  .error-content {
+    max-width: none;
+    width: calc(100vw - 2rem);
+  }
+
+  .btn-link {
+    font-size: 0.8rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.85rem;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .btn-primary:hover:not(:disabled),
+  .btn-social:hover:not(:disabled),
+  .btn-link:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .btn-primary:active:not(:disabled),
+  .btn-social:active:not(:disabled),
+  .btn-link:active {
+    transform: scale(0.98);
+  }
+
+  input:focus {
+    transform: none;
+  }
+
+  .password-toggle:active {
+    transform: scale(0.95);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .form-container {
+    border: 2px solid currentColor;
+  }
+
+  input {
+    border-width: 2px;
+  }
+
+  .btn-primary {
+    border: 2px solid transparent;
+  }
+
+  .btn-social {
+    border-width: 2px;
   }
 }
 </style>

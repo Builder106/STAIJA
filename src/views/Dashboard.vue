@@ -63,8 +63,8 @@
         <div v-if="isContentEditor" class="dashboard-card">
           <h3>Content Management</h3>
           <div class="content-actions">
-            <button @click="navigateTo('/admin')" class="btn-primary">Admin Panel</button>
-            <button @click="createContent = true" class="btn-secondary">Create New Content</button>
+            <button @click="navigateTo('/content')" class="btn-primary">Content Dashboard</button>
+            <button v-if="canAccessAdminPanel" @click="navigateTo('/admin')" class="btn-secondary">Admin Panel</button>
           </div>
           <div class="content-stats">
             <div class="stat">
@@ -74,6 +74,25 @@
             <div class="stat">
               <span class="stat-number">{{ contentStats.draft }}</span>
               <span class="stat-label">Drafts</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Student Portal Card (for students) -->
+        <div v-if="isStudent" class="dashboard-card">
+          <h3>Student Portal</h3>
+          <div class="student-actions">
+            <button @click="$router.push('/student')" class="btn-primary">My Program</button>
+            <button @click="$router.push('/student/assignments')" class="btn-secondary">Assignments</button>
+          </div>
+          <div class="student-stats">
+            <div class="stat">
+              <span class="stat-number">{{ studentStats.modules }}</span>
+              <span class="stat-label">Modules</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">{{ studentStats.completed }}</span>
+              <span class="stat-label">Completed</span>
             </div>
           </div>
         </div>
@@ -116,7 +135,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { AuthService, DatabaseService, type UserProfile } from '../services/firebase'
+import { AuthService, DatabaseService, PermissionService, type UserProfile } from '../services/firebase'
 
 const router = useRouter()
 
@@ -141,13 +160,26 @@ const alumniStats = ref({
   stories: 2
 })
 
+const studentStats = ref({
+  modules: 12,
+  completed: 5
+})
+
 // Computed properties
 const isContentEditor = computed(() => {
-  return userProfile.value?.role === 'content_editor' || userProfile.value?.role === 'admin'
+  return userProfile.value ? PermissionService.isContentEditorRole(userProfile.value.role) : false
 })
 
 const isAlumni = computed(() => {
-  return userProfile.value?.role === 'alumni'
+  return userProfile.value ? PermissionService.isAlumniRole(userProfile.value.role) : false
+})
+
+const canAccessAdminPanel = computed(() => {
+  return userProfile.value ? PermissionService.hasPermission(userProfile.value.role, 'view_all_users') : false
+})
+
+const isStudent = computed(() => {
+  return userProfile.value ? PermissionService.isStudentRole(userProfile.value.role) : false
 })
 
 // Methods
@@ -314,14 +346,14 @@ onMounted(() => {
   font-size: 1.5rem;
 }
 
-.content-actions, .alumni-actions {
+.content-actions, .alumni-actions, .student-actions {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.content-stats, .alumni-stats {
+.content-stats, .alumni-stats, .student-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;

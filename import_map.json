@@ -13,6 +13,7 @@
     "vite": "npm:vite@^7.1.2",
     "typescript": "npm:typescript@~5.8.3",
     "vue-tsc": "npm:vue-tsc@^3.0.5",
-    "motion-v": "npm:motion-v@^0.1.4"
+    "motion-v": "npm:motion-v@^1.7.1",
+    "@iconify/vue": "npm:@iconify/vue@^4.1.1"
   }
 }

@@ -21,6 +21,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../config/firebase'
+import { PermissionService } from '../../services/firebase'
 
 type DirAlumni = {
   uid: string
@@ -35,11 +36,11 @@ const q = ref('')
 const all = ref<DirAlumni[]>([])
 
 const load = async () => {
-  // Simple role filter on client; consider an index/collection for directory
+  // Filter users who can access alumni portal using permission checks
   const snap = await getDocs(query(collection(db, 'users')))
   all.value = snap.docs
     .map(d => ({ uid: d.id, ...(d.data() as DirAlumni) }))
-    .filter(a => a.role === 'alumni' || a.role === 'admin')
+    .filter(a => a.role && PermissionService.isAlumniRole(a.role))
 }
 
 const normalized = (s?: string) => (s || '').toLowerCase()

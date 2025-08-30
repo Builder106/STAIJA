@@ -19,6 +19,7 @@ export interface AppConfig {
     environmentId: string
     deliveryToken: string
     previewToken?: string
+    managementToken?: string
   }
 }
 
@@ -33,7 +34,7 @@ const REQUIRED_ENV_VARS = [
 ] as const
 
 // Optional environment variables
-const OPTIONAL_ENV_VARS = [
+const _OPTIONAL_ENV_VARS = [
   'VITE_FIREBASE_MEASUREMENT_ID',
   'VITE_APP_URL',
   'VITE_CONTENTFUL_SPACE_ID',

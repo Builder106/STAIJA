@@ -61,12 +61,45 @@
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   @click="activeTab = 'alumni-stories'"
                   :class="['nav-item', { active: activeTab === 'alumni-stories' }]"
                 >
                   <span class="nav-icon">🌟</span>
                   Alumni Stories
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <h3>Administration</h3>
+            <ul class="nav-list">
+              <li>
+                <button
+                  @click="$router.push('/admin/users')"
+                  class="nav-item"
+                >
+                  <span class="nav-icon">👥</span>
+                  Manage Users
+                </button>
+              </li>
+              <li>
+                <button
+                  @click="$router.push('/admin/applications')"
+                  class="nav-item"
+                >
+                  <span class="nav-icon">📋</span>
+                  Applications
+                </button>
+              </li>
+              <li>
+                <button
+                  @click="$router.push('/admin/programs')"
+                  class="nav-item"
+                >
+                  <span class="nav-icon">🎓</span>
+                  Programs
                 </button>
               </li>
             </ul>

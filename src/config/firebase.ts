@@ -6,13 +6,13 @@ import { getFunctions } from 'firebase/functions'
 import { getAnalytics } from 'firebase/analytics'
 import { getPerformance } from 'firebase/performance'
 
-import { getFirebaseConfig, logEnvironmentInfo } from '../utils/env.ts'
+import { getFirebaseConfig } from '../utils/env.ts'
 
 // Get Firebase configuration from environment variables
 const firebaseConfig = getFirebaseConfig()
 
 // Log environment info in development
-logEnvironmentInfo()
+// logEnvironmentInfo()
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
