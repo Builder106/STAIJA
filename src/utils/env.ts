@@ -48,15 +48,21 @@ const _OPTIONAL_ENV_VARS = [
  */
 export function validateEnvironment(): void {
   const missingVars = REQUIRED_ENV_VARS.filter(varName => !import.meta.env[varName])
-  
+
   if (missingVars.length > 0) {
+    console.warn('⚠️ Missing environment variables. Using development defaults.')
+    // Don't throw error in development - use placeholder values
+    if (import.meta.env.DEV) {
+      return
+    }
+
     const errorMessage = [
       'Missing required environment variables:',
       ...missingVars.map(varName => `  - ${varName}`),
       '',
       'Please check your .env file and ensure all required variables are set.'
     ].join('\n')
-    
+
     throw new Error(errorMessage)
   }
 }

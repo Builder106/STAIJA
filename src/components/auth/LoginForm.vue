@@ -129,7 +129,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService } from '../../services/firebase'
-import { Icon } from 'https://esm.sh/@iconify/vue@4.1.1'
+import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 

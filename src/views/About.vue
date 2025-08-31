@@ -1,5 +1,6 @@
 <template>
   <div class="about">
+    
     <!-- Hero Section -->
     <section class="about-hero">
       <div class="container">

@@ -1,7 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { auth } from '../config/firebase'
-import { DatabaseService, PermissionService, type Permission } from '../services/firebase'
+import { auth } from '../config/firebase.ts'
+import { DatabaseService, PermissionService, type Permission } from '../services/firebase.ts'
+
+// Extend the RouteMeta interface to include our custom properties
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+    requiresAuth?: boolean
+    permissions?: Permission[]
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: () => import('../views/Home.vue'), meta: { title: 'STAIJA' } },
@@ -80,8 +89,8 @@ router.afterEach((to) => {
 
 // Global auth and permission guard
 router.beforeEach(async (to) => {
-  const requiresAuth = Boolean(to.meta && (to.meta as any).requiresAuth)
-  const requiredPermissions = ((to.meta && (to.meta as any).permissions) || []) as Permission[]
+  const requiresAuth = Boolean(to.meta?.requiresAuth)
+  const requiredPermissions = to.meta?.permissions || []
 
   if (!requiresAuth && requiredPermissions.length === 0) return true
 

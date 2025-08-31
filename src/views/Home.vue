@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Hero from '../components/Hero.vue'
 import ProgramCard from '../components/ProgramCard.vue'
-import { Motion } from 'https://esm.sh/motion-v@1.7.0'
+import { Motion } from 'https://esm.sh/motion-v@1.7.1'
 </script>
 
 <template>

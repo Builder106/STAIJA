@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Motion } from 'https://esm.sh/motion-v@1.7.0'
+import { Motion } from 'https://esm.sh/motion-v@1.7.1'
 // Use ESM import for lottie-web to keep compatibility across bundlers
 // If local dependency exists, this can be changed to: import lottie from 'lottie-web'
 import lottie from 'https://esm.sh/lottie-web@5.12.2'
