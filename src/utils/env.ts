@@ -34,14 +34,14 @@ const REQUIRED_ENV_VARS = [
 ] as const
 
 // Optional environment variables
-const _OPTIONAL_ENV_VARS = [
-  'VITE_FIREBASE_MEASUREMENT_ID',
-  'VITE_APP_URL',
-  'VITE_CONTENTFUL_SPACE_ID',
-  'VITE_CONTENTFUL_ENV_ID',
-  'VITE_CONTENTFUL_DELIVERY_TOKEN',
-  'VITE_CONTENTFUL_PREVIEW_TOKEN'
-] as const
+// const _OPTIONAL_ENV_VARS = [
+//   'VITE_FIREBASE_MEASUREMENT_ID',
+//   'VITE_APP_URL',
+//   'VITE_CONTENTFUL_SPACE_ID',
+//   'VITE_CONTENTFUL_ENV_ID',
+//   'VITE_CONTENTFUL_DELIVERY_TOKEN',
+//   'VITE_CONTENTFUL_PREVIEW_TOKEN'
+// ] as const
 
 /**
  * Validates that all required environment variables are present
