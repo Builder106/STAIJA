@@ -26,14 +26,16 @@
             </div>
             <div class="info-item">
               <label>Role:</label>
-              <span class="role-badge">{{ userProfile?.role || 'student' }}</span>
+              <span class="role-badge">{{ userProfile?.role || 'applicant' }}</span>
             </div>
             <div class="info-item">
               <label>Member Since:</label>
               <span>{{ formatDate(userProfile?.createdAt) }}</span>
             </div>
           </div>
-          <button @click="editProfile = true" class="btn-primary">Edit Profile</button>
+          <div v-if="isAlumni" class="action-row">
+            <button @click="$router.push('/alumni/profile')" class="btn-primary">Edit Alumni Profile</button>
+          </div>
         </div>
         
         <!-- Quick Actions Card -->
@@ -41,20 +43,20 @@
           <h3>Quick Actions</h3>
           <div class="quick-actions">
             <button @click="navigateTo('/programs')" class="btn-action">
-              <span class="icon">📚</span>
+              <Icon icon="lucide:book-open" class="icon" />
               View Programs
             </button>
             <button @click="navigateTo('/blog')" class="btn-action">
-              <span class="icon">📝</span>
+              <Icon icon="lucide:file-text" class="icon" />
               Read Stories
             </button>
-            <button @click="navigateTo('/donate')" class="btn-action">
-              <span class="icon">💝</span>
-              Make a Donation
+            <button @click="navigateTo('/events')" class="btn-action">
+              <Icon icon="lucide:calendar" class="icon" />
+              Events
             </button>
-            <button @click="navigateTo('/contact')" class="btn-action">
-              <span class="icon">📧</span>
-              Contact Us
+            <button @click="navigateTo('/donate')" class="btn-action">
+              <Icon icon="lucide:heart" class="icon" />
+              Donate
             </button>
           </div>
         </div>
@@ -64,6 +66,7 @@
           <h3>Content Management</h3>
           <div class="content-actions">
             <button @click="navigateTo('/content')" class="btn-primary">Content Dashboard</button>
+            <button @click="navigateTo('/content/events')" class="btn-secondary">Manage Events</button>
             <button v-if="canAccessAdminPanel" @click="navigateTo('/admin')" class="btn-secondary">Admin Panel</button>
           </div>
           <div class="content-stats">
@@ -101,8 +104,8 @@
         <div v-if="isAlumni" class="dashboard-card">
           <h3>Alumni Features</h3>
           <div class="alumni-actions">
-            <button @click="shareStory = true" class="btn-primary">Share Your Story</button>
-            <button @click="connectNetwork = true" class="btn-secondary">Connect Network</button>
+            <button @click="$router.push('/alumni')" class="btn-primary">Alumni Directory</button>
+            <button @click="$router.push('/alumni/stories')" class="btn-secondary">Share Story</button>
           </div>
           <div class="alumni-stats">
             <div class="stat">
@@ -111,7 +114,7 @@
             </div>
             <div class="stat">
               <span class="stat-number">{{ alumniStats.stories }}</span>
-              <span class="stat-label">Stories Shared</span>
+              <span class="stat-label">Stories</span>
             </div>
           </div>
         </div>
@@ -136,6 +139,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService, PermissionService, type UserProfile } from '../services/firebase'
+import { Timestamp } from 'firebase/firestore'
+import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 
@@ -143,11 +148,6 @@ const router = useRouter()
 const userProfile = ref<UserProfile | null>(null)
 const loading = ref(true)
 const error = ref('')
-const editProfile = ref(false)
-const createContent = ref(false)
-const viewContent = ref(false)
-const shareStory = ref(false)
-const connectNetwork = ref(false)
 
 // Mock data for demonstration
 const contentStats = ref({
@@ -198,7 +198,15 @@ const loadUserProfile = async () => {
     if (profile) {
       userProfile.value = profile
     } else {
-      error.value = 'User profile not found'
+      // Fallback if profile doesn't exist yet
+      userProfile.value = {
+        uid: currentUser.uid,
+        email: currentUser.email || '',
+        displayName: currentUser.displayName || 'User',
+        role: 'applicant',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
   } catch (err: any) {
     error.value = err.message || 'Failed to load user profile'
@@ -220,13 +228,24 @@ const navigateTo = (path: string) => {
   router.push(path)
 }
 
-const formatDate = (date: Date | undefined) => {
+const formatDate = (date: any) => {
   if (!date) return 'Unknown'
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+  try {
+    // Handle Firestore Timestamp
+    const d = date instanceof Timestamp ? date.toDate() : 
+              date.toDate ? date.toDate() : // Handle duck-typing if class not instance
+              new Date(date)
+              
+    if (isNaN(d.getTime())) return 'Unknown'
+    
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  } catch (e) {
+    return 'Unknown'
+  }
 }
 
 // Lifecycle
@@ -278,6 +297,8 @@ onMounted(() => {
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-card h3 {
@@ -288,6 +309,7 @@ onMounted(() => {
 
 .profile-info {
   margin-bottom: 1.5rem;
+  flex: 1;
 }
 
 .info-item {

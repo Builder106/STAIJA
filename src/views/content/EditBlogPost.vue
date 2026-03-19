@@ -81,13 +81,13 @@
               <em>I</em>
             </button>
             <button @click="insertLink" class="toolbar-btn">
-              🔗
+              <Icon icon="lucide:link" />
             </button>
             <button @click="insertImage" class="toolbar-btn">
-              🖼️
+              <Icon icon="lucide:image" />
             </button>
             <button @click="insertList" class="toolbar-btn">
-              📝
+              <Icon icon="lucide:file-edit" />
             </button>
           </div>
           <textarea
@@ -192,7 +192,7 @@
           <h3>Featured Image</h3>
           <div class="image-upload">
             <div v-if="!post.featuredImage" class="upload-placeholder">
-              <div class="upload-icon">📷</div>
+              <div class="upload-icon"><Icon icon="lucide:camera" /></div>
               <p>Click to upload image</p>
               <input
                 type="file"
@@ -215,14 +215,14 @@
       <h3>Change History</h3>
       <div class="history-list">
         <div class="history-item">
-          <div class="history-icon">✏️</div>
+          <div class="history-icon"><Icon icon="lucide:pencil" /></div>
           <div class="history-content">
             <p>Post created</p>
             <span class="history-time">{{ formatDate(post.createdAt) }}</span>
           </div>
         </div>
         <div class="history-item">
-          <div class="history-icon">📝</div>
+          <div class="history-icon"><Icon icon="lucide:file-edit" /></div>
           <div class="history-content">
             <p>Last edited</p>
             <span class="history-time">{{ formatDate(post.updatedAt) }}</span>
@@ -235,6 +235,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter, useRoute } from 'vue-router'
 import { DatabaseService } from '../../services/firebase'
 
@@ -252,6 +253,7 @@ const post = ref({
   tags: [] as string[],
   featuredImage: '',
   author: '',
+  publishDate: undefined as Date | undefined,
   createdAt: new Date(),
   updatedAt: new Date(),
   views: 0
@@ -409,12 +411,13 @@ const loadPost = async () => {
         excerpt: postData.content.substring(0, 150) + '...',
         content: postData.content,
         status: postData.status,
-        categories: [], // Categories would need to be stored separately or extracted from tags
+        categories: [],
         tags: postData.tags,
         featuredImage: '',
         author: postData.author,
-        createdAt: postData.createdAt?.toDate() || new Date(),
-        updatedAt: postData.updatedAt?.toDate() || new Date(),
+        publishDate: postData.publishDate ? new Date(postData.publishDate) : undefined,
+        createdAt: postData.createdAt ? new Date(postData.createdAt) : new Date(),
+        updatedAt: postData.updatedAt ? new Date(postData.updatedAt) : new Date(),
         views: 0
       }
     } else {

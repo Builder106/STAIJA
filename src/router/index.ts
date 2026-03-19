@@ -21,6 +21,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
   { path: '/contact', name: 'contact', component: () => import('../views/Contact.vue'), meta: { title: 'Contact' } },
+  { path: '/events', name: 'events', component: () => import('../views/Events.vue'), meta: { title: 'Events & Workshops' } },
+  { path: '/events/:id', name: 'event-detail', component: () => import('../views/EventDetail.vue'), meta: { title: 'Event Details' } },
   
   // Authentication routes
   { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { title: 'Sign In' } },
@@ -30,12 +32,12 @@ const routes: RouteRecordRaw[] = [
   { path: '/applicant', name: 'applicant-dashboard', component: () => import('../views/applicant/ApplicantDashboard.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications', name: 'applicant-applications', component: () => import('../views/applicant/ApplicantApplications.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/new', name: 'new-application', component: () => import('../views/applicant/NewApplication.vue'), meta: { title: 'New Application — STAIJA', requiresAuth: true, permissions: ['apply_to_programs'] } },
-  { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/applicant/ViewApplication.vue'), meta: { title: 'Application Details — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
+  { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/applicant/ApplicantViewApplication.vue'), meta: { title: 'Application Details — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/:id/edit', name: 'edit-application', component: () => import('../views/applicant/EditApplication.vue'), meta: { title: 'Edit Application — STAIJA', requiresAuth: true, permissions: ['edit_own_applications'] } },
 
   // Student routes
   { path: '/student', name: 'student-dashboard', component: () => import('../views/student/StudentDashboard.vue'), meta: { title: 'My Program — STAIJA', requiresAuth: true, permissions: ['access_student_portal'] } },
-  { path: '/student/program', name: 'student-program', component: () => import('../views/student/ProgramContent.vue'), meta: { title: 'Program Content — STAIJA', requiresAuth: true, permissions: ['view_program_content'] } },
+  { path: '/student/program', name: 'student-program', component: () => import('../views/student/StudentProgramContent.vue'), meta: { title: 'Program Content — STAIJA', requiresAuth: true, permissions: ['view_program_content'] } },
   { path: '/student/assignments', name: 'student-assignments', component: () => import('../views/student/Assignments.vue'), meta: { title: 'Assignments — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
   { path: '/student/mentor', name: 'student-mentor', component: () => import('../views/student/MentorSupport.vue'), meta: { title: 'Mentor Support — STAIJA', requiresAuth: true, permissions: ['access_mentor_support'] } },
   { path: '/student/progress', name: 'student-progress', component: () => import('../views/student/Progress.vue'), meta: { title: 'My Progress — STAIJA', requiresAuth: true, permissions: ['access_student_portal'] } },
@@ -43,7 +45,7 @@ const routes: RouteRecordRaw[] = [
   // Staff/Admin routes
   { path: '/admin', name: 'admin', component: () => import('../views/Admin.vue'), meta: { title: 'Admin Panel — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
   { path: '/admin/applications', name: 'admin-applications', component: () => import('../views/admin/AdminApplications.vue'), meta: { title: 'Applications Management — STAIJA', requiresAuth: true, permissions: ['view_applications'] } },
-  { path: '/admin/applications/:id', name: 'admin-view-application', component: () => import('../views/admin/ViewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
+  { path: '/admin/applications/:id', name: 'admin-view-application', component: () => import('../views/admin/AdminViewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
   { path: '/admin/applications/:id/review', name: 'admin-review-application', component: () => import('../views/admin/ReviewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
   { path: '/admin/programs', name: 'admin-programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
@@ -88,19 +90,29 @@ router.afterEach((to) => {
 })
 
 // Global auth and permission guard
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, _from, next) => {
   const requiresAuth = Boolean(to.meta?.requiresAuth)
   const requiredPermissions = to.meta?.permissions || []
 
-  if (!requiresAuth && requiredPermissions.length === 0) return true
+  // Wait for Firebase Auth to be ready (if it's still initializing)
+  await new Promise<void>(resolve => {
+    const unsubscribe = auth.onAuthStateChanged(() => {
+      unsubscribe()
+      resolve()
+    })
+  })
+
+  if (!requiresAuth && requiredPermissions.length === 0) {
+    return next()
+  }
 
   const user = auth.currentUser
   if (!user) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return next({ name: 'login', query: { redirect: to.fullPath } })
   }
 
   // If no specific permissions required, allow access
-  if (requiredPermissions.length === 0) return true
+  if (requiredPermissions.length === 0) return next()
 
   try {
     const profile = await DatabaseService.getUserProfile(user.uid)
@@ -108,33 +120,33 @@ router.beforeEach(async (to) => {
     
     if (!userRole) {
       // No role assigned, redirect to login
-      return { name: 'login' }
+      return next({ name: 'login' })
     }
     
     // Check if user has required permissions
     const hasRequiredPermissions = PermissionService.hasAnyPermission(userRole, requiredPermissions)
 
     if (hasRequiredPermissions) {
-      return true
+      return next()
     }
     
         // User doesn't have required permissions, redirect based on their role capabilities
     if (PermissionService.isStaffRole(userRole)) {
-        return { name: 'admin' }
+        return next({ name: 'admin' })
     } else if (PermissionService.isContentEditorRole(userRole)) {
-      return { name: 'content-dashboard' }
+      return next({ name: 'content-dashboard' })
     } else if (PermissionService.isStudentRole(userRole)) {
-      return { name: 'student-dashboard' }
+      return next({ name: 'student-dashboard' })
     } else if (PermissionService.isAlumniRole(userRole)) {
-        return { name: 'alumni-home' }
+        return next({ name: 'alumni-home' })
     } else if (PermissionService.hasPermission(userRole, 'view_own_applications')) {
-        return { name: 'applicant-dashboard' }
+        return next({ name: 'applicant-dashboard' })
     } else {
-      return { name: 'home' }
+      return next({ name: 'home' })
     }
   } catch (error) {
     console.error('Auth guard error:', error)
-    return { name: 'login' }
+    return next({ name: 'login' })
   }
 })
 

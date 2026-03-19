@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 </script>
 
 <template>
@@ -26,7 +27,7 @@
         <div class="cards-grid">
           <!-- Volunteer -->
           <article id="volunteer" class="card">
-            <div class="card-icon">🤝</div>
+            <div class="card-icon"><Icon icon="lucide:handshake" /></div>
             <h3 class="card-title">Volunteer or mentor</h3>
             <p class="card-text">
               Guide students through research projects, career exploration and soft‑skills. Flexible time commitments and clear curricula provided.
@@ -44,7 +45,7 @@
 
           <!-- Partner -->
           <article id="partner" class="card">
-            <div class="card-icon">🏫</div>
+            <div class="card-icon"><Icon icon="lucide:building" /></div>
             <h3 class="card-title">Partner with STAIJA</h3>
             <p class="card-text">
               Schools, labs, companies and foundations can co‑host programs, provide equipment, sponsor cohorts, or offer expert workshops.
@@ -62,7 +63,7 @@
 
           <!-- Intern -->
           <article id="intern" class="card">
-            <div class="card-icon">🧪</div>
+            <div class="card-icon"><Icon icon="lucide:flask-conical" /></div>
             <h3 class="card-title">Internships</h3>
             <p class="card-text">
               Join our team to build curriculum, coordinate programs, conduct impact research, or support operations and communications.

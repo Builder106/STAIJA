@@ -7,7 +7,7 @@
       </div>
       <div class="header-actions">
         <button @click="showAddCategoryModal = true" class="btn-primary">
-          <span class="icon">➕</span>
+          <Icon icon="lucide:plus" />
           New Category
         </button>
       </div>
@@ -39,7 +39,7 @@
           v-if="categories.length === 0"
           class="empty-state"
         >
-          <div class="empty-icon">📁</div>
+          <div class="empty-icon"><Icon icon="lucide:folder" /></div>
           <h3>No categories found</h3>
           <p>Create your first category to organize content.</p>
           <button @click="showAddCategoryModal = true" class="btn-primary">
@@ -90,7 +90,7 @@
 
       <div class="categories-grid" v-else>
         <div class="loading-state">
-          <div class="loading-icon">⏳</div>
+          <div class="loading-icon"><Icon icon="lucide:hourglass" /></div>
           <h3>Loading categories...</h3>
         </div>
       </div>
@@ -137,7 +137,7 @@
           v-if="popularTags.length === 0"
           class="empty-tags"
         >
-          <div class="empty-icon">🏷️</div>
+          <div class="empty-icon"><Icon icon="lucide:tag" /></div>
           <h3>No tags found</h3>
           <p>Add tags to organize and find content easily.</p>
         </div>
@@ -152,7 +152,7 @@
       </div>
 
       <div v-else class="loading-tags">
-        <div class="loading-icon">⏳</div>
+        <div class="loading-icon"><Icon icon="lucide:hourglass" /></div>
         <h3>Loading tags...</h3>
       </div>
     </div>
@@ -237,6 +237,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { Icon } from '@iconify/vue'
 import { DatabaseService } from '../../services/firebase'
 
 interface Category {

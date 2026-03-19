@@ -58,13 +58,13 @@
               <em>I</em>
             </button>
             <button @click="insertLink" class="toolbar-btn">
-              🔗
+              <Icon icon="lucide:link" />
             </button>
             <button @click="insertImage" class="toolbar-btn">
-              🖼️
+              <Icon icon="lucide:image" />
             </button>
             <button @click="insertList" class="toolbar-btn">
-              📝
+              <Icon icon="lucide:file-edit" />
             </button>
           </div>
           <textarea
@@ -160,7 +160,7 @@
           <h3>Featured Image</h3>
           <div class="image-upload">
             <div v-if="!post.featuredImage" class="upload-placeholder">
-              <div class="upload-icon">📷</div>
+              <div class="upload-icon"><Icon icon="lucide:camera" /></div>
               <p>Click to upload image</p>
               <input
                 type="file"
@@ -211,6 +211,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService } from '../../services/firebase'
 
@@ -280,7 +281,7 @@ const savePost = async () => {
       updatedAt: new Date()
     }
 
-    const postId = await DatabaseService.createContentItem(contentItem)
+    await DatabaseService.createContentItem(contentItem)
 
     // Show success message
     alert(`Post ${post.value.status === 'published' ? 'published' : 'saved as draft'} successfully!`)

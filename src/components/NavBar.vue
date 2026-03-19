@@ -17,10 +17,6 @@ const closeMenu = () => {
 
 const router = useRouter()
 
-const goAlumni = () => { 
-  router.push({ name: 'alumni-home' }) 
-}
-
 const goLogin = () => {
   router.push('/login')
 }
@@ -127,6 +123,7 @@ onMounted(() => {
         <!-- Desktop Navigation -->
         <nav class="navbar-nav" aria-label="Primary navigation">
           <RouterLink to="/get-involved" class="nav-link">Get Involved</RouterLink>
+          <RouterLink to="/events" class="nav-link">Events</RouterLink>
           <RouterLink to="/about" class="nav-link">About</RouterLink>
           <RouterLink to="/blog" class="nav-link">Stories</RouterLink>
           <div class="navbar-ctas">
@@ -168,6 +165,7 @@ onMounted(() => {
       >
         <div class="mobile-nav-content">
           <RouterLink to="/get-involved" class="mobile-nav-link" @click="closeMenu">Get Involved</RouterLink>
+          <RouterLink to="/events" class="mobile-nav-link" @click="closeMenu">Events</RouterLink>
           <RouterLink to="/about" class="mobile-nav-link" @click="closeMenu">About</RouterLink>
           <RouterLink to="/blog" class="mobile-nav-link" @click="closeMenu">Stories</RouterLink>
           <div class="mobile-nav-cta">

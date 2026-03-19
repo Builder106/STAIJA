@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { DatabaseService, AuthService, type Program } from '../../services/firebase'
+import { DatabaseService, AuthService } from '../../services/firebase'
 
 const props = defineProps<{
   programId?: string
@@ -139,6 +139,15 @@ const saveProgram = async () => {
 
     const programData = {
       ...program,
+      overview: '',
+      benefits: [] as string[],
+      requirements: [] as string[],
+      applicationProcess: {
+        steps: [] as Array<{ title: string; description: string; duration: string }>,
+        summary: { totalTime: '', successRate: '', responseTime: '' }
+      },
+      eligibility: { ageRange: '', educationLevel: '', location: '', otherRequirements: [] as string[] },
+      curriculum: { duration: '', format: '', topics: [] as string[], activities: [] as string[] },
       updatedBy: currentUser.uid
     }
 

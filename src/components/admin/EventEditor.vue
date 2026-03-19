@@ -1,355 +1,176 @@
 <template>
-  <div class="event-editor">
-    <div class="editor-header">
-      <h2>{{ isEditing ? 'Edit Event' : 'Create New Event' }}</h2>
-      <div class="header-actions">
-        <button @click="saveEvent" class="btn btn-primary" :disabled="saving">
+  <form @submit.prevent="save" class="event-editor">
+    <div class="header">
+      <h2>{{ isEditing ? 'Edit Event' : 'New Event' }}</h2>
+      <div class="actions">
+        <button type="button" @click="$emit('cancel')" class="btn-secondary">Cancel</button>
+        <button type="submit" class="btn-primary" :disabled="saving">
           {{ saving ? 'Saving...' : 'Save Event' }}
-        </button>
-        <button @click="cancel" class="btn btn-outline" :disabled="saving">
-          Cancel
         </button>
       </div>
     </div>
 
-    <form @submit.prevent="saveEvent" class="editor-form">
-      <div class="form-group">
-        <label for="title" class="form-label">Title *</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
-          class="form-input"
-          placeholder="Enter event title"
-          required
-          :disabled="saving"
-        />
-      </div>
+    <div class="grid">
+      <label class="full">
+        <span>Title</span>
+        <input v-model="form.title" required />
+      </label>
 
-      <div class="form-group">
-        <label for="slug" class="form-label">Slug *</label>
-        <input
-          id="slug"
-          v-model="form.slug"
-          type="text"
-          class="form-input"
-          placeholder="event-slug"
-          required
-          :disabled="saving"
-        />
-      </div>
+      <label class="full">
+        <span>Description</span>
+        <textarea v-model="form.description" rows="5" required></textarea>
+      </label>
 
-      <div class="form-group">
-        <label for="description" class="form-label">Description</label>
-        <textarea
-          id="description"
-          v-model="form.description"
-          class="form-textarea"
-          rows="4"
-          placeholder="Event description"
-          :disabled="saving"
-        ></textarea>
-      </div>
+      <label>
+        <span>Start Date & Time</span>
+        <input type="datetime-local" v-model="form.start" required />
+      </label>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="startsAt" class="form-label">Start Date & Time *</label>
-          <input
-            id="startsAt"
-            v-model="form.startsAt"
-            type="datetime-local"
-            class="form-input"
-            required
-            :disabled="saving"
-          />
-        </div>
+      <label>
+        <span>End Date & Time</span>
+        <input type="datetime-local" v-model="form.end" required />
+      </label>
 
-        <div class="form-group">
-          <label for="endsAt" class="form-label">End Date & Time</label>
-          <input
-            id="endsAt"
-            v-model="form.endsAt"
-            type="datetime-local"
-            class="form-input"
-            :disabled="saving"
-          />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="location" class="form-label">Location</label>
-        <input
-          id="location"
-          v-model="form.location"
-          type="text"
-          class="form-input"
-          placeholder="Event location"
-          :disabled="saving"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="coverImage" class="form-label">Cover Image URL</label>
-        <input
-          id="coverImage"
-          v-model="form.coverImage"
-          type="url"
-          class="form-input"
-          placeholder="https://example.com/event-image.jpg"
-          :disabled="saving"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="registrationUrl" class="form-label">Registration URL</label>
-        <input
-          id="registrationUrl"
-          v-model="form.registrationUrl"
-          type="url"
-          class="form-input"
-          placeholder="https://example.com/register"
-          :disabled="saving"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="status" class="form-label">Status *</label>
-        <select
-          id="status"
-          v-model="form.status"
-          class="form-input"
-          required
-          :disabled="saving"
-        >
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="cancelled">Cancelled</option>
+      <label>
+        <span>Timezone</span>
+        <select v-model="form.timezone">
+          <option value="Africa/Lagos">West Africa Time (Lagos)</option>
+          <option value="UTC">UTC</option>
+          <option value="America/New_York">Eastern Time (US)</option>
         </select>
-      </div>
+      </label>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary" :disabled="saving || !canSave">
-          {{ saving ? 'Saving...' : 'Save Event' }}
-        </button>
-        <button type="button" @click="cancel" class="btn btn-outline" :disabled="saving">
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
+      <label>
+        <span>Capacity</span>
+        <input type="number" v-model="form.capacity" min="1" required />
+      </label>
+
+      <label class="full">
+        <span>Location Type</span>
+        <div class="radio-group">
+          <label><input type="radio" v-model="form.location.type" value="online" /> Online</label>
+          <label><input type="radio" v-model="form.location.type" value="physical" /> Physical</label>
+        </div>
+      </label>
+
+      <label v-if="form.location.type === 'online'" class="full">
+        <span>Meeting URL</span>
+        <input v-model="form.location.url" type="url" placeholder="https://zoom.us/..." />
+      </label>
+
+      <label v-else class="full">
+        <span>Address</span>
+        <input v-model="form.location.address" placeholder="123 Main St..." />
+      </label>
+
+      <label class="full">
+        <span>Tags (comma separated)</span>
+        <input v-model="tagsInput" placeholder="Workshop, Career, Tech" />
+      </label>
+
+      <label class="full checkbox-label">
+        <input type="checkbox" v-model="form.published" />
+        <span>Publish immediately</span>
+      </label>
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { contentfulManagement } from '../../services/contentful-management'
+import { ref, computed, onMounted } from 'vue'
+import { EventService, type AppEvent } from '../../services/eventService'
+import { Timestamp } from 'firebase/firestore'
 
-// Props
-interface Props {
-  event?: {
-    id?: string
-    title: string
-    slug: string
-    description?: string
-    startsAt: string
-    endsAt?: string
-    location?: string
-    coverImage?: string
-    registrationUrl?: string
-    status: 'draft' | 'published' | 'cancelled'
-  }
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  event: undefined
-})
-
-// Emits
-const emit = defineEmits<{
-  saved: [event: any]
-  cancelled: []
+const props = defineProps<{
+  event?: AppEvent
 }>()
 
-// State
+const emit = defineEmits(['save', 'cancel'])
+
+const isEditing = computed(() => !!props.event)
 const saving = ref(false)
+const tagsInput = ref('')
+
 const form = ref({
-  title: props.event?.title || '',
-  slug: props.event?.slug || '',
-  description: props.event?.description || '',
-  startsAt: props.event?.startsAt || '',
-  endsAt: props.event?.endsAt || '',
-  location: props.event?.location || '',
-  coverImage: props.event?.coverImage || '',
-  registrationUrl: props.event?.registrationUrl || '',
-  status: props.event?.status || 'draft'
+  title: '',
+  description: '',
+  start: '',
+  end: '',
+  timezone: 'Africa/Lagos',
+  capacity: 50,
+  location: {
+    type: 'online' as 'online' | 'physical',
+    url: '',
+    address: ''
+  },
+  published: false
 })
 
-// Computed
-const isEditing = computed(() => !!props.event?.id)
-const canSave = computed(() => form.value.title.trim() && form.value.slug.trim() && form.value.startsAt)
+onMounted(() => {
+  if (props.event) {
+    const e = props.event
+    form.value = {
+      title: e.title,
+      description: e.description,
+      start: toDateTimeLocal(e.start),
+      end: toDateTimeLocal(e.end),
+      timezone: e.timezone,
+      capacity: e.capacity,
+      location: {
+        type: e.location.type,
+        url: e.location.url || '',
+        address: e.location.address || ''
+      },
+      published: e.published
+    }
+    tagsInput.value = e.tags.join(', ')
+  }
+})
 
-// Methods
-const saveEvent = async () => {
-  if (!canSave.value) return
+const toDateTimeLocal = (val: Date | Timestamp | string) => {
+  if (!val) return ''
+  const d = val instanceof Timestamp ? val.toDate() : new Date(val)
+  // Format: YYYY-MM-DDThh:mm
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
+const save = async () => {
   saving.value = true
   try {
-    const result = await contentfulManagement.createEvent({
-      title: form.value.title,
-      slug: form.value.slug,
-      description: form.value.description,
-      startsAt: form.value.startsAt,
-      endsAt: form.value.endsAt,
-      location: form.value.location,
-      coverImage: form.value.coverImage,
-      registrationUrl: form.value.registrationUrl,
-      status: form.value.status
-    })
-    
-    if (result.success) {
-      emit('saved', { id: result.entryId, ...form.value })
-    } else {
-      throw new Error(result.message)
+    const eventData = {
+      ...form.value,
+      start: new Date(form.value.start),
+      end: new Date(form.value.end),
+      tags: tagsInput.value.split(',').map(t => t.trim()).filter(Boolean),
+      createdBy: 'admin' // In real app, get from auth
     }
-  } catch (error: any) {
-    console.error('Error saving event:', error)
+
+    if (props.event?.id) {
+      await EventService.updateEvent(props.event.id, eventData)
+    } else {
+      await EventService.createEvent(eventData)
+    }
+    emit('save')
+  } catch (e) {
+    alert('Failed to save event: ' + (e as Error).message)
   } finally {
     saving.value = false
   }
 }
-
-const cancel = () => {
-  emit('cancelled')
-}
 </script>
 
 <style scoped>
-.event-editor {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.editor-header h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.editor-form {
-  background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #495057;
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s ease;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #1976d2;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e9ecef;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background-color: #1976d2;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #1565c0;
-}
-
-.btn-primary:disabled {
-  background-color: #bdbdbd;
-  cursor: not-allowed;
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.btn-outline:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.btn-outline:disabled {
-  color: #bdbdbd;
-  border-color: #e9ecef;
-  cursor: not-allowed;
-}
-
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
+.event-editor { background: white; padding: 2rem; border-radius: 8px; max-width: 800px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.full { grid-column: 1 / -1; }
+label { display: flex; flex-direction: column; gap: 0.5rem; font-weight: 500; }
+input, textarea, select { padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; }
+.actions { display: flex; gap: 1rem; }
+.btn-primary { background: var(--color-primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; }
+.btn-secondary { background: #eee; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; }
+.radio-group { display: flex; gap: 1.5rem; font-weight: normal; }
+.radio-group label { flex-direction: row; align-items: center; }
+.checkbox-label { flex-direction: row; align-items: center; gap: 1rem; }
 </style>

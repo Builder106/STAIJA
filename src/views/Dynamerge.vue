@@ -5,7 +5,7 @@
       <div class="container">
         <div class="hero-content">
           <div class="hero-badge">
-            <span class="badge-text">⚡ Innovation & Collaboration</span>
+            <span class="badge-text"><Icon icon="lucide:zap" class="inline-icon" /> Innovation & Collaboration</span>
           </div>
           <h1 class="hero-title">Dynamerge</h1>
           <p class="hero-subtitle">
@@ -69,28 +69,28 @@
               <h3 class="card-title">Program Features</h3>
               <div class="features-list">
                 <div class="feature">
-                  <div class="feature-icon">🌍</div>
+                  <div class="feature-icon"><Icon icon="lucide:globe" /></div>
                   <div class="feature-content">
                     <h4 class="feature-title">Pan-African Reach</h4>
                     <p class="feature-text">Students from across Africa collaborate virtually</p>
                   </div>
                 </div>
                 <div class="feature">
-                  <div class="feature-icon">🔬</div>
+                  <div class="feature-icon"><Icon icon="lucide:microscope" /></div>
                   <div class="feature-content">
                     <h4 class="feature-title">Research Projects</h4>
                     <p class="feature-text">Hands-on research with real-world applications</p>
                   </div>
                 </div>
                 <div class="feature">
-                  <div class="feature-icon">🤝</div>
+                  <div class="feature-icon"><Icon icon="lucide:handshake" /></div>
                   <div class="feature-content">
                     <h4 class="feature-title">Expert Mentorship</h4>
                     <p class="feature-text">Guidance from leading researchers and professionals</p>
                   </div>
                 </div>
                 <div class="feature">
-                  <div class="feature-icon">💡</div>
+                  <div class="feature-icon"><Icon icon="lucide:lightbulb" /></div>
                   <div class="feature-content">
                     <h4 class="feature-title">Innovation Focus</h4>
                     <p class="feature-text">Emphasis on creative problem-solving and innovation</p>
@@ -110,7 +110,7 @@
           <h2 class="section-title">Program Structure</h2>
           <div class="structure-grid">
             <div class="structure-card">
-              <div class="card-icon">📚</div>
+              <div class="card-icon"><Icon icon="lucide:book-open" /></div>
               <h3 class="card-title">Phase 1: Foundation</h3>
               <p class="card-text">
                 Introduction to research methodologies, team building, and project ideation. 
@@ -124,7 +124,7 @@
               </ul>
             </div>
             <div class="structure-card">
-              <div class="card-icon">🔬</div>
+              <div class="card-icon"><Icon icon="lucide:microscope" /></div>
               <h3 class="card-title">Phase 2: Research</h3>
               <p class="card-text">
                 Intensive research phase where teams work on their projects with guidance 
@@ -138,7 +138,7 @@
               </ul>
             </div>
             <div class="structure-card">
-              <div class="card-icon">🎯</div>
+              <div class="card-icon"><Icon icon="lucide:target" /></div>
               <h3 class="card-title">Phase 3: Innovation</h3>
               <p class="card-text">
                 Final phase focused on refining solutions, preparing presentations, and 
@@ -163,7 +163,7 @@
           <h2 class="section-title">Eligibility & Timeline</h2>
           <div class="eligibility-grid">
             <div class="eligibility-card">
-              <div class="card-icon">🎓</div>
+              <div class="card-icon"><Icon icon="lucide:graduation-cap" /></div>
               <h3 class="card-title">Who Can Apply</h3>
               <ul class="eligibility-list">
                 <li>High school students across Africa</li>
@@ -174,7 +174,7 @@
               </ul>
             </div>
             <div class="eligibility-card">
-              <div class="card-icon">⏰</div>
+              <div class="card-icon"><Icon icon="lucide:clock" /></div>
               <h3 class="card-title">Program Duration</h3>
               <ul class="eligibility-list">
                 <li>Summer boot camp format</li>
@@ -185,7 +185,7 @@
               </ul>
             </div>
             <div class="eligibility-card">
-              <div class="card-icon">📅</div>
+              <div class="card-icon"><Icon icon="lucide:calendar" /></div>
               <h3 class="card-title">Application Timeline</h3>
               <ul class="eligibility-list">
                 <li><strong>Interest Registration:</strong> Open year-round</li>
@@ -418,6 +418,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const isSubmitting = ref(false)
 

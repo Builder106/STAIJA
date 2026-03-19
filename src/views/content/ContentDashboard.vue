@@ -113,7 +113,7 @@
       <h3>Recent Activity</h3>
       <div class="activity-list">
         <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
-          <div class="activity-icon">{{ activity.icon }}</div>
+          <div class="activity-icon"><Icon :icon="activity.icon" /></div>
           <div class="activity-content">
             <p class="activity-text">{{ activity.text }}</p>
             <span class="activity-time">{{ activity.time }}</span>
@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { Icon } from '@iconify/vue'
 
 // Mock data - in a real app, this would come from your backend
 const blogStats = ref({
@@ -152,31 +152,29 @@ const categoryStats = ref({
 const recentActivities = ref([
   {
     id: 1,
-    icon: '📝',
+    icon: 'lucide:file-edit',
     text: 'Published new blog post: "The Future of Tech Education"',
     time: '2 hours ago'
   },
   {
     id: 2,
-    icon: '🎓',
+    icon: 'lucide:graduation-cap',
     text: 'Updated StepUp Scholars program description',
     time: '1 day ago'
   },
   {
     id: 3,
-    icon: '📅',
+    icon: 'lucide:calendar',
     text: 'Created new workshop event: "Career Planning 101"',
     time: '2 days ago'
   },
   {
     id: 4,
-    icon: '🏷️',
+    icon: 'lucide:tag',
     text: 'Added new category: "Mentorship Programs"',
     time: '3 days ago'
   }
 ])
-
-const router = useRouter()
 
 onMounted(() => {
   // In a real app, you would fetch actual stats here

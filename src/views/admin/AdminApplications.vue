@@ -64,7 +64,7 @@
       </div>
 
       <div v-else-if="filteredApplications.length === 0" class="empty-state">
-        <div class="empty-icon">📋</div>
+        <div class="empty-icon"><Icon icon="lucide:clipboard-list" /></div>
         <h3>No applications found</h3>
         <p v-if="hasFilters">
           No applications match your current filters. Try adjusting your search criteria.
@@ -174,6 +174,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 
@@ -310,7 +311,7 @@ const clearSelection = () => {
   selectedApplications.value = []
 }
 
-const bulkUpdateStatus = async (status: string) => {
+const bulkUpdateStatus = async (status: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected') => {
   if (selectedApplications.value.length === 0) return
 
   try {

@@ -7,7 +7,7 @@
       </div>
       <div class="header-actions">
         <button @click="$router.push('/content/blog/new')" class="btn-primary">
-          <span class="icon">➕</span>
+          <Icon icon="lucide:plus" />
           New Post
         </button>
       </div>
@@ -49,7 +49,7 @@
           v-if="filteredPosts.length === 0"
           class="empty-state"
         >
-          <div class="empty-icon">📝</div>
+          <div class="empty-icon"><Icon icon="lucide:file-edit" /></div>
           <h3>No posts found</h3>
           <p>Create your first blog post to get started.</p>
           <button @click="$router.push('/content/blog/new')" class="btn-primary">
@@ -109,7 +109,7 @@
 
       <div class="table-body" v-else>
         <div class="loading-state">
-          <div class="loading-icon">⏳</div>
+          <div class="loading-icon"><Icon icon="lucide:hourglass" /></div>
           <h3>Loading posts...</h3>
         </div>
       </div>
@@ -128,8 +128,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { DatabaseService } from '../../services/firebase'
 
 interface BlogPost {
@@ -307,15 +307,15 @@ const loadPosts = async () => {
   try {
     const postsData = await DatabaseService.getContentItems('blog', undefined)
     posts.value = postsData.map(post => ({
-      id: post.id,
+      id: post.id || '',
       title: post.title,
       excerpt: post.content.substring(0, 150) + '...',
       author: post.author,
       status: post.status,
       tags: post.tags,
-      publishDate: post.publishDate?.toDate(),
-      createdAt: post.createdAt?.toDate() || new Date(),
-      views: 0 // This would need to be tracked separately
+      publishDate: post.publishDate ? new Date(post.publishDate) : undefined,
+      createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+      views: 0
     }))
   } catch (error) {
     console.error('Error loading posts:', error)

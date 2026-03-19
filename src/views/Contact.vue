@@ -6,11 +6,11 @@
         <p class="subtitle">Have questions about our programs? Want to collaborate? We'd love to hear from you.</p>
         <div class="contact-info">
           <div class="info-item">
-            <span class="icon">📧</span>
+            <span class="icon"><Icon icon="lucide:mail" /></span>
             <a href="mailto:hello@staija.org" class="link">hello@staija.org</a>
           </div>
           <div class="info-item">
-            <span class="icon">📍</span>
+            <span class="icon"><Icon icon="lucide:map-pin" /></span>
             <span>Lagos, Nigeria</span>
           </div>
         </div>
@@ -89,7 +89,7 @@
             {{ submitting ? 'Sending…' : 'Send message' }}
           </button>
           <p v-if="success" class="success" role="status">
-            <span class="success-icon">✓</span>
+            <Icon icon="lucide:check" class="success-icon" />
             Message sent successfully! We'll get back to you within 24 hours.
           </p>
           <p v-if="submitError" class="error" role="alert">{{ submitError }}</p>
@@ -102,6 +102,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
 

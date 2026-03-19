@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import { DatabaseService, type Application } from '../../services/firebase'
 
 const router = useRouter()
 const route = useRoute()
@@ -75,7 +75,7 @@ const loading = ref(true)
 const error = ref('')
 
 const form = ref({
-  program: '',
+  program: '' as 'stepup_scholars' | 'dynamerge' | '',
   personalInfo: {
     firstName: '',
     lastName: '',
@@ -106,7 +106,7 @@ const loadApplication = async () => {
 
 const saveDraft = async () => {
   if (application.value?.id) {
-    await DatabaseService.updateApplication(application.value.id, form.value)
+    await DatabaseService.updateApplication(application.value.id, form.value as unknown as Partial<Application>)
     router.push('/applicant/applications')
   }
 }
@@ -117,7 +117,7 @@ const handleSubmit = async () => {
       ...form.value,
       status: 'submitted',
       submittedAt: new Date()
-    })
+    } as unknown as Partial<Application>)
     router.push('/applicant/applications')
   }
 }

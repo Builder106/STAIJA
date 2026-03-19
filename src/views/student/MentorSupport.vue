@@ -17,15 +17,15 @@
 
       <div class="contact-options">
         <button class="btn-primary">
-          <span class="icon">💬</span>
+          <span class="icon"><Icon icon="lucide:message-circle" /></span>
           Schedule Meeting
         </button>
         <button class="btn-secondary">
-          <span class="icon">✉️</span>
+          <span class="icon"><Icon icon="lucide:mail" /></span>
           Send Message
         </button>
         <button class="btn-secondary">
-          <span class="icon">📅</span>
+          <span class="icon"><Icon icon="lucide:calendar" /></span>
           View Availability
         </button>
       </div>
@@ -35,14 +35,14 @@
       <h3>Recent Activity</h3>
       <div class="activity-list">
         <div class="activity-item">
-          <div class="activity-icon">💬</div>
+          <div class="activity-icon"><Icon icon="lucide:message-circle" /></div>
           <div class="activity-content">
             <p>You scheduled a meeting for Dec 18, 2024</p>
             <span class="activity-time">2 days ago</span>
           </div>
         </div>
         <div class="activity-item">
-          <div class="activity-icon">📧</div>
+          <div class="activity-icon"><Icon icon="lucide:mail" /></div>
           <div class="activity-content">
             <p>Mentor sent feedback on your research paper</p>
             <span class="activity-time">1 week ago</span>
@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-// Placeholder component - to be implemented with actual mentor functionality
+import { Icon } from '@iconify/vue'
 </script>
 
 <style scoped>

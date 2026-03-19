@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 
 type Stat = { label: string; value: number; suffix?: string }
 
@@ -58,16 +59,16 @@ onMounted(() => {
         <div class="divider"></div>
         <div class="partners" aria-label="Partner logos">
           <div class="track">
-            <div class="partner-logo">🎓 Universities</div>
-            <div class="partner-logo">🔬 Research Labs</div>
-            <div class="partner-logo">🏢 Tech Companies</div>
-            <div class="partner-logo">🌍 NGOs</div>
-            <div class="partner-logo">💼 Foundations</div>
-            <div class="partner-logo">🏛️ Government</div>
-            <div class="partner-logo">🎓 Universities</div>
-            <div class="partner-logo">🔬 Research Labs</div>
-            <div class="partner-logo">🏢 Tech Companies</div>
-            <div class="partner-logo">🌍 NGOs</div>
+            <div class="partner-logo"><Icon icon="lucide:graduation-cap" class="inline-icon" /> Universities</div>
+            <div class="partner-logo"><Icon icon="lucide:microscope" class="inline-icon" /> Research Labs</div>
+            <div class="partner-logo"><Icon icon="lucide:building-2" class="inline-icon" /> Tech Companies</div>
+            <div class="partner-logo"><Icon icon="lucide:globe" class="inline-icon" /> NGOs</div>
+            <div class="partner-logo"><Icon icon="lucide:briefcase" class="inline-icon" /> Foundations</div>
+            <div class="partner-logo"><Icon icon="lucide:landmark" class="inline-icon" /> Government</div>
+            <div class="partner-logo"><Icon icon="lucide:graduation-cap" class="inline-icon" /> Universities</div>
+            <div class="partner-logo"><Icon icon="lucide:microscope" class="inline-icon" /> Research Labs</div>
+            <div class="partner-logo"><Icon icon="lucide:building-2" class="inline-icon" /> Tech Companies</div>
+            <div class="partner-logo"><Icon icon="lucide:globe" class="inline-icon" /> NGOs</div>
           </div>
         </div>
       </div>

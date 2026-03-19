@@ -79,7 +79,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { contentfulManagement } from '../../services/contentful-management'
 
 // Props
 interface Props {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 
 type Post = {
   id: string
@@ -107,7 +108,7 @@ onMounted(() => {
         
         <!-- Empty State -->
         <div v-if="filteredPosts.length === 0" class="empty-state" style="grid-column: 1 / -1;">
-          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-icon"><Icon icon="lucide:file-edit" /></div>
           <h3 class="empty-state-title">No stories found</h3>
           <p class="empty-state-text">
             Try adjusting your filters or check back later for new content from our community.

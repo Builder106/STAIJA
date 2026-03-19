@@ -7,7 +7,7 @@
 
     <div class="content-grid">
       <div class="content-card">
-        <h3>📚 Curriculum Materials</h3>
+        <h3><Icon icon="lucide:book-open" class="inline-icon" /> Curriculum Materials</h3>
         <p>Access course materials, lectures, and study guides</p>
         <div class="progress-bar">
           <div class="progress-fill" style="width: 65%"></div>
@@ -16,13 +16,13 @@
       </div>
 
       <div class="content-card">
-        <h3>🎯 Program Resources</h3>
+        <h3><Icon icon="lucide:target" class="inline-icon" /> Program Resources</h3>
         <p>Download templates, tools, and additional resources</p>
         <button class="btn-primary">Browse Resources</button>
       </div>
 
       <div class="content-card">
-        <h3>📖 Reading Materials</h3>
+        <h3><Icon icon="lucide:book-open" class="inline-icon" /> Reading Materials</h3>
         <p>Access recommended readings and research papers</p>
         <button class="btn-secondary">View Library</button>
       </div>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-// Placeholder component - to be implemented with actual program content
+import { Icon } from '@iconify/vue'
 </script>
 
 <style scoped>

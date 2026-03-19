@@ -346,7 +346,7 @@
     <!-- Success Modal -->
     <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal">
       <div class="modal-content" @click.stop>
-        <div class="success-icon">✅</div>
+        <div class="success-icon"><Icon icon="lucide:check-circle" /></div>
         <h3>Application Submitted Successfully!</h3>
         <p>Your application has been submitted and is now under review. You will receive updates via email.</p>
         <div class="modal-actions">
@@ -367,7 +367,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import { Icon } from '@iconify/vue'
+import { DatabaseService, AuthService } from '../../services/firebase'
 
 const router = useRouter()
 

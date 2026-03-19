@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="editor-form">
+    <form @submit.prevent="() => handleSubmit()" class="editor-form">
       <div class="form-group">
         <label for="title" class="form-label">Title *</label>
         <input
@@ -98,7 +98,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn btn-ghost" :disabled="saving">
+        <button type="button" @click="$emit('cancelled')" class="btn btn-ghost" :disabled="saving">
           Cancel
         </button>
         <button type="submit" class="btn btn-primary" :disabled="saving || !canPublish">
@@ -117,6 +117,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { contentfulManagement, type BlogPostData } from '../../services/contentful-management'
+
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt?: string
+  tags?: string[]
+  publishDate?: string
+  status: 'draft' | 'published' | 'archived'
+  author: string
+}
 
 interface Props {
   post?: BlogPost

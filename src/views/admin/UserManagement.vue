@@ -15,7 +15,7 @@
             placeholder="Search by name, email, or role..."
             @input="debouncedSearch"
           >
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><Icon icon="lucide:search" /></span>
         </div>
 
         <div class="filter-tabs">
@@ -226,7 +226,8 @@
               >
                 <span class="permission-name">{{ permission.replace('_', ' ') }}</span>
                 <span class="permission-status">
-                  {{ hasPermission(permission) ? '✓' : '✗' }}
+                  <Icon v-if="hasPermission(permission)" icon="lucide:check" />
+                  <Icon v-else icon="lucide:x" />
                 </span>
               </div>
             </div>
@@ -243,7 +244,7 @@
                 :key="log.id"
                 class="activity-item"
               >
-                <div class="activity-icon">{{ getActivityIcon(log.type) }}</div>
+                <div class="activity-icon"><Icon :icon="getActivityIcon(log.type)" /></div>
                 <div class="activity-content">
                   <div class="activity-text">{{ getActivityText(log) }}</div>
                   <div class="activity-time">{{ formatDate(log.timestamp) }}</div>
@@ -261,7 +262,7 @@
 
     <!-- Success/Error Messages -->
     <div v-if="message" class="message-toast" :class="message.type">
-      <span class="message-icon">{{ message.type === 'success' ? '✓' : '⚠' }}</span>
+      <span class="message-icon"><Icon :icon="message.type === 'success' ? 'lucide:check' : 'lucide:alert-triangle'" /></span>
       <span class="message-text">{{ message.text }}</span>
       <button @click="message = null" class="message-close">×</button>
     </div>
@@ -270,7 +271,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { AuthService, DatabaseService, PermissionService, AuditService, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
+import { Icon } from '@iconify/vue'
+import { AuthService, PermissionService, AuditService, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
 import { auth } from '../../config/firebase'
 
 // Reactive data
@@ -411,7 +413,7 @@ const getInitials = (name: string | undefined) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-const getUserStatus = (user: UserProfile) => {
+const getUserStatus = (_user: UserProfile) => {
   // In a real app, you would check last login, etc.
   return 'active'
 }
@@ -509,9 +511,9 @@ const getRoleDescription = (role: UserRole) => {
 
 const getActivityIcon = (type: string) => {
   switch (type) {
-    case 'role_change': return '🔄'
-    case 'permission_check': return '🔒'
-    default: return '📝'
+    case 'role_change': return 'lucide:refresh-cw'
+    case 'permission_check': return 'lucide:lock'
+    default: return 'lucide:file-edit'
   }
 }
 

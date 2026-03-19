@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+</script>
+
 <template>
   <div class="about">
     
@@ -27,21 +31,21 @@
             </p>
             <div class="mission-values">
               <div class="value">
-                <div class="value-icon">🔬</div>
+                <div class="value-icon"><Icon icon="lucide:microscope" /></div>
                 <div class="value-content">
                   <h3 class="value-title">Scientific Excellence</h3>
                   <p class="value-text">Promoting rigorous research and evidence-based thinking</p>
                 </div>
               </div>
               <div class="value">
-                <div class="value-icon">🤝</div>
+                <div class="value-icon"><Icon icon="lucide:handshake" /></div>
                 <div class="value-content">
                   <h3 class="value-title">Collaborative Community</h3>
                   <p class="value-text">Building networks that transcend borders and disciplines</p>
                 </div>
               </div>
               <div class="value">
-                <div class="value-icon">🌱</div>
+                <div class="value-icon"><Icon icon="lucide:sprout" /></div>
                 <div class="value-content">
                   <h3 class="value-title">Sustainable Impact</h3>
                   <p class="value-text">Creating lasting change through education and mentorship</p>
@@ -79,7 +83,7 @@
         
         <div class="structure-grid">
           <div class="structure-card">
-            <div class="card-icon">👥</div>
+            <div class="card-icon"><Icon icon="lucide:users" /></div>
             <h3 class="card-title">Collaborative Leadership</h3>
             <p class="card-text">
               Our flat organizational structure ensures that every voice is heard and valued, 
@@ -87,7 +91,7 @@
             </p>
           </div>
           <div class="structure-card">
-            <div class="card-icon">⏰</div>
+            <div class="card-icon"><Icon icon="lucide:clock" /></div>
             <h3 class="card-title">Flexible Commitment</h3>
             <p class="card-text">
               Internships typically last a year and can be extended, requiring less than 2 hours 
@@ -95,7 +99,7 @@
             </p>
           </div>
           <div class="structure-card">
-            <div class="card-icon">🎯</div>
+            <div class="card-icon"><Icon icon="lucide:target" /></div>
             <h3 class="card-title">Equal Voice</h3>
             <p class="card-text">
               Every team member, regardless of their role, has an equal say in organizational 

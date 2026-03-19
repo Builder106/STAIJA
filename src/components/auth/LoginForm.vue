@@ -97,6 +97,18 @@
         </button>
 
         <button
+          @click="signInWithGitHub"
+          :disabled="loading"
+          class="btn-social github"
+          aria-label="Sign in with GitHub account"
+        >
+          <div class="social-icon">
+            <Icon icon="mdi:github" class="icon" aria-hidden="true" />
+          </div>
+          <span class="social-text">Continue with GitHub</span>
+        </button>
+
+        <button
           @click="signInWithEmailLink"
           :disabled="loading"
           class="btn-social email-link"
@@ -230,6 +242,20 @@ const signInWithGoogle = async () => {
     router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with Google.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const signInWithGitHub = async () => {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    await AuthService.signInWithGitHub()
+    router.push('/dashboard')
+  } catch (err: any) {
+    error.value = err.message || 'Failed to sign in with GitHub.'
   } finally {
     loading.value = false
   }

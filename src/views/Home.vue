@@ -51,7 +51,7 @@ import { Motion } from 'https://esm.sh/motion-v@1.7.1'
               title="StepUp Scholars"
               text="Hands-on research training and mentorship for students. Join a supportive cohort community and develop critical scientific skills."
               href="/programs/stepup-scholars"
-              icon="🔬"
+              icon="lucide:microscope"
               :featured="true"
             />
           </Motion>
@@ -68,7 +68,7 @@ import { Motion } from 'https://esm.sh/motion-v@1.7.1'
               title="Dynamerge"
               text="Collaboration and innovation for emerging researchers. Foster interdisciplinary connections and breakthrough discoveries."
               href="/programs/dynamerge"
-              icon="⚡"
+              icon="lucide:zap"
             />
           </Motion>
 
@@ -84,7 +84,7 @@ import { Motion } from 'https://esm.sh/motion-v@1.7.1'
               title="Get Involved"
               text="Volunteer, partner or intern with the STAIJA community. Make a meaningful impact on scientific education in Africa."
               href="/get-involved"
-              icon="🤝"
+              icon="lucide:handshake"
             />
           </Motion>
         </div>

@@ -5,7 +5,7 @@
       <div class="container">
         <div class="hero-content">
           <div class="hero-badge">
-            <span class="badge-text">💝 Support Our Mission</span>
+            <span class="badge-text"><Icon icon="lucide:heart" class="inline-icon" /> Support Our Mission</span>
           </div>
           <h1 class="hero-title">Fuel Research & Opportunity</h1>
           <p class="hero-subtitle">
@@ -386,11 +386,11 @@
     <div v-if="showConfirmation" class="modal-overlay">
       <div class="modal-content confirmation-modal" @click.stop>
         <div class="modal-header">
-          <h3 class="modal-title">Thank You for Your Donation! 🎉</h3>
+          <h3 class="modal-title">Thank You for Your Donation!</h3>
         </div>
         <div class="modal-body">
           <div class="confirmation-content">
-            <div class="confirmation-icon">✅</div>
+            <div class="confirmation-icon"><Icon icon="lucide:check-circle" /></div>
             <h4 class="confirmation-amount">₦{{ formatAmount(selectedAmount) }}</h4>
             <p class="confirmation-message">
               Your donation has been processed successfully. You will receive a receipt via email within 24 hours.
@@ -409,6 +409,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const isSubmitting = ref(false)
 const selectedTier = ref('workshop')

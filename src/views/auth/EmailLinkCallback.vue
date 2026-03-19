@@ -8,7 +8,7 @@
       </div>
 
       <div v-else-if="error" class="error-state">
-        <div class="error-icon">⚠️</div>
+        <div class="error-icon"><Icon icon="lucide:alert-triangle" /></div>
         <h2>Authentication Error</h2>
         <p>{{ error }}</p>
         <div class="error-actions">
@@ -18,7 +18,7 @@
       </div>
 
       <div v-else-if="emailPrompt" class="email-prompt">
-        <div class="prompt-icon">📧</div>
+        <div class="prompt-icon"><Icon icon="lucide:mail" /></div>
         <h2>Confirm Your Email</h2>
         <p>Please provide your email address to complete the sign-in process.</p>
         
@@ -42,7 +42,7 @@
       </div>
 
       <div v-else-if="success" class="success-state">
-        <div class="success-icon">✅</div>
+        <div class="success-icon"><Icon icon="lucide:check-circle" /></div>
         <h2>Sign In Successful!</h2>
         <p>Welcome back to STAIJA. Redirecting you to your dashboard...</p>
       </div>
@@ -53,6 +53,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getAdditionalUserInfo } from 'firebase/auth'
+import { Icon } from '@iconify/vue'
 import { AuthService } from '../../services/firebase'
 
 const router = useRouter()
@@ -73,12 +75,10 @@ const completeSignIn = async () => {
   try {
     const result = await AuthService.completeSignInWithEmailLink(email.value, window.location.href)
     
-    // Check if user is new and needs profile setup
-    const additionalUserInfo = result.additionalUserInfo
-    if (additionalUserInfo?.isNewUser) {
-      // Create user profile with stored role or default
+    const additionalInfo = getAdditionalUserInfo(result)
+    if (additionalInfo?.isNewUser) {
       const role = AuthService.getStoredRole() || 'applicant'
-      const displayName = email.value.split('@')[0] // Use email prefix as display name
+      const displayName = email.value.split('@')[0]
       
       await AuthService.createUserProfile(result.user, displayName, role as 'applicant' | 'staff' | 'alumni')
     }

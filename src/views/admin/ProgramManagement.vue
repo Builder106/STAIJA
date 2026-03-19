@@ -114,7 +114,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import ProgramService, { type Program } from '../../services/programService'
+import { ProgramService } from '../../services/programService'
+import type { Program } from '../../services/firebase'
 
 const router = useRouter()
 
@@ -146,7 +147,7 @@ const updateProgramDates = async (programId: string, dates: any) => {
   }
 }
 
-const updateProgramStatus = async (programId: string, status: string) => {
+const updateProgramStatus = async (programId: string, status: 'active' | 'inactive' | 'draft') => {
   try {
     await ProgramService.updateProgram(programId, { status })
     showUpdateMessage('Program status updated successfully!', 'success')

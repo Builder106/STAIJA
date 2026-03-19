@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
+
 defineProps<{ 
   title: string
   text: string
@@ -12,7 +14,7 @@ defineProps<{
   <article class="program-card" :class="{ 'program-card--featured': featured }">
     <div class="program-card__header">
       <div class="program-card__icon">
-        <span v-if="icon">{{ icon }}</span>
+        <Icon v-if="icon" :icon="icon" />
         <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>

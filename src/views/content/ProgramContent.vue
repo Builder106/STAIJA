@@ -7,7 +7,7 @@
       </div>
       <div class="header-actions">
         <button @click="$router.push('/content/programs/new')" class="btn-primary">
-          <span class="icon">➕</span>
+          <Icon icon="lucide:plus" />
           New Program Content
         </button>
       </div>
@@ -51,7 +51,7 @@
         v-if="filteredContent.length === 0"
         class="empty-state"
       >
-        <div class="empty-icon">📚</div>
+        <div class="empty-icon"><Icon icon="lucide:book-open" /></div>
         <h3>No program content found</h3>
         <p>Create content for programs to help students learn and grow.</p>
         <button @click="$router.push('/content/programs/new')" class="btn-primary">
@@ -84,19 +84,19 @@
 
         <div class="content-details">
           <div class="detail-item">
-            <span class="detail-icon">👤</span>
+            <span class="detail-icon"><Icon icon="lucide:user" /></span>
             <span>{{ content.author }}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-icon">📅</span>
+            <span class="detail-icon"><Icon icon="lucide:calendar" /></span>
             <span>{{ formatDate(content.createdAt) }}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-icon">👁️</span>
+            <span class="detail-icon"><Icon icon="lucide:eye" /></span>
             <span>{{ content.views }} views</span>
           </div>
           <div class="detail-item">
-            <span class="detail-icon">📊</span>
+            <span class="detail-icon"><Icon icon="lucide:bar-chart-2" /></span>
             <span>{{ content.completionRate }}% completion</span>
           </div>
         </div>
@@ -132,7 +132,7 @@
 
     <div class="content-grid" v-else>
       <div class="loading-state">
-        <div class="loading-icon">⏳</div>
+        <div class="loading-icon"><Icon icon="lucide:hourglass" /></div>
         <h3>Loading program content...</h3>
       </div>
     </div>
@@ -183,6 +183,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { DatabaseService } from '../../services/firebase'
 
@@ -195,7 +196,7 @@ interface ProgramContent {
   program: 'stepup_scholars' | 'dynamerge'
   type: 'lesson' | 'assignment' | 'resource' | 'video'
   author: string
-  status: 'draft' | 'published'
+  status: 'draft' | 'published' | 'archived'
   tags: string[]
   createdAt: Date
   views: number
@@ -282,16 +283,16 @@ const editContent = (content: ProgramContent) => {
   router.push(`/content/programs/${content.id}/edit`)
 }
 
-const duplicateContent = (content: ProgramContent) => {
-  const newContent: ProgramContent = {
-    ...content,
+const duplicateContent = (item: ProgramContent) => {
+  const newItem: ProgramContent = {
+    ...item,
     id: Date.now().toString(),
-    title: `${content.title} (Copy)`,
+    title: `${item.title} (Copy)`,
     status: 'draft',
     views: 0,
     completionRate: 0
   }
-  content.value.unshift(newContent)
+  content.value.unshift(newItem)
 }
 
 const togglePublish = (content: ProgramContent) => {
@@ -303,17 +304,17 @@ const loadContent = async () => {
   try {
     const contentData = await DatabaseService.getContentItems('program', undefined)
     content.value = contentData.map(item => ({
-      id: item.id,
+      id: item.id || '',
       title: item.title,
       description: item.content.substring(0, 100) + '...',
-      program: 'stepup_scholars' as const, // This would need to be stored separately
-      type: 'lesson' as const, // This would need to be stored separately
+      program: 'stepup_scholars' as const,
+      type: 'lesson' as const,
       author: item.author,
       status: item.status,
       tags: item.tags,
-      createdAt: item.createdAt?.toDate() || new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
       views: 0,
-      completionRate: Math.floor(Math.random() * 100) // Mock completion rate
+      completionRate: Math.floor(Math.random() * 100)
     }))
 
     // Mock program data - in a real app this would come from a programs collection

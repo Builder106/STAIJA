@@ -35,7 +35,7 @@
       <div class="status-banner" :class="`status-${application.status}`">
         <div class="status-content">
           <span class="status-icon">
-            {{ getStatusIcon(application.status) }}
+            <Icon :icon="getStatusIcon(application.status)" />
           </span>
           <div class="status-info">
             <h3>{{ formatStatus(application.status) }}</h3>
@@ -109,7 +109,7 @@
             </div>
           </div>
           
-          <div v-if="application.academicInfo.relevantCourses.length > 0" class="info-section">
+          <div v-if="application.academicInfo.relevantCourses && application.academicInfo.relevantCourses.length > 0" class="info-section">
             <label>Relevant Courses</label>
             <div class="tags-list">
               <span
@@ -203,7 +203,7 @@
 
     <!-- Not Found State -->
     <div v-else class="not-found-state">
-      <div class="not-found-icon">📄</div>
+      <div class="not-found-icon"><Icon icon="lucide:file-text" /></div>
       <h3>Application Not Found</h3>
       <p>The application you're looking for doesn't exist or you don't have permission to view it.</p>
       <button @click="navigateTo('/applicant/applications')" class="btn-primary">
@@ -216,6 +216,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Icon } from '@iconify/vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 
 const router = useRouter()
@@ -301,13 +302,13 @@ const formatStatus = (status: string) => {
 
 const getStatusIcon = (status: string) => {
   const iconMap: Record<string, string> = {
-    draft: '📝',
-    submitted: '📤',
-    under_review: '🔍',
-    accepted: '✅',
-    rejected: '❌'
+    draft: 'lucide:file-edit',
+    submitted: 'lucide:upload',
+    under_review: 'lucide:search',
+    accepted: 'lucide:check-circle',
+    rejected: 'lucide:x-circle'
   }
-  return iconMap[status] || '📄'
+  return iconMap[status] || 'lucide:file-text'
 }
 
 const getStatusDescription = (status: string) => {

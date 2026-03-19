@@ -45,11 +45,11 @@
             <p>Complete your assignments and track your progress</p>
             <div class="assignment-notifications">
               <div v-if="pendingAssignments > 0" class="notification pending">
-                <span class="notification-icon">📝</span>
+                <span class="notification-icon"><Icon icon="lucide:file-edit" /></span>
                 <span>{{ pendingAssignments }} pending assignments</span>
               </div>
               <div v-if="upcomingDeadlines > 0" class="notification urgent">
-                <span class="notification-icon">⏰</span>
+                <span class="notification-icon"><Icon icon="lucide:clock" /></span>
                 <span>{{ upcomingDeadlines }} due soon</span>
               </div>
             </div>
@@ -158,19 +158,19 @@
       <h3>Quick Actions</h3>
       <div class="action-buttons">
         <button @click="$router.push('/student/program')" class="quick-action-btn">
-          <span class="icon">📚</span>
+          <span class="icon"><Icon icon="lucide:book-open" /></span>
           <span>Study Materials</span>
         </button>
         <button @click="$router.push('/student/assignments')" class="quick-action-btn">
-          <span class="icon">📝</span>
+          <span class="icon"><Icon icon="lucide:file-edit" /></span>
           <span>Submit Assignment</span>
         </button>
         <button @click="$router.push('/student/mentor')" class="quick-action-btn">
-          <span class="icon">👨‍🏫</span>
+          <span class="icon"><Icon icon="lucide:presentation" /></span>
           <span>Ask Mentor</span>
         </button>
         <button @click="$router.push('/student/progress')" class="quick-action-btn">
-          <span class="icon">📊</span>
+          <span class="icon"><Icon icon="lucide:bar-chart-2" /></span>
           <span>Check Progress</span>
         </button>
       </div>
@@ -180,6 +180,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService, type UserProfile } from '../../services/firebase'
 

@@ -14,7 +14,9 @@
     "typescript": "npm:typescript@~5.8.3",
     "vue-tsc": "npm:vue-tsc@^3.0.5",
     "motion-v": "npm:motion-v@^1.7.1",
-    "@iconify/vue": "npm:@iconify/vue@^5.0.0"
+    "@iconify/vue": "npm:@iconify/vue@^5.0.0",
+    "vitest": "npm:vitest@^4.1.0",
+    "happy-dom": "npm:happy-dom@^18.0.1"
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -45,6 +47,8 @@
     "preview": "vite preview",
     "setup": "deno run --allow-read --allow-write --allow-env scripts/setup-env.ts",
     "cache": "deno run --allow-net --allow-read scripts/cache-deps.ts",
+    "test": "deno run -A npm:vitest run",
+    "test:watch": "deno run -A npm:vitest",
     "lint": "deno lint",
     "fmt": "deno fmt"
   }

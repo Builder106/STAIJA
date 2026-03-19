@@ -79,7 +79,7 @@
         <h3>Recent Achievements</h3>
         <div class="achievements-grid">
           <div class="achievement-card">
-            <div class="achievement-icon">🏆</div>
+            <div class="achievement-icon"><Icon icon="lucide:trophy" /></div>
             <div class="achievement-content">
               <h4>Research Excellence</h4>
               <p>Awarded for outstanding research paper</p>
@@ -88,7 +88,7 @@
           </div>
 
           <div class="achievement-card">
-            <div class="achievement-icon">⭐</div>
+            <div class="achievement-icon"><Icon icon="lucide:star" /></div>
             <div class="achievement-content">
               <h4>Perfect Attendance</h4>
               <p>100% attendance in program sessions</p>
@@ -97,7 +97,7 @@
           </div>
 
           <div class="achievement-card">
-            <div class="achievement-icon">🚀</div>
+            <div class="achievement-icon"><Icon icon="lucide:rocket" /></div>
             <div class="achievement-content">
               <h4>Fast Learner</h4>
               <p>Completed 10 modules ahead of schedule</p>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-// Placeholder component - to be implemented with actual progress tracking
+import { Icon } from '@iconify/vue'
 </script>
 
 <style scoped>

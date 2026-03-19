@@ -98,7 +98,7 @@ const error = ref('')
 const saving = ref(false)
 
 const reviewForm = ref({
-  status: 'submitted',
+  status: 'submitted' as 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected',
   feedback: ''
 })
 

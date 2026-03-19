@@ -6,7 +6,7 @@
       <div class="container">
         <div class="hero-content">
           <div class="hero-badge">
-            <span class="badge-text">🔬 Nigeria's Premier Research Program</span>
+            <span class="badge-text"><Icon icon="lucide:microscope" class="inline-icon" /> Nigeria's Premier Research Program</span>
           </div>
           <h1 class="hero-title">StepUp Scholars</h1>
           <p class="hero-subtitle">
@@ -38,21 +38,21 @@
             </p>
             <div class="program-highlights">
               <div class="highlight">
-                <div class="highlight-icon">🎯</div>
+                <div class="highlight-icon"><Icon icon="lucide:target" /></div>
                 <div class="highlight-content">
                   <h3 class="highlight-title">Research Excellence</h3>
                   <p class="highlight-text">Work on real research projects with guidance from experienced mentors</p>
                 </div>
               </div>
               <div class="highlight">
-                <div class="highlight-icon">🤝</div>
+                <div class="highlight-icon"><Icon icon="lucide:handshake" /></div>
                 <div class="highlight-content">
                   <h3 class="highlight-title">Mentorship</h3>
                   <p class="highlight-text">One-on-one guidance from leading scientists and researchers</p>
                 </div>
               </div>
               <div class="highlight">
-                <div class="highlight-icon">🌍</div>
+                <div class="highlight-icon"><Icon icon="lucide:globe" /></div>
                 <div class="highlight-content">
                   <h3 class="highlight-title">Community</h3>
                   <p class="highlight-text">Join a supportive cohort of like-minded students across Nigeria</p>
@@ -71,7 +71,7 @@
           <h2 class="section-title">Eligibility & Timeline</h2>
           <div class="eligibility-grid">
             <div class="eligibility-card">
-              <div class="card-icon">🎓</div>
+              <div class="card-icon"><Icon icon="lucide:graduation-cap" /></div>
               <h3 class="card-title">Who Can Apply</h3>
               <ul class="eligibility-list">
                 <li>High school students in Nigeria</li>
@@ -82,7 +82,7 @@
               </ul>
             </div>
             <div class="eligibility-card">
-              <div class="card-icon">⏰</div>
+              <div class="card-icon"><Icon icon="lucide:clock" /></div>
               <h3 class="card-title">Time Commitment</h3>
               <ul class="eligibility-list">
                 <li>~2–4 hours per week</li>
@@ -93,7 +93,7 @@
               </ul>
             </div>
             <div class="eligibility-card">
-              <div class="card-icon">📅</div>
+              <div class="card-icon"><Icon icon="lucide:calendar" /></div>
               <h3 class="card-title">Application Timeline</h3>
               <ul class="eligibility-list">
                 <li><strong>Applications Open:</strong> January 2025</li>
@@ -220,17 +220,17 @@
           
           <div class="process-summary">
             <div class="summary-card">
-              <div class="summary-icon">📋</div>
+              <div class="summary-icon"><Icon icon="lucide:clipboard-list" /></div>
               <h4>Total Time</h4>
               <p>2-3 hours across multiple sessions</p>
               </div>
             <div class="summary-card">
-              <div class="summary-icon">🎯</div>
+              <div class="summary-icon"><Icon icon="lucide:target" /></div>
               <h4>Success Rate</h4>
               <p>25% of applicants are selected</p>
               </div>
             <div class="summary-card">
-              <div class="summary-icon">⚡</div>
+              <div class="summary-icon"><Icon icon="lucide:zap" /></div>
               <h4>Response Time</h4>
               <p>Decisions within 1 week of interview</p>
             </div>
@@ -250,7 +250,7 @@
           
           <div class="apply-options">
             <div class="apply-card">
-              <div class="apply-card-icon">👤</div>
+              <div class="apply-card-icon"><Icon icon="lucide:user" /></div>
               <h3 class="apply-card-title">New Applicants</h3>
               <p class="apply-card-description">
                 Create your account and start your application journey. You'll be able to save your progress and return later.
@@ -261,7 +261,7 @@
               </div>
 
             <div class="apply-card">
-              <div class="apply-card-icon">🔐</div>
+              <div class="apply-card-icon"><Icon icon="lucide:lock" /></div>
               <h3 class="apply-card-title">Returning Users</h3>
               <p class="apply-card-description">
                 Already have an account? Sign in to continue your application or check your status.
@@ -367,7 +367,7 @@
 </template>
 
 <script setup lang="ts">
-// No additional logic needed for this page
+import { Icon } from '@iconify/vue'
 </script>
 
 <style scoped>

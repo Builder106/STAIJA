@@ -319,6 +319,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getAdditionalUserInfo } from 'firebase/auth'
 import { AuthService, PermissionService, type PublicAssignableRole } from '../../services/firebase'
 import { Icon } from '@iconify/vue'
 
@@ -445,12 +446,12 @@ const toggleRoleMenu = () => {
 }
 
 const selectRole = (selectedRole: string) => {
-  role.value = selectedRole
+  role.value = selectedRole as PublicAssignableRole
   showRoleMenu.value = false
   clearFieldError('role')
 }
 
-const clearFieldError = (field: string) => {
+const clearFieldError = (_field: string) => {
   if (showValidation.value) {
     // Check if all required fields are now filled
     const allFieldsValid = displayName.value.trim() && email.value.trim() && role.value && agreeToTerms.value
@@ -553,8 +554,8 @@ const signUpWithGoogle = async () => {
   try {
     const result = await AuthService.signInWithGoogle()
     
-    // Check if this is a new user (first time signing up)
-    if (result?.additionalUserInfo?.isNewUser) {
+    const additionalInfo = result ? getAdditionalUserInfo(result) : null
+    if (additionalInfo?.isNewUser) {
       // Show modal to collect additional info
       showGoogleModal.value = true
     } else {
@@ -616,15 +617,12 @@ const completeGoogleSignUp = async () => {
       return
     }
     
-    // Update user profile with role and set password
     await AuthService.updatePassword(googlePassword.value)
-    await AuthService.createUserProfile({
-      uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName || '',
-      role: googleRole.value as 'applicant' | 'staff' | 'alumni',
-      createdAt: new Date()
-    })
+    await AuthService.createUserProfile(
+      user,
+      user.displayName || '',
+      googleRole.value as 'applicant' | 'staff' | 'alumni'
+    )
     
     // Close modal and redirect
     showGoogleModal.value = false

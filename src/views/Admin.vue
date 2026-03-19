@@ -20,7 +20,7 @@
                   @click="activeTab = 'blog-posts'"
                   :class="['nav-item', { active: activeTab === 'blog-posts' }]"
                 >
-                  <span class="nav-icon">📝</span>
+                  <span class="nav-icon"><Icon icon="lucide:file-edit" /></span>
                   Blog Posts
                 </button>
               </li>
@@ -29,7 +29,7 @@
                   @click="activeTab = 'authors'"
                   :class="['nav-item', { active: activeTab === 'authors' }]"
                 >
-                  <span class="nav-icon">👤</span>
+                  <span class="nav-icon"><Icon icon="lucide:user" /></span>
                   Authors
                 </button>
               </li>
@@ -38,7 +38,7 @@
                   @click="activeTab = 'categories'"
                   :class="['nav-item', { active: activeTab === 'categories' }]"
                 >
-                  <span class="nav-icon">🏷️</span>
+                  <span class="nav-icon"><Icon icon="lucide:tag" /></span>
                   Categories
                 </button>
               </li>
@@ -47,7 +47,7 @@
                   @click="activeTab = 'programs'"
                   :class="['nav-item', { active: activeTab === 'programs' }]"
                 >
-                  <span class="nav-icon">🎓</span>
+                  <span class="nav-icon"><Icon icon="lucide:graduation-cap" /></span>
                   Programs
                 </button>
               </li>
@@ -56,7 +56,7 @@
                   @click="activeTab = 'events'"
                   :class="['nav-item', { active: activeTab === 'events' }]"
                 >
-                  <span class="nav-icon">📅</span>
+                  <span class="nav-icon"><Icon icon="lucide:calendar" /></span>
                   Events
                 </button>
               </li>
@@ -65,7 +65,7 @@
                   @click="activeTab = 'alumni-stories'"
                   :class="['nav-item', { active: activeTab === 'alumni-stories' }]"
                 >
-                  <span class="nav-icon">🌟</span>
+                  <span class="nav-icon"><Icon icon="lucide:star" /></span>
                   Alumni Stories
                 </button>
               </li>
@@ -80,7 +80,7 @@
                   @click="$router.push('/admin/users')"
                   class="nav-item"
                 >
-                  <span class="nav-icon">👥</span>
+                  <span class="nav-icon"><Icon icon="lucide:users" /></span>
                   Manage Users
                 </button>
               </li>
@@ -89,7 +89,7 @@
                   @click="$router.push('/admin/applications')"
                   class="nav-item"
                 >
-                  <span class="nav-icon">📋</span>
+                  <span class="nav-icon"><Icon icon="lucide:clipboard-list" /></span>
                   Applications
                 </button>
               </li>
@@ -98,7 +98,7 @@
                   @click="$router.push('/admin/programs')"
                   class="nav-item"
                 >
-                  <span class="nav-icon">🎓</span>
+                  <span class="nav-icon"><Icon icon="lucide:graduation-cap" /></span>
                   Programs
                 </button>
               </li>
@@ -113,7 +113,7 @@
                   @click="createNewContent"
                   class="nav-item btn-primary"
                 >
-                  <span class="nav-icon">➕</span>
+                  <span class="nav-icon"><Icon icon="lucide:plus" /></span>
                   Create New {{ getCurrentContentTypeName() }}
                 </button>
               </li>
@@ -122,7 +122,7 @@
                   @click="viewAllContent"
                   class="nav-item"
                 >
-                  <span class="nav-icon">📋</span>
+                  <span class="nav-icon"><Icon icon="lucide:clipboard-list" /></span>
                   View All {{ getCurrentContentTypeName() }}
                 </button>
               </li>
@@ -201,7 +201,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { getAuth, signOut as firebaseSignOut, onAuthStateChanged, type User } from 'firebase/auth'
 import app from '../config/firebase'
@@ -209,6 +210,7 @@ import BlogPostEditor from '../components/admin/BlogPostEditor.vue'
 import AuthorEditor from '../components/admin/AuthorEditor.vue'
 import CategoryEditor from '../components/admin/CategoryEditor.vue'
 import ProgramEditor from '../components/admin/ProgramEditor.vue'
+import ProgramList from '../components/admin/ProgramList.vue'
 import EventEditor from '../components/admin/EventEditor.vue'
 import AlumniStoryEditor from '../components/admin/AlumniStoryEditor.vue'
 
@@ -249,6 +251,14 @@ const createNewContent = () => {
 
 const viewAllContent = () => {
   showEditor.value = false
+}
+
+const handleProgramSaved = (_programId: string) => {
+  showEditor.value = false
+}
+
+const handleProgramEdit = (_program: unknown) => {
+  showEditor.value = true
 }
 
 // Lifecycle
