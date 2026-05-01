@@ -1,231 +1,164 @@
-<template>
-  <div class="signup-page">
-    <!-- Background Pattern -->
-    <div class="background-pattern">
-      <div class="pattern-circle pattern-circle-1"></div>
-      <div class="pattern-circle pattern-circle-2"></div>
-      <div class="pattern-circle pattern-circle-3"></div>
-      <div class="pattern-grid"></div>
-    </div>
-    
-    <div class="page-container">
-      <!-- Header Section -->
-      <div class="auth-header">
-        <router-link to="/" class="logo-link">
-          <div class="logo-container">
-            <img src="../assets/staija-logo.svg" alt="STAIJA Logo" class="logo" height="100" width="100"/>
-          </div>
-        </router-link>
-      </div>
-      
-      <!-- Main Content -->
-      <div class="auth-content">
-        <div class="welcome-section">
-          <h1 class="welcome-title">Join STAIJA</h1>
-          <p class="welcome-subtitle">Create your account to start your journey with STAIJA programs</p>
-        </div>
-        <SignUpForm />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import SignUpForm from '../components/auth/SignUpForm.vue'
+import { ref, computed } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import { AuthService } from '../services/auth'
+
+const router = useRouter()
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
+const password = ref('')
+const submitting = ref(false)
+const error = ref<string | null>(null)
+
+const displayName = computed(() => [firstName.value, lastName.value].filter(Boolean).join(' '))
+
+async function onSubmit(e: Event) {
+  e.preventDefault()
+  error.value = null
+  submitting.value = true
+  try {
+    await AuthService.signUp(email.value, password.value, displayName.value || email.value)
+    router.push('/applicant')
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Sign up failed'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function onGoogle() {
+  error.value = null
+  submitting.value = true
+  try {
+    await AuthService.signInWithGoogle()
+    router.push('/applicant')
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Google sign up failed'
+  } finally {
+    submitting.value = false
+  }
+}
 </script>
 
-<style scoped>
-.signup-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-}
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section class="!py-8 md:!py-16 flex-1 flex flex-col justify-center">
+      <Container class="max-w-6xl">
+        <div class="grid lg:grid-cols-2 bg-white rounded-[24px] border hairline-ink overflow-hidden shadow-sm min-h-[600px]">
+          <!-- Form -->
+          <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+            <div class="max-w-md w-full mx-auto">
+              <Heading :level="2" class="mb-2">Join STAIJA</Heading>
+              <Body class="mb-8">
+                Create an account to apply to programs, save your progress, and join our community.
+              </Body>
 
-/* Background Pattern */
-.background-pattern {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 1;
-}
+              <form class="flex flex-col gap-5" @submit="onSubmit">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">First Name</label>
+                    <input
+                      v-model="firstName"
+                      type="text"
+                      required
+                      autocomplete="given-name"
+                      placeholder="Amina"
+                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Last Name</label>
+                    <input
+                      v-model="lastName"
+                      type="text"
+                      required
+                      autocomplete="family-name"
+                      placeholder="Yusuf"
+                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Email Address</label>
+                  <input
+                    v-model="email"
+                    type="email"
+                    required
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                  />
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Password</label>
+                  <input
+                    v-model="password"
+                    type="password"
+                    required
+                    minlength="8"
+                    autocomplete="new-password"
+                    placeholder="Create a strong password"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                  />
+                  <p class="text-xs text-ink/50 mt-1 m-0">Must be at least 8 characters long.</p>
+                </div>
 
-.pattern-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-}
+                <div v-if="error" role="alert" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                  {{ error }}
+                </div>
 
-.pattern-circle-1 {
-  width: 300px;
-  height: 300px;
-  top: -150px;
-  right: -150px;
-  animation: float 6s ease-in-out infinite;
-}
+                <UiButton
+                  variant="gradient"
+                  type="submit"
+                  :disabled="submitting"
+                  class="w-full mt-2 !h-12 text-base font-bold"
+                >
+                  {{ submitting ? 'Creating account…' : 'Create Account' }}
+                </UiButton>
+              </form>
 
-.pattern-circle-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -100px;
-  left: -100px;
-  animation: float 8s ease-in-out infinite reverse;
-}
+              <div class="flex items-center gap-4 my-8">
+                <div class="flex-1 h-px bg-ink/10" />
+                <span class="text-xs font-semibold text-ink/40 uppercase tracking-widest">Or</span>
+                <div class="flex-1 h-px bg-ink/10" />
+              </div>
 
-.pattern-circle-3 {
-  width: 150px;
-  height: 150px;
-  top: 50%;
-  left: 10%;
-  animation: float 10s ease-in-out infinite;
-}
+              <UiButton
+                variant="secondary"
+                :disabled="submitting"
+                class="w-full !h-12 flex items-center justify-center gap-3"
+                @click="onGoogle"
+              >
+                <Icon icon="logos:google-icon" width="18" />
+                Sign up with Google
+              </UiButton>
 
-.pattern-grid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: gridMove 20s linear infinite;
-}
+              <p class="mt-8 text-center text-sm text-ink/70">
+                Already have an account?
+                <RouterLink to="/login" class="font-semibold text-brand-violet hover:underline underline-offset-2">Sign in</RouterLink>
+              </p>
+            </div>
+          </div>
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(180deg); }
-}
-
-@keyframes gridMove {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(50px, 50px); }
-}
-
-.page-container {
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  position: relative;
-  z-index: 2;
-}
-
-/* Header Section */
-.auth-header {
-  text-align: center;
-}
-
-.logo-link {
-  display: inline-block;
-  text-decoration: none;
-  transition: transform 0.3s ease;
-}
-
-.logo-link:hover {
-  transform: scale(1.05);
-}
-
-.logo-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logo {
-  height: 100px;
-  width: 100px;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
-}
-
-/* Welcome Section */
-.welcome-section {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.welcome-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.welcome-subtitle {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.auth-content {
-  flex: 1;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .signup-page {
-    padding: 1.5rem;
-  }
-  
-  .page-container {
-    gap: 2rem;
-    max-width: 100%;
-  }
-  
-  .page-container {
-    max-width: 500px;
-  }
-  
-  .welcome-title {
-    font-size: 1.75rem;
-  }
-  
-  .welcome-subtitle {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .signup-page {
-    padding: 1rem;
-  }
-  
-  .page-container {
-    gap: 1.5rem;
-  }
-  
-  .welcome-title {
-    font-size: 1.5rem;
-  }
-  
-  .welcome-subtitle {
-    font-size: 0.9rem;
-  }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .pattern-circle,
-  .pattern-grid {
-    animation: none;
-  }
-  
-  .logo-link:hover {
-    transform: none;
-  }
-}
-</style>
+          <!-- Photo -->
+          <div class="hidden lg:block relative bg-ink">
+            <div class="absolute inset-0 wash-violet-6 mix-blend-screen z-10 pointer-events-none" />
+            <div class="absolute inset-0 bg-ink/10 mix-blend-multiply z-10 pointer-events-none" />
+            <img
+              src="https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+              alt="Student with laptop"
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </Container>
+    </Section>
+  </div>
+</template>

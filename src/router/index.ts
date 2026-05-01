@@ -20,6 +20,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/donate', name: 'donate', component: () => import('../views/Donate.vue'), meta: { title: 'Donate' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
+  { path: '/blog/:slug', name: 'blog-post', component: () => import('../views/BlogPost.vue'), meta: { title: 'Story — STAIJA' } },
   { path: '/contact', name: 'contact', component: () => import('../views/Contact.vue'), meta: { title: 'Contact' } },
   { path: '/events', name: 'events', component: () => import('../views/Events.vue'), meta: { title: 'Events & Workshops' } },
   { path: '/events/:id', name: 'event-detail', component: () => import('../views/EventDetail.vue'), meta: { title: 'Event Details' } },

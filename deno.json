@@ -16,7 +16,9 @@
     "motion-v": "npm:motion-v@^1.7.1",
     "@iconify/vue": "npm:@iconify/vue@^5.0.0",
     "vitest": "npm:vitest@^4.1.0",
-    "happy-dom": "npm:happy-dom@^18.0.1"
+    "happy-dom": "npm:happy-dom@^18.0.1",
+    "tailwindcss": "npm:tailwindcss@^4.1.12",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.12"
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {

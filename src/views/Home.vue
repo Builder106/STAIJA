@@ -1,413 +1,291 @@
 <script setup lang="ts">
-import Hero from '../components/Hero.vue'
-import ProgramCard from '../components/ProgramCard.vue'
-import { Motion } from 'https://esm.sh/motion-v@1.7.1'
+import { Motion } from 'motion-v'
+import { Icon } from '@iconify/vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
+import UiChip from '../components/ui/UiChip.vue'
+
+const stats = [
+  { eyebrow: 'Scholars trained', number: '240', caption: 'Across 18 Nigerian states' },
+  { eyebrow: 'Countries', number: '12', caption: 'Represented in Dynamerge' },
+  { eyebrow: 'Research papers', number: '45', caption: 'Published or presented' },
+  { eyebrow: 'Mentors', number: '120+', caption: 'From top global institutions' },
+]
+
+const events = [
+  { date: 'Oct 12', title: 'Information Session: StepUp 2025', loc: 'Virtual', type: 'Webinar' },
+  { date: 'Oct 24', title: 'Alumni Research Symposium', loc: 'Lagos, Nigeria', type: 'In-person' },
+  { date: 'Nov 05', title: 'Mentor Matching Mixer', loc: 'Virtual', type: 'Networking' },
+]
+
+const HERO_IMG = 'https://images.unsplash.com/photo-1758573467240-f944226c2026?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
+const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
 </script>
 
 <template>
-  <div class="home">
-    <!-- Hero Section -->
-    <Hero
-      title="Nurturing Africa's next generation of scientist‑leaders"
-      subtitle="Hands-on research programs, mentorship and community for ambitious students across Nigeria and beyond."
-      ctaText="Apply to StepUp Scholars"
-      ctaHref="/programs/stepup-scholars"
-      secondaryCtaText="Get Involved"
-      secondaryCtaHref="/get-involved"
-    />
-
-    <!-- Programs Section -->
-    <Motion
-      :initial="{ opacity: 0, y: 50 }"
-      :whileInView="{ opacity: 1, y: 0 }"
-      :transition="{ duration: 0.8, ease: 'easeOut' }"
-      :viewport="{ once: true, margin: '-100px' }"
-      class="programs-section"
-    >
-      <div class="container">
-        <Motion
-          :initial="{ opacity: 0, y: 30 }"
-          :whileInView="{ opacity: 1, y: 0 }"
-          :transition="{ duration: 0.6, delay: 0.2, ease: 'easeOut' }"
-          :viewport="{ once: true }"
-          class="section-header"
-        >
-          <h2 class="section-title">Our Programs</h2>
-          <p class="section-subtitle">
-            Empowering the next generation through innovative research and mentorship opportunities
-          </p>
-        </Motion>
-
-        <div class="programs-grid">
+  <div class="flex flex-col">
+    <!-- Hero -->
+    <Section class="!pt-8 !pb-16 md:!pt-16 md:!pb-24">
+      <Container>
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           <Motion
-            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
-            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
-            :transition="{ duration: 0.6, delay: 0.1, ease: 'easeOut' }"
-            :viewport="{ once: true }"
-            :whileHover="{ y: -8, scale: 1.02 }"
-            class="program-card-wrapper"
+            :initial="{ opacity: 0, y: 12 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.32, ease: 'easeOut' }"
+            class="flex flex-col gap-8 max-w-xl"
           >
-            <ProgramCard
-              title="StepUp Scholars"
-              text="Hands-on research training and mentorship for students. Join a supportive cohort community and develop critical scientific skills."
-              href="/programs/stepup-scholars"
-              icon="lucide:microscope"
-              :featured="true"
-            />
+            <Heading :level="1">Africa's next scientist-leaders start here.</Heading>
+            <Body large>
+              We nurture ambitious high-school and gap-year students through
+              intensive research programs, mentorship, and a pan-African
+              community of practice.
+            </Body>
+            <div class="flex flex-wrap gap-4">
+              <UiButton variant="gradient" :to="'/programs/stepup-scholars'">
+                Apply to StepUp
+              </UiButton>
+              <UiButton variant="secondary" href="#programs">
+                Explore programs
+              </UiButton>
+            </div>
           </Motion>
 
           <Motion
-            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
-            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
-            :transition="{ duration: 0.6, delay: 0.3, ease: 'easeOut' }"
-            :viewport="{ once: true }"
-            :whileHover="{ y: -8, scale: 1.02 }"
-            class="program-card-wrapper"
+            :initial="{ opacity: 0 }"
+            :animate="{ opacity: 1 }"
+            :transition="{ duration: 0.6, delay: 0.2 }"
+            class="relative w-full aspect-[4/3] lg:aspect-square rounded-2xl overflow-hidden"
           >
-            <ProgramCard
-              title="Dynamerge"
-              text="Collaboration and innovation for emerging researchers. Foster interdisciplinary connections and breakthrough discoveries."
-              href="/programs/dynamerge"
-              icon="lucide:zap"
-            />
-          </Motion>
-
-          <Motion
-            :initial="{ opacity: 0, y: 30, scale: 0.9 }"
-            :whileInView="{ opacity: 1, y: 0, scale: 1 }"
-            :transition="{ duration: 0.6, delay: 0.5, ease: 'easeOut' }"
-            :viewport="{ once: true }"
-            :whileHover="{ y: -8, scale: 1.02 }"
-            class="program-card-wrapper"
-          >
-            <ProgramCard
-              title="Get Involved"
-              text="Volunteer, partner or intern with the STAIJA community. Make a meaningful impact on scientific education in Africa."
-              href="/get-involved"
-              icon="lucide:handshake"
+            <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
+            <img
+              :src="HERO_IMG"
+              alt="Nigerian student in science lab"
+              class="w-full h-full object-cover"
+              loading="eager"
             />
           </Motion>
         </div>
-      </div>
-    </Motion>
+      </Container>
+    </Section>
 
-
-    <!-- CTA Section -->
-    <Motion
-      :initial="{ opacity: 0, y: 50 }"
-      :whileInView="{ opacity: 1, y: 0 }"
-      :transition="{ duration: 0.8, ease: 'easeOut' }"
-      :viewport="{ once: true, margin: '-100px' }"
-      class="cta-section"
-    >
-      <div class="container">
-        <div class="cta-content">
+    <!-- Impact Strip -->
+    <Section class="!py-12 border-y hairline-ink bg-paper/50">
+      <Container>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
           <Motion
-            :initial="{ opacity: 0, y: 30 }"
-            :whileInView="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.6, delay: 0.2, ease: 'easeOut' }"
-            :viewport="{ once: true }"
+            v-for="(stat, i) in stats"
+            :key="stat.eyebrow"
+            :initial="{ opacity: 0, y: 10 }"
+            :while-in-view="{ opacity: 1, y: 0 }"
+            :viewport="{ once: true, margin: '-50px' }"
+            :transition="{ duration: 0.4, delay: i * 0.08 }"
+            class="flex flex-col gap-2"
           >
-            <h2 class="cta-title">Ready to Shape the Future of Science in Africa?</h2>
-          </Motion>
-
-          <Motion
-            :initial="{ opacity: 0, y: 20 }"
-            :whileInView="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.6, delay: 0.4, ease: 'easeOut' }"
-            :viewport="{ once: true }"
-          >
-            <p class="cta-description">
-              Join our community of passionate researchers, mentors, and innovators. Whether you're a student
-              looking to develop your skills or a professional wanting to give back, there's a place for you at STAIJA.
-            </p>
-          </Motion>
-
-          <Motion
-            :initial="{ opacity: 0, y: 20 }"
-            :whileInView="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.6, delay: 0.6, ease: 'easeOut' }"
-            :viewport="{ once: true }"
-            class="cta-actions"
-          >
-            <Motion
-              :initial="{ opacity: 0, x: -30 }"
-              :whileInView="{ opacity: 1, x: 0 }"
-              :transition="{ duration: 0.5, delay: 0.7, ease: 'easeOut' }"
-              :viewport="{ once: true }"
-              :whileHover="{ scale: 1.05, y: -2 }"
-              :whileTap="{ scale: 0.98 }"
-            >
-              <a href="/programs/stepup-scholars" class="btn btn-primary btn-lg">
-                Apply Now
-                <Motion
-                  :initial="{ x: -5, opacity: 0 }"
-                  :whileInView="{ x: 0, opacity: 1 }"
-                  :transition="{ duration: 0.4, delay: 1.0, ease: 'easeOut' }"
-                  :viewport="{ once: true }"
-                  class="inline-block"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Motion>
-              </a>
-            </Motion>
-
-            <Motion
-              :initial="{ opacity: 0, x: 30 }"
-              :whileInView="{ opacity: 1, x: 0 }"
-              :transition="{ duration: 0.5, delay: 0.8, ease: 'easeOut' }"
-              :viewport="{ once: true }"
-              :whileHover="{ scale: 1.05, y: -2 }"
-              :whileTap="{ scale: 0.98 }"
-            >
-              <a href="/donate" class="btn btn-secondary btn-lg">
-                Support Our Mission
-              </a>
-            </Motion>
+            <Eyebrow class="text-ink/60">{{ stat.eyebrow }}</Eyebrow>
+            <div class="font-display text-4xl md:text-5xl font-semibold tracking-tight">
+              {{ stat.number }}
+            </div>
+            <p class="text-sm text-ink/70">{{ stat.caption }}</p>
           </Motion>
         </div>
-      </div>
-    </Motion>
+      </Container>
+    </Section>
+
+    <!-- Programs Split -->
+    <Section id="programs" class="bg-white">
+      <Container>
+        <div class="flex flex-col gap-12">
+          <div class="max-w-2xl">
+            <Eyebrow class="text-brand-violet mb-4 block">Our Programs</Eyebrow>
+            <Heading :level="2">Two paths to accelerated impact.</Heading>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
+            <Motion
+              :initial="{ opacity: 0, y: 20 }"
+              :while-in-view="{ opacity: 1, y: 0 }"
+              :viewport="{ once: true }"
+              :transition="{ duration: 0.5 }"
+            >
+              <UiCard hoverable class="h-full flex flex-col relative pt-[4px]">
+                <div class="absolute top-0 left-0 right-0 h-[4px] bg-gradient-brand" />
+                <div class="p-8 md:p-10 flex flex-col h-full gap-6">
+                  <div class="flex justify-between items-start gap-4">
+                    <Heading :level="3">StepUp Scholars</Heading>
+                    <UiChip>In-person</UiChip>
+                  </div>
+                  <Body class="flex-1">
+                    A rigorous, Nigeria-based research incubator for high-school
+                    and gap-year students. Access world-class labs, receive a
+                    stipend, and publish your first paper.
+                  </Body>
+                  <div class="pt-6 border-t hairline-ink flex items-center justify-between">
+                    <span class="text-sm font-semibold text-ink/60">Ages 15–19 · Nigeria</span>
+                    <UiButton variant="tertiary" :to="'/programs/stepup-scholars'" class="text-brand-violet">
+                      <span class="flex items-center gap-1 group">
+                        Learn more
+                        <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
+                      </span>
+                    </UiButton>
+                  </div>
+                </div>
+              </UiCard>
+            </Motion>
+
+            <Motion
+              :initial="{ opacity: 0, y: 20 }"
+              :while-in-view="{ opacity: 1, y: 0 }"
+              :viewport="{ once: true }"
+              :transition="{ duration: 0.5, delay: 0.1 }"
+            >
+              <UiCard hoverable class="h-full flex flex-col relative pt-[4px]">
+                <div class="absolute top-0 left-0 right-0 h-[4px] bg-gradient-brand" />
+                <div class="p-8 md:p-10 flex flex-col h-full gap-6">
+                  <div class="flex justify-between items-start gap-4">
+                    <Heading :level="3">Dynamerge</Heading>
+                    <UiChip>Virtual</UiChip>
+                  </div>
+                  <Body class="flex-1">
+                    A pan-African virtual summer bootcamp connecting ambitious
+                    students with global mentors. Four weeks of intense
+                    learning, collaboration, and skill-building.
+                  </Body>
+                  <div class="pt-6 border-t hairline-ink flex items-center justify-between">
+                    <span class="text-sm font-semibold text-ink/60">Ages 15–20 · Pan-African</span>
+                    <UiButton variant="tertiary" :to="'/programs/dynamerge'" class="text-brand-violet">
+                      <span class="flex items-center gap-1 group">
+                        Learn more
+                        <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
+                      </span>
+                    </UiButton>
+                  </div>
+                </div>
+              </UiCard>
+            </Motion>
+          </div>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- Featured Story -->
+    <Section class="bg-paper">
+      <Container>
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+          <Motion
+            class="lg:col-span-7 aspect-[4/3] rounded-2xl overflow-hidden relative"
+            :initial="{ opacity: 0, scale: 0.98 }"
+            :while-in-view="{ opacity: 1, scale: 1 }"
+            :viewport="{ once: true }"
+            :transition="{ duration: 0.6 }"
+          >
+            <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
+            <img
+              :src="FEATURED_IMG"
+              alt="Student portrait"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </Motion>
+          <Motion
+            class="lg:col-span-5 flex flex-col gap-6"
+            :initial="{ opacity: 0, x: 20 }"
+            :while-in-view="{ opacity: 1, x: 0 }"
+            :viewport="{ once: true }"
+            :transition="{ duration: 0.6, delay: 0.2 }"
+          >
+            <Eyebrow class="text-ink/50">Featured Scholar</Eyebrow>
+            <blockquote class="font-display text-2xl md:text-3xl lg:text-4xl italic leading-tight text-ink m-0">
+              "STAIJA didn't just teach me how to run a PCR test. They taught me
+              how to ask questions that matter to my community."
+            </blockquote>
+            <div class="mt-4 flex flex-col gap-4">
+              <div>
+                <div class="font-semibold text-ink">Chinedu Okafor</div>
+                <div class="text-sm text-ink/70">StepUp Scholar '24 · Lagos, Nigeria</div>
+              </div>
+              <UiButton variant="tertiary" :to="'/blog/chinedu-story'" class="self-start text-brand-violet mt-2">
+                <span class="flex items-center gap-1 group">
+                  Read Chinedu's story
+                  <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
+                </span>
+              </UiButton>
+            </div>
+          </Motion>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- Upcoming Events -->
+    <Section class="bg-white border-y hairline-ink">
+      <Container>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div class="max-w-2xl">
+            <Eyebrow class="text-brand-violet mb-4 block">Community</Eyebrow>
+            <Heading :level="2">Upcoming events.</Heading>
+          </div>
+          <UiButton variant="tertiary" :to="'/events'">
+            <span class="flex items-center gap-1 group pb-1">
+              View all events
+              <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
+            </span>
+          </UiButton>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+          <Motion
+            v-for="(event, i) in events"
+            :key="event.title"
+            :initial="{ opacity: 0, y: 15 }"
+            :while-in-view="{ opacity: 1, y: 0 }"
+            :viewport="{ once: true }"
+            :transition="{ duration: 0.4, delay: i * 0.1 }"
+          >
+            <UiCard hoverable class="p-6 flex flex-col gap-6 h-full">
+              <div class="flex justify-between items-start">
+                <div class="bg-ink/5 rounded-lg px-4 py-3 text-center min-w-[70px]">
+                  <div class="text-sm font-semibold text-ink/60 uppercase">
+                    {{ event.date.split(' ')[0] }}
+                  </div>
+                  <div class="font-display font-semibold text-2xl text-ink">
+                    {{ event.date.split(' ')[1] }}
+                  </div>
+                </div>
+                <UiChip>{{ event.type }}</UiChip>
+              </div>
+              <div class="flex-1">
+                <h4 class="font-sans font-semibold text-lg leading-snug mb-3">
+                  {{ event.title }}
+                </h4>
+                <div class="flex items-center gap-1.5 text-sm text-ink/60">
+                  <Icon icon="lucide:map-pin" width="16" />
+                  {{ event.loc }}
+                </div>
+              </div>
+            </UiCard>
+          </Motion>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- Partners -->
+    <Section class="bg-paper">
+      <Container>
+        <Eyebrow class="text-center text-ink/40 mb-10 block">
+          Supported by global partners
+        </Eyebrow>
+        <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale">
+          <span class="font-display text-2xl font-bold">Acme Corp</span>
+          <span class="font-sans text-xl font-bold tracking-widest">GLOBEX</span>
+          <span class="font-display text-2xl italic">Stark Labs</span>
+          <span class="font-sans text-xl font-semibold">Massive Dynamic</span>
+          <span class="font-display text-2xl">Soylent</span>
+        </div>
+      </Container>
+    </Section>
   </div>
 </template>
-
-<style scoped>
-.home {
-  width: 100%;
-}
-
-/* Programs Section */
-.programs-section {
-  padding: var(--space-20) 0;
-  background: white;
-  width: 100%;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: var(--space-12);
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.section-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-4);
-}
-
-.section-subtitle {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin: 0;
-}
-
-.programs-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-}
-
-.program-card-wrapper {
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.inline-block {
-  display: inline-block;
-}
-
-/* Impact Section */
-.impact-section {
-  padding: var(--space-20) 0;
-  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
-  width: 100%;
-}
-
-.impact-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: center;
-}
-
-.impact-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-.impact-description {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-}
-
-.impact-highlights {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.highlight {
-  display: flex;
-  gap: var(--space-4);
-  align-items: flex-start;
-}
-
-.highlight-icon {
-  font-size: var(--text-2xl);
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  flex-shrink: 0;
-}
-
-.highlight-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-1);
-}
-
-.highlight-text {
-  color: var(--neutral-600);
-  margin: 0;
-}
-
-.impact-visual {
-  display: flex;
-  justify-content: center;
-}
-
-.impact-card {
-  background: white;
-  padding: var(--space-8);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-xl);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
-  max-width: 400px;
-  width: 100%;
-}
-
-.impact-stat {
-  text-align: center;
-}
-
-.stat-number {
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: var(--primary-600);
-  line-height: 1;
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  font-weight: 500;
-}
-
-/* CTA Section */
-.cta-section {
-  padding: var(--space-20) 0;
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
-  color: white;
-  width: 100%;
-}
-
-.cta-content {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.cta-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  margin-bottom: var(--space-6);
-  color: white;
-}
-
-.cta-description {
-  font-size: var(--text-lg);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.cta-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-.w-5 {
-  width: 1.25rem;
-}
-
-.h-5 {
-  height: 1.25rem;
-}
-
-/* Responsive Design */
-@media (min-width: 640px) {
-  .programs-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  }
-  
-  .impact-highlights {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
-  .highlight {
-    flex: 1;
-    min-width: 250px;
-  }
-  
-  .cta-actions {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: var(--text-4xl);
-  }
-  
-  .impact-title {
-    font-size: var(--text-4xl);
-  }
-  
-  .cta-title {
-    font-size: var(--text-4xl);
-  }
-}
-
-@media (min-width: 1024px) {
-  .impact-content {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .impact-highlights {
-    flex-direction: column;
-  }
-}
-</style>

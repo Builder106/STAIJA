@@ -1,327 +1,160 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
+
+const tabs = [
+  { id: 'mentor', label: 'Volunteer / Mentor', icon: 'lucide:users' },
+  { id: 'partner', label: 'Partner', icon: 'lucide:building-2' },
+  { id: 'intern', label: 'Intern', icon: 'lucide:graduation-cap' },
+] as const
+
+const content = {
+  mentor: {
+    title: 'Guide the next generation.',
+    desc: 'We are looking for scientists, researchers, and tech professionals to mentor our scholars. Share your expertise, review research proposals, or lead a virtual workshop.',
+    eligibility: ['Currently in a STEM profession or postgraduate study', 'Passionate about youth development', 'Can commit 2-4 hours per month'],
+    success: 'Seeing your mentee confidently present their first research abstract.',
+    formFields: [
+      { name: 'name', label: 'Full Name', type: 'text' },
+      { name: 'email', label: 'Email Address', type: 'email' },
+      { name: 'linkedin', label: 'LinkedIn Profile URL', type: 'url' },
+      { name: 'field', label: 'Area of Expertise', type: 'text' },
+      { name: 'why', label: 'Why do you want to mentor?', type: 'textarea' },
+    ],
+  },
+  partner: {
+    title: 'Scale our impact together.',
+    desc: 'Universities, research institutes, and corporations can partner with STAIJA to provide lab space, fund cohorts, or offer internships to our alumni.',
+    eligibility: ['Registered organization or academic institution', 'Aligned with our mission to democratize STEM access', 'Capacity to offer resources or funding'],
+    success: 'Building a robust pipeline of diverse scientific talent for your organization.',
+    formFields: [
+      { name: 'orgName', label: 'Organization Name', type: 'text' },
+      { name: 'contactName', label: 'Contact Person', type: 'text' },
+      { name: 'email', label: 'Work Email', type: 'email' },
+      { name: 'type', label: 'Partnership Type (Funding, Lab Space, etc.)', type: 'text' },
+      { name: 'message', label: 'How would you like to collaborate?', type: 'textarea' },
+    ],
+  },
+  intern: {
+    title: 'Learn how a nonprofit works.',
+    desc: 'Join our core team for a 3-month remote internship. Help us with communications, program operations, or data analysis while gaining valuable experience.',
+    eligibility: ['Current undergraduate or recent graduate', 'Strong communication and organizational skills', 'Can commit 10-15 hours per week'],
+    success: 'Leading a key operational project and earning a glowing recommendation.',
+    formFields: [
+      { name: 'name', label: 'Full Name', type: 'text' },
+      { name: 'email', label: 'Email Address', type: 'email' },
+      { name: 'university', label: 'University', type: 'text' },
+      { name: 'role', label: 'Desired Role (Ops, Comms, Data)', type: 'text' },
+      { name: 'cover', label: 'Brief Cover Letter', type: 'textarea' },
+    ],
+  },
+} as const
+
+type TabId = keyof typeof content
+const activeTab = ref<TabId>('mentor')
+const activeContent = computed(() => content[activeTab.value])
 </script>
 
 <template>
-  <div>
-    <!-- Hero Section -->
-    <section class="get-involved-hero">
-      <div class="container">
-        <div class="hero-content">
-          <h1 class="hero-title">Get involved with STAIJA</h1>
-          <p class="hero-subtitle">
-            Volunteer, partner, or intern to empower the next generation of scientist‑leaders across Africa.
-          </p>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section class="!pb-8 !pt-16 md:!pt-24 text-center">
+      <Container class="max-w-3xl">
+        <Eyebrow class="text-brand-violet mb-4 block">Get Involved</Eyebrow>
+        <Heading :level="1" class="mb-6">Join the movement.</Heading>
+        <Body large class="mb-16">
+          Whether you have an hour a month or a lab to share, there's a place for you in the STAIJA community. Choose a path below to apply.
+        </Body>
+
+        <div class="flex flex-wrap justify-center gap-4 bg-white p-2 rounded-2xl border hairline-ink shadow-sm w-fit mx-auto">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            type="button"
+            class="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all focus-ring-brand"
+            :class="activeTab === tab.id ? 'bg-ink text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            @click="activeTab = tab.id"
+          >
+            <Icon :icon="tab.icon" width="18" />
+            {{ tab.label }}
+          </button>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
 
-    <!-- Ways to Get Involved -->
-    <section class="section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Ways to help</h2>
-          <p class="section-subtitle">Choose the path that fits your time, skills, or organization</p>
-        </div>
-
-        <div class="cards-grid">
-          <!-- Volunteer -->
-          <article id="volunteer" class="card">
-            <div class="card-icon"><Icon icon="lucide:handshake" /></div>
-            <h3 class="card-title">Volunteer or mentor</h3>
-            <p class="card-text">
-              Guide students through research projects, career exploration and soft‑skills. Flexible time commitments and clear curricula provided.
-            </p>
-            <ul class="card-list" aria-label="Volunteer benefits">
-              <li>Curriculum and training included</li>
-              <li>Remote and on‑site options</li>
-              <li>Mentor community + support</li>
-            </ul>
-            <div class="card-actions">
-              <a href="mailto:hello@staija.org?subject=Volunteer%20with%20STAIJA" class="btn btn-primary">Email to volunteer</a>
-              <a href="/programs/stepup-scholars" class="btn btn-outline">See our programs</a>
+    <Section class="!pt-8 !pb-24 flex-1">
+      <Container class="max-w-5xl">
+        <Motion
+          :key="activeTab"
+          :initial="{ opacity: 0, y: 10 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.2 }"
+          class="grid md:grid-cols-12 gap-12 lg:gap-16 items-start"
+        >
+          <div class="md:col-span-5 flex flex-col gap-8 md:sticky md:top-32">
+            <div>
+              <Heading :level="2" class="!text-3xl mb-4 leading-tight">{{ activeContent.title }}</Heading>
+              <Body class="text-ink/70">{{ activeContent.desc }}</Body>
             </div>
-          </article>
-
-          <!-- Partner -->
-          <article id="partner" class="card">
-            <div class="card-icon"><Icon icon="lucide:building" /></div>
-            <h3 class="card-title">Partner with STAIJA</h3>
-            <p class="card-text">
-              Schools, labs, companies and foundations can co‑host programs, provide equipment, sponsor cohorts, or offer expert workshops.
-            </p>
-            <ul class="card-list" aria-label="Partnership options">
-              <li>Program sponsorships</li>
-              <li>Equipment and lab access</li>
-              <li>Expert seminars + site visits</li>
-            </ul>
-            <div class="card-actions">
-              <a href="mailto:hello@staija.org?subject=Partner%20with%20STAIJA" class="btn btn-secondary">Contact partnerships</a>
-              <a href="/donate" class="btn btn-outline">Sponsor a cohort</a>
+            <div>
+              <h4 class="font-semibold text-sm uppercase tracking-wider text-brand-violet mb-3">Eligibility & Commitment</h4>
+              <ul class="flex flex-col gap-2.5 list-none p-0 m-0">
+                <li v-for="item in activeContent.eligibility" :key="item" class="flex items-start gap-2 text-sm text-ink/80">
+                  <div class="w-1.5 h-1.5 rounded-full bg-ink/20 mt-1.5 shrink-0" />
+                  {{ item }}
+                </li>
+              </ul>
             </div>
-          </article>
-
-          <!-- Intern -->
-          <article id="intern" class="card">
-            <div class="card-icon"><Icon icon="lucide:flask-conical" /></div>
-            <h3 class="card-title">Internships</h3>
-            <p class="card-text">
-              Join our team to build curriculum, coordinate programs, conduct impact research, or support operations and communications.
-            </p>
-            <ul class="card-list" aria-label="Intern tracks">
-              <li>Education + curriculum</li>
-              <li>Program ops + community</li>
-              <li>Research + data insights</li>
-            </ul>
-            <div class="card-actions">
-              <a href="mailto:hello@staija.org?subject=Internship%20interest" class="btn btn-primary">Apply via email</a>
-              <a href="/blog" class="btn btn-outline">Learn about our impact</a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Impact / Benefits -->
-    <section class="section section-alt">
-      <div class="container-wide">
-        <div class="impact">
-          <div class="impact-text">
-            <h2 class="section-title">Your involvement multiplies impact</h2>
-            <p class="lead">Support students to gain hands‑on research experience, mentorship and a pathway into science and technology careers.</p>
-            <ul class="benefits" aria-label="Why get involved">
-              <li><span class="benefit-dot"></span> Expand high‑quality STEM opportunities across Nigeria and beyond</li>
-              <li><span class="benefit-dot"></span> Build a diverse pipeline of scientist‑leaders</li>
-              <li><span class="benefit-dot"></span> Join a collaborative community of mentors and partners</li>
-            </ul>
-            <div class="impact-ctas">
-              <a href="/donate" class="btn btn-secondary">Donate to accelerate access</a>
-              <a href="mailto:hello@staija.org" class="btn btn-outline">Email hello@staija.org</a>
-            </div>
+            <UiCard class="p-5 bg-white !border-brand-violet/20 shadow-sm relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-1 h-full bg-gradient-brand" />
+              <h4 class="font-semibold text-sm uppercase tracking-wider text-ink/40 mb-2 m-0">What success looks like</h4>
+              <p class="text-ink font-medium leading-relaxed m-0">"{{ activeContent.success }}"</p>
+            </UiCard>
           </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Contact CTA -->
-    <section class="section">
-      <div class="container contact-cta">
-        <h3 class="contact-title">Have another idea?</h3>
-        <p class="contact-text">We’d love to hear from you.</p>
-        <a href="mailto:hello@staija.org" class="btn btn-primary">Get in touch</a>
-      </div>
-    </section>
+          <UiCard class="md:col-span-7 p-8 md:p-10 bg-white">
+            <form class="flex flex-col gap-6" @submit.prevent>
+              <div class="mb-2">
+                <Heading :level="3" class="!text-2xl mb-2">Application Form</Heading>
+                <p class="text-sm text-ink/60 m-0">We review applications on a rolling basis. Expect a reply within 5 days.</p>
+              </div>
+
+              <div v-for="field in activeContent.formFields" :key="field.name" class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-ink/80">{{ field.label }}</label>
+                <textarea
+                  v-if="field.type === 'textarea'"
+                  class="w-full border hairline-ink rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm resize-y bg-white"
+                  :placeholder="`Enter your ${field.label.toLowerCase()}`"
+                  required
+                />
+                <input
+                  v-else
+                  :type="field.type"
+                  class="w-full border hairline-ink rounded-xl p-4 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                  :placeholder="`Enter your ${field.label.toLowerCase()}`"
+                  required
+                />
+              </div>
+
+              <div class="pt-4 border-t hairline-ink mt-2">
+                <UiButton variant="primary" type="submit" class="w-full md:w-auto !h-12 text-base !px-8 group">
+                  <span class="flex items-center gap-2">
+                    Submit Application
+                    <Icon icon="lucide:arrow-right" width="18" class="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </UiButton>
+              </div>
+            </form>
+          </UiCard>
+        </Motion>
+      </Container>
+    </Section>
   </div>
-  
 </template>
-
-<style scoped>
-/* Hero Section */
-.get-involved-hero {
-  padding: var(--space-20) 0 var(--space-16);
-  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
-  text-align: center;
-}
-
-.hero-title {
-  font-size: var(--text-4xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-.hero-subtitle {
-  font-size: var(--text-xl);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Wide container for impact section */
-.container-wide {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--space-4);
-}
-
-/* Responsive Design */
-@media (min-width: 768px) {
-  .hero-title {
-    font-size: var(--text-5xl);
-  }
-}
-
-@media (min-width: 1024px) {
-  .hero-title {
-    font-size: var(--text-6xl);
-  }
-}
-
-.section {
-  padding: var(--space-16) 0;
-}
-
-.section-alt {
-  background: linear-gradient(180deg, var(--neutral-100), #ffffff);
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: var(--space-10);
-}
-
-.section-title {
-  margin-bottom: var(--space-3);
-}
-
-.section-subtitle {
-  color: var(--neutral-600);
-}
-
-.cards-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-}
-
-@media (min-width: 800px) {
-  .cards-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.card {
-  background: white;
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-8);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
-}
-
-.card-icon {
-  font-size: 2rem;
-  margin-bottom: var(--space-4);
-}
-
-.card-title {
-  margin-bottom: var(--space-3);
-}
-
-.card-text {
-  margin-bottom: var(--space-4);
-}
-
-.card-list {
-  margin: 0 0 var(--space-6) 0;
-  padding-left: 1.25rem;
-  color: var(--neutral-700);
-}
-
-.card-actions {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.impact {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-  align-items: center;
-  text-align: center;
-  justify-content: center;
-}
-
-.impact-text {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-@media (min-width: 900px) {
-  .impact {
-    grid-template-columns: 1fr;
-  }
-}
-
-.benefits {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-6) 0;
-}
-
-.benefits li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.benefit-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
-  box-shadow: var(--shadow-glow);
-}
-
-.impact-ctas {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.impact-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
-}
-
-.stat {
-  background: white;
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  text-align: center;
-}
-
-.stat-number {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--primary-700);
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
-.contact-cta {
-  text-align: center;
-  background: white;
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-12);
-  box-shadow: var(--shadow-sm);
-}
-
-.contact-title {
-  margin-bottom: var(--space-2);
-}
-
-.contact-text {
-  margin-bottom: var(--space-6);
-}
-</style>

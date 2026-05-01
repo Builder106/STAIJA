@@ -1,393 +1,147 @@
-<template>
-  <section class="contact">
-    <div class="contact-container">
-      <header class="header">
-        <h1 class="title">Get in Touch</h1>
-        <p class="subtitle">Have questions about our programs? Want to collaborate? We'd love to hear from you.</p>
-        <div class="contact-info">
-          <div class="info-item">
-            <span class="icon"><Icon icon="lucide:mail" /></span>
-            <a href="mailto:hello@staija.org" class="link">hello@staija.org</a>
-          </div>
-          <div class="info-item">
-            <span class="icon"><Icon icon="lucide:map-pin" /></span>
-            <span>Lagos, Nigeria</span>
-          </div>
-        </div>
-      </header>
-
-      <form class="form" novalidate @submit.prevent="onSubmit" aria-describedby="form-help">
-        <div class="form-grid">
-          <div class="field">
-            <label for="name">Full name</label>
-            <input
-              id="name"
-              v-model.trim="form.name"
-              type="text"
-              :class="{ error: errors.name }"
-              :aria-invalid="Boolean(errors.name)"
-              :aria-describedby="errors.name ? 'name-error' : undefined"
-              required
-              autocomplete="name"
-              placeholder="Your full name"
-            />
-            <p v-if="errors.name" id="name-error" class="error-message">{{ errors.name }}</p>
-          </div>
-
-          <div class="field">
-            <label for="email">Email address</label>
-            <input
-              id="email"
-              v-model.trim="form.email"
-              type="email"
-              :class="{ error: errors.email }"
-              :aria-invalid="Boolean(errors.email)"
-              :aria-describedby="errors.email ? 'email-error' : undefined"
-              required
-              autocomplete="email"
-              placeholder="you@example.com"
-            />
-            <p v-if="errors.email" id="email-error" class="error-message">{{ errors.email }}</p>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="subject">Subject</label>
-          <input
-            id="subject"
-            v-model.trim="form.subject"
-            type="text"
-            :class="{ error: errors.subject }"
-            :aria-invalid="Boolean(errors.subject)"
-            :aria-describedby="errors.subject ? 'subject-error' : undefined"
-            required
-            placeholder="How can we help?"
-          />
-          <p v-if="errors.subject" id="subject-error" class="error-message">{{ errors.subject }}</p>
-        </div>
-
-        <div class="field">
-          <label for="message">Message</label>
-          <textarea
-            id="message"
-            v-model.trim="form.message"
-            rows="6"
-            :class="{ error: errors.message }"
-            :aria-invalid="Boolean(errors.message)"
-            :aria-describedby="errors.message ? 'message-error' : undefined"
-            required
-            placeholder="Tell us more about your inquiry..."
-          ></textarea>
-          <p v-if="errors.message" id="message-error" class="error-message">{{ errors.message }}</p>
-        </div>
-
-        <p id="form-help" class="help-text">All fields are required. We'll get back to you within 24 hours.</p>
-
-        <div class="actions">
-          <button class="btn" type="submit" :disabled="submitting">
-            <span v-if="submitting" class="spinner" aria-hidden="true"></span>
-            {{ submitting ? 'Sending…' : 'Send message' }}
-          </button>
-          <p v-if="success" class="success" role="status">
-            <Icon icon="lucide:check" class="success-icon" />
-            Message sent successfully! We'll get back to you within 24 hours.
-          </p>
-          <p v-if="submitError" class="error" role="alert">{{ submitError }}</p>
-        </div>
-      </form>
-    </div>
-  </section>
-  
-</template>
-
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
+import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../config/firebase'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
 
-const form = reactive({
-  name: '',
-  email: '',
-  subject: '',
-  message: ''
-})
+const submitted = ref(false)
 
-const errors = reactive<{ name?: string; email?: string; subject?: string; message?: string }>({})
-const submitting = ref(false)
-const success = ref(false)
-const submitError = ref('')
-
-const validate = () => {
-  errors.name = form.name ? '' : 'Please enter your name.'
-  const emailOk = /.+@.+\..+/.test(form.email)
-  errors.email = emailOk ? '' : 'Please enter a valid email.'
-  errors.subject = form.subject ? '' : 'Please add a subject.'
-  errors.message = form.message && form.message.length >= 10 ? '' : 'Message must be at least 10 characters.'
-  return !errors.name && !errors.email && !errors.subject && !errors.message
-}
-
-const onSubmit = async () => {
-  if (!validate()) return
-  
-  submitting.value = true
-  success.value = false
-  submitError.value = ''
-
-  try {
-    // Store message in Firestore
-    await addDoc(collection(db, 'contact_messages'), {
-      name: form.name,
-      email: form.email,
-      subject: form.subject,
-      message: form.message,
-      timestamp: serverTimestamp(),
-      status: 'new'
-    })
-
-    // Clear form and show success
-    form.name = ''
-    form.email = ''
-    form.subject = ''
-    form.message = ''
-    success.value = true
-    
-    // Reset success message after 5 seconds
-    setTimeout(() => {
-      success.value = false
-    }, 5000)
-    
-  } catch (error: any) {
-    console.error('Error submitting form:', error)
-    submitError.value = 'Failed to send message. Please try again or email us directly at hello@staija.org'
-  } finally {
-    submitting.value = false
-  }
+function handleSubmit(e: Event) {
+  e.preventDefault()
+  submitted.value = true
 }
 </script>
 
-<style scoped>
-.contact { 
-  min-height: 100vh; 
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 2rem 1rem;
-}
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section>
+      <Container>
+        <div class="max-w-2xl mb-16">
+          <Eyebrow class="text-brand-violet mb-4 block">Contact Us</Eyebrow>
+          <Heading :level="1" class="mb-6">We'd love to hear from you.</Heading>
+          <Body large>
+            Whether you have a question about our programs, want to explore a partnership,
+            or just want to say hello, our inbox is always open.
+          </Body>
+        </div>
 
-.contact-container { 
-  max-width: 800px; 
-  margin: 0 auto; 
-  display: grid; 
-  gap: 3rem; 
-  align-items: start;
-}
+        <div class="grid lg:grid-cols-12 gap-16 items-start">
+          <div class="lg:col-span-7">
+            <UiCard class="p-8 md:p-10 bg-white">
+              <Motion
+                v-if="submitted"
+                :initial="{ opacity: 0, scale: 0.95 }"
+                :animate="{ opacity: 1, scale: 1 }"
+                class="flex flex-col items-center text-center py-12 gap-4"
+              >
+                <div class="w-20 h-20 bg-brand-violet/10 text-brand-violet rounded-full flex items-center justify-center mb-4">
+                  <Icon icon="lucide:send" width="32" class="ml-1" />
+                </div>
+                <Heading :level="2">Message sent!</Heading>
+                <Body>Thank you for reaching out. A member of our team will get back to you within 24-48 hours.</Body>
+                <UiButton variant="secondary" class="mt-6" @click="submitted = false">
+                  Send another message
+                </UiButton>
+              </Motion>
 
-.header { 
-  text-align: center; 
-  margin-bottom: 2rem; 
-}
+              <form
+                v-else
+                class="flex flex-col gap-6"
+                @submit="handleSubmit"
+              >
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Full Name</label>
+                    <input type="text" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="Amina Yusuf" />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Email Address</label>
+                    <input type="email" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="amina@example.com" />
+                  </div>
+                </div>
 
-.title { 
-  font-size: 2.5rem; 
-  font-weight: 700; 
-  margin: 0 0 1rem; 
-  background: linear-gradient(135deg, var(--color-primary) 0%, #4f46e5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Subject</label>
+                  <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white">
+                    <option value="">Select a topic</option>
+                    <option value="programs">Program Inquiry (StepUp / Dynamerge)</option>
+                    <option value="partnership">Partnership or Sponsorship</option>
+                    <option value="media">Press or Media</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
 
-.subtitle { 
-  font-size: 1.125rem; 
-  color: var(--color-text-secondary); 
-  margin: 0 0 2rem; 
-  line-height: 1.6;
-}
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Message</label>
+                  <textarea required class="border hairline-ink rounded-xl px-4 py-3 min-h-[160px] resize-y focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="How can we help you?" />
+                </div>
 
-.contact-info {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
+                <UiButton variant="primary" type="submit" class="w-full md:w-auto !h-12 text-base mt-2 group">
+                  <span class="flex items-center gap-2">
+                    Send Message
+                    <Icon icon="lucide:send" width="16" class="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  </span>
+                </UiButton>
+              </form>
+            </UiCard>
+          </div>
 
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-border);
-}
+          <div class="lg:col-span-5 flex flex-col gap-12">
+            <div>
+              <Heading :level="3" class="mb-6">Contact Information</Heading>
+              <div class="flex flex-col gap-6">
+                <a href="mailto:hello@staija.org" class="flex items-start gap-4 p-4 rounded-xl hover:bg-white border border-transparent hover:border-ink/10 transition-all group">
+                  <div class="w-10 h-10 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center shrink-0 mt-1">
+                    <Icon icon="lucide:mail" width="20" />
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-ink mb-1 group-hover:text-brand-violet transition-colors m-0">Email Us</h4>
+                    <p class="text-sm text-ink/60 m-0">hello@staija.org</p>
+                    <p class="text-xs text-ink/40 mt-1 m-0">We aim to respond within 24 hours.</p>
+                  </div>
+                </a>
 
-.icon {
-  font-size: 1.25rem;
-}
+                <div class="flex items-start gap-4 p-4 rounded-xl border border-transparent">
+                  <div class="w-10 h-10 rounded-full bg-brand-sky/10 text-brand-sky flex items-center justify-center shrink-0 mt-1">
+                    <Icon icon="lucide:map-pin" width="20" />
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-ink mb-1 m-0">Lagos Office</h4>
+                    <p class="text-sm text-ink/60 leading-relaxed max-w-[200px] m-0">
+                      14 Innovation Drive,<br />
+                      Yaba, Lagos 101212,<br />
+                      Nigeria
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-.link { 
-  color: var(--color-primary); 
-  text-decoration: none; 
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.link:hover { 
-  color: #4f46e5; 
-  text-decoration: underline; 
-}
+            <div class="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-ink/5 border hairline-ink relative flex items-center justify-center">
+              <div class="absolute inset-0 bg-cover bg-center opacity-30 grayscale" style="background-image:url('https://images.unsplash.com/photo-1524661135-423995f22d0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080')" />
+              <div class="bg-white p-3 rounded-full shadow-lg z-10 flex items-center gap-2">
+                <Icon icon="lucide:map-pin" width="20" class="text-brand-violet" />
+                <span class="font-semibold text-sm pr-2">STAIJA HQ</span>
+              </div>
+            </div>
 
-.form { 
-  background: white; 
-  border-radius: 16px; 
-  padding: 2.5rem; 
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--color-border);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.field { 
-  display: grid; 
-  gap: 0.5rem; 
-}
-
-label { 
-  font-weight: 600; 
-  color: var(--color-text); 
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-input, textarea { 
-  border: 2px solid var(--color-border); 
-  border-radius: 12px; 
-  padding: 0.875rem 1rem; 
-  font-size: 1rem; 
-  transition: all 0.2s;
-  background: #fafafa;
-}
-
-input:focus, textarea:focus { 
-  outline: none; 
-  border-color: var(--color-primary); 
-  box-shadow: 0 0 0 4px rgba(76, 110, 245, 0.1); 
-  background: white;
-  transform: translateY(-1px);
-}
-
-input.error, textarea.error { 
-  border-color: #dc2626; 
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1); 
-}
-
-.error-message { 
-  color: #dc2626; 
-  font-size: 0.875rem; 
-  font-weight: 500;
-}
-
-.help-text { 
-  color: var(--color-text-secondary); 
-  font-size: 0.875rem; 
-  margin: 0 0 1.5rem; 
-  text-align: center;
-}
-
-.actions { 
-  display: flex; 
-  flex-direction: column;
-  align-items: center; 
-  gap: 1rem; 
-}
-
-.btn { 
-  background: linear-gradient(135deg, var(--color-primary) 0%, #4f46e5 100%);
-  color: white; 
-  border: none; 
-  border-radius: 12px; 
-  padding: 1rem 2rem; 
-  font-weight: 600; 
-  font-size: 1rem;
-  cursor: pointer; 
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.btn:disabled { 
-  opacity: 0.7; 
-  cursor: not-allowed; 
-  transform: none;
-}
-
-.spinner { 
-  width: 18px; 
-  height: 18px; 
-  border: 2px solid rgba(255,255,255,0.3); 
-  border-top-color: white; 
-  border-radius: 50%; 
-  display: inline-block; 
-  margin-right: 8px; 
-  animation: spin 1s linear infinite; 
-}
-
-.success { 
-  color: #059669; 
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.success-icon {
-  background: #10b981;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-.error {
-  color: #dc2626;
-  font-weight: 500;
-  text-align: center;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background-color: #fef3f2;
-  border: 1px solid #fca5a5;
-}
-
-@keyframes spin { 
-  to { transform: rotate(360deg); } 
-}
-
-@media (max-width: 768px) {
-  .contact-container { gap: 2rem; }
-  .title { font-size: 2rem; }
-  .form { padding: 1.5rem; }
-  .form-grid { grid-template-columns: 1fr; }
-  .contact-info { gap: 1rem; }
-  .info-item { padding: 0.5rem 0.75rem; }
-}
-
-@media (max-width: 480px) {
-  .contact { padding: 1rem 0.5rem; }
-  .form { padding: 1rem; }
-  .title { font-size: 1.75rem; }
-}
-</style>
+            <div>
+              <Heading :level="3" class="mb-4 !text-lg">Follow Us</Heading>
+              <div class="flex gap-4">
+                <a v-for="social in ['Twitter', 'LinkedIn', 'Instagram']" :key="social" href="#" class="px-4 py-2 rounded-full border hairline-ink text-sm font-semibold hover:!border-brand-violet hover:!text-brand-violet transition-colors bg-white">
+                  {{ social }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Container>
+    </Section>
+  </div>
+</template>
