@@ -1,185 +1,204 @@
-<template>
-  <div v-if="loading" class="loading">Loading event...</div>
-  <div v-else-if="!event" class="error">Event not found</div>
-  <div v-else class="event-detail">
-    <div class="hero">
-      <div class="container">
-        <router-link to="/events" class="back-link">← Back to Events</router-link>
-        <div class="tags">
-          <span v-for="tag in event.tags" :key="tag" class="tag">{{ tag }}</span>
-        </div>
-        <h1>{{ event.title }}</h1>
-        <div class="meta-row">
-          <span><Icon icon="lucide:calendar" class="icon" /> {{ formatDate(event.start) }}</span>
-          <span><Icon icon="lucide:clock" class="icon" /> {{ formatTime(event.start) }} - {{ formatTime(event.end) }} ({{ event.timezone }})</span>
-          <span><Icon icon="lucide:map-pin" class="icon" /> {{ event.location.type === 'online' ? 'Online' : event.location.address }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="container content-grid">
-      <div class="main">
-        <h2>About this event</h2>
-        <p class="description">{{ event.description }}</p>
-      </div>
-
-      <div class="sidebar">
-        <div class="register-card">
-          <div v-if="registration">
-            <div class="status-msg" :class="registration.status">
-              <span v-if="registration.status === 'registered'"><Icon icon="lucide:check-circle" class="icon inline" /> You are registered!</span>
-              <span v-else-if="registration.status === 'waitlisted'"><Icon icon="lucide:hourglass" class="icon inline" /> You are on the waitlist</span>
-              <span v-else>Registration Cancelled</span>
-            </div>
-            <div class="actions">
-              <a v-if="registration.status === 'registered' && event.location.url" :href="event.location.url" target="_blank" class="btn btn-primary full">Join Event</a>
-              <button @click="cancelRegistration" class="btn btn-outline full" :disabled="processing">Cancel Registration</button>
-            </div>
-          </div>
-
-          <div v-else>
-            <div class="spots-info">
-              <div v-if="isFull" class="full-warning">Event is full. Join the waitlist.</div>
-              <div v-else class="spots-avail">{{ event.capacity - event.registeredCount }} spots remaining</div>
-            </div>
-            
-            <button v-if="user" @click="register" class="btn btn-primary full" :disabled="processing">
-              {{ isFull ? 'Join Waitlist' : 'Register Now' }}
-            </button>
-            <button v-else @click="$router.push(`/login?redirect=/events/${event.id}`)" class="btn btn-primary full">
-              Sign in to Register
-            </button>
-          </div>
-
-          <div class="ics-link" v-if="registration?.status === 'registered'">
-             <!-- Placeholder for ICS download -->
-             <a href="#" @click.prevent="downloadICS">Add to Calendar</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { EventService, type AppEvent, type EventRegistration } from '../services/eventService'
-import { AuthService } from '../services/firebase'
-import { Timestamp } from 'firebase/firestore'
+import { ref, computed, watch, onMounted } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
+import UiChip from '../components/ui/UiChip.vue'
+import { getEvent, type EventItem } from '../services/content'
+import { trackEventRsvp } from '../services/analytics'
 
 const route = useRoute()
-const event = ref<AppEvent | null>(null)
-const registration = ref<EventRegistration | null>(null)
+const event = ref<EventItem | null>(null)
 const loading = ref(true)
-const processing = ref(false)
-const user = AuthService.getCurrentUser()
+const notFound = ref(false)
 
-const isFull = computed(() => {
-  if (!event.value) return false
-  return event.value.registeredCount >= event.value.capacity
+const formattedDate = computed(() => {
+  if (!event.value) return ''
+  return new Date(event.value.datetime).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 })
 
-const load = async () => {
+const formattedTime = computed(() => {
+  if (!event.value) return ''
+  return new Date(event.value.datetime).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: event.value.timezone,
+  })
+})
+
+async function load() {
+  const slug = route.params.slug as string
   loading.value = true
-  const id = route.params.id as string
+  notFound.value = false
   try {
-    event.value = await EventService.getEvent(id)
-    if (user && event.value) {
-      registration.value = await EventService.getUserRegistration(id, user.uid)
+    const result = await getEvent(slug)
+    if (!result) {
+      notFound.value = true
+      event.value = null
+    } else {
+      event.value = result
     }
-  } catch (e) {
-    console.error(e)
   } finally {
     loading.value = false
   }
 }
 
-const register = async () => {
-  if (!user || !event.value) return
-  processing.value = true
-  try {
-    await EventService.registerForEvent(event.value.id!, user.uid)
-    // Reload to get updated counts and status
-    await load()
-  } catch (e) {
-    alert('Registration failed: ' + (e as Error).message)
-  } finally {
-    processing.value = false
-  }
-}
-
-const cancelRegistration = async () => {
-  if (!user || !event.value) return
-  if (!confirm('Are you sure you want to cancel?')) return
-  
-  processing.value = true
-  try {
-    await EventService.cancelRegistration(event.value.id!, user.uid)
-    registration.value = null
-    await load()
-  } catch (e) {
-    alert('Cancellation failed: ' + (e as Error).message)
-  } finally {
-    processing.value = false
-  }
-}
-
-const downloadICS = () => {
-  // Basic ICS generation could go here
-  alert('Calendar download not implemented yet')
-}
-
-const getDateObj = (val: Date | Timestamp | string) => {
-  return val instanceof Timestamp ? val.toDate() : new Date(val)
-}
-
-const formatDate = (val: Date | Timestamp | string) => {
-  return getDateObj(val).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-}
-
-const formatTime = (val: Date | Timestamp | string) => {
-  return getDateObj(val).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-}
-
+watch(() => route.params.slug, load)
 onMounted(load)
+
+const rsvpState = ref<'idle' | 'loading' | 'success'>('idle')
+
+function handleRSVP(e: Event) {
+  e.preventDefault()
+  rsvpState.value = 'loading'
+  if (event.value) {
+    trackEventRsvp({ event_slug: event.value.slug, is_virtual: event.value.isVirtual })
+  }
+  setTimeout(() => { rsvpState.value = 'success' }, 800)
+}
 </script>
 
-<style scoped>
-.hero { background: var(--color-background-soft); padding: 4rem 0; }
-.container { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
-.back-link { display: inline-block; margin-bottom: 2rem; color: #666; text-decoration: none; font-weight: 500; }
-.tags { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.tag { background: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; color: var(--color-primary); }
-h1 { font-size: 2.5rem; margin-bottom: 1.5rem; }
-.meta-row { display: flex; gap: 2rem; color: #555; font-size: 1.1rem; flex-wrap: wrap; }
-.meta-row span { display: flex; align-items: center; gap: 0.5rem; }
+<template>
+  <div class="flex flex-col bg-paper min-h-screen pb-24">
+    <Section v-if="loading && !event" class="!pt-12">
+      <Container>
+        <div class="aspect-[3/1] bg-ink/5 rounded-3xl animate-pulse mb-8" />
+        <div class="max-w-3xl flex flex-col gap-4">
+          <div class="h-6 w-24 bg-ink/5 rounded animate-pulse" />
+          <div class="h-12 w-3/4 bg-ink/5 rounded animate-pulse" />
+          <div class="h-6 w-full bg-ink/5 rounded animate-pulse" />
+        </div>
+      </Container>
+    </Section>
 
-.content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; margin-top: 3rem; padding-bottom: 4rem; }
-.description { font-size: 1.1rem; line-height: 1.6; color: #444; white-space: pre-line; }
+    <Section v-else-if="notFound" class="!pt-24 !pb-24 text-center">
+      <Container class="max-w-xl flex flex-col items-center gap-6">
+        <Heading :level="2">Event not found.</Heading>
+        <Body>That event doesn't exist or hasn't been published yet.</Body>
+        <UiButton variant="primary" :to="'/events'">Back to events</UiButton>
+      </Container>
+    </Section>
 
-.register-card { 
-  background: white; padding: 2rem; border-radius: 16px; 
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 2rem;
-}
-.btn { padding: 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: inline-block; }
-.full { width: 100%; display: block; box-sizing: border-box; }
-.btn-primary { background: var(--color-primary); color: white; border: none; }
-.btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
-.btn-outline { background: white; border: 1px solid var(--color-error); color: var(--color-error); margin-top: 0.5rem; }
+    <template v-else-if="event">
+    <Section class="!pt-8 !pb-0">
+      <Container>
+        <RouterLink to="/events" class="inline-flex items-center gap-2 text-sm font-semibold text-ink/60 hover:text-brand-violet transition-colors mb-6 focus-ring-brand rounded-sm">
+          <Icon icon="lucide:arrow-left" width="16" /> Back to events
+        </RouterLink>
 
-.status-msg { padding: 1rem; border-radius: 8px; text-align: center; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-.status-msg.registered { background: #e6fffa; color: #00a88d; }
-.status-msg.waitlisted { background: #fffaf0; color: #c05621; }
-.inline { font-size: 1.2rem; }
+        <Motion
+          v-if="event.hero"
+          class="aspect-[21/9] md:aspect-[3/1] rounded-3xl overflow-hidden relative border hairline-ink"
+          :initial="{ opacity: 0, y: 10 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.5 }"
+        >
+          <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
+          <img :src="event.hero" :alt="event.title" class="w-full h-full object-cover" />
+        </Motion>
+      </Container>
+    </Section>
 
-.spots-info { text-align: center; margin-bottom: 1rem; color: #666; }
-.full-warning { color: var(--color-error); font-weight: bold; }
-.ics-link { margin-top: 1rem; text-align: center; font-size: 0.9rem; }
+    <Section class="!pt-12 !pb-16">
+      <Container>
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start relative">
+          <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-10">
+            <Motion :initial="{ opacity: 0, x: -10 }" :animate="{ opacity: 1, x: 0 }" :transition="{ delay: 0.2 }">
+              <UiChip class="mb-4 bg-ink !text-white !border-transparent">{{ event.type }}</UiChip>
+              <Heading :level="1" class="mb-6">{{ event.title }}</Heading>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-4 border-y hairline-ink bg-white/50 px-2">
+                <div class="flex items-center gap-3 text-ink font-semibold">
+                  <Icon icon="lucide:calendar" width="20" class="text-brand-violet" /> {{ formattedDate }}
+                </div>
+                <div class="flex items-center gap-3 text-ink font-semibold">
+                  <Icon icon="lucide:clock" width="20" class="text-brand-violet" /> {{ formattedTime }} ({{ event.timezone }})
+                </div>
+              </div>
+              <div class="flex items-center gap-3 py-4 border-b hairline-ink bg-white/50 px-2 text-ink font-semibold">
+                <Icon :icon="event.isVirtual ? 'lucide:video' : 'lucide:map-pin'" width="20" class="text-brand-violet" />
+                {{ event.location }}
+              </div>
+            </Motion>
 
-@media (max-width: 768px) {
-  .content-grid { grid-template-columns: 1fr; }
-  .meta-row { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
-}
-</style>
+            <div v-if="event.dek">
+              <Heading :level="3" class="mb-4">About this event</Heading>
+              <Body large class="text-ink/80 leading-relaxed">{{ event.dek }}</Body>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-32">
+            <UiCard class="p-8 bg-white shadow-xl shadow-ink/5 !border-2 !border-brand-violet/10">
+              <Motion
+                v-if="rsvpState === 'success'"
+                :initial="{ opacity: 0, scale: 0.95 }"
+                :animate="{ opacity: 1, scale: 1 }"
+                class="flex flex-col items-center text-center py-8 gap-4"
+              >
+                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+                  <Icon icon="lucide:calendar" width="32" />
+                </div>
+                <Heading :level="3">You're all set!</Heading>
+                <Body>We've sent a calendar invite and details to your email address.</Body>
+                <UiButton variant="secondary" :to="'/events'" class="mt-4 w-full">
+                  Browse more events
+                </UiButton>
+              </Motion>
+
+              <Motion v-else :initial="{ opacity: 0 }" :animate="{ opacity: 1 }">
+                <div class="mb-6 border-b hairline-ink pb-6">
+                  <Heading :level="3" class="mb-2">Secure your spot</Heading>
+                  <p class="text-sm text-ink/60 m-0">This event is free, but space is limited. Register to receive the streaming link.</p>
+                </div>
+
+                <form class="flex flex-col gap-5" @submit="handleRSVP">
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Full Name</label>
+                    <input type="text" required placeholder="Amina Yusuf" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Email Address</label>
+                    <input type="email" required placeholder="amina@example.com" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-ink/80">Are you a prospective student?</label>
+                    <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white">
+                      <option value="">Select an option</option>
+                      <option value="yes">Yes, I want to apply</option>
+                      <option value="no">No, I'm a parent/educator/mentor</option>
+                    </select>
+                  </div>
+
+                  <UiButton
+                    variant="gradient"
+                    type="submit"
+                    :disabled="rsvpState === 'loading'"
+                    class="w-full mt-4 !h-12 text-base font-bold group"
+                  >
+                    <span v-if="rsvpState === 'loading'">Processing…</span>
+                    <span v-else class="flex items-center gap-2">
+                      Complete RSVP
+                      <Icon icon="lucide:arrow-right" width="18" class="transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </UiButton>
+                </form>
+              </Motion>
+            </UiCard>
+          </div>
+        </div>
+      </Container>
+    </Section>
+    </template>
+  </div>
+</template>

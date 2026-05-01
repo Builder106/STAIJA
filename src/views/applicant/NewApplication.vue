@@ -4,6 +4,19 @@
       <div class="header-content">
         <h1>New Application</h1>
         <p class="subtitle">Complete your application for STAIJA programs</p>
+        <div v-if="draftRestored" class="autosave-banner" role="status">
+          We restored your last draft. Your progress saves automatically every 30 seconds.
+        </div>
+        <div class="autosave-status" :data-status="autoSaveStatus">
+          <span v-if="autoSaveStatus === 'saving'">Saving draft…</span>
+          <span v-else-if="autoSaveStatus === 'saved' && autoSavedAt">
+            Draft saved at {{ autoSavedAt.toLocaleTimeString() }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'error'">
+            Couldn't save draft locally. Your work in this tab is safe; sign in to save to the server.
+          </span>
+          <span v-else>Auto-saves every 30 seconds.</span>
+        </div>
       </div>
       <div class="header-actions">
         <button @click="goBack" class="btn-secondary">Cancel</button>
@@ -369,6 +382,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { DatabaseService, AuthService } from '../../services/firebase'
+import { useAutoSave } from '../../composables/useAutoSave'
 
 const router = useRouter()
 
@@ -414,6 +428,11 @@ const form = ref({
 const loading = ref(false)
 const error = ref('')
 const showSuccessModal = ref(false)
+
+// Auto-save: persist the draft to localStorage every 30s and on tab close.
+// Restored automatically on mount; cleared on successful submit.
+const { restored: draftRestored, status: autoSaveStatus, lastSavedAt: autoSavedAt, clear: clearDraft } =
+  useAutoSave('apply.new', form)
 
 // Computed properties for text inputs
 const relevantCoursesText = computed({
@@ -506,6 +525,10 @@ const submitApplication = async (status: 'draft' | 'submitted') => {
     }
 
     await DatabaseService.createApplication(applicationData)
+
+    // The draft is persisted on the server now — wipe the local copy
+    // so we don't restore stale state on the next visit.
+    clearDraft()
 
     if (status === 'submitted') {
       showSuccessModal.value = true

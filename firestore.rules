@@ -105,6 +105,28 @@ service cloud.firestore {
       allow read: if hasAnyRole(['staff', 'admin']);
     }
 
+    // Donations: written exclusively by the Paystack webhook (admin SDK
+    // bypasses these rules). Donors can read their own donation rows;
+    // admins can read all. No client writes.
+    match /donations/{ref} {
+      allow read: if isAuthenticated() && (
+        resource.data.donorUid == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow write: if false;
+    }
+
+    // CMS mirror collections — public read (matches the public blog/events
+    // pages). Writes are server-only (Contentful webhook via admin SDK).
+    match /cms_blogPosts/{entryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /cms_events/{entryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Audit logs collection rules (for tracking role changes)
     match /audit_logs/{logId} {
       // Only admins can read audit logs

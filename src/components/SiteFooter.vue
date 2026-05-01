@@ -1,307 +1,194 @@
-<template>
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-content">
-        <!-- Brand Section -->
-        <div class="footer-brand">
-          <div class="footer-logo">
-            <span class="footer-title">STAIJA</span>
-          </div>
-          <p class="footer-description">
-            Nurturing Africa's next generation of scientist-leaders through research, mentorship, and community.
-          </p>
-          <div class="footer-social">
-            <a href="https://www.threads.com/@staija_ng" class="social-link" aria-label="Follow us on Threads">
-              <img src="../assets/threads.svg" alt="Threads" width="24" height="24" />
-            </a>
-            <a href="https://www.instagram.com/staija_ng/" class="social-link" aria-label="Follow us on Instagram">
-              <Icon icon="mdi:instagram" width="24" height="24" />
-            </a>
-            <a href="https://www.linkedin.com/company/staija-ng/" class="social-link" aria-label="Follow us on LinkedIn">
-              <Icon icon="mdi:linkedin" width="24" height="24" />
-            </a>
-          </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="footer-section">
-          <h3 class="footer-heading">Programs</h3>
-          <nav class="footer-nav" aria-label="Programs">
-            <RouterLink to="/programs/stepup-scholars" class="footer-link">StepUp Scholars</RouterLink>
-            <RouterLink to="/programs/dynamerge" class="footer-link">Dynamerge</RouterLink>
-          </nav>
-        </div>
-
-        <!-- Organization -->
-        <div class="footer-section">
-          <h3 class="footer-heading">Organization</h3>
-          <nav class="footer-nav" aria-label="Organization">
-            <RouterLink to="/about" class="footer-link">About</RouterLink>
-            <RouterLink to="/blog" class="footer-link">Stories</RouterLink>
-            <RouterLink to="/contact" class="footer-link">Contact</RouterLink>
-          </nav>
-        </div>
-      </div>
-
-      <!-- Newsletter Signup -->
-      <div class="footer-newsletter">
-        <div class="newsletter-content">
-          <h3 class="newsletter-title">Stay Updated</h3>
-          <p class="newsletter-description">Get the latest news about our programs and impact stories.</p>
-        </div>
-        <form class="newsletter-form" @submit.prevent="handleNewsletterSubmit">
-          <div class="newsletter-input-group">
-            <label for="newsletter-email" class="sr-only">Email address</label>
-            <input 
-              id="newsletter-email"
-              type="email" 
-              placeholder="Enter your email"
-              class="newsletter-input"
-              required
-            />
-            <button type="submit" class="btn btn-primary">
-              Subscribe
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Bottom Bar -->
-      <div class="footer-bottom">
-        <div class="footer-bottom-content">
-          <p class="footer-copyright">
-            © {{ new Date().getFullYear() }} STAIJA. All rights reserved.
-          </p>
-          <nav class="footer-legal" aria-label="Legal">
-            <a href="/privacy" class="footer-legal-link">Privacy Policy</a>
-            <a href="/terms" class="footer-legal-link">Terms of Service</a>
-            <a href="/accessibility" class="footer-legal-link">Accessibility</a>
-          </nav>
-        </div>
-      </div>
-    </div>
-  </footer>
-</template>
-
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import Container from './ui/Container.vue'
+import UiButton from './ui/UiButton.vue'
+import LocaleSwitcher from './LocaleSwitcher.vue'
+import { trackNewsletterSignup } from '../services/analytics'
+import { getAppConfig } from '../utils/env'
 
-const handleNewsletterSubmit = () => {
-  // Newsletter signup logic would go here
-  console.log('Newsletter signup submitted')
+const year = computed(() => new Date().getFullYear())
+
+const newsletterEmail = ref('')
+const honeypot = ref('') // bots that auto-fill every field will trip this
+const newsletterStatus = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
+const newsletterError = ref<string | null>(null)
+
+async function handleNewsletter(e: Event) {
+  e.preventDefault()
+  if (newsletterStatus.value === 'submitting') return
+  if (honeypot.value) return // silent drop
+
+  newsletterStatus.value = 'submitting'
+  newsletterError.value = null
+
+  const endpoint = getAppConfig().newsletterEndpoint
+  if (!endpoint) {
+    // Endpoint not configured yet — track the intent but explain.
+    trackNewsletterSignup('footer')
+    newsletterStatus.value = 'success'
+    return
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newsletterEmail.value, source: 'footer' }),
+    })
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string }
+      throw new Error(data.error ?? 'Subscription failed')
+    }
+    trackNewsletterSignup('footer')
+    newsletterStatus.value = 'success'
+    newsletterEmail.value = ''
+  } catch (err) {
+    newsletterStatus.value = 'error'
+    newsletterError.value = err instanceof Error ? err.message : 'Subscription failed'
+  }
 }
 </script>
 
-<style scoped>
-.footer {
-  background: var(--neutral-900);
-  color: var(--neutral-300);
-  margin-top: auto;
-}
+<template>
+  <footer class="bg-ink text-paper py-16 md:py-24">
+    <Container>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <RouterLink to="/" class="inline-block focus-ring-brand rounded-sm">
+            <span class="font-display font-bold text-2xl tracking-tighter text-gradient-brand">
+              STAIJA
+            </span>
+          </RouterLink>
+          <p class="text-paper/70 text-sm max-w-sm leading-relaxed">
+            Nurturing Africa's next generation of scientist-leaders through research,
+            mentorship, and community.
+          </p>
+          <div class="flex items-center gap-4">
+            <a
+              href="https://www.threads.com/@staija_ng"
+              target="_blank"
+              rel="noopener"
+              aria-label="Follow us on Threads"
+              class="text-paper/60 hover:text-paper transition-colors"
+            >
+              <Icon icon="simple-icons:threads" width="20" height="20" />
+            </a>
+            <a
+              href="https://www.instagram.com/staija_ng/"
+              target="_blank"
+              rel="noopener"
+              aria-label="Follow us on Instagram"
+              class="text-paper/60 hover:text-paper transition-colors"
+            >
+              <Icon icon="mdi:instagram" width="22" height="22" />
+            </a>
+            <a
+              href="https://www.linkedin.com/company/staija-ng/"
+              target="_blank"
+              rel="noopener"
+              aria-label="Follow us on LinkedIn"
+              class="text-paper/60 hover:text-paper transition-colors"
+            >
+              <Icon icon="mdi:linkedin" width="22" height="22" />
+            </a>
+          </div>
+          <div class="mt-2">
+            <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-4 font-semibold">
+              Newsletter
+            </span>
+            <form
+              v-if="newsletterStatus !== 'success'"
+              class="flex gap-2"
+              @submit="handleNewsletter"
+            >
+              <input
+                v-model="newsletterEmail"
+                type="email"
+                placeholder="Email address"
+                aria-label="Email address"
+                :disabled="newsletterStatus === 'submitting'"
+                class="bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5 text-sm w-full text-paper placeholder:text-paper/40 focus:outline-none focus:border-brand-sky focus:ring-1 focus:ring-brand-sky transition-all disabled:opacity-50"
+                required
+              />
+              <input
+                v-model="honeypot"
+                type="text"
+                name="trap"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+                class="sr-only"
+              />
+              <UiButton
+                variant="primary"
+                type="submit"
+                class="shrink-0 px-4"
+                :disabled="newsletterStatus === 'submitting'"
+                aria-label="Subscribe"
+              >
+                <Icon
+                  :icon="newsletterStatus === 'submitting' ? 'lucide:loader-2' : 'lucide:arrow-right'"
+                  width="18"
+                  height="18"
+                  :class="newsletterStatus === 'submitting' && 'animate-spin'"
+                />
+              </UiButton>
+            </form>
+            <p v-else class="text-sm text-paper/80 bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5">
+              Thanks — check your inbox to confirm your subscription.
+            </p>
+            <p v-if="newsletterError" role="alert" class="mt-2 text-xs text-red-300">
+              {{ newsletterError }}
+            </p>
+          </div>
+        </div>
 
-.footer-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-  padding: var(--space-16) 0 var(--space-12);
-}
+        <div class="lg:col-span-2 lg:col-start-6">
+          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
+            Programs
+          </span>
+          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
+            <li><RouterLink to="/programs/stepup-scholars" class="hover:text-white transition-colors">StepUp Scholars</RouterLink></li>
+            <li><RouterLink to="/programs/dynamerge" class="hover:text-white transition-colors">Dynamerge</RouterLink></li>
+            <li><RouterLink to="/events" class="hover:text-white transition-colors">All Events</RouterLink></li>
+            <li><RouterLink to="/blog" class="hover:text-white transition-colors">Stories</RouterLink></li>
+          </ul>
+        </div>
 
-.footer-brand {
-  max-width: 320px;
-}
+        <div class="lg:col-span-2">
+          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
+            Organization
+          </span>
+          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
+            <li><RouterLink to="/about" class="hover:text-white transition-colors">About Us</RouterLink></li>
+            <li><RouterLink to="/get-involved" class="hover:text-white transition-colors">Get Involved</RouterLink></li>
+            <li><RouterLink to="/contact" class="hover:text-white transition-colors">Contact</RouterLink></li>
+            <li><RouterLink to="/press" class="hover:text-white transition-colors">Press</RouterLink></li>
+            <li><RouterLink to="/donate" class="hover:text-white transition-colors">Donate</RouterLink></li>
+          </ul>
+        </div>
 
-.footer-logo {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
+        <div class="lg:col-span-2">
+          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
+            Resources
+          </span>
+          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
+            <li><RouterLink to="/login" class="hover:text-white transition-colors">Sign in</RouterLink></li>
+            <li><RouterLink to="/signup" class="hover:text-white transition-colors">Apply</RouterLink></li>
+          </ul>
+        </div>
+      </div>
 
-.footer-logo-img {
-  height: 2rem;
-  width: auto;
-  filter: brightness(0) invert(1);
-}
-
-.footer-title {
-  font-family: 'Cairo', sans-serif;
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: white;
-  letter-spacing: -0.025em;
-}
-
-.footer-description {
-  color: var(--neutral-400);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-6);
-}
-
-.footer-social {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: var(--neutral-800);
-  color: var(--neutral-400);
-  border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
-  text-decoration: none;
-}
-
-.social-link:hover {
-  background: var(--primary-600);
-  color: white;
-  transform: translateY(-2px);
-  text-decoration: none;
-}
-
-.footer-section {
-  min-width: 0;
-}
-
-.footer-heading {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: white;
-  margin-bottom: var(--space-4);
-}
-
-.footer-nav {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.footer-link {
-  color: var(--neutral-400);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-  font-size: var(--text-sm);
-}
-
-.footer-link:hover {
-  color: var(--primary-400);
-  text-decoration: none;
-}
-
-.footer-newsletter {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  padding: var(--space-8) 0;
-  border-top: 1px solid var(--neutral-800);
-  border-bottom: 1px solid var(--neutral-800);
-}
-
-.newsletter-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: white;
-  margin-bottom: var(--space-2);
-}
-
-.newsletter-description {
-  color: var(--neutral-400);
-  margin-bottom: 0;
-}
-
-.newsletter-form {
-  max-width: 400px;
-}
-
-.newsletter-input-group {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.newsletter-input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  background: var(--neutral-800);
-  border: 1px solid var(--neutral-700);
-  border-radius: var(--radius-lg);
-  color: white;
-  font-size: var(--text-sm);
-  transition: all var(--transition-fast);
-}
-
-.newsletter-input:focus {
-  outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
-}
-
-.newsletter-input::placeholder {
-  color: var(--neutral-500);
-}
-
-.footer-bottom {
-  padding: var(--space-6) 0;
-}
-
-.footer-bottom-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-  text-align: center;
-}
-
-.footer-copyright {
-  color: var(--neutral-500);
-  font-size: var(--text-sm);
-  margin: 0;
-}
-
-.footer-legal {
-  display: flex;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.footer-legal-link {
-  color: var(--neutral-500);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  transition: color var(--transition-fast);
-}
-
-.footer-legal-link:hover {
-  color: var(--neutral-300);
-  text-decoration: none;
-}
-
-
-
-/* Responsive Design */
-@media (min-width: 640px) {
-  .footer-content {
-    grid-template-columns: 2fr 1fr 1fr;
-  }
-  
-  .newsletter-input-group {
-    flex-direction: row;
-  }
-  
-  .footer-bottom-content {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
-  }
-}
-
-@media (min-width: 768px) {
-  .footer-newsletter {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-  }
-}
-</style>
+      <div class="mt-16 pt-8 border-t border-paper/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-paper/40">
+        <p>© {{ year }} STAIJA. All rights reserved.</p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="hover:text-paper transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-paper transition-colors">Terms of Service</a>
+          <LocaleSwitcher />
+        </div>
+      </div>
+    </Container>
+  </footer>
+</template>

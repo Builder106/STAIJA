@@ -18,11 +18,14 @@ const routes: RouteRecordRaw[] = [
   { path: '/programs/dynamerge', name: 'dynamerge', component: () => import('../views/Dynamerge.vue'), meta: { title: 'Dynamerge' } },
   { path: '/get-involved', name: 'get-involved', component: () => import('../views/GetInvolved.vue'), meta: { title: 'Get Involved' } },
   { path: '/donate', name: 'donate', component: () => import('../views/Donate.vue'), meta: { title: 'Donate' } },
+  { path: '/donor', name: 'donor-dashboard', component: () => import('../views/donor/DonorDashboard.vue'), meta: { title: 'My Donations — STAIJA', requiresAuth: true } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
+  { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
+  { path: '/blog/:slug', name: 'blog-post', component: () => import('../views/BlogPost.vue'), meta: { title: 'Story — STAIJA' } },
   { path: '/contact', name: 'contact', component: () => import('../views/Contact.vue'), meta: { title: 'Contact' } },
   { path: '/events', name: 'events', component: () => import('../views/Events.vue'), meta: { title: 'Events & Workshops' } },
-  { path: '/events/:id', name: 'event-detail', component: () => import('../views/EventDetail.vue'), meta: { title: 'Event Details' } },
+  { path: '/events/:slug', name: 'event-detail', component: () => import('../views/EventDetail.vue'), meta: { title: 'Event Details' } },
   
   // Authentication routes
   { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { title: 'Sign In' } },

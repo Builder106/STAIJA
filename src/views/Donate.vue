@@ -1,1350 +1,335 @@
-<template>
-  <div class="donate">
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="container">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <span class="badge-text"><Icon icon="lucide:heart" class="inline-icon" /> Support Our Mission</span>
-          </div>
-          <h1 class="hero-title">Fuel Research & Opportunity</h1>
-          <p class="hero-subtitle">
-            Your donation directly supports mentorship programs, research equipment, student stipends, and 
-            the development of Africa's next generation of scientist-leaders.
-          </p>
-          <div class="hero-stats">
-            <div class="stat">
-              <div class="stat-number">₦5,000</div>
-              <div class="stat-label">Workshop Access</div>
-            </div>
-            <div class="stat">
-              <div class="stat-number">₦25,000</div>
-              <div class="stat-label">Research Stipend</div>
-            </div>
-            <div class="stat">
-              <div class="stat-number">₦100,000</div>
-              <div class="stat-label">Full Program Support</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-
-    <!-- Donation Options -->
-    <section class="donation-section">
-      <div class="container">
-        <div class="donation-content">
-          <h2 class="section-title">Choose Your Impact</h2>
-          <p class="donation-description">
-            Select a donation amount that matches your desired impact, or choose a custom amount. 
-            Every contribution, no matter the size, makes a difference.
-          </p>
-          
-          <div class="donation-tiers">
-            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'starter' }" @click="selectTier('starter')">
-              <div class="tier-header">
-                <div class="tier-amount">₦2,500</div>
-                <div class="tier-badge">Starter</div>
-              </div>
-              <h3 class="tier-title">Research Materials</h3>
-              <p class="tier-description">Provides essential research materials and supplies for one student</p>
-              <ul class="tier-benefits">
-                <li>Lab supplies and equipment</li>
-                <li>Research methodology guide</li>
-                <li>Digital learning resources</li>
-                <li>Certificate of support</li>
-              </ul>
-            </div>
-            
-            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'workshop' }" @click="selectTier('workshop')">
-              <div class="tier-header">
-                <div class="tier-amount">₦5,000</div>
-                <div class="tier-badge">Popular</div>
-              </div>
-              <h3 class="tier-title">Workshop Access</h3>
-              <p class="tier-description">Provides one student with access to research workshops and training sessions</p>
-              <ul class="tier-benefits">
-                <li>Research methodology training</li>
-                <li>Skill development workshops</li>
-                <li>Peer networking opportunities</li>
-                <li>Certificate of participation</li>
-              </ul>
-            </div>
-            
-            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'stipend' }" @click="selectTier('stipend')">
-              <div class="tier-header">
-                <div class="tier-amount">₦25,000</div>
-                <div class="tier-badge">High Impact</div>
-              </div>
-              <h3 class="tier-title">Research Stipend</h3>
-              <p class="tier-description">Funds a student's research project with stipend and equipment support</p>
-              <ul class="tier-benefits">
-                <li>Monthly research stipend</li>
-                <li>Equipment and materials</li>
-                <li>Mentor guidance</li>
-                <li>Publication opportunities</li>
-              </ul>
-            </div>
-            
-            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'program' }" @click="selectTier('program')">
-              <div class="tier-header">
-                <div class="tier-amount">₦100,000</div>
-                <div class="tier-badge">Transformative</div>
-              </div>
-              <h3 class="tier-title">Full Program Support</h3>
-              <p class="tier-description">Comprehensive support for a student's entire research journey</p>
-              <ul class="tier-benefits">
-                <li>Full program participation</li>
-                <li>International conference attendance</li>
-                <li>Research publication support</li>
-                <li>Career development guidance</li>
-              </ul>
-            </div>
-            
-            <div class="tier-card" :class="{ 'tier-card--selected': selectedTier === 'custom' }" @click="selectTier('custom')">
-              <div class="tier-header">
-                <div class="tier-amount">Custom</div>
-                <div class="tier-badge">Flexible</div>
-              </div>
-              <h3 class="tier-title">Custom Amount</h3>
-              <p class="tier-description">Choose any amount that works for you and your desired impact</p>
-              <div class="custom-amount-input">
-                <label for="customAmount" class="form-label">Amount (₦)</label>
-                <input 
-                  id="customAmount"
-                  v-model="customAmount"
-                  type="number"
-                  min="1000"
-                  step="1000"
-                  class="form-input"
-                  placeholder="Enter amount"
-                  @input="handleCustomAmount"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Donation Form -->
-    <section class="form-section">
-      <div class="container">
-        <div class="form-content">
-          <h2 class="section-title">Complete Your Donation</h2>
-          
-          <form class="donation-form" @submit.prevent="handleDonationSubmit">
-            <div class="form-grid">
-              <!-- Personal Information -->
-              <div class="form-section-group">
-                <h3 class="form-section-title">Personal Information</h3>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="firstName" class="form-label">First Name *</label>
-                    <input 
-                      id="firstName"
-                      v-model="form.firstName"
-                      type="text" 
-                      class="form-input" 
-                      required
-                      :class="{ 'error': !form.firstName && showValidation }"
-                    />
-                    <span v-if="!form.firstName && showValidation" class="error-message">First name is required</span>
-                  </div>
-                  <div class="form-group">
-                    <label for="lastName" class="form-label">Last Name *</label>
-                    <input 
-                      id="lastName"
-                      v-model="form.lastName"
-                      type="text" 
-                      class="form-input" 
-                      required
-                      :class="{ 'error': !form.lastName && showValidation }"
-                    />
-                    <span v-if="!form.lastName && showValidation" class="error-message">Last name is required</span>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="email" class="form-label">Email Address *</label>
-                  <input 
-                    id="email"
-                    v-model="form.email"
-                    type="email" 
-                    class="form-input" 
-                    required
-                    :class="{ 'error': !form.email && showValidation }"
-                  />
-                  <span v-if="!form.email && showValidation" class="error-message">Email address is required</span>
-                </div>
-                <div class="form-group">
-                  <label for="phone" class="form-label">Phone Number</label>
-                  <input 
-                    id="phone"
-                    v-model="form.phone"
-                    type="tel" 
-                    class="form-input"
-                  />
-                </div>
-              </div>
-
-              <!-- Donation Details -->
-              <div class="form-section-group">
-                <h3 class="form-section-title">Donation Details</h3>
-                <div class="donation-summary">
-                  <div class="summary-item">
-                    <span class="summary-label">Selected Amount:</span>
-                    <span class="summary-value">₦{{ formatAmount(selectedAmount) }}</span>
-                  </div>
-                  <div class="summary-item">
-                    <span class="summary-label">Frequency:</span>
-                    <select v-model="form.frequency" class="form-select">
-                      <option value="one-time">One-time</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="annually">Annually</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div class="form-group">
-                  <label for="message" class="form-label">Message (Optional)</label>
-                  <textarea 
-                    id="message"
-                    v-model="form.message"
-                    class="form-textarea" 
-                    rows="3"
-                    placeholder="Share why you're supporting STAIJA or leave a message for our students..."
-                  ></textarea>
-                </div>
-                
-                <div class="form-group">
-                  <label class="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      v-model="form.anonymous"
-                      class="checkbox-input"
-                    />
-                    Make this donation anonymous
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <div class="payment-options">
-                <button 
-                  type="button" 
-                  class="btn btn-primary btn-lg payment-btn" 
-                  :disabled="isSubmitting || !canProceed"
-                  @click="initializePaystack"
-                >
-                  <span v-if="isSubmitting">
-                    <div class="loading-spinner"></div>
-                    Processing...
-                  </span>
-                  <span v-else>
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    Donate ₦{{ formatAmount(selectedAmount) }} via Paystack
-                  </span>
-                </button>
-              </div>
-              
-              <p class="form-note">
-                Your donation is secure and tax-deductible. You'll receive a receipt via email.
-              </p>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="faq-section">
-      <div class="container">
-        <h2 class="section-title">Frequently Asked Questions</h2>
-        <div class="faq-grid">
-          <div class="faq-item">
-            <h3 class="faq-question">Is my donation tax-deductible?</h3>
-            <p class="faq-answer">
-              Yes, donations to STAIJA are tax-deductible in Nigeria. You'll receive a receipt for your records.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="faq-question">How will my donation be used?</h3>
-            <p class="faq-answer">
-              Your donation directly supports student programs, research equipment, mentorship initiatives, and 
-              community building activities. We provide regular updates on how funds are utilized.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="faq-question">Can I make a recurring donation?</h3>
-            <p class="faq-answer">
-              Yes, you can set up monthly, quarterly, or annual recurring donations to provide sustained support 
-              for our programs.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="faq-question">What payment methods do you accept?</h3>
-            <p class="faq-answer">
-              We accept credit/debit cards, bank transfers, and mobile money payments through Paystack. 
-              All transactions are secure and encrypted.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="faq-question">Can I donate anonymously?</h3>
-            <p class="faq-answer">
-              Yes, you can choose to make your donation anonymous. Your information will be kept private.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="faq-question">How can I get a receipt?</h3>
-            <p class="faq-answer">
-              You'll automatically receive a receipt via email after your donation is processed. 
-              You can also request additional copies by contacting us.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="container">
-        <div class="cta-content">
-          <h2 class="cta-title">Ready to Make a Difference?</h2>
-          <p class="cta-description">
-            Join our community of supporters who are investing in Africa's future through science and innovation. 
-            Every donation, no matter the size, creates lasting impact.
-          </p>
-          <div class="cta-actions">
-            <a href="#donate" class="btn btn-primary btn-lg">Donate Now</a>
-            <RouterLink to="/contact" class="btn btn-outline btn-lg">Contact Us</RouterLink>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bank Transfer Modal -->
-    <div v-if="showBankDetails" class="modal-overlay" @click="showBankDetails = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title">Bank Transfer Details</h3>
-          <button class="modal-close" @click="showBankDetails = false">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="bank-details">
-            <div class="bank-item">
-              <span class="bank-label">Bank Name:</span>
-              <span class="bank-value">First Bank of Nigeria</span>
-            </div>
-            <div class="bank-item">
-              <span class="bank-label">Account Name:</span>
-              <span class="bank-value">STAIJA Foundation</span>
-            </div>
-            <div class="bank-item">
-              <span class="bank-label">Account Number:</span>
-              <span class="bank-value">1234567890</span>
-            </div>
-            <div class="bank-item">
-              <span class="bank-label">Amount:</span>
-              <span class="bank-value">₦{{ formatAmount(selectedAmount) }}</span>
-            </div>
-          </div>
-          <p class="bank-note">
-            Please include your name as reference when making the transfer. 
-            You'll receive a confirmation email once the payment is verified.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Money Modal -->
-    <div v-if="showMobileMoney" class="modal-overlay" @click="showMobileMoney = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title">Mobile Money Payment</h3>
-          <button class="modal-close" @click="showMobileMoney = false">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p class="mobile-note">
-            Mobile money payments are processed through our secure payment partners. 
-            Please contact us directly for mobile money payment instructions.
-          </p>
-          <div class="contact-info">
-            <p><strong>Email:</strong> donations@staija.org</p>
-            <p><strong>Phone:</strong> +234 123 456 7890</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div v-if="showConfirmation" class="modal-overlay">
-      <div class="modal-content confirmation-modal" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title">Thank You for Your Donation!</h3>
-        </div>
-        <div class="modal-body">
-          <div class="confirmation-content">
-            <div class="confirmation-icon"><Icon icon="lucide:check-circle" /></div>
-            <h4 class="confirmation-amount">₦{{ formatAmount(selectedAmount) }}</h4>
-            <p class="confirmation-message">
-              Your donation has been processed successfully. You will receive a receipt via email within 24 hours.
-            </p>
-            <div class="confirmation-actions">
-              <button class="btn btn-primary" @click="showConfirmation = false">Close</button>
-              <a href="/" class="btn btn-outline">Return to Home</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
+import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiButton from '../components/ui/UiButton.vue'
+import UiCard from '../components/ui/UiCard.vue'
+import { trackDonateStart } from '../services/analytics'
+import { donate as launchPaystack, formatNaira } from '../services/donations'
+import { auth } from '../config/firebase'
 
-const isSubmitting = ref(false)
-const selectedTier = ref('workshop')
+type Frequency = 'one-time' | 'monthly'
+
+const frequency = ref<Frequency>('monthly')
+const selectedTier = ref<number>(1)
 const customAmount = ref('')
-const paystackLoaded = ref(false)
-const showBankDetails = ref(false)
-const showMobileMoney = ref(false)
-const showConfirmation = ref(false)
-const showValidation = ref(false)
+const submitting = ref(false)
+const errorMessage = ref<string | null>(null)
+const successRef = ref<string | null>(null)
 
-const form = reactive({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  frequency: 'one-time',
-  message: '',
-  anonymous: false
+const tiers = [
+  { id: 0, amount: '₦5,000', impact: 'Funds one workshop seat', bestValue: false },
+  { id: 1, amount: '₦25,000', impact: 'Covers a research stipend for a month', bestValue: true },
+  { id: 2, amount: '₦100,000', impact: 'Sponsors a full StepUp cohort placement', bestValue: false },
+]
+
+const allocation = [
+  { name: 'Student Stipends', value: 60, color: '#8B55FF' },
+  { name: 'Lab Materials & Venue', value: 20, color: '#5EDBE7' },
+  { name: 'Mentorship Ops', value: 10, color: '#9768FF' },
+  { name: 'Admin & Overhead', value: 10, color: '#0E1217' },
+]
+
+// Build a single conic-gradient string from the allocation percentages.
+const donutGradient = computed(() => {
+  let acc = 0
+  const stops = allocation.map((seg) => {
+    const start = acc
+    acc += seg.value
+    return `${seg.color} ${start}% ${acc}%`
+  })
+  return `conic-gradient(${stops.join(', ')})`
 })
 
-const tierAmounts = {
-  starter: 2500,
-  workshop: 5000,
-  stipend: 25000,
-  program: 100000,
-  custom: 0
+function pickTier(id: number) {
+  selectedTier.value = id
+  customAmount.value = ''
 }
 
-const selectedAmount = computed(() => {
-  if (selectedTier.value === 'custom') {
-    return parseInt(customAmount.value) || 0
+function pickCustom(value: string) {
+  customAmount.value = value
+  selectedTier.value = -1
+}
+
+function currentAmountKobo(): number {
+  if (selectedTier.value >= 0) {
+    const amounts = [5000, 25000, 100000]
+    return (amounts[selectedTier.value] ?? 0) * 100
   }
-  return tierAmounts[selectedTier.value as keyof typeof tierAmounts]
-})
+  const naira = parseInt(customAmount.value, 10)
+  return Number.isFinite(naira) ? naira * 100 : 0
+}
 
-const canProceed = computed(() => {
-  return form.firstName && form.lastName && form.email && selectedAmount.value > 0
-})
+async function handleDonateClick() {
+  errorMessage.value = null
+  successRef.value = null
 
-// Watch for form changes to hide validation errors
-watch([() => form.firstName, () => form.lastName, () => form.email], () => {
-  if (showValidation.value && canProceed.value) {
-    showValidation.value = false
+  const amountKobo = currentAmountKobo()
+  if (amountKobo <= 0) {
+    errorMessage.value = 'Pick an amount or enter a custom value above ₦100.'
+    return
   }
-})
-
-const selectTier = (tier: string) => {
-  selectedTier.value = tier
-  if (tier !== 'custom') {
-    customAmount.value = ''
-  }
-}
-
-const handleCustomAmount = () => {
-  if (customAmount.value) {
-    selectedTier.value = 'custom'
-  }
-}
-
-const formatAmount = (amount: number) => {
-  return amount.toLocaleString('en-NG')
-}
-
-const generateReference = () => {
-  const timestamp = Date.now()
-  const random = Math.random().toString(36).substring(2, 15)
-  return `STAIJA_${timestamp}_${random}`.toUpperCase()
-}
-
-const initializePaystack = async () => {
-  if (!canProceed.value) {
-    showValidation.value = true
+  if (amountKobo < 100 * 100) {
+    errorMessage.value = 'Minimum donation is ₦100.'
     return
   }
 
-  isSubmitting.value = true
+  trackDonateStart({
+    amount_kobo: amountKobo,
+    frequency: frequency.value,
+    tier: selectedTier.value >= 0 ? 'preset' : 'custom',
+  })
 
-  try {
-    // Check if Paystack is loaded
-    if (typeof (window as any).PaystackPop === 'undefined') {
-      throw new Error('Paystack is not loaded. Please check your internet connection and try again.')
-    }
-
-    const handler = (window as any).PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-      email: form.email,
-      amount: selectedAmount.value * 100, // Convert to kobo
-      currency: 'NGN',
-      ref: generateReference(),
-      callback: (response: any) => {
-        handlePaymentSuccess(response)
-      },
-      onClose: () => {
-        handlePaymentClose()
-      },
-      metadata: {
-        donor_name: `${form.firstName} ${form.lastName}`,
-        donor_email: form.email,
-        donor_phone: form.phone,
-        donation_tier: selectedTier.value,
-        donation_frequency: form.frequency,
-        anonymous: form.anonymous,
-        message: form.message,
-        custom_fields: {
-          donor_name: `${form.firstName} ${form.lastName}`,
-          donor_email: form.email,
-          donation_purpose: 'STAIJA Research and Education Programs'
-        }
-      }
-    })
-
-    handler.openIframe()
-  } catch (error) {
-    console.error('Error initializing Paystack:', error)
-    alert('There was an error initializing the payment. Please try again.')
-    isSubmitting.value = false
+  // Use the signed-in user's email if available; otherwise prompt.
+  let email = auth.currentUser?.email ?? ''
+  if (!email) {
+    const entered = window.prompt('Enter your email for the donation receipt:')
+    if (!entered) return
+    email = entered.trim()
   }
-}
 
-const handlePaymentSuccess = async (response: any) => {
-  console.log('Payment successful:', response)
-  
+  submitting.value = true
   try {
-    // Here you would typically send the payment verification to your backend
-    // For now, we'll simulate a successful donation
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Show confirmation modal
-    showConfirmation.value = true
-    
-    // Reset form
-    Object.assign(form, {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      frequency: 'one-time',
-      message: '',
-      anonymous: false
+    const result = await launchPaystack({
+      amountKobo,
+      email,
+      frequency: frequency.value,
+      fullName: auth.currentUser?.displayName ?? undefined,
     })
-    selectedTier.value = 'workshop'
-    customAmount.value = ''
-    showValidation.value = false
-    
-  } catch (error) {
-    console.error('Error processing payment success:', error)
-    alert('Payment was successful, but there was an error processing your donation details. Please contact us.')
+    if (result.status === 'success' && result.reference) {
+      successRef.value = result.reference
+    }
+  } catch (err) {
+    errorMessage.value = err instanceof Error ? err.message : 'Donation failed.'
   } finally {
-    isSubmitting.value = false
+    submitting.value = false
   }
 }
-
-const handlePaymentClose = () => {
-  console.log('Payment window closed')
-  isSubmitting.value = false
-}
-
-const handleDonationSubmit = async () => {
-  // This is now handled by the Paystack integration
-  initializePaystack()
-}
-
-onMounted(() => {
-  // Load Paystack script dynamically
-  const loadPaystackScript = () => {
-    if (typeof (window as any).PaystackPop === 'undefined') {
-      const script = document.createElement('script')
-      script.src = 'https://js.paystack.co/v1/inline.js'
-      script.onload = () => {
-        paystackLoaded.value = true
-      }
-      script.onerror = () => {
-        console.error('Failed to load Paystack script')
-      }
-      document.head.appendChild(script)
-    } else {
-      paystackLoaded.value = true
-    }
-  }
-  
-  loadPaystackScript()
-})
 </script>
 
-<style scoped>
-.donate {
-  min-height: 100vh;
-}
-
-/* Hero Section */
-.hero-section {
-  padding: var(--space-20) 0 var(--space-16);
-  background: linear-gradient(135deg, var(--secondary-500) 0%, var(--primary-600) 100%);
-  text-align: center;
-  color: white;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-4);
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-glow);
-  margin-bottom: var(--space-6);
-  backdrop-filter: blur(10px);
-}
-
-.badge-text {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: white;
-}
-
-.hero-title {
-  font-size: var(--text-4xl);
-  font-weight: 800;
-  margin-bottom: var(--space-6);
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.hero-subtitle {
-  font-size: var(--text-xl);
-  line-height: var(--leading-relaxed);
-  max-width: 600px;
-  margin: 0 auto var(--space-8);
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.hero-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.stat {
-  text-align: center;
-  background: rgba(255, 255, 255, 0.1);
-  padding: var(--space-4);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all var(--transition-normal);
-}
-
-.stat:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.stat-number {
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: white;
-  line-height: 1;
-  margin-bottom: var(--space-1);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-}
-
-/* Form validation styles */
-.form-input.error,
-.form-select.error,
-.form-textarea.error {
-  border-color: var(--error-500);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-
-.error-message {
-  color: var(--error-500);
-  font-size: var(--text-sm);
-  margin-top: var(--space-1);
-  display: block;
-}
-
-/* Loading spinner */
-.loading-spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: var(--space-2);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-
-
-.section-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-
-
-
-
-/* Donation Section */
-.donation-section {
-  padding: var(--space-20) 0;
-  background: var(--neutral-50);
-}
-
-.donation-content {
-  text-align: center;
-  margin-bottom: var(--space-12);
-}
-
-.donation-description {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  max-width: 600px;
-  margin: 0 auto var(--space-8);
-}
-
-.donation-tiers {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.tier-card {
-  background: white;
-  padding: var(--space-8);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  text-align: left;
-  position: relative;
-  overflow: hidden;
-}
-
-.tier-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-}
-
-.tier-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-6px);
-}
-
-.tier-card:hover::before {
-  transform: scaleX(1);
-}
-
-.tier-card--selected {
-  border-color: var(--primary-500);
-  box-shadow: var(--shadow-hover);
-  background: var(--primary-50);
-}
-
-.tier-card--selected::before {
-  transform: scaleX(1);
-}
-
-.tier-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
-}
-
-.tier-amount {
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: var(--primary-600);
-}
-
-.tier-badge {
-  padding: var(--space-1) var(--space-3);
-  background: var(--primary-500);
-  color: white;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  border-radius: var(--radius-full);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.tier-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-2);
-}
-
-.tier-description {
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-4);
-}
-
-.tier-benefits {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tier-benefits li {
-  padding: var(--space-1) 0;
-  color: var(--neutral-700);
-  position: relative;
-  padding-left: var(--space-6);
-}
-
-.tier-benefits li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--primary-600);
-  font-weight: bold;
-}
-
-.custom-amount-input {
-  margin-top: var(--space-4);
-}
-
-/* Form Section */
-.form-section {
-  padding: var(--space-20) 0;
-  background: white;
-}
-
-.form-content {
-  text-align: center;
-  margin-bottom: var(--space-12);
-}
-
-.donation-form {
-  background: var(--neutral-50);
-  padding: var(--space-8);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-lg);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.form-grid {
-  display: grid;
-  gap: var(--space-8);
-}
-
-.form-section-group {
-  border-bottom: 1px solid var(--neutral-200);
-  padding-bottom: var(--space-8);
-}
-
-.form-section-group:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.form-section-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-  text-align: left;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-.form-group {
-  margin-bottom: var(--space-4);
-}
-
-.form-label {
-  display: block;
-  font-weight: 600;
-  color: var(--neutral-700);
-  margin-bottom: var(--space-2);
-  text-align: left;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--neutral-300);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-base);
-  transition: all var(--transition-fast);
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--neutral-700);
-}
-
-.checkbox-input {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: var(--primary-600);
-}
-
-.donation-summary {
-  background: white;
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--space-6);
-  border: 1px solid var(--neutral-200);
-  transition: all var(--transition-normal);
-}
-
-.donation-summary:hover {
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
-}
-
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-3);
-}
-
-.summary-item:last-child {
-  margin-bottom: 0;
-}
-
-.summary-label {
-  font-weight: 600;
-  color: var(--neutral-700);
-}
-
-.summary-value {
-  font-weight: 700;
-  color: var(--primary-600);
-  font-size: var(--text-lg);
-}
-
-.form-actions {
-  text-align: center;
-  margin-top: var(--space-8);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--neutral-200);
-}
-
-.payment-options {
-  margin-bottom: var(--space-6);
-}
-
-.payment-btn {
-  margin-bottom: var(--space-6);
-}
-
-
-
-.form-note {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin-top: var(--space-4);
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--space-4);
-}
-
-.modal-content {
-  background: white;
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-2xl);
-  max-width: 500px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-6);
-  border-bottom: 1px solid var(--neutral-200);
-}
-
-.modal-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: var(--text-2xl);
-  color: var(--neutral-500);
-  cursor: pointer;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  transition: all var(--transition-fast);
-}
-
-.modal-close:hover {
-  background: var(--neutral-100);
-  color: var(--neutral-700);
-}
-
-.modal-body {
-  padding: var(--space-6);
-}
-
-.bank-details {
-  background: var(--neutral-50);
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--space-6);
-}
-
-.bank-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--neutral-200);
-}
-
-.bank-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.bank-label {
-  font-weight: 600;
-  color: var(--neutral-700);
-}
-
-.bank-value {
-  font-weight: 700;
-  color: var(--primary-600);
-}
-
-.bank-note {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin: 0;
-}
-
-.mobile-note {
-  font-size: var(--text-lg);
-  color: var(--neutral-700);
-  margin-bottom: var(--space-6);
-}
-
-.contact-info {
-  background: var(--neutral-50);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-}
-
-.contact-info p {
-  margin: var(--space-2) 0;
-  color: var(--neutral-700);
-}
-
-.confirmation-modal {
-  text-align: center;
-}
-
-.confirmation-content {
-  padding: var(--space-4) 0;
-}
-
-.confirmation-icon {
-  font-size: var(--text-4xl);
-  margin-bottom: var(--space-4);
-  animation: bounce 0.6s ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-.confirmation-amount {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--primary-600);
-  margin-bottom: var(--space-4);
-}
-
-.confirmation-message {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  margin-bottom: var(--space-6);
-}
-
-.confirmation-actions {
-  display: flex;
-  gap: var(--space-4);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* FAQ Section */
-.faq-section {
-  padding: var(--space-20) 0;
-  background: var(--neutral-50);
-}
-
-.faq-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.faq-item {
-  background: white;
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--neutral-200);
-  transition: all var(--transition-normal);
-}
-
-.faq-item:hover {
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
-
-.faq-question {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-3);
-}
-
-.faq-answer {
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin: 0;
-}
-
-/* CTA Section */
-.cta-section {
-  padding: var(--space-20) 0;
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-500));
-  text-align: center;
-  color: white;
-}
-
-.cta-content {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.cta-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  margin-bottom: var(--space-6);
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.cta-description {
-  font-size: var(--text-lg);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.cta-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-/* Responsive Design */
-@media (min-width: 640px) {
-  .hero-stats {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .cta-actions {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .hero-title {
-    font-size: var(--text-5xl);
-  }
-  
-  .section-title {
-    font-size: var(--text-4xl);
-  }
-  
-  .cta-title {
-    font-size: var(--text-4xl);
-  }
-}
-
-@media (min-width: 1024px) {
-  
-  .donation-tiers {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .hero-title {
-    font-size: var(--text-6xl);
-  }
-}
-
-.w-5 {
-  width: 1.25rem;
-}
-
-.h-5 {
-  height: 1.25rem;
-}
-
-.mr-2 {
-  margin-right: var(--space-2);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stat:hover,
-
-  .tier-card:hover,
-  .donation-summary:hover,
-  .modal-close:hover,
-  .faq-item:hover {
-    transform: none;
-  }
-  
-  .confirmation-icon {
-    animation: none;
-  }
-  
-  .modal-content {
-    animation: none;
-  }
-  
-  .loading-spinner {
-    animation: none;
-  }
-}
-</style>
-
-
+<template>
+  <div class="flex flex-col bg-paper">
+    <!-- Hero -->
+    <Section class="!pb-16 md:!pb-24">
+      <Container>
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <Motion
+            class="flex flex-col gap-6"
+            :initial="{ opacity: 0, y: 12 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.3 }"
+          >
+            <Heading :level="1" class="leading-[1.1]">
+              Invest in Africa's <span class="text-brand-violet">scientific future</span>.
+            </Heading>
+            <Body large class="text-ink/70">
+              100% of your donation directly funds student research, stipends, and materials.
+            </Body>
+          </Motion>
+
+          <Motion
+            class="relative aspect-square md:aspect-video lg:aspect-square rounded-2xl overflow-hidden"
+            :initial="{ opacity: 0 }"
+            :animate="{ opacity: 1 }"
+            :transition="{ duration: 0.6, delay: 0.2 }"
+          >
+            <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
+            <img
+              src="https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+              alt="Student smiling"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg z-20 border hairline-ink">
+              <p class="font-sans font-medium text-sm text-ink mb-1 m-0">
+                "₦25,000 funded Aisha's first research stipend."
+              </p>
+              <p class="text-xs text-ink/60 m-0">Aisha T., StepUp Scholar '23</p>
+            </div>
+          </Motion>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- Tier Picker -->
+    <Section class="bg-white border-y hairline-ink relative z-10 !py-20">
+      <Container class="max-w-4xl flex flex-col items-center">
+        <div class="bg-paper p-1 rounded-full flex border hairline-ink mb-12 shadow-sm w-full max-w-[320px]">
+          <button
+            type="button"
+            class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold transition-all"
+            :class="frequency === 'one-time' ? 'bg-brand-violet text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            @click="frequency = 'one-time'"
+          >
+            One-time
+          </button>
+          <button
+            type="button"
+            class="flex-1 py-2.5 px-4 rounded-full text-sm font-bold transition-all flex items-center justify-center gap-1.5"
+            :class="frequency === 'monthly' ? 'bg-brand-violet text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            @click="frequency = 'monthly'"
+          >
+            Monthly
+            <span class="w-1.5 h-1.5 rounded-full bg-[#FFE500] animate-pulse" />
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6 w-full mb-8">
+          <Motion
+            v-for="tier in tiers"
+            :key="tier.id"
+            :while-hover="{ y: -2 }"
+            :transition="{ duration: 0.15 }"
+          >
+            <div
+              class="relative h-full rounded-2xl p-6 cursor-pointer flex flex-col gap-4 text-center transition-all bg-white"
+              :class="
+                selectedTier === tier.id
+                  ? 'border-2 border-transparent border-gradient-brand shadow-lg'
+                  : 'border border-ink/10 hover:border-ink/20 shadow-sm'
+              "
+              @click="pickTier(tier.id)"
+            >
+              <div
+                v-if="tier.bestValue"
+                class="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full"
+              >
+                Best Value
+              </div>
+
+              <div class="font-display text-4xl text-ink font-semibold tracking-tight mt-2">
+                {{ tier.amount }}
+              </div>
+              <div class="text-sm text-ink/70 leading-relaxed font-medium">
+                {{ tier.impact }}
+              </div>
+
+              <div
+                class="w-5 h-5 rounded-full border-2 mx-auto mt-auto flex items-center justify-center transition-colors"
+                :class="selectedTier === tier.id ? 'border-brand-violet' : 'border-ink/20'"
+              >
+                <Motion
+                  v-if="selectedTier === tier.id"
+                  :initial="{ scale: 0 }"
+                  :animate="{ scale: 1 }"
+                  :exit="{ scale: 0 }"
+                  class="w-2.5 h-2.5 bg-brand-violet rounded-full"
+                />
+              </div>
+            </div>
+          </Motion>
+        </div>
+
+        <div class="w-full max-w-[400px] flex gap-3 mb-10">
+          <div class="relative flex-1">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40 font-semibold font-display text-xl">₦</span>
+            <input
+              type="number"
+              placeholder="Custom amount"
+              :value="customAmount"
+              class="w-full bg-paper border rounded-xl py-3 pl-10 pr-4 text-lg font-medium focus:outline-none transition-all placeholder:text-ink/30 font-display"
+              :class="customAmount && selectedTier === -1 ? 'border-brand-violet shadow-[0_0_0_2px_rgba(139,85,255,0.2)]' : 'border-ink/10 focus:border-brand-violet'"
+              @input="(e) => pickCustom((e.target as HTMLInputElement).value)"
+            />
+          </div>
+        </div>
+
+        <UiButton
+          variant="gradient"
+          class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
+          :disabled="submitting"
+          @click="handleDonateClick"
+        >
+          <span v-if="submitting">Opening checkout…</span>
+          <span v-else>
+            Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
+            <span v-if="currentAmountKobo() > 0" class="opacity-80">· {{ formatNaira(currentAmountKobo()) }}</span>
+          </span>
+        </UiButton>
+
+        <div v-if="errorMessage" role="alert" class="mt-4 max-w-[400px] text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          {{ errorMessage }}
+        </div>
+
+        <div v-if="successRef" role="status" class="mt-4 max-w-[400px] text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+          Thanks — your donation went through. Reference: <span class="font-mono">{{ successRef }}</span>. A receipt is on its way to your inbox.
+        </div>
+
+        <!-- Receipt Preview -->
+        <div class="mt-12 bg-paper border hairline-ink rounded-xl p-4 flex items-start gap-4 max-w-[400px]">
+          <Icon icon="lucide:receipt-text" width="24" class="text-brand-violet shrink-0 mt-0.5" />
+          <div>
+            <h4 class="text-sm font-semibold text-ink mb-1 m-0">What happens next?</h4>
+            <p class="text-xs text-ink/70 leading-relaxed m-0">
+              You'll instantly receive a tax-deductible receipt via email. Expect an impact
+              report at the end of the semester, and an option to be listed in our Annual
+              Report.
+            </p>
+          </div>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- Transparency Donut -->
+    <Section class="bg-ink text-white !py-24">
+      <Container>
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <Eyebrow class="text-white/50 mb-4 block">Transparency</Eyebrow>
+            <Heading :level="2" class="mb-6 !text-white">Where the money goes.</Heading>
+            <Body large class="!text-white/80 mb-8">
+              We believe in radical transparency. Your donation isn't just a drop in the bucket;
+              it's a measurable investment in a scholar's path.
+            </Body>
+            <div class="flex flex-col gap-4">
+              <div v-for="seg in allocation" :key="seg.name" class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: seg.color }" />
+                <span class="font-semibold text-lg w-12">{{ seg.value }}%</span>
+                <span class="text-white/70">{{ seg.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-center">
+            <div
+              class="relative w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full"
+              :style="{ background: donutGradient }"
+            >
+              <div class="absolute inset-[18%] rounded-full bg-ink" />
+            </div>
+          </div>
+        </div>
+      </Container>
+    </Section>
+
+    <!-- FAQ for donors -->
+    <Section class="bg-paper">
+      <Container class="max-w-3xl flex flex-col gap-8">
+        <div class="flex items-center gap-3 justify-center mb-4">
+          <Icon icon="lucide:help-circle" width="28" class="text-brand-violet" />
+          <Heading :level="2">Donor FAQ</Heading>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <UiCard
+            v-for="faq in [
+              { q: 'Is my donation tax-deductible?', a: 'Yes, STAIJA is a registered 501(c)(3) in the US and a registered NGO in Nigeria.' },
+              { q: 'Can I sponsor a specific student?', a: 'We pool donations to ensure all accepted students receive equitable support, but at the ₦100k tier, we will pair you with a cohort and send personalized updates.' },
+              { q: 'How do I update my monthly giving?', a: 'You will receive a secure donor portal link in your receipt email where you can pause, cancel, or change your amount at any time.' },
+            ]"
+            :key="faq.q"
+            class="p-6 bg-white"
+          >
+            <h4 class="font-semibold text-lg mb-2 m-0">{{ faq.q }}</h4>
+            <p class="text-ink/70 text-sm leading-relaxed m-0">{{ faq.a }}</p>
+          </UiCard>
+        </div>
+      </Container>
+    </Section>
+  </div>
+</template>

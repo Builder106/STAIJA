@@ -46,50 +46,49 @@ defineProps<{
   flex-direction: column;
   background: white;
   border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
+  border-radius: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   height: 100%;
   position: relative;
+  z-index: 1;
 }
 
-.program-card::before {
+.program-card::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-  transform-origin: left;
+  inset: 0;
+  background-image: repeating-linear-gradient(45deg, var(--primary-100) 0, var(--primary-100) 1px, transparent 1px, transparent 20px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .program-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-6px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
   border-color: var(--primary-300);
 }
 
-.program-card:hover::before {
-  transform: scaleX(1);
+.program-card:hover::after {
+  opacity: 0.4;
 }
 
 .program-card--featured {
-  border-color: var(--primary-400);
-  box-shadow: var(--shadow-hover);
   background: linear-gradient(135deg, white 0%, var(--primary-50) 100%);
+  border-color: var(--primary-200);
 }
 
-.program-card--featured::before {
-  transform: scaleX(1);
+.program-card--featured::after {
+  background-image: repeating-linear-gradient(45deg, var(--primary-200) 0, var(--primary-200) 1px, transparent 1px, transparent 20px);
+  opacity: 0.3;
 }
 
 .program-card__header {
   position: relative;
-  padding: var(--space-6) var(--space-6) 0;
+  padding: var(--space-8) var(--space-8) 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -99,77 +98,74 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600));
+  width: 4rem;
+  height: 4rem;
+  background: var(--neutral-900);
   color: white;
-  border-radius: var(--radius-xl);
-  font-size: var(--text-xl);
-  box-shadow: var(--shadow-glow);
-  transition: all var(--transition-normal);
+  border-radius: 0;
+  font-size: var(--text-2xl);
+  clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 100%, 0 100%);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .program-card:hover .program-card__icon {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: var(--shadow-hover);
+  transform: scale(1.05);
+  background: var(--primary-600);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .program-card__badge {
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   background: var(--primary-500);
   color: white;
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
+  letter-spacing: 0.1em;
+  border-radius: 0;
+  border: none;
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+  box-shadow: 0 4px 12px rgba(var(--primary-500-rgb), 0.3);
 }
 
 .program-card__content {
   flex: 1;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-8);
 }
 
 .program-card__title {
-  font-size: var(--text-xl);
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: 900;
   color: var(--neutral-900);
-  margin-bottom: var(--space-3);
-  line-height: var(--leading-tight);
+  margin-bottom: var(--space-4);
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .program-card__text {
-  color: var(--neutral-600);
+  color: var(--neutral-800);
   line-height: var(--leading-relaxed);
+  font-weight: 500;
+  font-size: var(--text-base);
   margin-bottom: 0;
 }
 
 .program-card__footer {
-  padding: 0 var(--space-6) var(--space-6);
+  padding: 0 var(--space-8) var(--space-8);
 }
 
 .program-card__link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--primary-600);
-  font-weight: 600;
-  font-size: var(--text-sm);
+  color: var(--neutral-900);
+  font-weight: 900;
+  font-size: var(--text-base);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-decoration: none;
-  transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  padding-bottom: 4px;
 }
 
 .program-card__link::before {
@@ -177,30 +173,29 @@ defineProps<{
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--primary-500);
-  transition: width var(--transition-normal);
+  width: 100%;
+  height: 4px;
+  background: var(--neutral-900);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .program-card__link:hover {
-  color: var(--primary-500);
+  color: var(--primary-600);
   gap: var(--space-3);
   text-decoration: none;
 }
 
 .program-card__link:hover::before {
-  width: 100%;
+  transform: scaleX(1);
+  background: var(--primary-600);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .program-card:hover,
   .program-card:hover .program-card__icon {
     transform: none;
-  }
-  
-  .program-card__badge {
-    animation: none;
   }
 }
 

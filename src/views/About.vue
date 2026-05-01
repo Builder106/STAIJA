@@ -1,518 +1,140 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
+import { Motion } from 'motion-v'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiCard from '../components/ui/UiCard.vue'
+
+const TEAM = [
+  { name: 'Dr. Amina Yusuf', title: 'Executive Director' },
+  { name: 'David Okafor', title: 'Director of Research' },
+  { name: 'Sarah Nwachukwu', title: 'Head of Programs' },
+  { name: 'Oluwaseun Adeyemi', title: 'Operations Lead' },
+  { name: 'Chidi Nnamdi', title: 'Mentorship Coordinator' },
+  { name: 'Amara Onwu', title: 'Community Manager' },
+  { name: 'Ken Ikemefuna', title: 'Data Scientist' },
+  { name: 'Nneka Eze', title: 'Communications Lead' },
+].map((m) => ({
+  ...m,
+  img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+  bio: 'Former researcher at MIT. Passionate about democratizing access to lab spaces across West Africa.',
+}))
+
+const ADVISORS = [
+  'Prof. Olabisi Ojo (Stanford)',
+  'Dr. Kwame Ndlovu (Oxford)',
+  'Funke Opeke (Tech Entrepreneur)',
+  'Dr. Ndidi Nnoli-Edozien',
+  'Tomiwa Alabi',
+  'Niyi Yusuf',
+]
+
+const PRESS = [
+  { source: 'Tech Review Africa', quote: 'Quietly building the most robust pipeline of scientific talent on the continent.' },
+  { source: 'Daily Science', quote: "STAIJA's model proves that high schoolers can conduct rigorous, publishable research." },
+  { source: 'The Lagos Times', quote: 'A masterclass in community-driven STEM education.' },
+]
 </script>
 
 <template>
-  <div class="about">
-    
-    <!-- Hero Section -->
-    <section class="about-hero">
-      <div class="container">
-        <div class="hero-content">
-          <h1 class="hero-title">About STAIJA</h1>
-          <p class="hero-subtitle">
-            Advancing scientific and intellectual study across Africa, nurturing critical‑thinking 
-            scientist‑leaders who drive innovation and economic growth.
+  <div class="flex flex-col bg-paper min-h-screen">
+    <!-- Hero -->
+    <Section class="!py-24 md:!py-32">
+      <Container class="max-w-4xl text-center flex flex-col items-center">
+        <Eyebrow class="text-brand-violet mb-8 block">Our Mission</Eyebrow>
+        <blockquote class="font-display text-4xl md:text-5xl lg:text-6xl italic leading-tight text-ink m-0">
+          "Talent is evenly distributed across the continent. Opportunity, equipment, and mentorship are not. We are here to balance the equation."
+        </blockquote>
+      </Container>
+    </Section>
+
+    <!-- Story -->
+    <Section class="bg-white !py-24 border-y hairline-ink">
+      <Container class="max-w-3xl">
+        <div class="flex flex-col gap-8 text-lg md:text-xl text-ink/80 leading-relaxed font-sans">
+          <p class="m-0">
+            <span class="font-semibold text-brand-violet">STAIJA</span> began in 2018 in a borrowed classroom at the University of Lagos. Our founders—three Nigerian doctoral students who had struggled to find rigorous research opportunities during their own undergraduate years—wanted to build the bridge they never had.
+          </p>
+          <p class="m-0">
+            What started as a weekend seminar for 15 ambitious high-schoolers has grown into a pan-African ecosystem. We realized early on that simply teaching students <em>about</em> science wasn't enough; they needed to <em>do</em> science. They needed pipettes, sequencers, clean data sets, and mentors who treated them as future peers, not just students.
+          </p>
+          <p class="m-0">
+            Today, STAIJA runs two flagship programs that reach hundreds of scholars across 12 countries. We have built a network of over 120 mentors from top global institutions, and our alumni are already publishing papers, founding startups, and reshaping the narrative of African innovation.
           </p>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
 
-    <!-- Mission Section -->
-    <section class="mission-section">
-      <div class="container">
-        <div class="mission-content">
-          <div class="mission-text">
-            <h2 class="section-title">Our Mission</h2>
-            <p class="mission-description">
-              STAIJA is dedicated to promoting scientific research, mentorship, and community building 
-              across Africa. We believe that by investing in young scientists and researchers, we can 
-              drive innovation-led economic growth and create lasting positive change across the continent.
-            </p>
-            <div class="mission-values">
-              <div class="value">
-                <div class="value-icon"><Icon icon="lucide:microscope" /></div>
-                <div class="value-content">
-                  <h3 class="value-title">Scientific Excellence</h3>
-                  <p class="value-text">Promoting rigorous research and evidence-based thinking</p>
-                </div>
-              </div>
-              <div class="value">
-                <div class="value-icon"><Icon icon="lucide:handshake" /></div>
-                <div class="value-content">
-                  <h3 class="value-title">Collaborative Community</h3>
-                  <p class="value-text">Building networks that transcend borders and disciplines</p>
-                </div>
-              </div>
-              <div class="value">
-                <div class="value-icon"><Icon icon="lucide:sprout" /></div>
-                <div class="value-content">
-                  <h3 class="value-title">Sustainable Impact</h3>
-                  <p class="value-text">Creating lasting change through education and mentorship</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mission-visual">
-            <div class="mission-card">
-              <h3 class="card-title">Our Approach</h3>
-              <ul class="approach-list">
-                <li>Hands-on research training</li>
-                <li>One-on-one mentorship</li>
-                <li>Peer collaboration</li>
-                <li>Industry partnerships</li>
-                <li>Publication opportunities</li>
-                <li>Career development</li>
-              </ul>
-            </div>
-          </div>
+    <!-- Leadership Grid -->
+    <Section class="bg-paper !py-24">
+      <Container>
+        <div class="text-center mb-16">
+          <Heading :level="2">Leadership Team</Heading>
         </div>
-      </div>
-    </section>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Motion
+            v-for="(member, i) in TEAM"
+            :key="member.name"
+            :initial="{ opacity: 0, y: 20 }"
+            :while-in-view="{ opacity: 1, y: 0 }"
+            :viewport="{ once: true }"
+            :transition="{ delay: (i % 4) * 0.1 }"
+          >
+            <UiCard class="overflow-hidden bg-white group">
+              <div class="aspect-square relative overflow-hidden border-b hairline-ink">
+                <div class="absolute inset-0 wash-violet-6 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+                <img :src="member.img" :alt="member.name" class="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div class="p-6">
+                <h4 class="font-display text-xl font-semibold mb-1 group-hover:text-brand-violet transition-colors m-0">{{ member.name }}</h4>
+                <p class="text-sm font-semibold text-ink/60 uppercase tracking-wide mb-3 m-0">{{ member.title }}</p>
+                <p class="text-sm text-ink/80 leading-relaxed m-0">{{ member.bio }}</p>
+              </div>
+            </UiCard>
+          </Motion>
+        </div>
+      </Container>
+    </Section>
 
-    <!-- Structure Section -->
-    <section class="structure-section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Organizational Structure</h2>
-          <p class="section-subtitle">
-            STAIJA promotes a non-hierarchical environment where interns work alongside executive 
-            members and have an equal voice in decision-making.
-          </p>
+    <!-- Board + Advisors -->
+    <Section class="bg-white !py-24 border-t hairline-ink">
+      <Container class="max-w-4xl text-center">
+        <Heading :level="3" class="mb-12">Board & Advisors</Heading>
+        <div class="flex flex-wrap justify-center gap-x-8 gap-y-4">
+          <span
+            v-for="advisor in ADVISORS"
+            :key="advisor"
+            class="text-lg font-medium text-ink/70 px-4 py-2 bg-ink/5 rounded-full"
+          >{{ advisor }}</span>
         </div>
-        
-        <div class="structure-grid">
-          <div class="structure-card">
-            <div class="card-icon"><Icon icon="lucide:users" /></div>
-            <h3 class="card-title">Collaborative Leadership</h3>
-            <p class="card-text">
-              Our flat organizational structure ensures that every voice is heard and valued, 
-              from interns to executive members.
-            </p>
-          </div>
-          <div class="structure-card">
-            <div class="card-icon"><Icon icon="lucide:clock" /></div>
-            <h3 class="card-title">Flexible Commitment</h3>
-            <p class="card-text">
-              Internships typically last a year and can be extended, requiring less than 2 hours 
-              per week to ensure accessibility.
-            </p>
-          </div>
-          <div class="structure-card">
-            <div class="card-icon"><Icon icon="lucide:target" /></div>
-            <h3 class="card-title">Equal Voice</h3>
-            <p class="card-text">
-              Every team member, regardless of their role, has an equal say in organizational 
-              decisions and strategic direction.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
 
-    <!-- Impact Section -->
-    <section class="impact-section">
-      <div class="container">
-        <div class="impact-content">
-          <div class="impact-stats">
-            <h2 class="section-title">Our Impact</h2>
-            <p class="impact-description">
-              Since our founding, STAIJA has grown into a continental network of scientist-leaders 
-              who are making meaningful contributions to research, innovation, and economic development.
-            </p>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-number">500+</div>
-                <div class="stat-label">Students Mentored</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">50+</div>
-                <div class="stat-label">Research Projects</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">25+</div>
-                <div class="stat-label">Partner Organizations</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">15+</div>
-                <div class="stat-label">Countries Represented</div>
-              </div>
-            </div>
-          </div>
-          <div class="impact-testimonial">
-            <blockquote class="testimonial">
-              <p class="testimonial-text">
-                "STAIJA transformed my understanding of what it means to be a scientist in Africa. 
-                The mentorship and community I found here has been invaluable in shaping my career path."
-              </p>
-              <footer class="testimonial-footer">
-                <cite class="testimonial-author">— Alumni, StepUp Scholars Program</cite>
-              </footer>
-            </blockquote>
-          </div>
+    <!-- Partners & Funders -->
+    <Section class="bg-paper !py-24 border-t hairline-ink">
+      <Container>
+        <Eyebrow class="text-center text-ink/40 mb-12 block">Backed by</Eyebrow>
+        <div class="flex flex-wrap justify-center gap-12 md:gap-24 opacity-40 grayscale">
+          <span class="font-display text-3xl font-bold">Foundation X</span>
+          <span class="font-sans text-2xl font-bold tracking-widest">TECHCORP</span>
+          <span class="font-display text-3xl italic">Global Health Inst.</span>
+          <span class="font-sans text-2xl font-semibold">Africa Innovates</span>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="container">
-        <div class="cta-content">
-          <h2 class="cta-title">Join Our Mission</h2>
-          <p class="cta-description">
-            Whether you're a student, researcher, or organization, there are many ways to get 
-            involved with STAIJA and help shape the future of science in Africa.
-          </p>
-          <div class="cta-actions">
-            <RouterLink to="/get-involved" class="btn btn-primary btn-lg">
-              Get Involved
-            </RouterLink>
-            <RouterLink to="/contact" class="btn btn-outline btn-lg">
-              Contact Us
-            </RouterLink>
+    <!-- Press -->
+    <Section class="bg-ink !py-24 text-white">
+      <Container>
+        <Eyebrow class="text-white/40 mb-16 block text-center">In the Press</Eyebrow>
+        <div class="grid md:grid-cols-3 gap-12 text-center">
+          <div v-for="press in PRESS" :key="press.source" class="flex flex-col items-center gap-6">
+            <span class="font-display text-xl font-bold text-brand-sky">{{ press.source }}</span>
+            <p class="text-lg text-white/80 italic leading-relaxed m-0">"{{ press.quote }}"</p>
           </div>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   </div>
 </template>
-
-<style scoped>
-.about {
-  min-height: 100vh;
-}
-
-/* Hero Section */
-.about-hero {
-  padding: var(--space-20) 0 var(--space-16);
-  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
-  text-align: center;
-}
-
-.hero-title {
-  font-size: var(--text-4xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-.hero-subtitle {
-  font-size: var(--text-xl);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Mission Section */
-.mission-section {
-  padding: var(--space-20) 0;
-  background: white;
-}
-
-.mission-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: center;
-}
-
-.section-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-6);
-}
-
-.mission-description {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-}
-
-.mission-values {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.value {
-  display: flex;
-  gap: var(--space-4);
-  align-items: flex-start;
-}
-
-.value-icon {
-  font-size: var(--text-2xl);
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-100);
-  border-radius: var(--radius-xl);
-  flex-shrink: 0;
-}
-
-.value-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-1);
-}
-
-.value-text {
-  color: var(--neutral-600);
-  margin: 0;
-}
-
-.mission-visual {
-  display: flex;
-  justify-content: center;
-}
-
-.mission-card {
-  background: var(--neutral-50);
-  padding: var(--space-8);
-  border-radius: var(--radius-2xl);
-  border: 1px solid var(--neutral-200);
-  max-width: 400px;
-  width: 100%;
-}
-
-.card-title {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-4);
-}
-
-.approach-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.approach-list li {
-  padding: var(--space-2) 0;
-  color: var(--neutral-700);
-  position: relative;
-  padding-left: var(--space-6);
-}
-
-.approach-list li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--primary-600);
-  font-weight: bold;
-}
-
-/* Structure Section */
-.structure-section {
-  padding: var(--space-20) 0;
-  background: var(--neutral-50);
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: var(--space-12);
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.section-subtitle {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin: 0;
-}
-
-.structure-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-}
-
-.structure-card {
-  background: white;
-  padding: var(--space-8);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-  transition: all var(--transition-normal);
-}
-
-.structure-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-}
-
-.card-icon {
-  font-size: var(--text-3xl);
-  margin-bottom: var(--space-4);
-}
-
-.card-text {
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin: 0;
-}
-
-/* Impact Section */
-.impact-section {
-  padding: var(--space-20) 0;
-  background: white;
-}
-
-.impact-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: center;
-}
-
-.impact-description {
-  font-size: var(--text-lg);
-  color: var(--neutral-600);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-6);
-}
-
-.stat-item {
-  text-align: center;
-  padding: var(--space-4);
-}
-
-.stat-number {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--primary-600);
-  line-height: 1;
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  font-weight: 500;
-}
-
-.impact-testimonial {
-  display: flex;
-  justify-content: center;
-}
-
-.testimonial {
-  background: var(--primary-50);
-  padding: var(--space-8);
-  border-radius: var(--radius-2xl);
-  border-left: 4px solid var(--primary-500);
-  max-width: 500px;
-  margin: 0;
-}
-
-.testimonial-text {
-  font-size: var(--text-lg);
-  color: var(--neutral-700);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-4);
-  font-style: italic;
-}
-
-.testimonial-footer {
-  text-align: right;
-}
-
-.testimonial-author {
-  color: var(--neutral-600);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-/* CTA Section */
-.cta-section {
-  padding: var(--space-20) 0;
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
-  color: white;
-}
-
-.cta-content {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.cta-title {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  margin-bottom: var(--space-6);
-  color: white;
-}
-
-.cta-description {
-  font-size: var(--text-lg);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.cta-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-/* Responsive Design */
-@media (min-width: 640px) {
-  .structure-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  
-  .cta-actions {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .hero-title {
-    font-size: var(--text-5xl);
-  }
-  
-  .section-title {
-    font-size: var(--text-4xl);
-  }
-  
-  .cta-title {
-    font-size: var(--text-4xl);
-  }
-}
-
-@media (min-width: 1024px) {
-  .mission-content {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .impact-content {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .hero-title {
-    font-size: var(--text-6xl);
-  }
-}
-</style>
