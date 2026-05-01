@@ -9,6 +9,7 @@ import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import UiChip from '../components/ui/UiChip.vue'
+import HeroLottie from '../components/HeroLottie.vue'
 
 const stats = [
   { eyebrow: 'Scholars trained', number: '240', caption: 'Across 18 Nigerian states' },
@@ -23,7 +24,6 @@ const events = [
   { date: 'Nov 05', title: 'Mentor Matching Mixer', loc: 'Virtual', type: 'Networking' },
 ]
 
-const HERO_IMG = 'https://images.unsplash.com/photo-1758573467240-f944226c2026?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
 const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
 </script>
 
@@ -58,18 +58,12 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
           </Motion>
 
           <Motion
-            :initial="{ opacity: 0 }"
-            :animate="{ opacity: 1 }"
-            :transition="{ duration: 0.6, delay: 0.2 }"
-            class="relative w-full aspect-[4/3] lg:aspect-square rounded-2xl overflow-hidden"
+            :initial="{ opacity: 0, scale: 0.95 }"
+            :animate="{ opacity: 1, scale: 1 }"
+            :transition="{ duration: 0.5, delay: 0.2 }"
+            class="relative w-full aspect-[4/3] lg:aspect-square flex items-center justify-center"
           >
-            <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
-            <img
-              :src="HERO_IMG"
-              alt="Nigerian student in science lab"
-              class="w-full h-full object-cover"
-              loading="eager"
-            />
+            <HeroLottie class="w-full h-full max-w-[560px]" />
           </Motion>
         </div>
       </Container>

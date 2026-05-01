@@ -13,6 +13,7 @@
     "npm:firebase@10.7.1": "10.7.1_@firebase+app@0.9.25_@firebase+app-compat@0.2.25_@firebase+app-types@0.9.0",
     "npm:firebase@^10.7.1": "10.7.1_@firebase+app@0.9.25_@firebase+app-compat@0.2.25_@firebase+app-types@0.9.0",
     "npm:happy-dom@^18.0.1": "18.0.1",
+    "npm:lottie-web@^5.12.2": "5.13.0",
     "npm:motion-v@^1.7.1": "1.7.1_@vueuse+core@13.8.0__vue@3.5.20___typescript@5.8.3__typescript@5.8.3_vue@3.5.20__typescript@5.8.3_typescript@5.8.3",
     "npm:puppeteer-core@22.15.0": "22.15.0_devtools-protocol@0.0.1312386",
     "npm:tailwindcss@^4.1.12": "4.2.4",
@@ -1675,6 +1676,9 @@
     "long@5.3.2": {
       "integrity": "sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA=="
     },
+    "lottie-web@5.13.0": {
+      "integrity": "sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ=="
+    },
     "lru-cache@7.18.3": {
       "integrity": "sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA=="
     },
@@ -2225,6 +2229,7 @@
       "npm:contentful-management@10",
       "npm:firebase@^10.7.1",
       "npm:happy-dom@^18.0.1",
+      "npm:lottie-web@^5.12.2",
       "npm:motion-v@^1.7.1",
       "npm:tailwindcss@^4.1.12",
       "npm:typescript@~5.8.3",
@@ -2242,6 +2247,7 @@
         "npm:@vue/tsconfig@0.7",
         "npm:contentful-management@10.0.0",
         "npm:firebase@10.7.1",
+        "npm:lottie-web@^5.12.2",
         "npm:motion-v@^1.7.1",
         "npm:tailwindcss@^4.1.12",
         "npm:typescript@~5.8.3",
