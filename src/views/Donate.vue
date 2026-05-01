@@ -10,12 +10,17 @@ import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import { trackDonateStart } from '../services/analytics'
+import { donate as launchPaystack, formatNaira } from '../services/donations'
+import { auth } from '../config/firebase'
 
 type Frequency = 'one-time' | 'monthly'
 
 const frequency = ref<Frequency>('monthly')
 const selectedTier = ref<number>(1)
 const customAmount = ref('')
+const submitting = ref(false)
+const errorMessage = ref<string | null>(null)
+const successRef = ref<string | null>(null)
 
 const tiers = [
   { id: 0, amount: '₦5,000', impact: 'Funds one workshop seat', bestValue: false },
@@ -60,13 +65,50 @@ function currentAmountKobo(): number {
   return Number.isFinite(naira) ? naira * 100 : 0
 }
 
-function handleDonateClick() {
+async function handleDonateClick() {
+  errorMessage.value = null
+  successRef.value = null
+
+  const amountKobo = currentAmountKobo()
+  if (amountKobo <= 0) {
+    errorMessage.value = 'Pick an amount or enter a custom value above ₦100.'
+    return
+  }
+  if (amountKobo < 100 * 100) {
+    errorMessage.value = 'Minimum donation is ₦100.'
+    return
+  }
+
   trackDonateStart({
-    amount_kobo: currentAmountKobo(),
+    amount_kobo: amountKobo,
     frequency: frequency.value,
     tier: selectedTier.value >= 0 ? 'preset' : 'custom',
   })
-  // TODO: kick off Paystack checkout (M3)
+
+  // Use the signed-in user's email if available; otherwise prompt.
+  let email = auth.currentUser?.email ?? ''
+  if (!email) {
+    const entered = window.prompt('Enter your email for the donation receipt:')
+    if (!entered) return
+    email = entered.trim()
+  }
+
+  submitting.value = true
+  try {
+    const result = await launchPaystack({
+      amountKobo,
+      email,
+      frequency: frequency.value,
+      fullName: auth.currentUser?.displayName ?? undefined,
+    })
+    if (result.status === 'success' && result.reference) {
+      successRef.value = result.reference
+    }
+  } catch (err) {
+    errorMessage.value = err instanceof Error ? err.message : 'Donation failed.'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -200,10 +242,23 @@ function handleDonateClick() {
         <UiButton
           variant="gradient"
           class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
+          :disabled="submitting"
           @click="handleDonateClick"
         >
-          Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
+          <span v-if="submitting">Opening checkout…</span>
+          <span v-else>
+            Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
+            <span v-if="currentAmountKobo() > 0" class="opacity-80">· {{ formatNaira(currentAmountKobo()) }}</span>
+          </span>
         </UiButton>
+
+        <div v-if="errorMessage" role="alert" class="mt-4 max-w-[400px] text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          {{ errorMessage }}
+        </div>
+
+        <div v-if="successRef" role="status" class="mt-4 max-w-[400px] text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+          Thanks — your donation went through. Reference: <span class="font-mono">{{ successRef }}</span>. A receipt is on its way to your inbox.
+        </div>
 
         <!-- Receipt Preview -->
         <div class="mt-12 bg-paper border hairline-ink rounded-xl p-4 flex items-start gap-4 max-w-[400px]">

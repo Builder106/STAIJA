@@ -60,6 +60,12 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
 
         <div class="hidden lg:flex items-center gap-4">
           <template v-if="isAuthenticated">
+            <RouterLink
+              to="/donor"
+              class="text-sm font-medium text-ink/70 hover:text-brand-violet transition-colors focus-ring-brand rounded-sm"
+            >
+              My donations
+            </RouterLink>
             <span class="text-sm text-ink/60 hidden xl:inline">{{ displayName }}</span>
             <button
               type="button"

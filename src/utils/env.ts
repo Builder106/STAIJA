@@ -21,6 +21,9 @@ export interface AppConfig {
     previewToken?: string
     managementToken?: string
   }
+  paystack?: {
+    publicKey: string
+  }
 }
 
 // Required environment variables
@@ -103,7 +106,10 @@ export function getAppConfig(): AppConfig {
                 previewToken: import.meta.env.VITE_CONTENTFUL_PREVIEW_TOKEN,
                 managementToken: import.meta.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN
               }
-            : undefined
+            : undefined,
+    paystack: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
+      ? { publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY }
+      : undefined
   }
 }
 
