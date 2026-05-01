@@ -1,17 +1,53 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from './ui/Container.vue'
 import UiButton from './ui/UiButton.vue'
+import LocaleSwitcher from './LocaleSwitcher.vue'
 import { trackNewsletterSignup } from '../services/analytics'
+import { getAppConfig } from '../utils/env'
 
 const year = computed(() => new Date().getFullYear())
 
-function handleNewsletter(e: Event) {
+const newsletterEmail = ref('')
+const honeypot = ref('') // bots that auto-fill every field will trip this
+const newsletterStatus = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
+const newsletterError = ref<string | null>(null)
+
+async function handleNewsletter(e: Event) {
   e.preventDefault()
-  trackNewsletterSignup('footer')
-  // TODO: wire to Mailgun list (M5)
+  if (newsletterStatus.value === 'submitting') return
+  if (honeypot.value) return // silent drop
+
+  newsletterStatus.value = 'submitting'
+  newsletterError.value = null
+
+  const endpoint = getAppConfig().newsletterEndpoint
+  if (!endpoint) {
+    // Endpoint not configured yet — track the intent but explain.
+    trackNewsletterSignup('footer')
+    newsletterStatus.value = 'success'
+    return
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newsletterEmail.value, source: 'footer' }),
+    })
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string }
+      throw new Error(data.error ?? 'Subscription failed')
+    }
+    trackNewsletterSignup('footer')
+    newsletterStatus.value = 'success'
+    newsletterEmail.value = ''
+  } catch (err) {
+    newsletterStatus.value = 'error'
+    newsletterError.value = err instanceof Error ? err.message : 'Subscription failed'
+  }
 }
 </script>
 
@@ -62,18 +98,50 @@ function handleNewsletter(e: Event) {
             <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-4 font-semibold">
               Newsletter
             </span>
-            <form class="flex gap-2" @submit="handleNewsletter">
+            <form
+              v-if="newsletterStatus !== 'success'"
+              class="flex gap-2"
+              @submit="handleNewsletter"
+            >
               <input
+                v-model="newsletterEmail"
                 type="email"
                 placeholder="Email address"
                 aria-label="Email address"
-                class="bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5 text-sm w-full text-paper placeholder:text-paper/40 focus:outline-none focus:border-brand-sky focus:ring-1 focus:ring-brand-sky transition-all"
+                :disabled="newsletterStatus === 'submitting'"
+                class="bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5 text-sm w-full text-paper placeholder:text-paper/40 focus:outline-none focus:border-brand-sky focus:ring-1 focus:ring-brand-sky transition-all disabled:opacity-50"
                 required
               />
-              <UiButton variant="primary" type="submit" class="shrink-0 px-4" aria-label="Subscribe">
-                <Icon icon="lucide:arrow-right" width="18" height="18" />
+              <input
+                v-model="honeypot"
+                type="text"
+                name="trap"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+                class="sr-only"
+              />
+              <UiButton
+                variant="primary"
+                type="submit"
+                class="shrink-0 px-4"
+                :disabled="newsletterStatus === 'submitting'"
+                aria-label="Subscribe"
+              >
+                <Icon
+                  :icon="newsletterStatus === 'submitting' ? 'lucide:loader-2' : 'lucide:arrow-right'"
+                  width="18"
+                  height="18"
+                  :class="newsletterStatus === 'submitting' && 'animate-spin'"
+                />
               </UiButton>
             </form>
+            <p v-else class="text-sm text-paper/80 bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5">
+              Thanks — check your inbox to confirm your subscription.
+            </p>
+            <p v-if="newsletterError" role="alert" class="mt-2 text-xs text-red-300">
+              {{ newsletterError }}
+            </p>
           </div>
         </div>
 
@@ -97,6 +165,7 @@ function handleNewsletter(e: Event) {
             <li><RouterLink to="/about" class="hover:text-white transition-colors">About Us</RouterLink></li>
             <li><RouterLink to="/get-involved" class="hover:text-white transition-colors">Get Involved</RouterLink></li>
             <li><RouterLink to="/contact" class="hover:text-white transition-colors">Contact</RouterLink></li>
+            <li><RouterLink to="/press" class="hover:text-white transition-colors">Press</RouterLink></li>
             <li><RouterLink to="/donate" class="hover:text-white transition-colors">Donate</RouterLink></li>
           </ul>
         </div>
@@ -114,9 +183,10 @@ function handleNewsletter(e: Event) {
 
       <div class="mt-16 pt-8 border-t border-paper/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-paper/40">
         <p>© {{ year }} STAIJA. All rights reserved.</p>
-        <div class="flex gap-6">
+        <div class="flex items-center gap-6">
           <a href="#" class="hover:text-paper transition-colors">Privacy Policy</a>
           <a href="#" class="hover:text-paper transition-colors">Terms of Service</a>
+          <LocaleSwitcher />
         </div>
       </div>
     </Container>

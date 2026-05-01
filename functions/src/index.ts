@@ -20,3 +20,4 @@ admin.initializeApp()
 export { contentfulWebhook } from './contentful'
 export { paystackWebhook, cancelSubscription } from './paystack'
 export { onApplicationStatusChange } from './email'
+export { subscribeNewsletter } from './newsletter'

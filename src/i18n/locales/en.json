@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "stepup": "StepUp Scholars",
+    "dynamerge": "Dynamerge",
+    "events": "Events",
+    "stories": "Stories",
+    "about": "About",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "donate": "Donate",
+    "myDonations": "My donations"
+  },
+  "footer": {
+    "tagline": "Nurturing Africa's next generation of scientist-leaders through research, mentorship, and community.",
+    "newsletter": "Newsletter",
+    "newsletterPlaceholder": "Email address",
+    "newsletterThanks": "Thanks — check your inbox to confirm your subscription.",
+    "programs": "Programs",
+    "organization": "Organization",
+    "resources": "Resources",
+    "press": "Press",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "rights": "All rights reserved.",
+    "language": "Language"
+  },
+  "home": {
+    "hero": {
+      "headlinePart1": "Africa's next",
+      "headlineAccent": "scientist-leaders",
+      "headlinePart2": "start here.",
+      "dek": "We nurture ambitious high-school and gap-year students through intensive research programs, mentorship, and a pan-African community of practice.",
+      "ctaPrimary": "Apply to StepUp",
+      "ctaSecondary": "Explore programs"
+    },
+    "stats": {
+      "scholarsTrained": "Scholars trained",
+      "scholarsCaption": "Across 18 Nigerian states",
+      "countries": "Countries",
+      "countriesCaption": "Represented in Dynamerge",
+      "papers": "Research papers",
+      "papersCaption": "Published or presented",
+      "mentors": "Mentors",
+      "mentorsCaption": "From top global institutions"
+    },
+    "programs": {
+      "eyebrow": "Our Programs",
+      "heading": "Two paths to accelerated impact.",
+      "stepupChip": "In-person",
+      "stepupBlurb": "A rigorous, Nigeria-based research incubator for high-school and gap-year students. Access world-class labs, receive a stipend, and publish your first paper.",
+      "stepupAge": "Ages 15–19 · Nigeria",
+      "dynamergeChip": "Virtual",
+      "dynamergeBlurb": "A pan-African virtual summer bootcamp connecting ambitious students with global mentors. Four weeks of intense learning, collaboration, and skill-building.",
+      "dynamergeAge": "Ages 15–20 · Pan-African",
+      "learnMore": "Learn more"
+    },
+    "featured": {
+      "eyebrow": "Featured Scholar",
+      "quote": "STAIJA didn't just teach me how to run a PCR test. They taught me how to ask questions that matter to my community.",
+      "name": "Chinedu Okafor",
+      "role": "StepUp Scholar '24 · Lagos, Nigeria",
+      "readMore": "Read Chinedu's story"
+    },
+    "events": {
+      "eyebrow": "Community",
+      "heading": "Upcoming events.",
+      "viewAll": "View all events"
+    },
+    "partners": {
+      "eyebrow": "Supported by global partners"
+    }
+  },
+  "donate": {
+    "hero": {
+      "headlinePart1": "Invest in Africa's",
+      "headlineAccent": "scientific future",
+      "headlineEnd": ".",
+      "dek": "100% of your donation directly funds student research, stipends, and materials.",
+      "scholarQuote": "₦25,000 funded Aisha's first research stipend.",
+      "scholarAttribution": "Aisha T., StepUp Scholar '23"
+    },
+    "frequency": {
+      "oneTime": "One-time",
+      "monthly": "Monthly"
+    },
+    "tiers": {
+      "supporter": "Funds one workshop seat",
+      "builder": "Covers a research stipend for a month",
+      "sponsor": "Sponsors a full StepUp cohort placement",
+      "bestValue": "Best Value"
+    },
+    "customAmount": "Custom amount",
+    "donateButton": "Donate",
+    "monthlyBadge": "Monthly",
+    "nowBadge": "Now",
+    "receipt": {
+      "heading": "What happens next?",
+      "body": "You'll instantly receive a tax-deductible receipt via email. Expect an impact report at the end of the semester, and an option to be listed in our Annual Report."
+    },
+    "transparency": {
+      "eyebrow": "Transparency",
+      "heading": "Where the money goes.",
+      "body": "We believe in radical transparency. Your donation isn't just a drop in the bucket; it's a measurable investment in a scholar's path."
+    }
+  },
+  "common": {
+    "loading": "Loading…",
+    "tryAgain": "Try again",
+    "back": "Back"
+  }
+}

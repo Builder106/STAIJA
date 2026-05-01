@@ -15,6 +15,7 @@
     "vue-tsc": "npm:vue-tsc@^3.0.5",
     "motion-v": "npm:motion-v@^1.7.1",
     "lottie-web": "npm:lottie-web@^5.12.2",
+    "vue-i18n": "npm:vue-i18n@^9.13.1",
     "@iconify/vue": "npm:@iconify/vue@^5.0.0",
     "vitest": "npm:vitest@^4.1.0",
     "happy-dom": "npm:happy-dom@^18.0.1",

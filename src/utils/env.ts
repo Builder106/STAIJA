@@ -24,6 +24,8 @@ export interface AppConfig {
   paystack?: {
     publicKey: string
   }
+  /** Public URL of the deployed `subscribeNewsletter` Cloud Function. */
+  newsletterEndpoint?: string
 }
 
 // Required environment variables
@@ -109,7 +111,8 @@ export function getAppConfig(): AppConfig {
             : undefined,
     paystack: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
       ? { publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY }
-      : undefined
+      : undefined,
+    newsletterEndpoint: import.meta.env.VITE_NEWSLETTER_ENDPOINT
   }
 }
 

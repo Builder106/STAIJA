@@ -1,0 +1,3 @@
+{
+  "_README": "Yorùbá translations. Copy keys from en.json into this file and provide native-speaker translations. Anything you don't translate (or omit) falls back to en.json automatically. Per PRD §8 + Decision #4, do NOT auto-translate — Yorùbá speakers can tell. Send the finished pass to a Yorùbá-speaking reviewer before merging."
+}

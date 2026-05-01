@@ -22,6 +22,7 @@
     "npm:vite@^7.1.2": "7.1.3_picomatch@4.0.3",
     "npm:vitest@*": "4.1.0_happy-dom@18.0.1_vite@7.1.3__picomatch@4.0.3",
     "npm:vitest@^4.1.0": "4.1.0_happy-dom@18.0.1_vite@7.1.3__picomatch@4.0.3",
+    "npm:vue-i18n@^9.13.1": "9.14.5_vue@3.5.20__typescript@5.8.3_typescript@5.8.3",
     "npm:vue-router@^4.4.5": "4.5.1_vue@3.5.20__typescript@5.8.3_typescript@5.8.3",
     "npm:vue-tsc@3.0.6": "3.0.6_typescript@5.8.3",
     "npm:vue-tsc@^3.0.5": "3.0.6_typescript@5.8.3",
@@ -570,6 +571,23 @@
         "@iconify/types",
         "vue"
       ]
+    },
+    "@intlify/core-base@9.14.5": {
+      "integrity": "sha512-5ah5FqZG4pOoHjkvs8mjtv+gPKYU0zCISaYNjBNNqYiaITxW8ZtVih3GS/oTOqN8d9/mDLyrjD46GBApNxmlsA==",
+      "dependencies": [
+        "@intlify/message-compiler",
+        "@intlify/shared"
+      ]
+    },
+    "@intlify/message-compiler@9.14.5": {
+      "integrity": "sha512-IHzgEu61/YIpQV5Pc3aRWScDcnFKWvQA9kigcINcCBXN8mbW+vk9SK+lDxA6STzKQsVJxUPg9ACC52pKKo3SVQ==",
+      "dependencies": [
+        "@intlify/shared",
+        "source-map-js"
+      ]
+    },
+    "@intlify/shared@9.14.5": {
+      "integrity": "sha512-9gB+E53BYuAEMhbCAxVgG38EZrk59sxBtv3jSizNL2hEWlgjBjAw1AwpLHtNaeda12pe6W20OGEa0TwuMSRbyQ=="
     },
     "@jridgewell/gen-mapping@0.3.13": {
       "integrity": "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==",
@@ -2106,6 +2124,16 @@
     "vscode-uri@3.1.0": {
       "integrity": "sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ=="
     },
+    "vue-i18n@9.14.5_vue@3.5.20__typescript@5.8.3_typescript@5.8.3": {
+      "integrity": "sha512-0jQ9Em3ymWngyiIkj0+c/k7WgaPO+TNzjKSNq9BvBQaKJECqn9cd9fL4tkDhB5G1QBskGl9YxxbDAhgbFtpe2g==",
+      "dependencies": [
+        "@intlify/core-base",
+        "@intlify/shared",
+        "@vue/devtools-api",
+        "vue"
+      ],
+      "deprecated": true
+    },
     "vue-router@4.5.1_vue@3.5.20__typescript@5.8.3_typescript@5.8.3": {
       "integrity": "sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw==",
       "dependencies": [
@@ -2235,6 +2263,7 @@
       "npm:typescript@~5.8.3",
       "npm:vite@^7.1.2",
       "npm:vitest@^4.1.0",
+      "npm:vue-i18n@^9.13.1",
       "npm:vue-router@^4.4.5",
       "npm:vue-tsc@^3.0.5",
       "npm:vue@^3.5.18"
@@ -2252,6 +2281,7 @@
         "npm:tailwindcss@^4.1.12",
         "npm:typescript@~5.8.3",
         "npm:vite@^7.1.2",
+        "npm:vue-i18n@^9.13.1",
         "npm:vue-router@^4.4.5",
         "npm:vue-tsc@^3.0.5",
         "npm:vue@^3.5.18"
