@@ -52,51 +52,52 @@ async function handleNewsletter(e: Event) {
 </script>
 
 <template>
-  <footer class="bg-ink text-paper py-16 md:py-24">
+  <footer class="bg-ink text-paper py-16 md:py-20">
     <Container>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
-        <div class="lg:col-span-4 flex flex-col gap-6">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-y-12 gap-x-8 lg:gap-x-12">
+        <!-- Brand + tagline + social + newsletter -->
+        <div class="col-span-2 lg:col-span-2 flex flex-col gap-6 max-w-md">
           <RouterLink to="/" class="inline-block focus-ring-brand rounded-sm">
             <span class="font-display font-bold text-2xl tracking-tighter text-gradient-brand">
               STAIJA
             </span>
           </RouterLink>
-          <p class="text-paper/70 text-sm max-w-sm leading-relaxed">
+          <p class="text-paper/70 text-sm leading-relaxed m-0">
             Nurturing Africa's next generation of scientist-leaders through research,
             mentorship, and community.
           </p>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
             <a
               href="https://www.threads.com/@staija_ng"
               target="_blank"
               rel="noopener"
               aria-label="Follow us on Threads"
-              class="text-paper/60 hover:text-paper transition-colors"
+              class="w-9 h-9 rounded-full bg-paper/5 border border-paper/10 flex items-center justify-center text-paper/70 hover:text-paper hover:bg-paper/10 hover:border-paper/20 transition-colors"
             >
-              <Icon icon="simple-icons:threads" width="20" height="20" />
+              <Icon icon="simple-icons:threads" width="16" height="16" />
             </a>
             <a
               href="https://www.instagram.com/staija_ng/"
               target="_blank"
               rel="noopener"
               aria-label="Follow us on Instagram"
-              class="text-paper/60 hover:text-paper transition-colors"
+              class="w-9 h-9 rounded-full bg-paper/5 border border-paper/10 flex items-center justify-center text-paper/70 hover:text-paper hover:bg-paper/10 hover:border-paper/20 transition-colors"
             >
-              <Icon icon="mdi:instagram" width="22" height="22" />
+              <Icon icon="mdi:instagram" width="18" height="18" />
             </a>
             <a
               href="https://www.linkedin.com/company/staija-ng/"
               target="_blank"
               rel="noopener"
               aria-label="Follow us on LinkedIn"
-              class="text-paper/60 hover:text-paper transition-colors"
+              class="w-9 h-9 rounded-full bg-paper/5 border border-paper/10 flex items-center justify-center text-paper/70 hover:text-paper hover:bg-paper/10 hover:border-paper/20 transition-colors"
             >
-              <Icon icon="mdi:linkedin" width="22" height="22" />
+              <Icon icon="mdi:linkedin" width="18" height="18" />
             </a>
           </div>
           <div class="mt-2">
-            <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-4 font-semibold">
-              Newsletter
+            <span class="block text-[11px] uppercase tracking-wider text-paper/70 mb-3 font-semibold">
+              Stay in the loop
             </span>
             <form
               v-if="newsletterStatus !== 'success'"
@@ -106,10 +107,10 @@ async function handleNewsletter(e: Event) {
               <input
                 v-model="newsletterEmail"
                 type="email"
-                placeholder="Email address"
+                placeholder="you@example.com"
                 aria-label="Email address"
                 :disabled="newsletterStatus === 'submitting'"
-                class="bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5 text-sm w-full text-paper placeholder:text-paper/40 focus:outline-none focus:border-brand-sky focus:ring-1 focus:ring-brand-sky transition-all disabled:opacity-50"
+                class="bg-paper/10 border border-paper/15 rounded-xl px-4 py-2.5 text-sm w-full text-paper placeholder:text-paper/50 focus:outline-none focus:border-brand-sky focus:bg-paper/15 focus:ring-1 focus:ring-brand-sky transition-all disabled:opacity-50"
                 required
               />
               <input
@@ -136,33 +137,35 @@ async function handleNewsletter(e: Event) {
                 />
               </UiButton>
             </form>
-            <p v-else class="text-sm text-paper/80 bg-paper/5 border border-paper/10 rounded-xl px-4 py-2.5">
+            <p v-else class="text-sm text-paper/85 bg-paper/10 border border-paper/15 rounded-xl px-4 py-2.5 m-0">
               Thanks — check your inbox to confirm your subscription.
             </p>
-            <p v-if="newsletterError" role="alert" class="mt-2 text-xs text-red-300">
+            <p v-if="newsletterError" role="alert" class="mt-2 text-xs text-red-300 m-0">
               {{ newsletterError }}
             </p>
           </div>
         </div>
 
-        <div class="lg:col-span-2 lg:col-start-6">
-          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
+        <!-- Programs -->
+        <div class="lg:col-span-1">
+          <h3 class="font-sans text-[11px] uppercase tracking-wider text-paper/70 mb-5 font-semibold m-0">
             Programs
-          </span>
-          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
+          </h3>
+          <ul class="flex flex-col gap-3 text-sm text-paper/85 list-none p-0 m-0">
             <li><RouterLink to="/programs/stepup-scholars" class="hover:text-white transition-colors">StepUp Scholars</RouterLink></li>
             <li><RouterLink to="/programs/dynamerge" class="hover:text-white transition-colors">Dynamerge</RouterLink></li>
-            <li><RouterLink to="/events" class="hover:text-white transition-colors">All Events</RouterLink></li>
+            <li><RouterLink to="/events" class="hover:text-white transition-colors">Events</RouterLink></li>
             <li><RouterLink to="/blog" class="hover:text-white transition-colors">Stories</RouterLink></li>
           </ul>
         </div>
 
-        <div class="lg:col-span-2">
-          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
+        <!-- Organization -->
+        <div class="lg:col-span-1">
+          <h3 class="font-sans text-[11px] uppercase tracking-wider text-paper/70 mb-5 font-semibold m-0">
             Organization
-          </span>
-          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
-            <li><RouterLink to="/about" class="hover:text-white transition-colors">About Us</RouterLink></li>
+          </h3>
+          <ul class="flex flex-col gap-3 text-sm text-paper/85 list-none p-0 m-0">
+            <li><RouterLink to="/about" class="hover:text-white transition-colors">About</RouterLink></li>
             <li><RouterLink to="/get-involved" class="hover:text-white transition-colors">Get Involved</RouterLink></li>
             <li><RouterLink to="/contact" class="hover:text-white transition-colors">Contact</RouterLink></li>
             <li><RouterLink to="/press" class="hover:text-white transition-colors">Press</RouterLink></li>
@@ -170,22 +173,24 @@ async function handleNewsletter(e: Event) {
           </ul>
         </div>
 
-        <div class="lg:col-span-2">
-          <span class="block text-xs uppercase tracking-[0.12em] text-paper/50 mb-6 font-semibold">
-            Resources
-          </span>
-          <ul class="flex flex-col gap-4 text-sm text-paper/80 list-none p-0 m-0">
+        <!-- Account -->
+        <div class="lg:col-span-1">
+          <h3 class="font-sans text-[11px] uppercase tracking-wider text-paper/70 mb-5 font-semibold m-0">
+            Account
+          </h3>
+          <ul class="flex flex-col gap-3 text-sm text-paper/85 list-none p-0 m-0">
             <li><RouterLink to="/login" class="hover:text-white transition-colors">Sign in</RouterLink></li>
             <li><RouterLink to="/signup" class="hover:text-white transition-colors">Apply</RouterLink></li>
+            <li><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
           </ul>
         </div>
       </div>
 
-      <div class="mt-16 pt-8 border-t border-paper/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-paper/40">
-        <p>© {{ year }} STAIJA. All rights reserved.</p>
+      <div class="mt-16 pt-8 border-t border-paper/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-paper/55">
+        <p class="m-0">© {{ year }} STAIJA. All rights reserved.</p>
         <div class="flex items-center gap-6">
-          <a href="#" class="hover:text-paper transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-paper transition-colors">Terms of Service</a>
+          <a href="#" class="hover:text-paper transition-colors">Privacy</a>
+          <a href="#" class="hover:text-paper transition-colors">Terms</a>
           <LocaleSwitcher />
         </div>
       </div>

@@ -1,6 +1,10 @@
 import { createApp } from 'vue'
-import './style.css'
+// Legacy first so Tailwind's responsive utilities (loaded second) win
+// when they overlap. legacy.css defines unscoped `.grid-cols-2` etc.
+// for the dashboard tree; if loaded after Tailwind it would override
+// `lg:grid-cols-*` and break footer / hero / other responsive grids.
 import './styles/legacy.css'
+import './style.css'
 import App from './App.vue'
 import router from './router'
 import { auth } from './config/firebase.ts'

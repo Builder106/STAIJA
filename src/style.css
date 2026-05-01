@@ -1,3 +1,9 @@
+/* Layer order: legacy (dashboard-only styles) below Tailwind's utilities so
+   Tailwind's `lg:grid-cols-N`, responsive variants, etc. always win on the
+   redesigned pages. legacy.css must wrap its rules in `@layer legacy { ... }`
+   for this to take effect. */
+@layer legacy, theme, base, components, utilities;
+
 @import "tailwindcss";
 
 @theme {
@@ -59,6 +65,9 @@
   background-color: rgba(139, 85, 255, 0.2);
 }
 
+/* Apply Playfair as the heading default but DON'T force a color — pages
+   set text colors via Tailwind utilities (e.g., text-paper in the dark
+   footer would be overridden if we forced text-ink here). */
 .brand-surface h1,
 .brand-surface h2,
 .brand-surface h3,
@@ -67,7 +76,6 @@
 .brand-surface h6,
 .brand-surface .font-display {
   font-family: var(--font-display);
-  color: var(--color-ink);
   margin: 0;
 }
 

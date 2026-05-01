@@ -1,3 +1,4 @@
+@layer legacy {
 /* Design System Variables */
 :root {
   /* Colors - Science nonprofit vibe: Blue (primary) + Purple (accent) */
@@ -663,4 +664,4 @@ main {
   .card:hover {
     transform: none;
   }
-}
+}}
