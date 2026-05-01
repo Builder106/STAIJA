@@ -10,6 +10,7 @@ import Eyebrow from './ui/Eyebrow.vue'
 import UiButton from './ui/UiButton.vue'
 import UiCard from './ui/UiCard.vue'
 import UiChip from './ui/UiChip.vue'
+import { trackApplyClick } from '../services/analytics'
 
 type Stat = { icon: string; label: string; value: string }
 type Feature = { title: string; desc: string; img: string }
@@ -176,6 +177,7 @@ function toggleFaq(i: number) {
             <UiButton
               :to="'/signup'"
               class="!bg-white !text-ink hover:!bg-paper hover:shadow-lg"
+              @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_hero' })"
             >
               Apply to {{ program.name }}
             </UiButton>
@@ -331,6 +333,7 @@ function toggleFaq(i: number) {
           <UiButton
             :to="'/signup'"
             class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
+            @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_cta_banner' })"
           >
             Apply to {{ program.name }}
           </UiButton>

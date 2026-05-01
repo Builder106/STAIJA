@@ -9,11 +9,13 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import { trackInquirySubmit } from '../services/analytics'
 
 const submitted = ref(false)
 
 function handleSubmit(e: Event) {
   e.preventDefault()
+  trackInquirySubmit({ type: 'contact' })
   submitted.value = true
 }
 </script>

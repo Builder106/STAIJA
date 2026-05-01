@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
@@ -8,25 +9,64 @@ import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
+import { getBlogPost, type BlogPost } from '../services/content'
 
 const route = useRoute()
-// Slug is read but content is mocked for now — wire to CMS in a follow-up.
-void route.params.slug
+const post = ref<BlogPost | null>(null)
+const loading = ref(true)
+const notFound = ref(false)
 
-const post = {
-  title: 'How to run a PCR test when the power goes out',
-  dek: 'A brief look into the creative problem solving required to do rigorous science in resource-constrained environments. Sometimes the most important discoveries happen during a blackout.',
-  eyebrow: 'StepUp · Research · Oct 12, 2024',
-  author: 'Chinedu Okafor',
-  role: "StepUp Scholar '24",
-  readingTime: '6 min read',
-  heroImg: 'https://images.unsplash.com/photo-1758573467240-f944226c2026?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-  authorImg: 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+const eyebrow = computed(() => {
+  if (!post.value) return ''
+  const d = new Date(post.value.publishedAt)
+  const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const programLabel = post.value.program === 'stepup' ? 'StepUp' : post.value.program === 'dynamerge' ? 'Dynamerge' : ''
+  const topicLabel = post.value.topic.charAt(0).toUpperCase() + post.value.topic.slice(1)
+  return [programLabel, topicLabel, date].filter(Boolean).join(' · ')
+})
+
+async function load() {
+  const slug = route.params.slug as string
+  loading.value = true
+  notFound.value = false
+  try {
+    const result = await getBlogPost(slug)
+    if (!result) {
+      notFound.value = true
+      post.value = null
+    } else {
+      post.value = result
+    }
+  } finally {
+    loading.value = false
+  }
 }
+
+watch(() => route.params.slug, load)
+onMounted(load)
 </script>
 
 <template>
   <div class="flex flex-col bg-paper min-h-screen">
+    <Section v-if="loading && !post" class="!pt-8 !pb-16">
+      <Container class="max-w-3xl flex flex-col gap-6">
+        <div class="h-3 w-40 bg-ink/5 rounded animate-pulse" />
+        <div class="h-12 w-3/4 bg-ink/5 rounded animate-pulse" />
+        <div class="h-6 w-full bg-ink/5 rounded animate-pulse" />
+        <div class="h-6 w-5/6 bg-ink/5 rounded animate-pulse" />
+        <div class="aspect-[21/9] bg-ink/5 rounded-2xl animate-pulse mt-8" />
+      </Container>
+    </Section>
+
+    <Section v-else-if="notFound" class="!pt-24 !pb-24 text-center">
+      <Container class="max-w-xl flex flex-col items-center gap-6">
+        <Heading :level="2">Story not found.</Heading>
+        <Body>That story doesn't exist or hasn't been published yet.</Body>
+        <UiButton variant="primary" :to="'/blog'">Back to stories</UiButton>
+      </Container>
+    </Section>
+
+    <template v-else-if="post">
     <Section class="!pt-8 !pb-16 border-b hairline-ink">
       <Container class="max-w-3xl">
         <RouterLink to="/blog" class="inline-flex items-center gap-2 text-sm font-semibold text-ink/60 hover:text-brand-violet transition-colors mb-10 focus-ring-brand rounded-sm">
@@ -34,19 +74,18 @@ const post = {
         </RouterLink>
 
         <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.4 }">
-          <Eyebrow class="text-brand-violet mb-6 block">{{ post.eyebrow }}</Eyebrow>
+          <Eyebrow class="text-brand-violet mb-6 block">{{ eyebrow }}</Eyebrow>
           <Heading :level="1" class="mb-6 leading-tight">{{ post.title }}</Heading>
           <Body large class="text-ink/70 mb-10 leading-relaxed !text-xl">{{ post.dek }}</Body>
 
           <div class="flex items-center gap-4 pt-6 border-t hairline-ink">
-            <div class="w-12 h-12 rounded-full overflow-hidden bg-ink/10 shrink-0">
-              <img :src="post.authorImg" :alt="post.author" class="w-full h-full object-cover" />
+            <div class="w-12 h-12 rounded-full overflow-hidden bg-ink/10 shrink-0 flex items-center justify-center">
+              <Icon icon="lucide:user" width="20" class="text-ink/40" />
             </div>
             <div class="flex flex-col">
               <span class="font-semibold text-ink leading-tight">{{ post.author }}</span>
-              <span class="text-sm text-ink/60">{{ post.role }}</span>
             </div>
-            <div class="ml-auto flex items-center gap-1.5 text-sm font-medium text-ink/50 bg-ink/5 px-3 py-1.5 rounded-full">
+            <div v-if="post.readingTime" class="ml-auto flex items-center gap-1.5 text-sm font-medium text-ink/50 bg-ink/5 px-3 py-1.5 rounded-full">
               <Icon icon="lucide:clock" width="14" /> {{ post.readingTime }}
             </div>
           </div>
@@ -54,7 +93,7 @@ const post = {
       </Container>
     </Section>
 
-    <Section class="!py-0 relative -mt-6 z-10">
+    <Section v-if="post.hero" class="!py-0 relative -mt-6 z-10">
       <Container class="max-w-4xl">
         <Motion
           class="aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-xl border hairline-ink relative"
@@ -63,7 +102,7 @@ const post = {
           :transition="{ duration: 0.5, delay: 0.2 }"
         >
           <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
-          <img :src="post.heroImg" :alt="post.title" class="w-full h-full object-cover" />
+          <img :src="post.hero" :alt="post.title" class="w-full h-full object-cover" />
         </Motion>
       </Container>
     </Section>
@@ -133,5 +172,6 @@ const post = {
         </div>
       </Container>
     </Section>
+    </template>
   </div>
 </template>

@@ -9,6 +9,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import { trackDonateStart } from '../services/analytics'
 
 type Frequency = 'one-time' | 'monthly'
 
@@ -48,6 +49,24 @@ function pickTier(id: number) {
 function pickCustom(value: string) {
   customAmount.value = value
   selectedTier.value = -1
+}
+
+function currentAmountKobo(): number {
+  if (selectedTier.value >= 0) {
+    const amounts = [5000, 25000, 100000]
+    return (amounts[selectedTier.value] ?? 0) * 100
+  }
+  const naira = parseInt(customAmount.value, 10)
+  return Number.isFinite(naira) ? naira * 100 : 0
+}
+
+function handleDonateClick() {
+  trackDonateStart({
+    amount_kobo: currentAmountKobo(),
+    frequency: frequency.value,
+    tier: selectedTier.value >= 0 ? 'preset' : 'custom',
+  })
+  // TODO: kick off Paystack checkout (M3)
 }
 </script>
 
@@ -178,7 +197,11 @@ function pickCustom(value: string) {
           </div>
         </div>
 
-        <UiButton variant="gradient" class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold">
+        <UiButton
+          variant="gradient"
+          class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
+          @click="handleDonateClick"
+        >
           Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
         </UiButton>
 

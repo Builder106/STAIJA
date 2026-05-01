@@ -10,6 +10,7 @@ import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import UiChip from '../components/ui/UiChip.vue'
 import HeroLottie from '../components/HeroLottie.vue'
+import { trackApplyClick } from '../services/analytics'
 
 const stats = [
   { eyebrow: 'Scholars trained', number: '240', caption: 'Across 18 Nigerian states' },
@@ -48,7 +49,11 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
               community of practice.
             </Body>
             <div class="flex flex-wrap gap-4">
-              <UiButton variant="gradient" :to="'/programs/stepup-scholars'">
+              <UiButton
+                variant="gradient"
+                :to="'/programs/stepup-scholars'"
+                @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
+              >
                 Apply to StepUp
               </UiButton>
               <UiButton variant="secondary" href="#programs">

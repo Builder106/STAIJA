@@ -11,39 +11,29 @@ import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import UiChip from '../components/ui/UiChip.vue'
-
-type EventItem = {
-  id: string
-  date: string
-  title: string
-  location: string
-  type: string
-  isUpcoming: boolean
-  isVirtual: boolean
-}
-
-const EVENTS: EventItem[] = [
-  { id: '1', date: '2024-10-12', title: 'Information Session: StepUp 2025', location: 'Virtual (Zoom)', type: 'Webinar', isUpcoming: true, isVirtual: true },
-  { id: '2', date: '2024-10-24', title: 'Alumni Research Symposium', location: 'Lagos, Nigeria', type: 'In-person', isUpcoming: true, isVirtual: false },
-  { id: '3', date: '2024-11-05', title: 'Mentor Matching Mixer', location: 'Virtual', type: 'Networking', isUpcoming: true, isVirtual: true },
-  { id: '4', date: '2024-08-15', title: 'Dynamerge Demo Day 2024', location: 'Virtual', type: 'Showcase', isUpcoming: false, isVirtual: true },
-  { id: '5', date: '2024-07-20', title: 'Lab Safety Certification Workshop', location: 'Lagos, Nigeria', type: 'Workshop', isUpcoming: false, isVirtual: false },
-]
+import { getEvents, type EventItem } from '../services/content'
 
 const tab = ref<'upcoming' | 'past'>('upcoming')
 const loading = ref(true)
-
-const displayed = computed(() => EVENTS.filter((e) => e.isUpcoming === (tab.value === 'upcoming')))
+const error = ref<string | null>(null)
+const displayed = ref<EventItem[]>([])
 const showEmpty = computed(() => !loading.value && displayed.value.length === 0)
 
-let timer: ReturnType<typeof setTimeout> | null = null
-function refresh() {
+async function load() {
   loading.value = true
-  if (timer) clearTimeout(timer)
-  timer = setTimeout(() => { loading.value = false }, 600)
+  error.value = null
+  try {
+    displayed.value = await getEvents({ upcoming: tab.value === 'upcoming' })
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to load events'
+    displayed.value = []
+  } finally {
+    loading.value = false
+  }
 }
-onMounted(refresh)
-watch(tab, refresh)
+
+onMounted(load)
+watch(tab, load)
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -135,20 +125,23 @@ function formatDate(iso: string) {
           </template>
 
           <template v-else>
+            <div v-if="error" role="alert" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              {{ error }}
+            </div>
             <Motion
               v-for="(event, i) in displayed"
-              :key="event.id"
+              :key="event.slug"
               :initial="{ opacity: 0, x: -10 }"
               :animate="{ opacity: 1, x: 0 }"
               :transition="{ delay: i * 0.1 }"
             >
-              <RouterLink :to="`/events/${event.id}`" class="group block focus-ring-brand rounded-2xl">
+              <RouterLink :to="`/events/${event.slug}`" class="group block focus-ring-brand rounded-2xl">
                 <UiCard class="flex flex-col md:flex-row items-start md:items-center gap-6 p-6 md:p-8 hover:shadow-md transition-shadow bg-white">
                   <div class="bg-ink/5 rounded-xl px-5 py-4 text-center min-w-[80px] shrink-0 border hairline-ink group-hover:bg-brand-violet/5 group-hover:!border-brand-violet/20 transition-colors">
                     <div class="text-sm font-semibold text-ink/60 uppercase tracking-widest group-hover:text-brand-violet transition-colors">
-                      {{ formatDate(event.date).month }}
+                      {{ formatDate(event.datetime).month }}
                     </div>
-                    <div class="font-display font-bold text-3xl text-ink">{{ formatDate(event.date).day }}</div>
+                    <div class="font-display font-bold text-3xl text-ink">{{ formatDate(event.datetime).day }}</div>
                   </div>
 
                   <div class="flex flex-col gap-2.5 flex-1">
@@ -169,7 +162,7 @@ function formatDate(iso: string) {
                   <div class="mt-4 md:mt-0 md:ml-auto w-full md:w-auto flex items-center justify-end">
                     <UiButton
                       :variant="tab === 'upcoming' ? 'primary' : 'secondary'"
-                      :to="`/events/${event.id}`"
+                      :to="`/events/${event.slug}`"
                       class="w-full md:w-auto !px-6"
                     >
                       {{ tab === 'upcoming' ? 'RSVP Now' : 'View Recap' }}

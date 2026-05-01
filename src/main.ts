@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 import { auth } from './config/firebase.ts'
 import { onAuthStateChanged } from 'firebase/auth'
+import { installAnalyticsRouter } from './services/analytics'
 
 // Wait for Firebase Auth to initialize before mounting the app
 let app: ReturnType<typeof createApp> | undefined
@@ -13,6 +14,7 @@ onAuthStateChanged(auth, () => {
   if (!app) {
     app = createApp(App)
     app.use(router)
+    installAnalyticsRouter(router)
     app.mount('#app')
   }
 })

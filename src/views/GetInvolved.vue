@@ -9,6 +9,20 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import { trackInquirySubmit } from '../services/analytics'
+
+type InquiryType = 'volunteer' | 'partner' | 'intern'
+const TAB_TO_INQUIRY: Record<string, InquiryType> = {
+  mentor: 'volunteer',
+  partner: 'partner',
+  intern: 'intern',
+}
+
+function handleInquirySubmit(e: Event) {
+  e.preventDefault()
+  trackInquirySubmit({ type: TAB_TO_INQUIRY[activeTab.value] ?? 'volunteer' })
+  // TODO: post to backend (M2/M3 follow-up)
+}
 
 const tabs = [
   { id: 'mentor', label: 'Volunteer / Mentor', icon: 'lucide:users' },
@@ -120,7 +134,7 @@ const activeContent = computed(() => content[activeTab.value])
           </div>
 
           <UiCard class="md:col-span-7 p-8 md:p-10 bg-white">
-            <form class="flex flex-col gap-6" @submit.prevent>
+            <form class="flex flex-col gap-6" @submit="handleInquirySubmit">
               <div class="mb-2">
                 <Heading :level="3" class="!text-2xl mb-2">Application Form</Heading>
                 <p class="text-sm text-ink/60 m-0">We review applications on a rolling basis. Expect a reply within 5 days.</p>

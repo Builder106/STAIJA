@@ -4,12 +4,14 @@ import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from './ui/Container.vue'
 import UiButton from './ui/UiButton.vue'
+import { trackNewsletterSignup } from '../services/analytics'
 
 const year = computed(() => new Date().getFullYear())
 
 function handleNewsletter(e: Event) {
   e.preventDefault()
-  // TODO: wire to newsletter backend
+  trackNewsletterSignup('footer')
+  // TODO: wire to Mailgun list (M5)
 }
 </script>
 
