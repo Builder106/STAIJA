@@ -24,7 +24,7 @@ const tiers = [
 
 const allocation = [
   { name: 'Student Stipends', value: 60, color: '#8B55FF' },
-  { name: 'Lab Materials & Venue', value: 20, color: '#69B9ED' },
+  { name: 'Lab Materials & Venue', value: 20, color: '#5EDBE7' },
   { name: 'Mentorship Ops', value: 10, color: '#9768FF' },
   { name: 'Admin & Overhead', value: 10, color: '#0E1217' },
 ]
@@ -63,7 +63,9 @@ function pickCustom(value: string) {
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3 }"
           >
-            <Heading :level="1" class="leading-[1.1]">Invest in Africa's scientific future.</Heading>
+            <Heading :level="1" class="leading-[1.1]">
+              Invest in Africa's <span class="text-brand-violet">scientific future</span>.
+            </Heading>
             <Body large class="text-ink/70">
               100% of your donation directly funds student research, stipends, and materials.
             </Body>

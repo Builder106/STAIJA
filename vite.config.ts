@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
     },
     server: {
-      port: 5173,
+      port: 5190,
+      strictPort: true,
       host: true,
     },
     build: {

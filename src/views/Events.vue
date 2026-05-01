@@ -59,7 +59,7 @@ function formatDate(iso: string) {
     <Section class="!pb-8 !pt-16 md:!pt-24 text-center">
       <Container class="max-w-2xl">
         <Eyebrow class="text-brand-violet mb-4 block">Community</Eyebrow>
-        <Heading :level="1" class="mb-6">Gather with us.</Heading>
+        <Heading :level="1" class="mb-6">Gather with <span class="text-brand-violet">us</span>.</Heading>
         <Body large class="mb-12">
           From virtual demo days to in-person symposiums, our events bring together the
           brightest young minds and the mentors who support them.
@@ -69,7 +69,7 @@ function formatDate(iso: string) {
           <button
             type="button"
             class="px-6 py-2.5 rounded-full text-sm font-semibold transition-all focus-ring-brand"
-            :class="tab === 'upcoming' ? 'bg-ink text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            :class="tab === 'upcoming' ? 'bg-brand-violet text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
             @click="tab = 'upcoming'"
           >
             Upcoming Events
@@ -77,7 +77,7 @@ function formatDate(iso: string) {
           <button
             type="button"
             class="px-6 py-2.5 rounded-full text-sm font-semibold transition-all focus-ring-brand"
-            :class="tab === 'past' ? 'bg-ink text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            :class="tab === 'past' ? 'bg-brand-violet text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
             @click="tab = 'past'"
           >
             Past Events

@@ -47,7 +47,7 @@ const gridPosts = POSTS.slice(1, 10)
   <div class="flex flex-col bg-paper min-h-screen">
     <Section class="!pb-8 !pt-12 md:!pt-16">
       <Container>
-        <Heading :level="1" class="mb-12">Stories from the lab.</Heading>
+        <Heading :level="1" class="mb-12">Stories from <span class="text-brand-violet">the lab</span>.</Heading>
 
         <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.4 }">
           <RouterLink :to="`/blog/${featured.slug}`" class="group block focus-ring-brand rounded-2xl">

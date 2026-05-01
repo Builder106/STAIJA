@@ -68,7 +68,7 @@ const activeContent = computed(() => content[activeTab.value])
     <Section class="!pb-8 !pt-16 md:!pt-24 text-center">
       <Container class="max-w-3xl">
         <Eyebrow class="text-brand-violet mb-4 block">Get Involved</Eyebrow>
-        <Heading :level="1" class="mb-6">Join the movement.</Heading>
+        <Heading :level="1" class="mb-6">Join the <span class="text-brand-violet">movement</span>.</Heading>
         <Body large class="mb-16">
           Whether you have an hour a month or a lab to share, there's a place for you in the STAIJA community. Choose a path below to apply.
         </Body>
@@ -79,7 +79,7 @@ const activeContent = computed(() => content[activeTab.value])
             :key="tab.id"
             type="button"
             class="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all focus-ring-brand"
-            :class="activeTab === tab.id ? 'bg-ink text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
+            :class="activeTab === tab.id ? 'bg-brand-violet text-white shadow-md' : 'text-ink/60 hover:text-ink hover:bg-ink/5'"
             @click="activeTab = tab.id"
           >
             <Icon :icon="tab.icon" width="18" />

@@ -30,7 +30,7 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
 <template>
   <div class="flex flex-col">
     <!-- Hero -->
-    <Section class="!pt-8 !pb-16 md:!pt-16 md:!pb-24">
+    <Section class="!pt-8 !pb-16 md:!pt-16 md:!pb-24 wash-violet-6">
       <Container>
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           <Motion
@@ -39,7 +39,9 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
             :transition="{ duration: 0.32, ease: 'easeOut' }"
             class="flex flex-col gap-8 max-w-xl"
           >
-            <Heading :level="1">Africa's next scientist-leaders start here.</Heading>
+            <Heading :level="1">
+              Africa's next <span class="text-brand-violet">scientist-leaders</span> start here.
+            </Heading>
             <Body large>
               We nurture ambitious high-school and gap-year students through
               intensive research programs, mentorship, and a pan-African
@@ -86,8 +88,8 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
             :transition="{ duration: 0.4, delay: i * 0.08 }"
             class="flex flex-col gap-2"
           >
-            <Eyebrow class="text-ink/60">{{ stat.eyebrow }}</Eyebrow>
-            <div class="font-display text-4xl md:text-5xl font-semibold tracking-tight">
+            <Eyebrow class="text-brand-violet">{{ stat.eyebrow }}</Eyebrow>
+            <div class="font-display text-4xl md:text-5xl font-semibold tracking-tight text-brand-violet">
               {{ stat.number }}
             </div>
             <p class="text-sm text-ink/70">{{ stat.caption }}</p>
@@ -198,7 +200,7 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
             :viewport="{ once: true }"
             :transition="{ duration: 0.6, delay: 0.2 }"
           >
-            <Eyebrow class="text-ink/50">Featured Scholar</Eyebrow>
+            <Eyebrow class="text-brand-violet">Featured Scholar</Eyebrow>
             <blockquote class="font-display text-2xl md:text-3xl lg:text-4xl italic leading-tight text-ink m-0">
               "STAIJA didn't just teach me how to run a PCR test. They taught me
               how to ask questions that matter to my community."
@@ -275,7 +277,7 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
     <!-- Partners -->
     <Section class="bg-paper">
       <Container>
-        <Eyebrow class="text-center text-ink/40 mb-10 block">
+        <Eyebrow class="text-center text-brand-violet mb-10 block">
           Supported by global partners
         </Eyebrow>
         <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale">

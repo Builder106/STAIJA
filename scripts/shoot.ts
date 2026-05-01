@@ -1,7 +1,7 @@
 import puppeteer from "npm:puppeteer-core@22.15.0";
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const BASE = "http://localhost:5173";
+const BASE = "http://localhost:5190";
 const OUT = "/tmp/staija-shots";
 
 const routes: [string, string][] = [

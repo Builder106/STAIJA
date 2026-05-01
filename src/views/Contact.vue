@@ -24,7 +24,7 @@ function handleSubmit(e: Event) {
       <Container>
         <div class="max-w-2xl mb-16">
           <Eyebrow class="text-brand-violet mb-4 block">Contact Us</Eyebrow>
-          <Heading :level="1" class="mb-6">We'd love to hear from you.</Heading>
+          <Heading :level="1" class="mb-6">We'd love to <span class="text-brand-violet">hear from you</span>.</Heading>
           <Body large>
             Whether you have a question about our programs, want to explore a partnership,
             or just want to say hello, our inbox is always open.

@@ -31,8 +31,8 @@ The existing logo is a wordmark on a horizontal gradient running
 violet → sky blue. The gradient stops are:
 
 - Brand Violet: #8B55FF
-- Brand Sky:    #69B9ED
-- Brand Gradient: linear-gradient(90deg, #8B55FF 0%, #69B9ED 100%)
+- Brand Sky:    #5EDBE7
+- Brand Gradient: linear-gradient(90deg, #8B55FF 0%, #5EDBE7 100%)
 
 Treat the gradient as a brand asset, not a hero wash. Use it for:
 the logo, one accent moment per page (e.g. donate amount selector,
@@ -56,8 +56,8 @@ Color
 - Ink (near-black, primary text):    #0E1217
 - Paper (warm off-white, primary bg): #FAF7F2
 - Brand Violet:                       #8B55FF
-- Brand Sky:                          #69B9ED
-- Brand Gradient: linear-gradient(90deg, #8B55FF, #69B9ED)
+- Brand Sky:                          #5EDBE7
+- Brand Gradient: linear-gradient(90deg, #8B55FF, #5EDBE7)
 - Primary CTA fill: Brand Violet (#8B55FF). Hover: shift toward
   Brand Sky by ~15% (a single, gentle hue shift).
 - Surface tints for hero washes: 6% Brand Violet over Paper, OR 6%
