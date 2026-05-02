@@ -72,6 +72,34 @@ export interface UserProfile {
   applicationStatus?: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected'
 }
 
+// A mentor↔student pairing for the duration of a program.
+// Created by staff/admin (initially in Firestore directly; an admin UI for
+// this can come later). Read by the mentor portal to populate "your students".
+export interface MentorAssignment {
+  id?: string
+  mentorId: string
+  studentId: string
+  program: 'stepup_scholars' | 'dynamerge'
+  status: 'active' | 'ended'
+  assignedAt: Date
+  endedAt?: Date
+  assignedBy?: string
+  notes?: string
+}
+
+// Free-form feedback a mentor leaves about an assigned student. Visible to
+// the mentor (their own past entries) and to staff/admin. Student visibility
+// is intentionally deferred — adding a student-facing surface needs UX
+// thinking (timing of disclosure, ability to respond, etc.) that's separate
+// from getting the mentor side working.
+export interface MentorFeedback {
+  id?: string
+  mentorId: string
+  studentId: string
+  content: string
+  submittedAt: Date
+}
+
 export interface ContentItem {
   id?: string
   title: string

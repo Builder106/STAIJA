@@ -82,6 +82,10 @@ const routes: RouteRecordRaw[] = [
   // Legacy dashboard (redirects based on role)
   { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { title: 'Dashboard — STAIJA', requiresAuth: true } },
 
+  // Mentor portal routes
+  { path: '/mentor', name: 'mentor-dashboard', component: () => import('../views/mentor/MentorDashboard.vue'), meta: { title: 'Mentor portal — STAIJA', requiresAuth: true, permissions: ['view_assigned_students'] } },
+  { path: '/mentor/feedback/:studentId', name: 'mentor-feedback', component: () => import('../views/mentor/MentorFeedback.vue'), meta: { title: 'Leave feedback — STAIJA', requiresAuth: true, permissions: ['submit_mentor_feedback'] } },
+
   // Alumni portal routes
   { path: '/alumni', name: 'alumni-home', component: () => import('../views/alumni/AlumniHome.vue'), meta: { title: 'Alumni — STAIJA', requiresAuth: true, permissions: ['access_alumni_portal'] } },
   { path: '/alumni/profile', name: 'alumni-profile', component: () => import('../views/alumni/AlumniProfile.vue'), meta: { title: 'My Alumni Profile — STAIJA', requiresAuth: true, permissions: ['access_alumni_portal'] } },
@@ -156,6 +160,8 @@ router.beforeEach(async (to, _from, next) => {
       return next({ name: 'student-dashboard' })
     } else if (PermissionService.isAlumniRole(userRole)) {
         return next({ name: 'alumni-home' })
+    } else if (PermissionService.isMentorRole(userRole)) {
+        return next({ name: 'mentor-dashboard' })
     } else if (PermissionService.hasPermission(userRole, 'view_own_applications')) {
         return next({ name: 'applicant-dashboard' })
     } else {

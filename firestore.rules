@@ -26,18 +26,22 @@ service cloud.firestore {
       let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
       // Only admins can assign any role
       return userRole == 'admin' ||
-             // Staff can assign applicant, staff, alumni, and student roles
-             (userRole == 'staff' && targetRole in ['applicant', 'staff', 'alumni', 'student']);
+             // Staff can assign applicant, staff, alumni, student, and mentor roles
+             (userRole == 'staff' && targetRole in ['applicant', 'staff', 'alumni', 'student', 'mentor']);
     }
 
     function isValidRoleTransition(currentRole, newRole) {
-      // Define allowed role transitions
+      // Mirror src/services/permissions.ts:isValidRoleTransition. Keep these
+      // in lockstep — drift here means client validation passes but the rule
+      // rejects (or vice versa).
       let allowedTransitions = {
         'applicant': ['student', 'alumni'],
         'student': ['alumni', 'applicant'],
-        'alumni': ['applicant', 'student'],
-        'staff': ['admin', 'applicant'],
-        'admin': ['staff', 'applicant', 'alumni']
+        'alumni': ['applicant', 'student', 'mentor'],
+        'mentor': ['staff', 'alumni'],
+        'staff': ['admin', 'applicant', 'mentor'],
+        'admin': ['staff', 'applicant', 'alumni', 'mentor'],
+        'content_editor': ['admin', 'staff']
       };
       return newRole in allowedTransitions[currentRole] || currentRole == newRole;
     }
@@ -134,6 +138,39 @@ service cloud.firestore {
 
       // System can create audit logs
       allow create: if hasRole('admin') || hasRole('staff');
+    }
+
+    // Mentor↔student assignments. Created by staff/admin (no client-side
+    // assignment UI yet — set up in Firestore directly or via a future admin
+    // tool). Mentors see only their own pairings. Students could conceivably
+    // see "who is my mentor", but that surface doesn't exist yet, so the
+    // student-side read is omitted until a UX is decided.
+    match /mentor_assignments/{assignmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.mentorId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow create, update, delete: if hasAnyRole(['staff', 'admin']);
+    }
+
+    // Mentor feedback. The mentor who wrote it can read+update their own;
+    // staff/admin can read everything. Students cannot read their own
+    // feedback yet — that surface needs a UX decision (timing, response,
+    // etc.) and is intentionally out of scope until that's designed.
+    match /mentor_feedback/{feedbackId} {
+      allow read: if isAuthenticated() && (
+        resource.data.mentorId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow create: if isAuthenticated() &&
+                       request.resource.data.mentorId == request.auth.uid &&
+                       hasRole('mentor');
+      allow update: if isAuthenticated() &&
+                       resource.data.mentorId == request.auth.uid &&
+                       hasRole('mentor') &&
+                       request.resource.data.mentorId == resource.data.mentorId &&
+                       request.resource.data.studentId == resource.data.studentId;
+      allow delete: if hasAnyRole(['staff', 'admin']);
     }
   }
 }
