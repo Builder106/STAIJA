@@ -1,1008 +1,308 @@
-<template>
-  <div class="applicant-dashboard">
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="container">
-        <div class="hero-content">
-          <div class="hero-text">
-            <h1 class="hero-title">
-              Welcome back, {{ userProfile?.displayName || 'Applicant' }}! 
-              <Icon icon="mdi:hand-wave" class="welcome-icon" />
-            </h1>
-            <p class="hero-subtitle">
-              Track your progress and manage your STAIJA program applications
-            </p>
-          </div>
-          <div class="hero-actions">
-            <button @click="navigateTo('/applicant/applications/new')" class="btn btn-primary btn-lg">
-              <Icon icon="mdi:file-document-edit" class="icon" />
-              Start New Application
-            </button>
-            <button @click="handleSignOut" class="btn btn-outline">
-              <Icon icon="mdi:logout" class="icon" />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Dashboard Content -->
-    <section class="dashboard-section">
-      <div class="container">
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <Icon icon="mdi:chart-bar" />
-            </div>
-            <div class="stat-content">
-              <span class="stat-number">{{ applications.length }}</span>
-              <span class="stat-label">Total Applications</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">
-              <Icon icon="mdi:check-circle" />
-            </div>
-            <div class="stat-content">
-              <span class="stat-number">{{ submittedCount }}</span>
-              <span class="stat-label">Submitted</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">
-              <Icon icon="mdi:file-document" />
-            </div>
-            <div class="stat-content">
-              <span class="stat-number">{{ draftCount }}</span>
-              <span class="stat-label">Drafts</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">
-              <Icon icon="mdi:clock-outline" />
-            </div>
-            <div class="stat-content">
-              <span class="stat-number">{{ underReviewCount }}</span>
-              <span class="stat-label">Under Review</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Main Dashboard Grid -->
-        <div class="dashboard-grid">
-          <!-- Quick Actions -->
-          <div class="dashboard-card quick-actions-card">
-            <div class="card-header">
-              <h3 class="card-title">
-                <Icon icon="mdi:lightning-bolt" class="icon" />
-                Quick Actions
-              </h3>
-              <p class="card-subtitle">Access your most important tools</p>
-            </div>
-            <div class="quick-actions-grid">
-              <button @click="navigateTo('/applicant/applications')" class="action-button">
-                <div class="action-icon">
-                  <Icon icon="mdi:clipboard-list" />
-                </div>
-                <div class="action-content">
-                  <span class="action-title">View All Applications</span>
-                  <span class="action-description">Manage and track your submissions</span>
-                </div>
-              </button>
-              <button @click="navigateTo('/programs/stepup-scholars')" class="action-button">
-                <div class="action-icon">
-                  <Icon icon="mdi:school" />
-                </div>
-                <div class="action-content">
-                  <span class="action-title">StepUp Scholars</span>
-                  <span class="action-description">Learn about the program</span>
-                </div>
-              </button>
-              <button @click="navigateTo('/programs/dynamerge')" class="action-button">
-                <div class="action-icon">
-                  <Icon icon="mdi:microscope" />
-                </div>
-                <div class="action-content">
-                  <span class="action-title">Dynamerge</span>
-                  <span class="action-description">Explore research opportunities</span>
-                </div>
-              </button>
-              <button @click="navigateTo('/contact')" class="action-button">
-                <div class="action-icon">
-                  <Icon icon="mdi:message-text" />
-                </div>
-                <div class="action-content">
-                  <span class="action-title">Contact Support</span>
-                  <span class="action-description">Get help when you need it</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <!-- Recent Applications -->
-          <div class="dashboard-card applications-card">
-            <div class="card-header">
-              <h3 class="card-title">
-                <Icon icon="mdi:file-document-multiple" class="icon" />
-                Recent Applications
-              </h3>
-              <button @click="navigateTo('/applicant/applications')" class="btn btn-ghost btn-sm">
-                View All
-              </button>
-            </div>
-            
-            <div v-if="loading" class="loading-state">
-              <div class="loading-spinner"></div>
-              <p>Loading your applications...</p>
-            </div>
-            
-            <div v-else-if="applications.length === 0" class="empty-state">
-              <div class="empty-icon">
-                <Icon icon="mdi:file-document-edit" />
-              </div>
-              <h4 class="empty-title">No applications yet</h4>
-              <p class="empty-text">Start your journey by creating your first application</p>
-              <button @click="navigateTo('/applicant/applications/new')" class="btn btn-primary">
-                Create Application
-              </button>
-            </div>
-            
-            <div v-else class="applications-list">
-              <div 
-                v-for="app in recentApplications" 
-                :key="app.id" 
-                class="application-item"
-                @click="navigateTo(`/applicant/applications/${app.id}`)"
-              >
-                <div class="app-info">
-                  <div class="app-header">
-                    <h4 class="app-title">
-                      {{ app.program === 'stepup_scholars' ? 'StepUp Scholars' : 'Dynamerge' }}
-                    </h4>
-                    <span :class="['status-badge', `status-${app.status}`]">
-                      {{ formatStatus(app.status) }}
-                    </span>
-                  </div>
-                  <p class="app-date">Created {{ formatDate(app.createdAt) }}</p>
-                  <div class="app-progress">
-                    <div class="progress-bar">
-                      <div 
-                        :class="['progress-fill', `progress-${app.status}`]"
-                        :style="{ width: getProgressWidth(app.status) }"
-                      ></div>
-                    </div>
-                    <span class="progress-text">{{ getProgressText(app.status) }}</span>
-                  </div>
-                </div>
-                <div class="app-arrow">
-                  <Icon icon="mdi:chevron-right" class="icon" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Program Insights -->
-          <div class="dashboard-card insights-card">
-            <div class="card-header">
-              <h3 class="card-title">
-                <Icon icon="mdi:trending-up" class="icon" />
-                Program Insights
-              </h3>
-            </div>
-            <div class="insights-content">
-              <div class="insight-item">
-                <div class="insight-icon">
-                  <Icon icon="mdi:target" />
-                </div>
-                <div class="insight-text">
-                  <strong>StepUp Scholars</strong> focuses on leadership development and mentorship
-                </div>
-              </div>
-              <div class="insight-item">
-                <div class="insight-icon">
-                  <Icon icon="mdi:microscope" />
-                </div>
-                <div class="insight-text">
-                  <strong>Dynamerge</strong> emphasizes research collaboration and innovation
-                </div>
-              </div>
-              <div class="insight-item">
-                <div class="insight-icon">
-                  <Icon icon="mdi:star" />
-                </div>
-                <div class="insight-text">
-                  Both programs offer unique opportunities for African scientists
-                </div>
-              </div>
-            </div>
-            <div class="insights-actions">
-              <button @click="navigateTo('/programs/stepup-scholars')" class="btn btn-outline btn-sm">
-                Learn More
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Loading Overlay -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-content">
-        <div class="loading-spinner"></div>
-        <p>Loading your dashboard...</p>
-      </div>
-    </div>
-
-    <!-- Error State -->
-    <div v-if="error" class="error-overlay">
-      <div class="error-content">
-        <div class="error-icon">
-          <Icon icon="mdi:alert-circle" />
-        </div>
-        <h3>Something went wrong</h3>
-        <p>{{ error }}</p>
-        <button @click="loadData" class="btn btn-primary">Try Again</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
-import { AuthService, DatabaseService, type UserProfile, type Application } from '../../services/firebase'
+import Container from '../../components/ui/Container.vue'
+import Section from '../../components/ui/Section.vue'
+import Heading from '../../components/ui/Heading.vue'
+import Body from '../../components/ui/Body.vue'
+import Eyebrow from '../../components/ui/Eyebrow.vue'
+import UiButton from '../../components/ui/UiButton.vue'
+import UiCard from '../../components/ui/UiCard.vue'
+import UiChip from '../../components/ui/UiChip.vue'
+import { AuthService, DatabaseService } from '../../services/firebase'
+import type { Application } from '../../services/types'
+import { useAuth } from '../../composables/useAuth'
 
 const router = useRouter()
+const { displayName } = useAuth()
 
-// Reactive data
-const userProfile = ref<UserProfile | null>(null)
 const applications = ref<Application[]>([])
 const loading = ref(true)
 const error = ref('')
 
-// Computed properties
-const submittedCount = computed(() => 
-  applications.value.filter(app => app.status === 'submitted').length
+const firstName = computed(() => {
+  const name = displayName.value ?? ''
+  return name.split(/[\s@]/)[0] || 'there'
+})
+
+const sortedApplications = computed(() =>
+  [...applications.value].sort((a, b) => {
+    const aDate = toDate(a.updatedAt ?? a.createdAt).getTime()
+    const bDate = toDate(b.updatedAt ?? b.createdAt).getTime()
+    return bDate - aDate
+  }),
 )
 
-const draftCount = computed(() => 
-  applications.value.filter(app => app.status === 'draft').length
-)
+const hasApplications = computed(() => applications.value.length > 0)
 
-const underReviewCount = computed(() => 
-  applications.value.filter(app => app.status === 'under_review').length
-)
-
-const recentApplications = computed(() => 
-  applications.value.slice(0, 3) // Show only 3 most recent
-)
-
-// Methods
-const loadData = async () => {
+async function loadData() {
   loading.value = true
   error.value = ''
-  
   try {
     const currentUser = AuthService.getCurrentUser()
     if (!currentUser) {
       router.push('/login')
       return
     }
-    
-    // Load user profile
-    const profile = await DatabaseService.getUserProfile(currentUser.uid)
-    if (profile) {
-      userProfile.value = profile
-    }
-    
-    // Load user applications
-    const userApps = await DatabaseService.getUserApplications(currentUser.uid)
-    applications.value = userApps
-    
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load dashboard data'
+    applications.value = await DatabaseService.getUserApplications(currentUser.uid)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load your applications.'
   } finally {
     loading.value = false
   }
 }
 
-const handleSignOut = async () => {
-  try {
-    await AuthService.signOut()
-    router.push('/')
-  } catch (err: any) {
-    error.value = err.message || 'Failed to sign out'
+function toDate(value: unknown): Date {
+  if (value instanceof Date) return value
+  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate()
+  }
+  if (typeof value === 'string' || typeof value === 'number') return new Date(value)
+  return new Date(0)
+}
+
+function programLabel(p: Application['program']) {
+  return p === 'stepup_scholars' ? 'StepUp Scholars' : 'Dynamerge'
+}
+
+function statusLabel(s: Application['status']) {
+  switch (s) {
+    case 'draft': return 'Draft'
+    case 'submitted': return 'Submitted'
+    case 'under_review': return 'Under review'
+    case 'accepted': return 'Accepted'
+    case 'rejected': return 'Decision sent'
   }
 }
 
-const navigateTo = (path: string) => {
-  router.push(path)
+function statusTone(s: Application['status']): 'neutral' | 'progress' | 'success' | 'closed' {
+  if (s === 'draft') return 'neutral'
+  if (s === 'submitted' || s === 'under_review') return 'progress'
+  if (s === 'accepted') return 'success'
+  return 'closed'
 }
 
-const formatDate = (date: Date | undefined) => {
-  if (!date) return 'Unknown'
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+function timeAgo(d: Date): string {
+  const ms = Date.now() - d.getTime()
+  const min = Math.floor(ms / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min} min ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr} hr ago`
+  const day = Math.floor(hr / 24)
+  if (day < 7) return `${day} day${day === 1 ? '' : 's'} ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const formatStatus = (status: string) => {
-  const statusMap: Record<string, string> = {
-    draft: 'Draft',
-    submitted: 'Submitted',
-    under_review: 'Under Review',
-    accepted: 'Accepted',
-    rejected: 'Rejected'
-  }
-  return statusMap[status] || status
+function continueRoute(app: Application): string {
+  if (app.status === 'draft') return `/applicant/applications/${app.id}/edit`
+  return `/applicant/applications/${app.id}`
 }
 
-const getProgressWidth = (status: string) => {
-  const progressMap: Record<string, string> = {
-    draft: '25%',
-    submitted: '50%',
-    under_review: '75%',
-    accepted: '100%',
-    rejected: '100%'
-  }
-  return progressMap[status] || '0%'
-}
-
-const getProgressText = (status: string) => {
-  const textMap: Record<string, string> = {
-    draft: 'In Progress',
-    submitted: 'Submitted',
-    under_review: 'Under Review',
-    accepted: 'Accepted',
-    rejected: 'Decision Made'
-  }
-  return textMap[status] || 'Unknown'
-}
-
-// Lifecycle
-onMounted(() => {
-  loadData()
-})
+onMounted(loadData)
 </script>
 
-<style scoped>
-.applicant-dashboard {
-  min-height: 100vh;
-  background: var(--neutral-50);
-}
-
-/* Hero Section */
-.hero-section {
-  background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
-  color: white;
-  padding: var(--space-16) 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-  opacity: 0.3;
-}
-
-.hero-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-8);
-  position: relative;
-  z-index: 1;
-}
-
-.hero-text {
-  flex: 1;
-}
-
-.hero-title {
-  font-size: var(--text-4xl);
-  font-weight: 800;
-  margin-bottom: var(--space-4);
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.welcome-icon {
-  width: 2rem;
-  height: 2rem;
-  color: white;
-}
-
-.hero-subtitle {
-  font-size: var(--text-lg);
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  line-height: var(--leading-relaxed);
-}
-
-.hero-actions {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-.hero-actions .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-/* Dashboard Section */
-.dashboard-section {
-  padding: var(--space-16) 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-4);
-}
-
-/* Stats Overview */
-.stats-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-6);
-  margin-bottom: var(--space-12);
-}
-
-.stat-card {
-  background: white;
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--neutral-200);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-  transform-origin: left;
-}
-
-.stat-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-2px);
-}
-
-.stat-card:hover::before {
-  transform: scaleX(1);
-}
-
-.stat-icon {
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-50);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-}
-
-.stat-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--primary-600);
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-number {
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--neutral-900);
-  line-height: 1;
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  font-weight: 500;
-}
-
-/* Dashboard Grid */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--space-8);
-}
-
-.dashboard-card {
-  background: white;
-  border-radius: var(--radius-2xl);
-  padding: var(--space-8);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--neutral-200);
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.dashboard-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-  transform-origin: left;
-}
-
-.dashboard-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-4px);
-}
-
-.dashboard-card:hover::before {
-  transform: scaleX(1);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-6);
-}
-
-.card-title {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--neutral-900);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.card-title .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--primary-600);
-}
-
-.card-subtitle {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin: var(--space-2) 0 0 0;
-}
-
-/* Quick Actions */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-.action-button {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border: 2px solid var(--neutral-200);
-  border-radius: var(--radius-lg);
-  background: white;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  text-align: left;
-  width: 100%;
-}
-
-.action-button:hover {
-  border-color: var(--primary-500);
-  background: var(--primary-50);
-  transform: translateX(4px);
-}
-
-.action-icon {
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--neutral-100);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-  transition: all var(--transition-normal);
-}
-
-.action-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--neutral-600);
-}
-
-.action-button:hover .action-icon {
-  background: var(--primary-100);
-  transform: scale(1.1);
-}
-
-.action-button:hover .action-icon svg {
-  color: var(--primary-600);
-}
-
-.action-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.action-title {
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin-bottom: var(--space-1);
-}
-
-.action-description {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-}
-
-/* Applications List */
-.applications-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.application-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-lg);
-  background: var(--neutral-50);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.application-item:hover {
-  border-color: var(--primary-500);
-  background: white;
-  transform: translateX(4px);
-  box-shadow: var(--shadow-sm);
-}
-
-.app-info {
-  flex: 1;
-}
-
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-2);
-}
-
-.app-title {
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin: 0;
-}
-
-.app-date {
-  font-size: var(--text-sm);
-  color: var(--neutral-600);
-  margin: 0 0 var(--space-3) 0;
-}
-
-.app-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: var(--neutral-200);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  transition: width var(--transition-normal);
-}
-
-.progress-draft {
-  background: var(--warning-500);
-}
-
-.progress-submitted {
-  background: var(--primary-500);
-}
-
-.progress-under_review {
-  background: var(--secondary-500);
-}
-
-.progress-accepted {
-  background: var(--success-500);
-}
-
-.progress-rejected {
-  background: var(--error-500);
-}
-
-.progress-text {
-  font-size: var(--text-xs);
-  color: var(--neutral-600);
-  font-weight: 500;
-  min-width: 80px;
-}
-
-.app-arrow {
-  color: var(--neutral-400);
-  transition: all var(--transition-normal);
-}
-
-.app-arrow .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.application-item:hover .app-arrow {
-  color: var(--primary-500);
-  transform: translateX(4px);
-}
-
-/* Status Badges */
-.status-badge {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.status-draft {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-submitted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-under_review {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-
-.status-accepted {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Insights Card */
-.insights-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.insight-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-}
-
-.insight-icon {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--secondary-50);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-}
-
-.insight-icon svg {
-  width: 1rem;
-  height: 1rem;
-  color: var(--secondary-600);
-}
-
-.insight-text {
-  font-size: var(--text-sm);
-  color: var(--neutral-700);
-  line-height: var(--leading-relaxed);
-}
-
-.insights-actions {
-  text-align: center;
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: var(--space-12) var(--space-6);
-}
-
-.empty-icon {
-  margin-bottom: var(--space-4);
-  opacity: 0.5;
-}
-
-.empty-icon svg {
-  width: 3rem;
-  height: 3rem;
-  color: var(--neutral-400);
-}
-
-.empty-title {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--neutral-700);
-  margin-bottom: var(--space-2);
-}
-
-.empty-text {
-  font-size: var(--text-base);
-  color: var(--neutral-600);
-  margin-bottom: var(--space-6);
-  line-height: var(--leading-relaxed);
-}
-
-/* Loading States */
-.loading-state {
-  text-align: center;
-  padding: var(--space-8);
-  color: var(--neutral-600);
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--neutral-200);
-  border-top: 4px solid var(--primary-500);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto var(--space-4);
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Overlays */
-.loading-overlay, .error-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.loading-content, .error-content {
-  text-align: center;
-  padding: var(--space-8);
-}
-
-.error-icon {
-  margin-bottom: var(--space-4);
-}
-
-.error-icon svg {
-  width: 3rem;
-  height: 3rem;
-  color: var(--error-500);
-}
-
-.error-content h3 {
-  color: var(--neutral-900);
-  margin-bottom: var(--space-2);
-}
-
-.error-content p {
-  color: var(--neutral-600);
-  margin-bottom: var(--space-6);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .hero-content {
-    flex-direction: column;
-    text-align: center;
-    gap: var(--space-6);
-  }
-  
-  .hero-title {
-    font-size: var(--text-3xl);
-  }
-  
-  .hero-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .stats-overview {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .card-header {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-  
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-overview {
-    grid-template-columns: 1fr;
-  }
-  
-  .hero-section {
-    padding: var(--space-12) 0;
-  }
-  
-  .dashboard-section {
-    padding: var(--space-12) 0;
-  }
-}
-</style>
+<template>
+  <Section class="!pt-12 !pb-24">
+    <Container>
+      <!-- Greeting -->
+      <div class="flex flex-col gap-3 mb-12">
+        <Eyebrow class="text-brand-violet">Applicant dashboard</Eyebrow>
+        <Heading :level="1">Hi, {{ firstName }}.</Heading>
+        <Body v-if="!loading && !hasApplications" class="text-ink/70 max-w-xl">
+          You haven't started an application yet. Pick a program below to begin —
+          it takes about 20 minutes and your progress saves automatically.
+        </Body>
+        <Body v-else-if="!loading" class="text-ink/70 max-w-xl">
+          Pick up where you left off, or start a new application for the other program.
+        </Body>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="loading" class="flex items-center gap-3 text-ink/60">
+        <Icon icon="lucide:loader-2" width="18" class="animate-spin" />
+        Loading your applications…
+      </div>
+
+      <!-- Error -->
+      <div
+        v-else-if="error"
+        class="flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50/60 p-6"
+      >
+        <div class="flex items-center gap-3 text-red-700">
+          <Icon icon="lucide:alert-circle" width="20" />
+          <span class="font-semibold">Couldn't load your applications.</span>
+        </div>
+        <p class="text-sm text-ink/70 m-0">{{ error }}</p>
+        <UiButton variant="secondary" @click="loadData" class="self-start">
+          Try again
+        </UiButton>
+      </div>
+
+      <!-- Empty state: no applications -->
+      <template v-else-if="!hasApplications">
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+          <UiCard hoverable class="h-full flex flex-col relative pt-[4px]">
+            <div class="absolute top-0 left-0 right-0 h-[4px] bg-gradient-brand" />
+            <div class="p-8 flex flex-col h-full gap-5">
+              <div class="flex justify-between items-start gap-4">
+                <Heading :level="3">StepUp Scholars</Heading>
+                <UiChip>In-person</UiChip>
+              </div>
+              <Body class="flex-1 text-ink/75">
+                A six-month research incubator in Nigeria for high-school and
+                gap-year students. Lab access, a stipend, and mentorship toward
+                a first publication.
+              </Body>
+              <div class="flex items-center justify-between gap-4 pt-4 border-t hairline-ink">
+                <span class="text-xs font-semibold tracking-wide text-ink/55 uppercase">
+                  Ages 15–19 · Nigeria
+                </span>
+                <UiButton variant="primary" :to="'/apply/stepup-scholars'">
+                  Apply
+                </UiButton>
+              </div>
+            </div>
+          </UiCard>
+
+          <UiCard hoverable class="h-full flex flex-col relative pt-[4px]">
+            <div class="absolute top-0 left-0 right-0 h-[4px] bg-gradient-brand" />
+            <div class="p-8 flex flex-col h-full gap-5">
+              <div class="flex justify-between items-start gap-4">
+                <Heading :level="3">Dynamerge</Heading>
+                <UiChip>Virtual</UiChip>
+              </div>
+              <Body class="flex-1 text-ink/75">
+                A four-week pan-African virtual bootcamp — project-based work
+                with global mentors across coding, data, biotech, and clean
+                energy tracks.
+              </Body>
+              <div class="flex items-center justify-between gap-4 pt-4 border-t hairline-ink">
+                <span class="text-xs font-semibold tracking-wide text-ink/55 uppercase">
+                  Ages 15–20 · Pan-African
+                </span>
+                <UiButton variant="primary" :to="'/apply/dynamerge'">
+                  Apply
+                </UiButton>
+              </div>
+            </div>
+          </UiCard>
+        </div>
+
+        <!-- What you'll need -->
+        <div class="rounded-2xl border hairline-ink p-6 md:p-8 max-w-3xl">
+          <Eyebrow class="text-brand-violet mb-3 block">Before you start</Eyebrow>
+          <Heading :level="3" class="mb-4">What you'll need</Heading>
+          <ul class="grid sm:grid-cols-2 gap-y-3 gap-x-8 list-none p-0 m-0">
+            <li class="flex items-start gap-3">
+              <Icon icon="lucide:file-text" width="18" class="text-brand-violet mt-0.5 shrink-0" />
+              <span class="text-sm text-ink/80">A short personal essay (300–500 words)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Icon icon="lucide:users" width="18" class="text-brand-violet mt-0.5 shrink-0" />
+              <span class="text-sm text-ink/80">Two references — we'll email them a link</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Icon icon="lucide:graduation-cap" width="18" class="text-brand-violet mt-0.5 shrink-0" />
+              <span class="text-sm text-ink/80">A transcript or grade summary (PDF or image)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Icon icon="lucide:clock" width="18" class="text-brand-violet mt-0.5 shrink-0" />
+              <span class="text-sm text-ink/80">About 20 minutes — your progress saves as you go</span>
+            </li>
+          </ul>
+        </div>
+      </template>
+
+      <!-- Has applications: list view -->
+      <template v-else>
+        <div class="flex items-center justify-between gap-4 mb-6">
+          <Eyebrow class="text-brand-violet">Your applications</Eyebrow>
+          <UiButton variant="secondary" :to="'/applicant/applications/new'">
+            <Icon icon="lucide:plus" width="16" class="mr-1.5" />
+            New application
+          </UiButton>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <RouterLink
+            v-for="app in sortedApplications"
+            :key="app.id"
+            :to="continueRoute(app)"
+            class="block group focus-ring-brand rounded-2xl"
+          >
+            <UiCard hoverable class="p-6 flex items-center gap-6">
+              <div class="flex-1 flex flex-col gap-1.5 min-w-0">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <h3 class="font-display text-xl font-semibold m-0 truncate">
+                    {{ programLabel(app.program) }}
+                  </h3>
+                  <span
+                    :class="[
+                      'inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full',
+                      statusTone(app.status) === 'neutral' && 'bg-ink/10 text-ink/70',
+                      statusTone(app.status) === 'progress' && 'bg-brand-violet/10 text-brand-violet',
+                      statusTone(app.status) === 'success' && 'bg-emerald-500/10 text-emerald-700',
+                      statusTone(app.status) === 'closed' && 'bg-ink/15 text-ink/65',
+                    ]"
+                  >
+                    {{ statusLabel(app.status) }}
+                  </span>
+                </div>
+                <p class="text-sm text-ink/60 m-0">
+                  <template v-if="app.status === 'draft'">
+                    Last edited {{ timeAgo(toDate(app.updatedAt ?? app.createdAt)) }}
+                  </template>
+                  <template v-else-if="app.submittedAt">
+                    Submitted {{ timeAgo(toDate(app.submittedAt)) }}
+                  </template>
+                  <template v-else>
+                    Created {{ timeAgo(toDate(app.createdAt)) }}
+                  </template>
+                </p>
+              </div>
+              <div class="flex items-center gap-2 text-sm font-semibold text-brand-violet shrink-0">
+                <span class="hidden sm:inline">
+                  {{ app.status === 'draft' ? 'Continue' : 'View status' }}
+                </span>
+                <Icon
+                  icon="lucide:arrow-right"
+                  width="18"
+                  class="transition-transform group-hover:translate-x-1"
+                />
+              </div>
+            </UiCard>
+          </RouterLink>
+        </div>
+
+        <!-- "Apply to the other program" nudge: only show if exactly one program is covered -->
+        <div
+          v-if="applications.length === 1"
+          class="mt-12 rounded-2xl border hairline-ink bg-paper p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        >
+          <div>
+            <Heading :level="4" class="mb-1">Apply to the other program too?</Heading>
+            <p class="text-sm text-ink/70 m-0">
+              StepUp and Dynamerge are independent — you can apply to both.
+            </p>
+          </div>
+          <UiButton
+            v-if="applications[0].program === 'stepup_scholars'"
+            variant="secondary"
+            :to="'/apply/dynamerge'"
+          >
+            Apply to Dynamerge
+          </UiButton>
+          <UiButton
+            v-else
+            variant="secondary"
+            :to="'/apply/stepup-scholars'"
+          >
+            Apply to StepUp
+          </UiButton>
+        </div>
+      </template>
+    </Container>
+  </Section>
+</template>
