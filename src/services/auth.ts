@@ -15,7 +15,7 @@ import {
   signInWithEmailLink,
 } from 'firebase/auth'
 import type { User, UserCredential } from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../config/firebase.ts'
 import type {
   UserProfile,
@@ -30,7 +30,11 @@ import { DatabaseService } from './database'
 export class AuthService {
   static async signIn(email: string, password: string): Promise<UserCredential> {
     try {
-      return await signInWithEmailAndPassword(auth, email, password)
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      // Same idempotent profile sync OAuth sign-ins run — picks up role
+      // elevations once a STAIJA staff member verifies their email.
+      await this.ensureUserProfile(cred.user)
+      return cred
     } catch (error) {
       console.error('Sign in error:', error)
       throw error
@@ -45,13 +49,17 @@ export class AuthService {
   ): Promise<UserCredential> {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      
+
       if (userCredential.user) {
         await updateProfile(userCredential.user, { displayName })
+        // Even @staija.org sign-ups land as 'applicant' here — the staff
+        // elevation only fires after the user has clicked the Firebase
+        // verification email (which only the real IONOS mailbox owner can do).
+        // See ensureUserProfile() for the elevation step.
         await this.createUserProfile(userCredential.user, displayName, role)
         try { await sendEmailVerification(userCredential.user) } catch (_) { /* noop */ }
       }
-      
+
       return userCredential
     } catch (error) {
       console.error('Sign up error:', error)
@@ -233,10 +241,44 @@ export class AuthService {
 
   private static async ensureUserProfile(user: User): Promise<void> {
     if (!user) return
-    const existing = await getDoc(doc(db, 'users', user.uid))
+    const ref = doc(db, 'users', user.uid)
+    const existing = await getDoc(ref)
+
     if (!existing.exists()) {
       const name = user.displayName || user.email || 'User'
-      await this.createUserProfile(user, String(name))
+      // First-time profile: only auto-promote to staff if the OAuth provider
+      // has already verified the email. Email/password sign-ups land as
+      // 'applicant' here (email isn't verified yet) and elevate later, the
+      // first time they sign in after clicking the Firebase verification
+      // link delivered to their IONOS mailbox.
+      const role: AdminAssignableRole =
+        user.emailVerified && isStaffEmail(user.email) ? 'staff' : 'applicant'
+      await this.createUserProfile(user, String(name), role)
+      return
+    }
+
+    // Existing profile: auto-elevate applicant -> staff once the user proves
+    // they own the @staija.org mailbox by clicking Firebase's verification
+    // email. Only the real mailbox owner can complete that step, so this is
+    // a safe self-promotion. The matching Firestore rule re-verifies
+    // email_verified + domain server-side, so a tampered client can't write
+    // 'staff' without actually owning the inbox.
+    const profile = existing.data() as UserProfile
+    if (
+      profile.role === 'applicant' &&
+      user.emailVerified &&
+      isStaffEmail(user.email)
+    ) {
+      await updateDoc(ref, { role: 'staff', updatedAt: new Date() })
     }
   }
+}
+
+const STAFF_EMAIL_DOMAIN = 'staija.org'
+
+function isStaffEmail(email: string | null | undefined): boolean {
+  if (!email) return false
+  const at = email.lastIndexOf('@')
+  if (at < 0) return false
+  return email.slice(at + 1).toLowerCase() === STAFF_EMAIL_DOMAIN
 }

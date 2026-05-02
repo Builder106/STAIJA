@@ -66,6 +66,18 @@ service cloud.firestore {
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
                    canAssignRole(request.resource.data.role) &&
                    isValidRoleTransition(resource.data.role, request.resource.data.role);
+
+      // Self-elevation: applicant -> staff for @staija.org users who have
+      // proven mailbox ownership by verifying their email. The matching
+      // client-side flow lives in src/services/auth.ts:ensureUserProfile.
+      // Only fires once (subsequent updates fall back to canAssignRole).
+      allow update: if request.auth.uid == userId &&
+                       resource.data.role == 'applicant' &&
+                       request.resource.data.role == 'staff' &&
+                       request.auth.token.email_verified == true &&
+                       request.auth.token.email.lower().matches('.*@staija[.]org') &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['role', 'updatedAt']);
     }
 
     // Applications collection rules
