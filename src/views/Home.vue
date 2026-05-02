@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from '../components/ui/Container.vue'
@@ -11,6 +13,7 @@ import UiCard from '../components/ui/UiCard.vue'
 import UiChip from '../components/ui/UiChip.vue'
 import HeroLottie from '../components/HeroLottie.vue'
 import { trackApplyClick } from '../services/analytics'
+import { getBlogPosts, getEvents, type BlogPost, type EventItem } from '../services/content'
 
 const stats = [
   { eyebrow: 'Students reached', number: '100', caption: 'Across StepUp + Dynamerge since 2023' },
@@ -18,13 +21,39 @@ const stats = [
   { eyebrow: 'Programs', number: '2', caption: 'StepUp Scholars · Dynamerge' },
 ]
 
-const events = [
-  { date: 'Oct 12', title: 'Information Session: StepUp 2025', loc: 'Virtual', type: 'Webinar' },
-  { date: 'Oct 24', title: 'Alumni Research Symposium', loc: 'Lagos, Nigeria', type: 'In-person' },
-  { date: 'Nov 05', title: 'Mentor Matching Mixer', loc: 'Virtual', type: 'Networking' },
-]
+// Featured story + upcoming events read from Contentful via the content
+// service. Sections render only when real entries exist — no fallback to
+// fabricated "Chinedu Okafor" / "StepUp 2025 info session" stubs that
+// shipped fake credibility before the CMS was populated.
+const featuredStory = ref<BlogPost | null>(null)
+const upcomingEvents = ref<EventItem[]>([])
 
-const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
+const featuredEyebrow = computed(() => {
+  if (!featuredStory.value) return ''
+  const d = new Date(featuredStory.value.publishedAt)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+})
+
+function eventDateParts(iso: string) {
+  const d = new Date(iso)
+  return {
+    month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+    day: d.getDate(),
+  }
+}
+
+onMounted(async () => {
+  try {
+    const [blog, events] = await Promise.all([
+      getBlogPosts({ limit: 1 }),
+      getEvents({ upcoming: true, limit: 3 }),
+    ])
+    featuredStory.value = blog.items[0] ?? null
+    upcomingEvents.value = events
+  } catch {
+    // Soft-fail: leave both null/empty so the sections stay hidden.
+  }
+})
 </script>
 
 <template>
@@ -172,12 +201,12 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
       </Container>
     </Section>
 
-    <!-- Featured Story -->
-    <Section class="bg-paper">
+    <!-- Featured Story (renders only when CMS has at least one published post) -->
+    <Section v-if="featuredStory" class="bg-paper">
       <Container>
         <div class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <Motion
-            class="lg:col-span-7 aspect-[4/3] rounded-2xl overflow-hidden relative"
+            class="lg:col-span-7 aspect-[4/3] rounded-2xl overflow-hidden relative bg-ink/5"
             :initial="{ opacity: 0, scale: 0.98 }"
             :while-in-view="{ opacity: 1, scale: 1 }"
             :viewport="{ once: true }"
@@ -185,8 +214,9 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
           >
             <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
             <img
-              :src="FEATURED_IMG"
-              alt="Student portrait"
+              v-if="featuredStory.hero"
+              :src="featuredStory.hero"
+              :alt="featuredStory.title"
               class="w-full h-full object-cover"
               loading="lazy"
             />
@@ -198,19 +228,14 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
             :viewport="{ once: true }"
             :transition="{ duration: 0.6, delay: 0.2 }"
           >
-            <Eyebrow class="text-brand-violet">Featured Scholar</Eyebrow>
-            <blockquote class="font-display text-2xl md:text-3xl lg:text-4xl italic leading-tight text-ink m-0">
-              "STAIJA didn't just teach me how to run a PCR test. They taught me
-              how to ask questions that matter to my community."
-            </blockquote>
-            <div class="mt-4 flex flex-col gap-4">
-              <div>
-                <div class="font-semibold text-ink">Chinedu Okafor</div>
-                <div class="text-sm text-ink/70">StepUp Scholar '24 · Lagos, Nigeria</div>
-              </div>
-              <UiButton variant="tertiary" :to="'/blog/chinedu-story'" class="self-start text-brand-violet mt-2">
+            <Eyebrow class="text-brand-violet">Featured Story · {{ featuredEyebrow }}</Eyebrow>
+            <Heading :level="2">{{ featuredStory.title }}</Heading>
+            <Body>{{ featuredStory.dek }}</Body>
+            <div class="mt-2 flex flex-col gap-4">
+              <div class="text-sm text-ink/70">By {{ featuredStory.author }}</div>
+              <UiButton variant="tertiary" :to="`/blog/${featuredStory.slug}`" class="self-start text-brand-violet">
                 <span class="flex items-center gap-1 group">
-                  Read Chinedu's story
+                  Read full story
                   <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
                 </span>
               </UiButton>
@@ -220,8 +245,8 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
       </Container>
     </Section>
 
-    <!-- Upcoming Events -->
-    <Section class="bg-white border-y hairline-ink">
+    <!-- Upcoming Events (renders only when CMS has at least one upcoming event) -->
+    <Section v-if="upcomingEvents.length > 0" class="bg-white border-y hairline-ink">
       <Container>
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div class="max-w-2xl">
@@ -238,35 +263,37 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
 
         <div class="grid lg:grid-cols-3 gap-6">
           <Motion
-            v-for="(event, i) in events"
-            :key="event.title"
+            v-for="(event, i) in upcomingEvents"
+            :key="event.slug"
             :initial="{ opacity: 0, y: 15 }"
             :while-in-view="{ opacity: 1, y: 0 }"
             :viewport="{ once: true }"
             :transition="{ duration: 0.4, delay: i * 0.1 }"
           >
-            <UiCard hoverable class="p-6 flex flex-col gap-6 h-full">
-              <div class="flex justify-between items-start">
-                <div class="bg-ink/5 rounded-lg px-4 py-3 text-center min-w-[70px]">
-                  <div class="text-sm font-semibold text-ink/60 uppercase">
-                    {{ event.date.split(' ')[0] }}
+            <RouterLink :to="`/events/${event.slug}`" class="block h-full">
+              <UiCard hoverable class="p-6 flex flex-col gap-6 h-full">
+                <div class="flex justify-between items-start">
+                  <div class="bg-ink/5 rounded-lg px-4 py-3 text-center min-w-[70px]">
+                    <div class="text-sm font-semibold text-ink/60 uppercase">
+                      {{ eventDateParts(event.datetime).month }}
+                    </div>
+                    <div class="font-display font-semibold text-2xl text-ink">
+                      {{ eventDateParts(event.datetime).day }}
+                    </div>
                   </div>
-                  <div class="font-display font-semibold text-2xl text-ink">
-                    {{ event.date.split(' ')[1] }}
+                  <UiChip>{{ event.type }}</UiChip>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-sans font-semibold text-lg leading-snug mb-3">
+                    {{ event.title }}
+                  </h4>
+                  <div class="flex items-center gap-1.5 text-sm text-ink/60">
+                    <Icon icon="lucide:map-pin" width="16" />
+                    {{ event.location }}
                   </div>
                 </div>
-                <UiChip>{{ event.type }}</UiChip>
-              </div>
-              <div class="flex-1">
-                <h4 class="font-sans font-semibold text-lg leading-snug mb-3">
-                  {{ event.title }}
-                </h4>
-                <div class="flex items-center gap-1.5 text-sm text-ink/60">
-                  <Icon icon="lucide:map-pin" width="16" />
-                  {{ event.loc }}
-                </div>
-              </div>
-            </UiCard>
+              </UiCard>
+            </RouterLink>
           </Motion>
         </div>
       </Container>

@@ -60,7 +60,7 @@ const PRESS = [
             What started as a weekend seminar for 15 ambitious high-schoolers has grown into a pan-African ecosystem. We realized early on that simply teaching students <em>about</em> science wasn't enough; they needed to <em>do</em> science. They needed pipettes, sequencers, clean data sets, and mentors who treated them as future peers, not just students.
           </p>
           <p class="m-0">
-            Today, STAIJA runs two flagship programs that reach hundreds of scholars across 12 countries. We have built a network of over 120 mentors from top global institutions, and our alumni are already publishing papers, founding startups, and reshaping the narrative of African innovation.
+            Today, STAIJA runs two flagship programs — StepUp Scholars in Nigeria and Dynamerge across Africa — and hosts the STAIJA Talks series for the wider community. Around 100 students have come through our programs over the last three years, and roughly 200 more have joined us at Talks. Our alumni are publishing papers, founding startups, and reshaping the narrative of African innovation.
           </p>
         </div>
       </Container>

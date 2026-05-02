@@ -70,7 +70,7 @@ const programs: Record<string, Program> = {
     pitch: 'A pan-African virtual summer bootcamp connecting ambitious students with global mentors.',
     eligibility: 'Ages 15–20 · Pan-African',
     stats: [
-      { icon: 'lucide:users', label: 'Students', value: 'From 12 countries' },
+      { icon: 'lucide:users', label: 'Eligibility', value: 'Pan-African' },
       { icon: 'lucide:clock', label: 'Duration', value: '4 weeks' },
       { icon: 'lucide:banknote', label: 'Cost', value: 'Fully funded' },
     ],
