@@ -55,7 +55,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdditionalUserInfo } from 'firebase/auth'
 import { Icon } from '@iconify/vue'
-import { AuthService } from '../../services/firebase'
+import { AuthService, DatabaseService, postLoginRouteName } from '../../services/firebase'
 
 const router = useRouter()
 
@@ -86,34 +86,18 @@ const completeSignIn = async () => {
     success.value = true
     
     // Redirect after a short delay
-    setTimeout(() => {
+    setTimeout(async () => {
       const user = AuthService.getCurrentUser()
+      let resolvedRole = null
       if (user) {
-        // Redirect based on role
-        const isStaff = user.email?.endsWith('@staija.org')
-        const role = AuthService.getStoredRole() || (isStaff ? 'staff' : 'applicant')
-        
-        switch (role) {
-          case 'applicant':
-            router.push('/applicant')
-            break
-          case 'admin':
-          case 'staff':
-            router.push('/admin')
-            break
-          case 'alumni':
-            router.push('/alumni')
-            break
-          default:
-            if (isStaff) {
-              router.push('/admin')
-            } else {
-              router.push('/applicant')
-            }
+        try {
+          const profile = await DatabaseService.getUserProfile(user.uid)
+          resolvedRole = profile?.role ?? null
+        } catch {
+          // Fall through with role=null — postLoginRouteName returns 'home'
         }
-      } else {
-        router.push('/dashboard')
       }
+      router.push({ name: postLoginRouteName(resolvedRole) })
     }, 2000)
     
   } catch (err: any) {

@@ -36,6 +36,20 @@ export class DatabaseService {
     }
   }
 
+  // Admin-only listing. The matching Firestore rule allows staff/admin to
+  // read any document under /users/{uid}; non-staff calls will fail at the
+  // server. Don't paginate yet — at our scale (low hundreds at most) one
+  // round-trip is fine. Revisit if user counts ever exceed ~1000.
+  static async getAllUsers(): Promise<UserProfile[]> {
+    try {
+      const snap = await getDocs(collection(db, 'users'))
+      return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserProfile))
+    } catch (error) {
+      console.error('Get all users error:', error)
+      throw error
+    }
+  }
+
   static async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
     try {
       const docRef = doc(db, 'users', uid)

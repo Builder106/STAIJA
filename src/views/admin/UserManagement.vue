@@ -272,7 +272,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import { AuthService, PermissionService, AuditService, ALL_ROLES, ALL_PERMISSIONS, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
+import { AuthService, DatabaseService, PermissionService, AuditService, ALL_ROLES, ALL_PERMISSIONS, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
 import { auth } from '../../config/firebase'
 
 // Reactive data
@@ -337,50 +337,7 @@ const assignableRoles = computed(() => {
 const loadUsers = async () => {
   try {
     loading.value = true
-    // In a real app, you would have an admin method to get all users
-    // For now, we'll show a mock implementation
-    users.value = [
-      {
-        uid: '1',
-        email: 'admin@staija.org',
-        displayName: 'Admin User',
-        role: 'admin',
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date()
-      },
-      {
-        uid: '2',
-        email: 'staff@staija.org',
-        displayName: 'Staff Member',
-        role: 'staff',
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
-      },
-      {
-        uid: '4',
-        email: 'alumni@example.com',
-        displayName: 'Alumni Member',
-        role: 'alumni',
-        createdAt: new Date('2024-02-15'),
-        updatedAt: new Date()
-      },
-      {
-        uid: '5',
-        email: 'student@example.com',
-        displayName: 'Program Student',
-        role: 'student',
-        createdAt: new Date('2024-02-15'),
-        updatedAt: new Date()
-      },
-      {
-        uid: '6',
-        email: 'applicant@example.com',
-        displayName: 'Program Applicant',
-        role: 'applicant',
-        createdAt: new Date('2024-03-01'),
-        updatedAt: new Date()
-      }
-    ]
+    users.value = await DatabaseService.getAllUsers()
   } catch (error) {
     console.error('Failed to load users:', error)
     showMessage('error', 'Failed to load users')

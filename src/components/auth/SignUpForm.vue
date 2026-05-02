@@ -320,7 +320,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdditionalUserInfo } from 'firebase/auth'
-import { AuthService, PermissionService, type PublicAssignableRole } from '../../services/firebase'
+import { AuthService, DatabaseService, postLoginRouteName, type PublicAssignableRole } from '../../services/firebase'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
@@ -366,20 +366,26 @@ const handleSignUp = async () => {
   
   try {
     await AuthService.signUp(email.value, password.value, displayName.value, role.value)
-
-    // Redirect based on permissions
-    if (PermissionService.hasPermission(role.value, 'view_own_applications')) {
-      router.push('/applicant')
-    } else if (PermissionService.hasPermission(role.value, 'access_alumni_portal')) {
-      router.push('/alumni')
-    } else {
-      router.push('/dashboard')
-    }
+    await redirectByRole()
   } catch (err: any) {
     error.value = err.message || 'Failed to create account. Please try again.'
   } finally {
     loading.value = false
   }
+}
+
+async function redirectByRole() {
+  const user = AuthService.getCurrentUser()
+  let resolvedRole = null
+  if (user) {
+    try {
+      const profile = await DatabaseService.getUserProfile(user.uid)
+      resolvedRole = profile?.role ?? null
+    } catch {
+      // Fall through with role=null — postLoginRouteName returns 'home'
+    }
+  }
+  router.push({ name: postLoginRouteName(resolvedRole) })
 }
 
 const validatePassword = () => {
@@ -559,35 +565,7 @@ const signUpWithGoogle = async () => {
       // Show modal to collect additional info
       showGoogleModal.value = true
     } else {
-      // Existing user, redirect to appropriate dashboard
-      const user = AuthService.getCurrentUser()
-      if (user) {
-        try {
-          const profile = await AuthService.getUserProfile()
-          if (profile) {
-            switch (profile.role) {
-              case 'applicant':
-                router.push('/applicant')
-                break
-              case 'admin':
-              case 'staff':
-                router.push('/admin')
-                break
-              case 'alumni':
-                router.push('/alumni')
-                break
-              default:
-                router.push('/dashboard')
-            }
-          } else {
-            router.push('/dashboard')
-          }
-        } catch {
-          router.push('/dashboard')
-        }
-      } else {
-        router.push('/dashboard')
-      }
+      await redirectByRole()
     }
   } catch (err: any) {
     error.value = err.message || 'Failed to sign up with Google.'
@@ -631,15 +609,8 @@ const completeGoogleSignUp = async () => {
     googleAgreeToTerms.value = false
     showGooglePassword.value = false
     isGooglePasswordValid.value = false
-    
-    // Redirect based on role
-    if (googleRole.value === 'applicant') {
-      router.push('/applicant')
-    } else if (googleRole.value === 'staff') {
-      router.push('/admin')
-    } else {
-      router.push('/dashboard')
-    }
+
+    await redirectByRole()
   } catch (err: any) {
     error.value = err.message || 'Failed to complete sign up. Please try again.'
   } finally {

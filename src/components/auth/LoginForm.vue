@@ -140,7 +140,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { AuthService, DatabaseService } from '../../services/firebase'
+import { AuthService, DatabaseService, postLoginRouteName } from '../../services/firebase'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
@@ -173,41 +173,26 @@ const handleLogin = async () => {
   
   try {
     await AuthService.signIn(email.value, password.value)
-    
-    // Get user profile to determine redirect
-    const user = AuthService.getCurrentUser()
-    if (user) {
-      try {
-        const profile = await DatabaseService.getUserProfile(user.uid)
-        if (profile) {
-          switch (profile.role) {
-            case 'applicant':
-              router.push('/applicant')
-              break
-            case 'admin':
-            case 'staff':
-              router.push('/admin')
-              break
-            case 'alumni':
-              router.push('/alumni')
-              break
-            default:
-              router.push('/dashboard')
-          }
-        } else {
-          router.push('/dashboard')
-        }
-      } catch {
-        router.push('/dashboard')
-      }
-    } else {
-      router.push('/dashboard')
-    }
+    await redirectByRole()
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in. Please try again.'
   } finally {
     loading.value = false
   }
+}
+
+async function redirectByRole() {
+  const user = AuthService.getCurrentUser()
+  let role = null
+  if (user) {
+    try {
+      const profile = await DatabaseService.getUserProfile(user.uid)
+      role = profile?.role ?? null
+    } catch {
+      // Fall through with role=null — postLoginRouteName returns 'home'
+    }
+  }
+  router.push({ name: postLoginRouteName(role) })
 }
 
 const clearValidation = () => {
@@ -239,7 +224,7 @@ const signInWithGoogle = async () => {
   
   try {
     await AuthService.signInWithGoogle()
-    router.push('/dashboard')
+    await redirectByRole()
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with Google.'
   } finally {
@@ -250,10 +235,10 @@ const signInWithGoogle = async () => {
 const signInWithGitHub = async () => {
   loading.value = true
   error.value = ''
-  
+
   try {
     await AuthService.signInWithGitHub()
-    router.push('/dashboard')
+    await redirectByRole()
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with GitHub.'
   } finally {

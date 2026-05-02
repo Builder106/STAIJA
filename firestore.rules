@@ -48,8 +48,9 @@ service cloud.firestore {
 
     // Users collection rules
     match /users/{userId} {
-      // Users can read their own profile
-      allow read: if isOwner(userId);
+      // Users can read their own profile; staff/admin can read any (needed
+      // for the admin user-management screen and the alumni directory).
+      allow read: if isOwner(userId) || hasAnyRole(['staff', 'admin']);
 
       // Users can update their own profile (except role)
       allow update: if isOwner(userId) &&

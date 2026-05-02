@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { auth } from '../config/firebase.ts'
-import { DatabaseService, PermissionService, type Permission } from '../services/firebase.ts'
+import { DatabaseService, PermissionService, postLoginRouteName, type Permission } from '../services/firebase.ts'
 import { donationsEnabled } from '../config/features.ts'
 
 // Extend the RouteMeta interface to include our custom properties
@@ -73,9 +73,10 @@ const routes: RouteRecordRaw[] = [
 
   // Email Link Authentication
   { path: '/auth/email-link-callback', name: 'email-link-callback', component: () => import('../views/auth/EmailLinkCallback.vue'), meta: { title: 'Sign In — STAIJA' } },
-  
-  // Legacy dashboard (redirects based on role)
-  { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { title: 'Dashboard — STAIJA', requiresAuth: true } },
+
+  // /dashboard was retired — auth flows now route directly to the
+  // role-specific dashboard via postLoginRouteName(). The header link
+  // (SiteHeader.vue:dashboardPath) does the same.
 
   // Mentor portal routes
   { path: '/mentor', name: 'mentor-dashboard', component: () => import('../views/mentor/MentorDashboard.vue'), meta: { title: 'Mentor portal — STAIJA', requiresAuth: true, permissions: ['view_assigned_students'] } },
@@ -146,20 +147,9 @@ router.beforeEach(async (to, _from, next) => {
       return next()
     }
     
-        // User doesn't have required permissions, redirect based on their role capabilities
-    if (PermissionService.isStaffRole(userRole)) {
-        return next({ name: 'admin' })
-    } else if (PermissionService.isStudentRole(userRole)) {
-      return next({ name: 'student-dashboard' })
-    } else if (PermissionService.isAlumniRole(userRole)) {
-        return next({ name: 'alumni-home' })
-    } else if (PermissionService.isMentorRole(userRole)) {
-        return next({ name: 'mentor-dashboard' })
-    } else if (PermissionService.hasPermission(userRole, 'view_own_applications')) {
-        return next({ name: 'applicant-dashboard' })
-    } else {
-      return next({ name: 'home' })
-    }
+    // User doesn't have the required permissions for this route — bounce
+    // them to whichever dashboard fits their role.
+    return next({ name: postLoginRouteName(userRole) })
   } catch (error) {
     console.error('Auth guard error:', error)
     return next({ name: 'login' })
