@@ -99,7 +99,7 @@ const loadProfiles = async () => {
   try {
     // In a real app with many users, we'd paginate and filter server-side (Algolia/Typesense recommended)
     // For Phase 3B MVP, client-side filtering of "alumni" role users is acceptable
-    const q = query(collection(db, 'users'), where('role', 'in', ['alumni', 'admin', 'content_editor']), limit(50))
+    const q = query(collection(db, 'users'), where('role', 'in', ['alumni', 'admin']), limit(50))
     const snap = await getDocs(q)
     profiles.value = snap.docs.map(d => ({ uid: d.id, ...d.data() } as AlumniProfile))
   } catch (e) {

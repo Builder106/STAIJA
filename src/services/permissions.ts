@@ -6,11 +6,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_roles',
     'view_all_users',
     'manage_system_settings',
-    'create_content',
-    'edit_content',
-    'delete_content',
-    'publish_content',
-    'manage_content_categories',
     'view_applications',
     'review_applications',
     'manage_applications',
@@ -38,17 +33,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_program_settings',
     'access_alumni_portal',
     'manage_alumni_profiles',
-    'view_public_content',
-    'contact_support',
-    'manage_profile'
-  ],
-
-  content_editor: [
-    'create_content',
-    'edit_content',
-    'delete_content',
-    'publish_content',
-    'manage_content_categories',
     'view_public_content',
     'contact_support',
     'manage_profile'
@@ -129,19 +113,15 @@ export class PermissionService {
   // admin is a strict superset of staff capabilities, and the router's
   // post-login redirect cascade depends on admins matching it first so they
   // land at /admin. The others are strict identity checks: an admin is not
-  // a content_editor / alumni / student / mentor, even though they have
-  // superset permissions. Use `hasPermission(role, '...')` to ask
-  // capability questions.
+  // an alumnus / student / mentor, even though they have superset
+  // permissions. Use `hasPermission(role, '...')` to ask capability
+  // questions.
   static isAdminRole(role: UserRole): boolean {
     return role === 'admin'
   }
 
   static isStaffRole(role: UserRole): boolean {
     return role === 'admin' || role === 'staff'
-  }
-
-  static isContentEditorRole(role: UserRole): boolean {
-    return role === 'content_editor'
   }
 
   static isAlumniRole(role: UserRole): boolean {
@@ -174,15 +154,13 @@ export class PermissionService {
     //   mentor → staff (hired full-time) or alumni (mentor stint ended)
     //   staff → admin, applicant, or mentor (staff who also mentor)
     //   admin → staff, applicant, alumni, or mentor (mostly for testing)
-    //   content_editor → admin or staff (promotion paths)
     const allowedTransitions: Record<UserRole, UserRole[]> = {
       'applicant': ['student', 'alumni'],
       'student': ['alumni', 'applicant'],
       'alumni': ['applicant', 'student', 'mentor'],
       'mentor': ['staff', 'alumni'],
       'staff': ['admin', 'applicant', 'mentor'],
-      'admin': ['staff', 'applicant', 'alumni', 'mentor'],
-      'content_editor': ['admin', 'staff']
+      'admin': ['staff', 'applicant', 'alumni', 'mentor']
     }
 
     return allowedTransitions[currentRole]?.includes(newRole) ?? false

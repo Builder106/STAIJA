@@ -357,14 +357,6 @@ const loadUsers = async () => {
         updatedAt: new Date()
       },
       {
-        uid: '3',
-        email: 'editor@staija.org',
-        displayName: 'Content Editor',
-        role: 'content_editor',
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date()
-      },
-      {
         uid: '4',
         email: 'alumni@example.com',
         displayName: 'Alumni Member',
@@ -491,13 +483,13 @@ const hasPermission = (permission: Permission) => {
 }
 
 const getRoleDescription = (role: UserRole) => {
-  const descriptions = {
+  const descriptions: Record<UserRole, string> = {
     admin: 'Full system access and user management',
     staff: 'Administrative access and application management',
-    content_editor: 'Content creation and management',
     alumni: 'Access to alumni portal and networking',
     student: 'Active program participation and learning access',
-    applicant: 'Program application and basic access'
+    applicant: 'Program application and basic access',
+    mentor: 'Reviews assigned students and submits feedback',
   }
   return descriptions[role] || ''
 }
@@ -713,7 +705,7 @@ onMounted(async () => {
   color: white;
 }
 
-.role-badge.content_editor {
+.role-badge.mentor {
   background: #17a2b8;
   color: white;
 }

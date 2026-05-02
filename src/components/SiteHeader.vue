@@ -13,7 +13,7 @@ const mobileOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { isAuthenticated, displayName, signOut } = useAuth()
-const { isStaff, isContentEditor, isMentor, isStudent, isAlumni } = usePermissions()
+const { isStaff, isMentor, isStudent, isAlumni } = usePermissions()
 
 // Where the "Dashboard" link in the header points, by role. Mirrors the
 // router's post-login redirect cascade in src/router/index.ts so an
@@ -21,7 +21,6 @@ const { isStaff, isContentEditor, isMentor, isStudent, isAlumni } = usePermissio
 // the post-login fallback.
 const dashboardPath = computed(() => {
   if (isStaff.value) return '/admin'
-  if (isContentEditor.value) return '/content'
   if (isStudent.value) return '/student'
   if (isAlumni.value) return '/alumni'
   if (isMentor.value) return '/mentor'

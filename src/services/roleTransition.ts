@@ -20,8 +20,6 @@ export class RoleTransitionService {
           return await this.checkAlumniEligibility(userProfile)
         case 'student':
           return await this.checkStudentEligibility(userProfile)
-        case 'content_editor':
-          return await this.checkContentEditorEligibility(userProfile)
         case 'staff':
           return await this.checkStaffEligibility(userProfile)
         case 'admin':
@@ -87,33 +85,17 @@ export class RoleTransitionService {
     return { eligible: true }
   }
 
-  private static checkContentEditorEligibility(userProfile: UserProfile): {
-    eligible: boolean
-    reason?: string
-    requiredActions?: string[]
-  } {
-    const allowedSourceRoles: UserRole[] = ['staff', 'alumni', 'admin']
-    if (!allowedSourceRoles.includes(userProfile.role)) {
-      return {
-        eligible: false,
-        reason: 'Only staff, alumni, or admins can become content editors',
-        requiredActions: ['Must be staff, alumni, or admin first']
-      }
-    }
-    return { eligible: true }
-  }
-
   private static checkStaffEligibility(userProfile: UserProfile): {
     eligible: boolean
     reason?: string
     requiredActions?: string[]
   } {
-    const allowedSourceRoles: UserRole[] = ['content_editor', 'alumni']
+    const allowedSourceRoles: UserRole[] = ['alumni', 'mentor']
     if (!allowedSourceRoles.includes(userProfile.role)) {
       return {
         eligible: false,
-        reason: 'Only content editors or alumni can become staff',
-        requiredActions: ['Must be content editor or alumni first']
+        reason: 'Only alumni or mentors can transition into staff',
+        requiredActions: ['Must be alumni or mentor first']
       }
     }
     return { eligible: true }

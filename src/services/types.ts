@@ -14,7 +14,7 @@ export interface AuditLog {
   userAgent?: string
 }
 
-export type UserRole = 'admin' | 'content_editor' | 'alumni' | 'applicant' | 'staff' | 'student' | 'mentor'
+export type UserRole = 'admin' | 'alumni' | 'applicant' | 'staff' | 'student' | 'mentor'
 
 export type PublicAssignableRole = 'applicant' | 'alumni'
 
@@ -29,11 +29,6 @@ export type Permission =
   | 'manage_roles'
   | 'view_all_users'
   | 'manage_system_settings'
-  | 'create_content'
-  | 'edit_content'
-  | 'delete_content'
-  | 'publish_content'
-  | 'manage_content_categories'
   | 'view_applications'
   | 'review_applications'
   | 'manage_applications'

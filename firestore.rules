@@ -103,14 +103,10 @@ service cloud.firestore {
       allow write: if hasAnyRole(['staff', 'admin']);
     }
 
-    // Content collection rules
-    match /content/{contentId} {
-      // Everyone can read published content
-      allow read: if resource.data.status == 'published' || hasAnyRole(['content_editor', 'admin']);
-
-      // Content editors and admins can manage content
-      allow write: if hasAnyRole(['content_editor', 'admin']);
-    }
+    // The /content collection (legacy in-app CMS) was retired when STAIJA
+    // moved editorial workflows to Contentful. The cms_blogPosts and
+    // cms_events collections below are the read-only Firestore mirror
+    // populated by the Contentful webhook.
 
     // Contact messages collection rules
     match /contact_messages/{messageId} {

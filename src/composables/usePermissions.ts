@@ -23,7 +23,6 @@ export function usePermissions(roleOverride?: () => UserRole | null) {
 
   const isAdmin = computed(() => role.value ? PermissionService.isAdminRole(role.value) : false)
   const isStaff = computed(() => role.value ? PermissionService.isStaffRole(role.value) : false)
-  const isContentEditor = computed(() => role.value ? PermissionService.isContentEditorRole(role.value) : false)
   const isAlumni = computed(() => role.value ? PermissionService.isAlumniRole(role.value) : false)
   const isStudent = computed(() => role.value ? PermissionService.isStudentRole(role.value) : false)
   const isMentor = computed(() => role.value ? PermissionService.isMentorRole(role.value) : false)
@@ -34,7 +33,6 @@ export function usePermissions(roleOverride?: () => UserRole | null) {
     hasAnyPermission,
     isAdmin,
     isStaff,
-    isContentEditor,
     isAlumni,
     isStudent,
     isMentor,

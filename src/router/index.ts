@@ -67,15 +67,10 @@ const routes: RouteRecordRaw[] = [
   { path: '/admin/programs', name: 'admin-programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
 
-  // Content Editor routes
-  { path: '/content', name: 'content-dashboard', component: () => import('../views/content/ContentDashboard.vue'), meta: { title: 'Content Management — STAIJA', requiresAuth: true, permissions: ['create_content'] } },
-  { path: '/content/blog', name: 'content-blog', component: () => import('../views/content/BlogManagement.vue'), meta: { title: 'Blog Management — STAIJA', requiresAuth: true, permissions: ['edit_content'] } },
-  { path: '/content/blog/new', name: 'content-new-blog', component: () => import('../views/content/NewBlogPost.vue'), meta: { title: 'New Blog Post — STAIJA', requiresAuth: true, permissions: ['create_content'] } },
-  { path: '/content/blog/:id/edit', name: 'content-edit-blog', component: () => import('../views/content/EditBlogPost.vue'), meta: { title: 'Edit Blog Post — STAIJA', requiresAuth: true, permissions: ['edit_content'] } },
-  { path: '/content/programs', name: 'content-programs', component: () => import('../views/content/ProgramContent.vue'), meta: { title: 'Program Content — STAIJA', requiresAuth: true, permissions: ['edit_content'] } },
-  { path: '/content/events', name: 'content-events', component: () => import('../views/content/EventManagement.vue'), meta: { title: 'Event Management — STAIJA', requiresAuth: true, permissions: ['edit_content'] } },
-  { path: '/content/categories', name: 'content-categories', component: () => import('../views/content/CategoryManagement.vue'), meta: { title: 'Category Management — STAIJA', requiresAuth: true, permissions: ['manage_content_categories'] } },
-  
+  // /content/* in-app CMS was retired in favour of Contentful (see commit
+  // history). Editorial workflows now live at app.contentful.com — admins
+  // get a deep-link from /admin's Quick Actions panel.
+
   // Email Link Authentication
   { path: '/auth/email-link-callback', name: 'email-link-callback', component: () => import('../views/auth/EmailLinkCallback.vue'), meta: { title: 'Sign In — STAIJA' } },
   
@@ -154,8 +149,6 @@ router.beforeEach(async (to, _from, next) => {
         // User doesn't have required permissions, redirect based on their role capabilities
     if (PermissionService.isStaffRole(userRole)) {
         return next({ name: 'admin' })
-    } else if (PermissionService.isContentEditorRole(userRole)) {
-      return next({ name: 'content-dashboard' })
     } else if (PermissionService.isStudentRole(userRole)) {
       return next({ name: 'student-dashboard' })
     } else if (PermissionService.isAlumniRole(userRole)) {

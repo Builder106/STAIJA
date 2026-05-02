@@ -61,26 +61,6 @@
           </div>
         </div>
         
-        <!-- Content Management Card (for editors/admins) -->
-        <div v-if="isContentEditor" class="dashboard-card">
-          <h3>Content Management</h3>
-          <div class="content-actions">
-            <button @click="navigateTo('/content')" class="btn-primary">Content Dashboard</button>
-            <button @click="navigateTo('/content/events')" class="btn-secondary">Manage Events</button>
-            <button v-if="canAccessAdminPanel" @click="navigateTo('/admin')" class="btn-secondary">Admin Panel</button>
-          </div>
-          <div class="content-stats">
-            <div class="stat">
-              <span class="stat-number">{{ contentStats.published }}</span>
-              <span class="stat-label">Published</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">{{ contentStats.draft }}</span>
-              <span class="stat-label">Drafts</span>
-            </div>
-          </div>
-        </div>
-        
         <!-- Student Portal Card (for students) -->
         <div v-if="isStudent" class="dashboard-card">
           <h3>Student Portal</h3>
@@ -151,11 +131,6 @@ const loading = ref(true)
 const error = ref('')
 
 // Mock data for demonstration
-const contentStats = ref({
-  published: 12,
-  draft: 3
-})
-
 const alumniStats = ref({
   connections: 45,
   stories: 2
@@ -167,10 +142,6 @@ const studentStats = ref({
 })
 
 // Computed properties
-const isContentEditor = computed(() => {
-  return userProfile.value ? PermissionService.isContentEditorRole(userProfile.value.role) : false
-})
-
 const isAlumni = computed(() => {
   return userProfile.value ? PermissionService.isAlumniRole(userProfile.value.role) : false
 })
