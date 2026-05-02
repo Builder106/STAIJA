@@ -56,34 +56,51 @@ interface ContentfulCollection<F> {
   items: ContentfulEntry<F>[]
   includes?: {
     Asset?: Array<{ sys: { id: string }; fields: { file: { url: string } } }>
+    Entry?: Array<{
+      sys: { id: string; contentType?: { sys: { id: string } } }
+      fields: Record<string, unknown>
+    }>
   }
 }
 
+// Field shapes match the Contentful content model in space `zcw0qx1phkan`.
+// If the editorial team adds or renames fields in Contentful, update these
+// interfaces and the corresponding mapper(s) below — the public BlogPost /
+// EventItem types in this file are the contract the rest of the app
+// depends on, and shouldn't change without ripple-effect refactors.
 interface BlogPostFields {
   slug: string
   title: string
-  dek: string
-  hero?: { sys: { id: string } }
-  body: unknown
-  program?: BlogProgram
-  topic?: BlogTopic
-  author?: string
-  publishedAt?: string
-  readingTime?: string
+  excerpt?: string
+  content: unknown // Contentful RichText document
+  coverImage?: { sys: { id: string } }
+  author: { sys: { id: string } } // Link to an Author entry
+  category?: { sys: { id: string } } // Link to a Category entry
+  tags?: string[]
+  publishDate: string
+  status?: string
 }
 
 interface EventFields {
   slug: string
   title: string
-  dek?: string
-  hero?: { sys: { id: string } }
-  datetime: string
-  timezone?: string
+  description?: string
+  startsAt: string
+  endsAt?: string
   location?: string
-  isVirtual?: boolean
-  type?: string
-  capacity?: number
-  registrationDeadline?: string
+  coverImage?: { sys: { id: string } }
+  registrationUrl?: string
+  status?: string
+}
+
+interface AuthorFields {
+  name: string
+  slug: string
+}
+
+interface CategoryFields {
+  name: string
+  slug: string
 }
 
 // --- Mappers -----------------------------------------------------------
@@ -99,22 +116,60 @@ function resolveAssetUrl(
   return url.startsWith('//') ? `https:${url}` : url
 }
 
+function resolveLinkedEntry<F>(
+  entryRef: { sys: { id: string } } | undefined,
+  includes: ContentfulCollection<unknown>['includes'],
+): F | null {
+  if (!entryRef || !includes?.Entry) return null
+  const entry = includes.Entry.find((e) => e.sys.id === entryRef.sys.id)
+  return (entry?.fields as F | undefined) ?? null
+}
+
+// Map a Category entry's `slug` (e.g. "stepup", "dynamerge") to the app's
+// BlogProgram enum. Anything unrecognized lands as 'general' — that keeps
+// editors from blocking publish if they coin a new category we haven't
+// taught the UI to handle.
+function programFromCategorySlug(slug: string | undefined): BlogProgram {
+  if (slug === 'stepup' || slug === 'stepup-scholars') return 'stepup'
+  if (slug === 'dynamerge') return 'dynamerge'
+  return 'general'
+}
+
+// Same for BlogTopic, derived from the post's tags array.
+function topicFromTags(tags: string[] | undefined): BlogTopic {
+  if (!tags || tags.length === 0) return 'stories'
+  const norm = tags.map((t) => t.toLowerCase())
+  if (norm.includes('research')) return 'research'
+  if (norm.includes('news')) return 'news'
+  return 'stories'
+}
+
+// Heuristic: an event with "virtual"/"online"/"zoom" in its location string
+// counts as virtual. The content model has no isVirtual flag, and asking
+// editors to add one doubles the cognitive load when the location field
+// already says it.
+function inferIsVirtual(location: string | undefined): boolean {
+  if (!location) return false
+  return /\b(virtual|online|zoom|remote)\b/i.test(location)
+}
+
 function mapBlogPost(
   entry: ContentfulEntry<BlogPostFields>,
   includes: ContentfulCollection<unknown>['includes'],
 ): BlogPost {
   const f = entry.fields
+  const author = resolveLinkedEntry<AuthorFields>(f.author, includes)
+  const category = resolveLinkedEntry<CategoryFields>(f.category, includes)
   return {
     slug: f.slug,
     title: f.title,
-    dek: f.dek,
-    hero: resolveAssetUrl(f.hero, includes) ?? '',
-    body: f.body,
-    program: f.program ?? 'general',
-    topic: f.topic ?? 'stories',
-    author: f.author ?? 'STAIJA',
-    publishedAt: f.publishedAt ?? entry.sys.createdAt,
-    readingTime: f.readingTime,
+    dek: f.excerpt ?? '',
+    hero: resolveAssetUrl(f.coverImage, includes) ?? '',
+    body: f.content,
+    program: programFromCategorySlug(category?.slug),
+    topic: topicFromTags(f.tags),
+    author: author?.name ?? 'STAIJA',
+    publishedAt: f.publishDate ?? entry.sys.createdAt,
   }
 }
 
@@ -123,18 +178,17 @@ function mapEvent(
   includes: ContentfulCollection<unknown>['includes'],
 ): EventItem {
   const f = entry.fields
+  const location = f.location ?? 'TBD'
   return {
     slug: f.slug,
     title: f.title,
-    dek: f.dek ?? '',
-    hero: resolveAssetUrl(f.hero, includes),
-    datetime: f.datetime,
-    timezone: f.timezone ?? 'Africa/Lagos',
-    location: f.location ?? 'TBD',
-    isVirtual: f.isVirtual ?? false,
-    type: f.type ?? 'Event',
-    capacity: f.capacity,
-    registrationDeadline: f.registrationDeadline,
+    dek: f.description ?? '',
+    hero: resolveAssetUrl(f.coverImage, includes),
+    datetime: f.startsAt,
+    timezone: 'Africa/Lagos',
+    location,
+    isVirtual: inferIsVirtual(f.location),
+    type: 'Event',
   }
 }
 
@@ -158,26 +212,36 @@ export async function getBlogPosts(q: BlogQuery = {}): Promise<{ items: BlogPost
   }
 
   const client = new ContentfulClient()
+  // Over-fetch when filtering by program — that filter resolves through a
+  // linked Category entry, which Contentful's query API can't filter on
+  // directly without forcing editors to a single content type. Easier to
+  // pull a wider page and post-filter in-process. The site's content
+  // volume stays small enough that this is cheap.
+  const programFilterActive = q.program && q.program !== 'all'
+  const limit = q.limit ?? 9
+  const skip = q.skip ?? 0
   const query: Record<string, string | number | boolean> = {
     content_type: 'blogPost',
-    // Sort by sys.createdAt — always present. If the content model adds a
-    // fields.publishedAt and editors want stable order even when re-publishing,
-    // this can switch to '-fields.publishedAt'.
-    order: '-sys.createdAt',
-    limit: q.limit ?? 9,
-    skip: q.skip ?? 0,
+    order: '-fields.publishDate',
+    limit: programFilterActive ? Math.min(100, (limit + skip) * 3) : limit,
+    skip: programFilterActive ? 0 : skip,
     include: 2,
   }
-  if (q.program && q.program !== 'all') query['fields.program'] = q.program
-  if (q.topic && q.topic !== 'all') query['fields.topic'] = q.topic
+  // Topic maps to the post's `tags` array — Contentful supports `[in]`
+  // operators on Symbol arrays, so this filter happens server-side.
+  if (q.topic && q.topic !== 'all') query['fields.tags[in]'] = q.topic
   if (q.search) query['query'] = q.search
 
   try {
     const res = await client.getEntries<ContentfulCollection<BlogPostFields>>(query)
-    return {
-      items: res.items.map((e) => mapBlogPost(e, res.includes)),
-      total: res.total,
+    let items = res.items.map((e) => mapBlogPost(e, res.includes))
+    let total = res.total
+    if (programFilterActive) {
+      items = items.filter((p) => p.program === q.program)
+      total = items.length
+      items = items.slice(skip, skip + limit)
     }
+    return { items, total }
   } catch (err) {
     if (isUnknownFieldOrType(err)) {
       console.warn('[content] Contentful blogPost model not ready — using mock data.', err)
@@ -220,12 +284,12 @@ export async function getEvents(opts: { upcoming?: boolean; limit?: number } = {
   const now = new Date().toISOString()
   const query: Record<string, string | number | boolean> = {
     content_type: 'event',
-    order: opts.upcoming === false ? '-fields.datetime' : 'fields.datetime',
+    order: opts.upcoming === false ? '-fields.startsAt' : 'fields.startsAt',
     limit: opts.limit ?? 20,
     include: 2,
   }
-  if (opts.upcoming === true) query['fields.datetime[gte]'] = now
-  if (opts.upcoming === false) query['fields.datetime[lt]'] = now
+  if (opts.upcoming === true) query['fields.startsAt[gte]'] = now
+  if (opts.upcoming === false) query['fields.startsAt[lt]'] = now
 
   try {
     const res = await client.getEntries<ContentfulCollection<EventFields>>(query)
