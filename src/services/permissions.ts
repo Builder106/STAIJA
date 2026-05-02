@@ -16,8 +16,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_program_settings',
     'access_alumni_portal',
     'manage_alumni_profiles',
-    'share_alumni_stories',
-    'network_with_alumni',
     'view_public_content',
     'contact_support',
     'manage_profile'
@@ -28,11 +26,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_applications',
     'review_applications',
     'manage_applications',
-    'create_programs',
     'edit_programs',
     'manage_program_settings',
     'access_alumni_portal',
-    'manage_alumni_profiles',
     'view_public_content',
     'contact_support',
     'manage_profile'

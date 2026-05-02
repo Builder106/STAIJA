@@ -63,6 +63,24 @@ describe('PermissionService', () => {
         expect(PermissionService.hasPermission('admin', perm)).toBe(true)
       }
     })
+
+    // Boundary cases — keep the technical/non-technical split honest.
+    it('staff cannot create programs (admin-only)', () => {
+      expect(PermissionService.hasPermission('staff', 'create_programs')).toBe(false)
+      expect(PermissionService.hasPermission('admin', 'create_programs')).toBe(true)
+    })
+
+    it('staff cannot manage alumni profiles (admin-only)', () => {
+      expect(PermissionService.hasPermission('staff', 'manage_alumni_profiles')).toBe(false)
+      expect(PermissionService.hasPermission('admin', 'manage_alumni_profiles')).toBe(true)
+    })
+
+    it('admin does not have alumni-community participation permissions', () => {
+      // share_alumni_stories and network_with_alumni are alumni-only social
+      // features; admins moderate via manage_alumni_profiles, not by joining.
+      expect(PermissionService.hasPermission('admin', 'share_alumni_stories')).toBe(false)
+      expect(PermissionService.hasPermission('admin', 'network_with_alumni')).toBe(false)
+    })
   })
 
   describe('hasAnyPermission', () => {
