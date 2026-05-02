@@ -9,6 +9,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import IconPicker from '../../components/admin/IconPicker.vue'
+import ImageInput from '../../components/admin/ImageInput.vue'
 import {
   AuthService,
   DatabaseService,
@@ -440,27 +441,14 @@ const DYNAMERGE_SEED: SeedTemplate = {
                     class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
                   />
                 </label>
-                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
-                  <label class="flex flex-col gap-1.5">
-                    <span class="text-sm font-semibold text-ink/80">Hero image URL</span>
-                    <input
-                      v-model="drafts[p.id].heroImg"
-                      type="url"
-                      placeholder="https://…"
-                      class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
-                    />
-                  </label>
-                  <div
-                    v-if="drafts[p.id].heroImg"
-                    class="w-32 h-24 rounded-lg overflow-hidden border hairline-ink bg-ink/5 mt-7"
-                  >
-                    <img
-                      :src="drafts[p.id].heroImg"
-                      :alt="`${p.name} hero preview`"
-                      class="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-sm font-semibold text-ink/80">Hero image</span>
+                  <ImageInput
+                    v-model="drafts[p.id].heroImg"
+                    :path-prefix="`programs/${p.slug}/hero`"
+                    shape="landscape"
+                    :aria-label="`${p.name} hero image`"
+                  />
                 </div>
               </div>
             </details>
@@ -583,24 +571,14 @@ const DYNAMERGE_SEED: SeedTemplate = {
                     placeholder="One- or two-sentence description"
                     class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm leading-relaxed"
                   />
-                  <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-start">
-                    <input
+                  <div class="flex flex-col gap-1.5">
+                    <span class="text-xs font-semibold text-ink/70">Feature image</span>
+                    <ImageInput
                       v-model="feature.img"
-                      type="url"
-                      placeholder="Image URL (https://…)"
-                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                      :path-prefix="`programs/${p.slug}/features`"
+                      shape="landscape"
+                      :aria-label="feature.title || 'Feature image'"
                     />
-                    <div
-                      v-if="feature.img"
-                      class="w-24 h-18 rounded-lg overflow-hidden border hairline-ink bg-ink/5"
-                    >
-                      <img
-                        :src="feature.img"
-                        :alt="feature.title || 'Feature preview'"
-                        class="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -741,73 +719,52 @@ const DYNAMERGE_SEED: SeedTemplate = {
                 <div
                   v-for="(mentor, i) in drafts[p.id].mentors"
                   :key="i"
-                  class="flex gap-4 p-4 rounded-xl border hairline-ink"
+                  class="flex flex-col gap-3 p-4 rounded-xl border hairline-ink"
                 >
-                  <div
-                    v-if="mentor.img"
-                    class="w-16 h-16 rounded-full overflow-hidden border hairline-ink bg-ink/5 shrink-0"
-                  >
-                    <img
-                      :src="mentor.img"
-                      :alt="mentor.name || 'Mentor preview'"
-                      class="w-full h-full object-cover"
-                      loading="lazy"
+                  <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                    <label class="flex flex-col gap-1">
+                      <span class="text-xs font-semibold text-ink/70">Name</span>
+                      <input
+                        v-model="mentor.name"
+                        type="text"
+                        class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
+                      />
+                    </label>
+                    <label class="flex flex-col gap-1">
+                      <span class="text-xs font-semibold text-ink/70">Title</span>
+                      <input
+                        v-model="mentor.title"
+                        type="text"
+                        placeholder="Postdoctoral Researcher"
+                        class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      class="text-ink/50 hover:text-red-700 self-end p-2"
+                      :aria-label="`Remove mentor ${mentor.name}`"
+                      @click="drafts[p.id].mentors.splice(i, 1)"
+                    >
+                      <Icon icon="lucide:trash-2" width="16" />
+                    </button>
+                  </div>
+                  <label class="flex flex-col gap-1">
+                    <span class="text-xs font-semibold text-ink/70">Institution</span>
+                    <input
+                      v-model="mentor.institution"
+                      type="text"
+                      placeholder="MIT"
+                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
                     />
-                  </div>
-                  <div
-                    v-else
-                    class="w-16 h-16 rounded-full bg-ink/5 flex items-center justify-center shrink-0 text-ink/30"
-                  >
-                    <Icon icon="lucide:user" width="24" />
-                  </div>
-                  <div class="flex-1 flex flex-col gap-3 min-w-0">
-                    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
-                      <label class="flex flex-col gap-1">
-                        <span class="text-xs font-semibold text-ink/70">Name</span>
-                        <input
-                          v-model="mentor.name"
-                          type="text"
-                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
-                        />
-                      </label>
-                      <label class="flex flex-col gap-1">
-                        <span class="text-xs font-semibold text-ink/70">Title</span>
-                        <input
-                          v-model="mentor.title"
-                          type="text"
-                          placeholder="Postdoctoral Researcher"
-                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        class="text-ink/50 hover:text-red-700 self-end p-2"
-                        :aria-label="`Remove mentor ${mentor.name}`"
-                        @click="drafts[p.id].mentors.splice(i, 1)"
-                      >
-                        <Icon icon="lucide:trash-2" width="16" />
-                      </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <label class="flex flex-col gap-1">
-                        <span class="text-xs font-semibold text-ink/70">Institution</span>
-                        <input
-                          v-model="mentor.institution"
-                          type="text"
-                          placeholder="MIT"
-                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label class="flex flex-col gap-1">
-                        <span class="text-xs font-semibold text-ink/70">Photo URL</span>
-                        <input
-                          v-model="mentor.img"
-                          type="url"
-                          placeholder="https://…"
-                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                        />
-                      </label>
-                    </div>
+                  </label>
+                  <div class="flex flex-col gap-1.5">
+                    <span class="text-xs font-semibold text-ink/70">Photo</span>
+                    <ImageInput
+                      v-model="mentor.img"
+                      :path-prefix="`programs/${p.slug}/mentors`"
+                      shape="circle"
+                      :aria-label="mentor.name || 'Mentor photo'"
+                    />
                   </div>
                 </div>
               </div>
