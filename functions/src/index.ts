@@ -24,6 +24,8 @@ export {
   validateReferenceToken,
   submitReferenceLetter,
 } from './references'
+export { onUserCreated } from './welcome'
+export { sendReferenceReminders } from './referenceReminders'
 
 // paystack.ts and newsletter.ts are intentionally NOT re-exported here.
 //

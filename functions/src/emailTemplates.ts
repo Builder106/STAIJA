@@ -307,3 +307,155 @@ export function referenceInviteEmail(params: {
 
   return { html, text }
 }
+
+export function referenceLetterReceivedEmail(params: {
+  firstName: string
+  refName: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { firstName, refName, programLabel, applicationId } = params
+  const statusUrl = `https://staija.org/applicant/applications/${applicationId}`
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading(`${refName}'s letter just came in.`)}
+    ${p(`Hi ${firstName},`)}
+    ${p(`${refName} uploaded their reference letter for your ${programLabel} application. One more box checked.`, 'margin-bottom:0;')}
+    ${button('View application status', statusUrl)}
+    ${refBox(applicationId)}
+    ${p('— STAIJA', 'margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `${refName} uploaded their reference letter for your ${programLabel} application. One more box checked.`,
+    ``,
+    `See the latest status: ${statusUrl}`,
+    ``,
+    `Reference number: ${applicationId}`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function welcomeEmail(params: {
+  firstName: string
+}): { html: string; text: string } {
+  const { firstName } = params
+  const programsUrl = 'https://staija.org/programs'
+
+  const html = layout(`
+    ${eyebrow('Welcome')}
+    ${heading('Welcome to STAIJA.')}
+    ${p(`Hi ${firstName},`)}
+    ${p(`Glad to have you here. STAIJA builds research and learning programs for STEM students across Nigeria — purpose-built, locally grounded, and run with care.`)}
+    ${p(`When you're ready, take a look at our open programs. Applications run on a rolling basis, and the StepUp Scholars and Dynamerge tracks are both live right now.`, 'margin-bottom:0;')}
+    ${button('Browse programs', programsUrl)}
+    ${divider()}
+    ${p(`Questions? Write to us at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `Glad to have you here. STAIJA builds research and learning programs for STEM students across Nigeria — purpose-built, locally grounded, and run with care.`,
+    ``,
+    `When you're ready, take a look at our open programs. Applications run on a rolling basis, and the StepUp Scholars and Dynamerge tracks are both live right now.`,
+    ``,
+    `Browse programs: ${programsUrl}`,
+    ``,
+    `Questions? Write to us at hello@staija.org.`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function newApplicationStaffNotificationEmail(params: {
+  applicantName: string
+  applicantEmail: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { applicantName, applicantEmail, programLabel, applicationId } = params
+  const reviewUrl = `https://staija.org/admin/applications/${applicationId}`
+
+  const html = layout(`
+    ${eyebrow(`${programLabel} · New application`)}
+    ${heading(`${applicantName} just applied.`)}
+    ${p(`A new ${programLabel} application landed in the queue and is waiting for review.`)}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${PAPER};border-radius:10px;margin:0 0 32px;width:100%;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Applicant</p>
+          <p style="margin:4px 0 12px;font-family:${SANS};font-size:14px;color:${INK};font-weight:600;">${applicantName} &nbsp;·&nbsp; <a href="mailto:${applicantEmail}" style="color:${INK};text-decoration:none;font-weight:500;">${applicantEmail}</a></p>
+          <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Application ID</p>
+          <p style="margin:4px 0 0;font-family:${MONO};font-size:13px;color:${INK};font-weight:600;">${applicationId}</p>
+        </td>
+      </tr>
+    </table>
+
+    ${button('Open in admin', reviewUrl)}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `New application: ${applicantName} — ${programLabel}`,
+    ``,
+    `Applicant: ${applicantName} <${applicantEmail}>`,
+    `Application ID: ${applicationId}`,
+    ``,
+    `Open in admin: ${reviewUrl}`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function referenceReminderEmail(params: {
+  refName: string
+  applicantName: string
+  programLabel: string
+  relationship: string
+  institution: string
+  uploadUrl: string
+}): { html: string; text: string } {
+  const { refName, applicantName, programLabel, relationship, institution, uploadUrl } = params
+  const relationshipPhrase = relationship ? `their ${relationship}` : 'a reference'
+  const institutionPhrase = institution ? ` at ${institution}` : ''
+
+  const html = layout(`
+    ${eyebrow(`${programLabel} · Reminder`)}
+    ${heading(`${applicantName} is still waiting on your reference.`)}
+    ${p(`Hi ${refName},`)}
+    ${p(`A couple of weeks ago we wrote to let you know that ${applicantName} listed you as ${relationshipPhrase}${institutionPhrase} for their ${programLabel} application. We haven't seen your letter come in yet.`)}
+    ${p(`If you're still planning to write one, here's the upload link again. Same as before — personal to you, no required format.`, 'margin-bottom:0;')}
+    ${button('Upload your letter', uploadUrl)}
+    ${divider()}
+    ${p(`If you'd rather not write the letter, no need to reply — we'll stop reminding after this. Or write back to <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a> and we'll let ${applicantName} know.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${refName},`,
+    ``,
+    `A couple of weeks ago we wrote to let you know that ${applicantName} listed you as ${relationshipPhrase}${institutionPhrase} for their ${programLabel} application. We haven't seen your letter come in yet.`,
+    ``,
+    `If you're still planning to write one, here's the upload link again — same as before, personal to you:`,
+    uploadUrl,
+    ``,
+    `If you'd rather not, no need to reply — we'll stop reminding after this. Or write back to hello@staija.org and we'll let ${applicantName} know.`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}

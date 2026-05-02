@@ -21,7 +21,7 @@ import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
 import { createHmac, timingSafeEqual, randomBytes } from 'crypto'
 import Busboy from 'busboy'
-import { sendMailgun, referenceInviteEmail } from './emailTemplates'
+import { sendMailgun, referenceInviteEmail, referenceLetterReceivedEmail } from './emailTemplates'
 
 const REFERENCE_TOKEN_SECRET = defineSecret('REFERENCE_TOKEN_SECRET')
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -93,7 +93,7 @@ interface ApplicationRef {
 interface ApplicationDoc {
   status?: string
   program?: 'stepup_scholars' | 'dynamerge'
-  personalInfo?: { firstName?: string; lastName?: string }
+  personalInfo?: { firstName?: string; lastName?: string; email?: string }
   references?: ApplicationRef[]
 }
 
@@ -233,7 +233,7 @@ const ALLOWED_ORIGINS = [
 
 export const submitReferenceLetter = onRequest(
   {
-    secrets: [REFERENCE_TOKEN_SECRET],
+    secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],
     region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 90,
@@ -339,12 +339,22 @@ export const submitReferenceLetter = onRequest(
         .firestore()
         .collection('applications')
         .doc(payload.applicationId)
+
+      let applicantEmail: string | undefined
+      let applicantFirstName: string | undefined
+      let referenceName: string | undefined
+      let programLabelForEmail: string | undefined
+
       await admin.firestore().runTransaction(async (tx) => {
         const snap = await tx.get(docRef)
         const app = snap.data() as ApplicationDoc | undefined
         if (!app?.references) return
         const refs = [...app.references]
         if (!refs[payload.refIndex]) return
+        applicantEmail = app.personalInfo?.email
+        applicantFirstName = app.personalInfo?.firstName
+        referenceName = refs[payload.refIndex].name
+        programLabelForEmail = programLabel(app.program)
         refs[payload.refIndex] = {
           ...refs[payload.refIndex],
           status: 'received',
@@ -354,6 +364,28 @@ export const submitReferenceLetter = onRequest(
           [`referencesReceivedAt.${payload.refIndex}`]: admin.firestore.FieldValue.serverTimestamp(),
         })
       })
+
+      // Notify the applicant — fire-and-forget, don't fail the upload if email fails.
+      if (applicantEmail) {
+        try {
+          const { html, text } = referenceLetterReceivedEmail({
+            firstName: applicantFirstName ?? 'there',
+            refName: referenceName ?? 'A reference',
+            programLabel: programLabelForEmail ?? 'STAIJA',
+            applicationId: payload.applicationId,
+          })
+          await sendMailgun({
+            apiKey: MAILGUN_API_KEY.value(),
+            domain: MAILGUN_DOMAIN.value(),
+            to: applicantEmail,
+            subject: `${referenceName ?? 'Your reference'} sent in their letter`,
+            text,
+            html,
+          })
+        } catch (err) {
+          console.error('[references] letter-received notification failed', err, payload)
+        }
+      }
 
       res.status(200).json({ ok: true, storagePath })
     } catch (err) {

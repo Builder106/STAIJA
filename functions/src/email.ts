@@ -24,10 +24,12 @@ import {
   applicationReceivedEmail,
   applicationAcceptedEmail,
   applicationRejectedEmail,
+  newApplicationStaffNotificationEmail,
 } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
+const STAFF_NOTIFY_EMAIL = defineSecret('STAFF_NOTIFY_EMAIL')
 
 interface ApplicationDoc {
   userId?: string
@@ -44,7 +46,7 @@ interface ApplicationDoc {
 export const onApplicationStatusChange = onDocumentWritten(
   {
     document: 'applications/{applicationId}',
-    secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
+    secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN, STAFF_NOTIFY_EMAIL],
     region: 'us-central1',
   },
   async (event) => {
@@ -102,6 +104,35 @@ export const onApplicationStatusChange = onDocumentWritten(
         applicationId,
         afterStatus,
       })
+    }
+
+    // Staff notification on new submission. Independent send — failure here
+    // shouldn't affect the applicant-facing email above.
+    if (afterStatus === 'submitted') {
+      const staffTo = STAFF_NOTIFY_EMAIL.value()
+      if (staffTo) {
+        const applicantName =
+          [after.personalInfo?.firstName, after.personalInfo?.lastName].filter(Boolean).join(' ') ||
+          'an applicant'
+        const staff = newApplicationStaffNotificationEmail({
+          applicantName,
+          applicantEmail: email,
+          programLabel,
+          applicationId,
+        })
+        try {
+          await sendMailgun({
+            apiKey: MAILGUN_API_KEY.value(),
+            domain: MAILGUN_DOMAIN.value(),
+            to: staffTo,
+            subject: `New application: ${applicantName} — ${programLabel}`,
+            text: staff.text,
+            html: staff.html,
+          })
+        } catch (err) {
+          console.error('[email] Staff notification failed', err, { applicationId })
+        }
+      }
     }
   },
 )
