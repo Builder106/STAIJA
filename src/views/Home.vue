@@ -13,10 +13,9 @@ import HeroLottie from '../components/HeroLottie.vue'
 import { trackApplyClick } from '../services/analytics'
 
 const stats = [
-  { eyebrow: 'Scholars trained', number: '240', caption: 'Across 18 Nigerian states' },
-  { eyebrow: 'Countries', number: '12', caption: 'Represented in Dynamerge' },
-  { eyebrow: 'Research papers', number: '45', caption: 'Published or presented' },
-  { eyebrow: 'Mentors', number: '120+', caption: 'From top global institutions' },
+  { eyebrow: 'Students reached', number: '100', caption: 'Across StepUp + Dynamerge since 2023' },
+  { eyebrow: 'Talk attendees', number: '200', caption: 'At STAIJA Talks and public events' },
+  { eyebrow: 'Programs', number: '2', caption: 'StepUp Scholars · Dynamerge' },
 ]
 
 const events = [
@@ -77,7 +76,7 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
     <!-- Impact Strip -->
     <Section class="!py-12 border-y hairline-ink bg-paper/50">
       <Container>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           <Motion
             v-for="(stat, i) in stats"
             :key="stat.eyebrow"
