@@ -26,4 +26,15 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?docs/
+*.sw?
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Internal docs (not for public repo)
+docs/
+
+# Email preview output
+functions/email-previews/
