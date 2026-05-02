@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { StorageService } from '../../services/firebase'
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { publicStorage } from '../../config/firebase'
 
 const props = defineProps<{
   modelValue: string
@@ -55,7 +56,13 @@ async function handleFile(file: File) {
     const stamp = Date.now()
     const rand = Math.random().toString(36).slice(2, 8)
     const path = `${props.pathPrefix}/${stamp}-${rand}.${ext}`
-    const url = await StorageService.uploadFile(file, path)
+    // Always use publicStorage — these are program-page assets, served
+    // unauthenticated to the world. publicStorage points at the no-cost
+    // multi-region bucket; falls back to the default bucket if
+    // VITE_FIREBASE_PUBLIC_BUCKET isn't set in the environment.
+    const r = storageRef(publicStorage, path)
+    await uploadBytes(r, file)
+    const url = await getDownloadURL(r)
     emit('update:modelValue', url)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Upload failed.'
