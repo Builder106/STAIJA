@@ -5,6 +5,7 @@ import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
 import { getAnalytics } from 'firebase/analytics'
 import { getPerformance } from 'firebase/performance'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 
 import { getFirebaseConfig } from '../utils/env.ts'
 
@@ -16,6 +17,26 @@ const firebaseConfig = getFirebaseConfig()
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
+
+// Initialize App Check (browser only — App Check has no Node equivalent and
+// would crash SSR or test runs). Uses reCAPTCHA Enterprise.
+//
+// For local dev: open the browser console once, set
+//   self.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+// reload, copy the printed debug token, and register it in
+// Firebase Console → App Check → Apps → ⋮ → Manage debug tokens.
+// The Vite dev server will then bypass the reCAPTCHA challenge.
+if (typeof window !== 'undefined') {
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY as string | undefined
+  if (recaptchaSiteKey) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    })
+  } else if (import.meta.env.DEV) {
+    console.warn('[firebase] VITE_RECAPTCHA_ENTERPRISE_SITE_KEY not set — App Check skipped')
+  }
+}
 
 // Initialize Firebase services
 export const auth = getAuth(app)

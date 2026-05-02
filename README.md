@@ -58,6 +58,8 @@ VITE_CONTENTFUL_ENV_ID
 VITE_PAYSTACK_PUBLIC_KEY
 VITE_NEWSLETTER_ENDPOINT
 VITE_APP_URL
+
+VITE_RECAPTCHA_ENTERPRISE_SITE_KEY  # Firebase App Check site key (public)
 ```
 
 `.env` is gitignored. It is only read by the Vite build — Cloud Functions read secrets from Firebase Secret Manager, not from `.env`.
