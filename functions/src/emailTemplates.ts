@@ -1,0 +1,309 @@
+/**
+ * HTML email templates for STAIJA transactional email.
+ *
+ * Every exported template function returns { html, text }. Pass both to
+ * sendMailgun — html is used by clients that render it, text is the
+ * plain-text fallback.
+ *
+ * Design notes:
+ *   - Table-based outer layout for Outlook desktop compat; div-based inner
+ *     content is fine for Gmail, Apple Mail, and Outlook.com.
+ *   - All styles are inline — no external stylesheet, no <style> in <head>.
+ *   - Header uses solid brand violet (#8B55FF). CSS gradients are skipped
+ *     because Outlook ignores them.
+ *   - CTA buttons include a VML block for Outlook rounded corners.
+ *   - System font stack only — web fonts are unreliable in email clients.
+ *   - Brand tokens must stay in sync with src/style.css @theme block.
+ */
+
+// --- Brand tokens -------------------------------------------------------
+
+const VIOLET = '#8B55FF'
+const INK = '#0E1217'
+const PAPER = '#FAF7F2'
+const OUTER_BG = '#EDEAE2'  // slightly darker than paper for outer background
+const MUTED = '#9C9087'
+const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+const SERIF = "Georgia, 'Times New Roman', serif"
+const MONO = "'Courier New', Courier, monospace"
+
+// --- Shared Mailgun sender ---------------------------------------------
+
+export interface MailgunSendParams {
+  apiKey: string
+  domain: string
+  to: string
+  subject: string
+  text: string
+  html?: string
+}
+
+export async function sendMailgun(params: MailgunSendParams): Promise<void> {
+  const auth = Buffer.from(`api:${params.apiKey}`).toString('base64')
+  const form = new URLSearchParams()
+  form.set('from', 'STAIJA <hello@staija.org>')
+  form.set('to', params.to)
+  form.set('subject', params.subject)
+  form.set('text', params.text)
+  if (params.html) form.set('html', params.html)
+
+  const res = await fetch(`https://api.mailgun.net/v3/${params.domain}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: form.toString(),
+  })
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new Error(`Mailgun ${res.status}: ${detail}`)
+  }
+}
+
+// --- Internal rendering helpers ----------------------------------------
+
+function button(label: string, url: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
+        <tr>
+          <td>
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+              href="${url}" style="height:44px;v-text-anchor:middle;width:200px;"
+              arcsize="23%" strokecolor="${VIOLET}" fillcolor="${VIOLET}">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:600;">${label}</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <a href="${url}" style="background-color:${VIOLET};border-radius:10px;color:#ffffff;display:inline-block;font-family:${SANS};font-size:14px;font-weight:600;line-height:1;padding:13px 24px;text-decoration:none;">${label}</a>
+            <!--<![endif]-->
+          </td>
+        </tr>
+      </table>`
+}
+
+function refBox(applicationId: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${PAPER};border-radius:10px;margin:0 0 32px;width:100%;">
+        <tr>
+          <td style="padding:16px 20px;">
+            <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Reference number</p>
+            <p style="margin:5px 0 0;font-family:${MONO};font-size:14px;color:${INK};font-weight:600;">${applicationId}</p>
+          </td>
+        </tr>
+      </table>`
+}
+
+function eyebrow(text: string): string {
+  return `<p style="margin:0 0 16px;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.08em;text-transform:uppercase;">${text}</p>`
+}
+
+function heading(text: string): string {
+  return `<h1 style="margin:0 0 28px;font-family:${SERIF};font-size:27px;font-weight:700;color:${INK};line-height:1.2;">${text}</h1>`
+}
+
+function p(text: string, styles = ''): string {
+  return `<p style="margin:0 0 16px;font-family:${SANS};font-size:15px;color:${INK};line-height:1.75;${styles}">${text}</p>`
+}
+
+function divider(): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;width:100%;"><tr><td style="border-top:1px solid #EDE9E1;font-size:0;line-height:0;">&nbsp;</td></tr></table>`
+}
+
+function layout(body: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:${OUTER_BG};" bgcolor="${OUTER_BG}">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${OUTER_BG}" style="background-color:${OUTER_BG};min-width:320px;">
+    <tr>
+      <td align="center" style="padding:40px 16px 52px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td bgcolor="${VIOLET}" style="background-color:${VIOLET};border-radius:14px 14px 0 0;padding:22px 40px;">
+              <span style="font-family:${SERIF};font-size:21px;font-weight:700;color:#ffffff;letter-spacing:-0.2px;">STAIJA</span>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 14px 14px;padding:40px 40px 44px;">
+              ${body}
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 40px 0;" align="center">
+              <p style="margin:0;font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.6;">
+                STAIJA &nbsp;·&nbsp;
+                <a href="https://staija.org" style="color:${MUTED};text-decoration:underline;">staija.org</a>
+                &nbsp;·&nbsp;
+                <a href="mailto:hello@staija.org" style="color:${MUTED};text-decoration:underline;">hello@staija.org</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+// --- Exported template functions ----------------------------------------
+
+export function applicationReceivedEmail(params: {
+  firstName: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { firstName, programLabel, applicationId } = params
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading('Your application is in.')}
+    ${p(`Hi ${firstName},`)}
+    ${p(`We've received your application to ${programLabel}.`)}
+    ${p(`A reviewer will go through it within five business days. If we need anything from you in the meantime, we'll reach out directly.`, 'margin-bottom:32px;')}
+    ${refBox(applicationId)}
+    ${p('— STAIJA', 'margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `We've received your application to ${programLabel}.`,
+    ``,
+    `A reviewer will go through it within five business days. If we need anything from you in the meantime, we'll reach out directly.`,
+    ``,
+    `Your reference number is ${applicationId} — keep it handy if you need to write to us.`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function applicationAcceptedEmail(params: {
+  firstName: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { firstName, programLabel, applicationId } = params
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading("You've been accepted.")}
+    ${p(`Hi ${firstName},`)}
+    ${p(`Congratulations — your application to ${programLabel} has been accepted.`)}
+    ${p(`A program coordinator will be in touch within 48 hours with everything you need to get started, including the orientation schedule and your scholar agreement.`, 'margin-bottom:32px;')}
+    ${refBox(applicationId)}
+    ${p('Welcome.', 'margin-bottom:4px;')}
+    ${p('— STAIJA', 'margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `Congratulations — your application to ${programLabel} has been accepted.`,
+    ``,
+    `A program coordinator will be in touch within 48 hours with everything you need to get started, including the orientation schedule and your scholar agreement.`,
+    ``,
+    `Your reference number: ${applicationId}`,
+    ``,
+    `Welcome.`,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function applicationRejectedEmail(params: {
+  firstName: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { firstName, programLabel, applicationId } = params
+  const dashboardUrl = 'https://staija.org/applicant/applications'
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading('An update on your application.')}
+    ${p(`Hi ${firstName},`)}
+    ${p(`There's an update on your ${programLabel} application. Sign in to your account to read the full message from the team.`, 'margin-bottom:0;')}
+    ${button('View update', dashboardUrl)}
+    ${refBox(applicationId)}
+    ${p('Thank you for the time you put into your application.', 'margin-bottom:4px;')}
+    ${p('— STAIJA', 'margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `There's an update on your ${programLabel} application.`,
+    ``,
+    `Sign in to your account to read the full update from the team:`,
+    dashboardUrl,
+    ``,
+    `Your reference number: ${applicationId}`,
+    ``,
+    `Thank you for the time you put into your application.`,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function referenceInviteEmail(params: {
+  refName: string
+  applicantName: string
+  programLabel: string
+  relationship: string
+  institution: string
+  uploadUrl: string
+}): { html: string; text: string } {
+  const { refName, applicantName, programLabel, relationship, institution, uploadUrl } = params
+  const relationshipPhrase = relationship ? `their ${relationship}` : 'a reference'
+  const institutionPhrase = institution ? ` at ${institution}` : ''
+
+  const html = layout(`
+    ${eyebrow(`${programLabel} · Reference request`)}
+    ${heading(`${applicantName} has listed you as a reference.`)}
+    ${p(`Hi ${refName},`)}
+    ${p(`${applicantName} is applying to ${programLabel} at STAIJA and has listed you as ${relationshipPhrase}${institutionPhrase}.`)}
+    ${p(`If you're willing to write a recommendation, you can upload your letter using the button below. The link is personal to you and stays open for 90 days.`, 'margin-bottom:0;')}
+    ${button('Upload your letter', uploadUrl)}
+    ${divider()}
+    ${p(`There's no required format. A short, specific letter about what you've seen them do carries more weight than a long one.`, `font-size:13px;color:${MUTED};margin-bottom:8px;`)}
+    ${p(`Questions? Write to us at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${refName},`,
+    ``,
+    `${applicantName} is applying to ${programLabel} at STAIJA and has listed you as ${relationshipPhrase}${institutionPhrase}.`,
+    ``,
+    `If you're willing to write a recommendation, you can upload your letter here:`,
+    uploadUrl,
+    ``,
+    `The link is personal to you and stays open for 90 days. There's no required format — a short, specific letter about what you've seen them do carries more weight than a long one.`,
+    ``,
+    `If you have any questions, you can reach us at hello@staija.org.`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}

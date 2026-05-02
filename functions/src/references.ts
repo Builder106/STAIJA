@@ -21,12 +21,12 @@ import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
 import { createHmac, timingSafeEqual, randomBytes } from 'crypto'
 import Busboy from 'busboy'
+import { sendMailgun, referenceInviteEmail } from './emailTemplates'
 
 const REFERENCE_TOKEN_SECRET = defineSecret('REFERENCE_TOKEN_SECRET')
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
 
-const FROM_ADDRESS = 'STAIJA <hello@staija.org>'
 const PUBLIC_BASE_URL = 'https://staija.org'
 const TOKEN_TTL_DAYS = 90
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024 // 5MB — references letters often PDFs
@@ -81,35 +81,6 @@ export function verifyToken(token: string, secret: string): TokenPayload | null 
   return payload
 }
 
-// --- Mailgun helper ---------------------------------------------------
-
-async function sendMailgun(params: {
-  apiKey: string
-  domain: string
-  to: string
-  subject: string
-  text: string
-}): Promise<void> {
-  const auth = Buffer.from(`api:${params.apiKey}`).toString('base64')
-  const form = new URLSearchParams()
-  form.set('from', FROM_ADDRESS)
-  form.set('to', params.to)
-  form.set('subject', params.subject)
-  form.set('text', params.text)
-
-  const res = await fetch(`https://api.mailgun.net/v3/${params.domain}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: form.toString(),
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(`Mailgun ${res.status}: ${detail}`)
-  }
-}
 
 interface ApplicationRef {
   name?: string
@@ -179,23 +150,15 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
       const token = mintToken(applicationId, i, tokenSecret)
       const url = `${PUBLIC_BASE_URL}/refs/${token}`
 
-      const relationship = r.relationship ? `their ${r.relationship}` : 'a reference'
-      const institution = r.institution ? ` at ${r.institution}` : ''
+      const { html, text } = referenceInviteEmail({
+        refName: r.name ?? 'there',
+        applicantName,
+        programLabel: program,
+        relationship: r.relationship ?? '',
+        institution: r.institution ?? '',
+        uploadUrl: url,
+      })
       const subject = `${applicantName} has listed you as a reference for ${program}`
-      const body = [
-        `Hi ${r.name ?? 'there'},`,
-        ``,
-        `${applicantName} is applying to ${program} at STAIJA and has listed you as ${relationship}${institution}.`,
-        ``,
-        `If you're willing to write a recommendation, you can upload your letter here:`,
-        url,
-        ``,
-        `The link is personal to you and stays open for 90 days. There's no required format — a short, specific letter about what you've seen them do carries more weight than a long one.`,
-        ``,
-        `If you have any questions, you can reach us at hello@staija.org.`,
-        ``,
-        `— STAIJA`,
-      ].join('\n')
 
       try {
         await sendMailgun({
@@ -203,7 +166,8 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
           domain: mailgunDomain,
           to: r.email,
           subject,
-          text: body,
+          text,
+          html,
         })
         updatedRefs.push({ ...r, status: 'invited' })
       } catch (err) {
