@@ -10,6 +10,8 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import IconPicker from '../../components/admin/IconPicker.vue'
 import ImageInput from '../../components/admin/ImageInput.vue'
+import ProgramPreview from '../../components/admin/ProgramPreview.vue'
+import type { ProgramHistorySnapshot } from '../../services/firebase'
 import {
   AuthService,
   DatabaseService,
@@ -49,6 +51,46 @@ const toast = ref<{ kind: 'success' | 'error'; text: string } | null>(null)
 const sortedPrograms = computed(() =>
   [...programs.value].sort((a, b) => a.name.localeCompare(b.name)),
 )
+
+// History modal state. Open one program's history at a time; the editor
+// reviews past versions and can Restore one (which loads it into their
+// draft, leaving the canonical Program untouched until they Save).
+const historyOpen = ref<{ programId: string; entries: ProgramHistorySnapshot[]; loading: boolean } | null>(null)
+
+async function openHistory(p: Program) {
+  if (!p.id) return
+  historyOpen.value = { programId: p.id, entries: [], loading: true }
+  try {
+    const entries = await DatabaseService.getProgramHistory(p.id)
+    if (historyOpen.value?.programId === p.id) {
+      historyOpen.value.entries = entries
+      historyOpen.value.loading = false
+    }
+  } catch (err) {
+    if (historyOpen.value?.programId === p.id) {
+      historyOpen.value = null
+    }
+    showToast('error', err instanceof Error ? err.message : 'Failed to load history.')
+  }
+}
+
+function closeHistory() {
+  historyOpen.value = null
+}
+
+function restoreFromHistory(snapshot: ProgramHistorySnapshot) {
+  const programId = historyOpen.value?.programId
+  if (!programId) return
+  const p = programs.value.find((x) => x.id === programId)
+  if (!p) return
+  // Load the snapshot into the live draft so the editor can review and
+  // press Save to apply. We deliberately do NOT auto-save the restore —
+  // restoring through Save means it goes through the same dirty / history
+  // path as any other edit, with the restored state itself snapshotted.
+  drafts[programId] = snapshotDraft(snapshot.data)
+  closeHistory()
+  showToast('success', 'Loaded into the form. Click Save changes to apply.')
+}
 
 async function loadPrograms() {
   loading.value = true
@@ -126,7 +168,11 @@ async function saveChanges(p: Program) {
       status: d.status,
       updatedBy: currentUser?.uid ?? p.updatedBy ?? '',
     }
-    await DatabaseService.updateProgram(p.id, updates)
+    await DatabaseService.saveProgramWithHistory(
+      p.id,
+      updates,
+      currentUser?.uid ?? p.updatedBy ?? '',
+    )
     Object.assign(p, updates, { updatedAt: new Date() })
     showToast('success', `${p.name} saved.`)
   } catch (err) {
@@ -409,8 +455,25 @@ const DYNAMERGE_SEED: SeedTemplate = {
                 <span class="text-xs text-ink/55">
                   {{ applicationStatusLabel(applicationStatus(p)) }}
                 </span>
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-brand-violet hover:underline mt-1 flex items-center gap-1"
+                  @click="openHistory(p)"
+                >
+                  <Icon icon="lucide:history" width="12" />
+                  History
+                </button>
               </div>
             </div>
+
+            <!-- Live preview -->
+            <ProgramPreview
+              :name="p.name"
+              :pitch="drafts[p.id].pitch"
+              :eligibility="drafts[p.id].eligibility"
+              :hero-img="drafts[p.id].heroImg"
+              :stats="drafts[p.id].stats"
+            />
 
             <!-- Hero / pitch -->
             <details open class="group">
@@ -871,6 +934,81 @@ const DYNAMERGE_SEED: SeedTemplate = {
           </div>
         </UiCard>
       </div>
+
+      <!-- History modal -->
+      <Transition
+        enter-active-class="transition duration-150"
+        enter-from-class="opacity-0"
+        leave-active-class="transition duration-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="historyOpen"
+          class="fixed inset-0 z-40 bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-title"
+          @click.self="closeHistory"
+        >
+          <div class="bg-paper rounded-2xl border hairline-ink shadow-2xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-5 border-b hairline-ink">
+              <h3 id="history-title" class="font-display text-lg font-semibold m-0">
+                Version history
+              </h3>
+              <button
+                type="button"
+                class="text-ink/50 hover:text-ink p-1"
+                aria-label="Close"
+                @click="closeHistory"
+              >
+                <Icon icon="lucide:x" width="20" />
+              </button>
+            </div>
+            <div class="overflow-y-auto p-5 flex flex-col gap-3">
+              <p class="text-sm text-ink/65 m-0">
+                The 20 most recent saves. Click "Load" to bring a version
+                into the form — it won't go live until you click Save changes.
+              </p>
+              <div
+                v-if="historyOpen.loading"
+                class="flex items-center gap-3 text-ink/60 py-4"
+              >
+                <Icon icon="lucide:loader-2" width="16" class="animate-spin" />
+                Loading history…
+              </div>
+              <div
+                v-else-if="historyOpen.entries.length === 0"
+                class="text-sm text-ink/55 py-4 text-center"
+              >
+                No saved versions yet. Future saves will be tracked here automatically.
+              </div>
+              <div v-else class="flex flex-col gap-2">
+                <div
+                  v-for="entry in historyOpen.entries"
+                  :key="entry.id"
+                  class="flex items-center justify-between gap-3 p-3 rounded-lg border hairline-ink hover:border-brand-violet/40 transition-colors"
+                >
+                  <div class="flex flex-col gap-0.5 min-w-0">
+                    <span class="text-sm font-semibold">
+                      {{ timeAgo(entry.savedAt) }}
+                    </span>
+                    <span class="text-xs text-ink/55 font-mono truncate">
+                      {{ entry.savedBy ? `by ${entry.savedBy.slice(0, 8)}…` : 'unknown editor' }}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-brand-violet hover:underline shrink-0"
+                    @click="restoreFromHistory(entry)"
+                  >
+                    Load
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
 
       <!-- Toast -->
       <Transition

@@ -10,11 +10,13 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
-  limit
+  limit,
+  writeBatch,
+  serverTimestamp
 } from 'firebase/firestore'
 import type { Query as FsQuery, CollectionReference, DocumentData } from 'firebase/firestore'
 import { db } from '../config/firebase.ts'
-import type { UserProfile, ContentItem, Application, Program } from './types'
+import type { UserProfile, ContentItem, Application, Program, ProgramHistorySnapshot } from './types'
 
 export class DatabaseService {
   static async getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -271,10 +273,61 @@ export class DatabaseService {
         ...updates,
         updatedAt: new Date()
       }
-      
+
       await updateDoc(doc(db, 'programs', id), updateData)
     } catch (error) {
       console.error('Update program error:', error)
+      throw error
+    }
+  }
+
+  // Save a program update plus a history snapshot of the prior state in a
+  // single Firestore batch — atomic, so we never end up with new state
+  // committed but no undo trail. Snapshots live at
+  // /programs/{id}/history/{snapshotId} and are read by getProgramHistory().
+  static async saveProgramWithHistory(
+    id: string,
+    updates: Partial<Program>,
+    savedBy: string,
+  ): Promise<void> {
+    try {
+      const programRef = doc(db, 'programs', id)
+      const current = await getDoc(programRef)
+      const batch = writeBatch(db)
+
+      // Snapshot the current state (if any) before overwriting.
+      if (current.exists()) {
+        const historyRef = doc(collection(programRef, 'history'))
+        batch.set(historyRef, {
+          data: { id: current.id, ...current.data() },
+          savedAt: serverTimestamp(),
+          savedBy,
+        })
+      }
+
+      batch.update(programRef, {
+        ...updates,
+        updatedAt: new Date(),
+      })
+
+      await batch.commit()
+    } catch (error) {
+      console.error('Save program with history error:', error)
+      throw error
+    }
+  }
+
+  static async getProgramHistory(id: string, max = 20): Promise<ProgramHistorySnapshot[]> {
+    try {
+      const q = query(
+        collection(db, 'programs', id, 'history'),
+        orderBy('savedAt', 'desc'),
+        limit(max),
+      )
+      const snap = await getDocs(q)
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProgramHistorySnapshot))
+    } catch (error) {
+      console.error('Get program history error:', error)
       throw error
     }
   }

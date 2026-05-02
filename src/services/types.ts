@@ -205,3 +205,15 @@ export interface ProgramDates {
   programEnd: string
   decisionsBy: string
 }
+
+// A point-in-time copy of a Program, captured by saveProgramWithHistory()
+// before each update. Lives at programs/{id}/history/{snapshotId}. Used by
+// /admin/programs to let an editor revert to any of the last ~20 versions.
+export interface ProgramHistorySnapshot {
+  id?: string
+  // Captured Program state. Optional because a future schema change could
+  // produce historical entries we haven't fully back-filled.
+  data: Program
+  savedAt: Date
+  savedBy: string
+}

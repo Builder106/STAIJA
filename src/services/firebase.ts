@@ -14,6 +14,7 @@ export type {
   ProgramTimelineStep,
   ProgramMentor,
   ProgramDates,
+  ProgramHistorySnapshot,
   MentorAssignment,
   MentorFeedback,
 } from './types'

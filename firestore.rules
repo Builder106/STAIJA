@@ -102,6 +102,17 @@ service cloud.firestore {
 
       // Only staff and admins can create/update programs
       allow write: if hasAnyRole(['staff', 'admin']);
+
+      // Per-program version history written by saveProgramWithHistory().
+      // Append-only from the client side — no updates, no deletes; the
+      // /admin/programs UI restores by writing a new version, not by
+      // mutating an old one. Cleanup of older entries is a separate
+      // future job.
+      match /history/{snapshotId} {
+        allow read: if hasAnyRole(['staff', 'admin']);
+        allow create: if hasAnyRole(['staff', 'admin']);
+        allow update, delete: if false;
+      }
     }
 
     // The /content collection (legacy in-app CMS) was retired when STAIJA
