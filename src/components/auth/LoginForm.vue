@@ -140,7 +140,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { AuthService, DatabaseService, postLoginRouteName } from '../../services/firebase'
+import { AuthService, postLoginRouteName } from '../../services/firebase'
+import { primeProfileCache } from '../../router'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
@@ -166,33 +167,20 @@ const handleLogin = async () => {
     showValidation.value = true
     return
   }
-  
+
   loading.value = true
   error.value = ''
   showValidation.value = false
-  
+
   try {
-    await AuthService.signIn(email.value, password.value)
-    await redirectByRole()
+    const { credential, role } = await AuthService.signIn(email.value, password.value)
+    primeProfileCache(credential.user.uid, role)
+    router.push({ name: postLoginRouteName(role) })
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in. Please try again.'
   } finally {
     loading.value = false
   }
-}
-
-async function redirectByRole() {
-  const user = AuthService.getCurrentUser()
-  let role = null
-  if (user) {
-    try {
-      const profile = await DatabaseService.getUserProfile(user.uid)
-      role = profile?.role ?? null
-    } catch {
-      // Fall through with role=null — postLoginRouteName returns 'home'
-    }
-  }
-  router.push({ name: postLoginRouteName(role) })
 }
 
 const clearValidation = () => {
@@ -221,10 +209,10 @@ onUnmounted(() => {
 const signInWithGoogle = async () => {
   loading.value = true
   error.value = ''
-  
   try {
-    await AuthService.signInWithGoogle()
-    await redirectByRole()
+    const { credential, role } = await AuthService.signInWithGoogle()
+    primeProfileCache(credential.user.uid, role)
+    router.push({ name: postLoginRouteName(role) })
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with Google.'
   } finally {
@@ -235,10 +223,10 @@ const signInWithGoogle = async () => {
 const signInWithGitHub = async () => {
   loading.value = true
   error.value = ''
-
   try {
-    await AuthService.signInWithGitHub()
-    await redirectByRole()
+    const { credential, role } = await AuthService.signInWithGitHub()
+    primeProfileCache(credential.user.uid, role)
+    router.push({ name: postLoginRouteName(role) })
   } catch (err: any) {
     error.value = err.message || 'Failed to sign in with GitHub.'
   } finally {

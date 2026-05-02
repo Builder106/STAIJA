@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { auth } from '../config/firebase.ts'
 import { DatabaseService, PermissionService, postLoginRouteName, type Permission } from '../services/firebase.ts'
+import type { UserRole } from '../services/types'
 import { donationsEnabled } from '../config/features.ts'
 
 // Extend the RouteMeta interface to include our custom properties
@@ -99,6 +100,30 @@ const router = createRouter({
   }
 })
 
+// Resolves once Firebase Auth emits its first event — created once at
+// module load and reused across all navigations instead of recreating a
+// listener on every beforeEach call.
+const authReady = new Promise<void>(resolve => {
+  const unsub = auth.onAuthStateChanged(() => { unsub(); resolve() })
+})
+
+// Per-UID profile cache: avoids a Firestore read on every protected navigation.
+// Invalidated when the active UID changes (i.e. sign-out / account switch).
+let _cachedUid: string | null = null
+let _cachedRole: UserRole | null = null
+
+function invalidateProfileCache() {
+  _cachedUid = null
+  _cachedRole = null
+}
+
+// Warm the cache from the outside (e.g. after sign-in, the role is
+// already known — no reason to re-fetch it in the guard).
+export function primeProfileCache(uid: string, role: UserRole | null) {
+  _cachedUid = uid
+  _cachedRole = role
+}
+
 router.afterEach((to) => {
   if (to.meta && typeof to.meta.title === 'string') {
     const g = globalThis as unknown as { document?: { title: string } }
@@ -111,13 +136,7 @@ router.beforeEach(async (to, _from, next) => {
   const requiresAuth = Boolean(to.meta?.requiresAuth)
   const requiredPermissions = to.meta?.permissions || []
 
-  // Wait for Firebase Auth to be ready (if it's still initializing)
-  await new Promise<void>(resolve => {
-    const unsubscribe = auth.onAuthStateChanged(() => {
-      unsubscribe()
-      resolve()
-    })
-  })
+  await authReady
 
   if (!requiresAuth && requiredPermissions.length === 0) {
     return next()
@@ -125,30 +144,30 @@ router.beforeEach(async (to, _from, next) => {
 
   const user = auth.currentUser
   if (!user) {
+    invalidateProfileCache()
     return next({ name: 'login', query: { redirect: to.fullPath } })
   }
 
-  // If no specific permissions required, allow access
   if (requiredPermissions.length === 0) return next()
 
   try {
-    const profile = await DatabaseService.getUserProfile(user.uid)
-    const userRole = profile?.role
-    
-    if (!userRole) {
-      // No role assigned, redirect to login
-      return next({ name: 'login' })
+    let userRole: UserRole | null
+    if (user.uid === _cachedUid) {
+      userRole = _cachedRole
+    } else {
+      const profile = await DatabaseService.getUserProfile(user.uid)
+      userRole = profile?.role ?? null
+      _cachedUid = user.uid
+      _cachedRole = userRole
     }
-    
-    // Check if user has required permissions
-    const hasRequiredPermissions = PermissionService.hasAnyPermission(userRole, requiredPermissions)
 
-    if (hasRequiredPermissions) {
+    if (!userRole) return next({ name: 'login' })
+
+    if (PermissionService.hasAnyPermission(userRole, requiredPermissions)) {
       return next()
     }
-    
-    // User doesn't have the required permissions for this route — bounce
-    // them to whichever dashboard fits their role.
+
+    // User lacks permission for this route — send to their own dashboard.
     return next({ name: postLoginRouteName(userRole) })
   } catch (error) {
     console.error('Auth guard error:', error)

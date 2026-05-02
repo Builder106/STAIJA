@@ -320,7 +320,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdditionalUserInfo } from 'firebase/auth'
-import { AuthService, DatabaseService, postLoginRouteName, type PublicAssignableRole } from '../../services/firebase'
+import { AuthService, postLoginRouteName, type PublicAssignableRole } from '../../services/firebase'
+import { primeProfileCache } from '../../router'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
@@ -365,8 +366,9 @@ const handleSignUp = async () => {
   showValidation.value = false
   
   try {
-    await AuthService.signUp(email.value, password.value, displayName.value, role.value)
-    await redirectByRole()
+    const cred = await AuthService.signUp(email.value, password.value, displayName.value, role.value)
+    primeProfileCache(cred.user.uid, role.value)
+    router.push({ name: postLoginRouteName(role.value) })
   } catch (err: any) {
     error.value = err.message || 'Failed to create account. Please try again.'
   } finally {
@@ -374,19 +376,7 @@ const handleSignUp = async () => {
   }
 }
 
-async function redirectByRole() {
-  const user = AuthService.getCurrentUser()
-  let resolvedRole = null
-  if (user) {
-    try {
-      const profile = await DatabaseService.getUserProfile(user.uid)
-      resolvedRole = profile?.role ?? null
-    } catch {
-      // Fall through with role=null — postLoginRouteName returns 'home'
-    }
-  }
-  router.push({ name: postLoginRouteName(resolvedRole) })
-}
+
 
 const validatePassword = () => {
   const pwd = password.value
@@ -558,14 +548,13 @@ const signUpWithGoogle = async () => {
   error.value = ''
   
   try {
-    const result = await AuthService.signInWithGoogle()
-    
-    const additionalInfo = result ? getAdditionalUserInfo(result) : null
+    const { credential, role: resolvedRole } = await AuthService.signInWithGoogle()
+    const additionalInfo = getAdditionalUserInfo(credential)
     if (additionalInfo?.isNewUser) {
-      // Show modal to collect additional info
       showGoogleModal.value = true
     } else {
-      await redirectByRole()
+      primeProfileCache(credential.user.uid, resolvedRole)
+      router.push({ name: postLoginRouteName(resolvedRole) })
     }
   } catch (err: any) {
     error.value = err.message || 'Failed to sign up with Google.'
@@ -610,7 +599,8 @@ const completeGoogleSignUp = async () => {
     showGooglePassword.value = false
     isGooglePasswordValid.value = false
 
-    await redirectByRole()
+    if (user) primeProfileCache(user.uid, googleRole.value as PublicAssignableRole | null)
+    router.push({ name: postLoginRouteName(googleRole.value as PublicAssignableRole | null) })
   } catch (err: any) {
     error.value = err.message || 'Failed to complete sign up. Please try again.'
   } finally {

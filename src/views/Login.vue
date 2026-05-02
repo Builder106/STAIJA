@@ -7,7 +7,10 @@ import Section from '../components/ui/Section.vue'
 import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import UiButton from '../components/ui/UiButton.vue'
+import type { UserRole } from '../services/types'
 import { AuthService } from '../services/auth'
+import { primeProfileCache } from '../router'
+import { postLoginRouteName } from '../services/postLoginRedirect'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,9 +19,11 @@ const password = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 
-function redirectAfterAuth() {
-  const next = (route.query.redirect as string) || '/applicant'
-  router.push(next)
+function redirectAfterAuth(uid: string, role: UserRole | null) {
+  primeProfileCache(uid, role)
+  const redirect = route.query.redirect as string | undefined
+  if (redirect) return router.push(redirect)
+  router.push({ name: postLoginRouteName(role) })
 }
 
 async function onSubmit(e: Event) {
@@ -26,8 +31,8 @@ async function onSubmit(e: Event) {
   error.value = null
   submitting.value = true
   try {
-    await AuthService.signIn(email.value, password.value)
-    redirectAfterAuth()
+    const { credential, role } = await AuthService.signIn(email.value, password.value)
+    redirectAfterAuth(credential.user.uid, role)
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Sign in failed'
   } finally {
@@ -39,8 +44,8 @@ async function onGoogle() {
   error.value = null
   submitting.value = true
   try {
-    await AuthService.signInWithGoogle()
-    redirectAfterAuth()
+    const { credential, role } = await AuthService.signInWithGoogle()
+    redirectAfterAuth(credential.user.uid, role)
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Google sign in failed'
   } finally {

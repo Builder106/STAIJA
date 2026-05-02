@@ -19,6 +19,7 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../config/firebase.ts'
 import type {
   UserProfile,
+  UserRole,
   PublicAssignableRole,
   AdminAssignableRole,
   EmailLinkAssignableRole,
@@ -28,13 +29,11 @@ import { AuditService } from './audit'
 import { DatabaseService } from './database'
 
 export class AuthService {
-  static async signIn(email: string, password: string): Promise<UserCredential> {
+  static async signIn(email: string, password: string): Promise<{ credential: UserCredential; role: UserRole | null }> {
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password)
-      // Same idempotent profile sync OAuth sign-ins run — picks up role
-      // elevations once a STAIJA staff member verifies their email.
-      await this.ensureUserProfile(cred.user)
-      return cred
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      const role = await this.ensureUserProfile(credential.user)
+      return { credential, role }
     } catch (error) {
       console.error('Sign in error:', error)
       throw error
@@ -67,18 +66,18 @@ export class AuthService {
     }
   }
 
-  static async signInWithGoogle(): Promise<UserCredential> {
+  static async signInWithGoogle(): Promise<{ credential: UserCredential; role: UserRole | null }> {
     const provider = new GoogleAuthProvider()
-    const cred = await signInWithPopup(auth, provider)
-    await this.ensureUserProfile(cred.user)
-    return cred
+    const credential = await signInWithPopup(auth, provider)
+    const role = await this.ensureUserProfile(credential.user)
+    return { credential, role }
   }
 
-  static async signInWithGitHub(): Promise<UserCredential> {
+  static async signInWithGitHub(): Promise<{ credential: UserCredential; role: UserRole | null }> {
     const provider = new GithubAuthProvider()
-    const cred = await signInWithPopup(auth, provider)
-    await this.ensureUserProfile(cred.user)
-    return cred
+    const credential = await signInWithPopup(auth, provider)
+    const role = await this.ensureUserProfile(credential.user)
+    return { credential, role }
   }
 
   static async sendVerificationEmail(): Promise<void> {
@@ -239,8 +238,8 @@ export class AuthService {
     await setDoc(doc(db, 'users', user.uid), userProfile)
   }
 
-  private static async ensureUserProfile(user: User): Promise<void> {
-    if (!user) return
+  private static async ensureUserProfile(user: User): Promise<UserRole | null> {
+    if (!user) return null
     const ref = doc(db, 'users', user.uid)
     const existing = await getDoc(ref)
 
@@ -254,23 +253,18 @@ export class AuthService {
       const role: AdminAssignableRole =
         user.emailVerified && isStaffEmail(user.email) ? 'staff' : 'applicant'
       await this.createUserProfile(user, String(name), role)
-      return
+      return role
     }
 
+    const profile = existing.data() as UserProfile
     // Existing profile: auto-elevate applicant -> staff once the user proves
     // they own the @staija.org mailbox by clicking Firebase's verification
-    // email. Only the real mailbox owner can complete that step, so this is
-    // a safe self-promotion. The matching Firestore rule re-verifies
-    // email_verified + domain server-side, so a tampered client can't write
-    // 'staff' without actually owning the inbox.
-    const profile = existing.data() as UserProfile
-    if (
-      profile.role === 'applicant' &&
-      user.emailVerified &&
-      isStaffEmail(user.email)
-    ) {
+    // email.
+    if (profile.role === 'applicant' && user.emailVerified && isStaffEmail(user.email)) {
       await updateDoc(ref, { role: 'staff', updatedAt: new Date() })
+      return 'staff'
     }
+    return profile.role
   }
 }
 

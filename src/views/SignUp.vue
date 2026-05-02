@@ -8,6 +8,8 @@ import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import { AuthService } from '../services/auth'
+import { primeProfileCache } from '../router'
+import { postLoginRouteName } from '../services/postLoginRedirect'
 
 const router = useRouter()
 const firstName = ref('')
@@ -24,8 +26,10 @@ async function onSubmit(e: Event) {
   error.value = null
   submitting.value = true
   try {
-    await AuthService.signUp(email.value, password.value, displayName.value || email.value)
-    router.push('/applicant')
+    const cred = await AuthService.signUp(email.value, password.value, displayName.value || email.value)
+    // New sign-ups always land as applicant.
+    primeProfileCache(cred.user.uid, 'applicant')
+    router.push({ name: 'applicant-dashboard' })
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Sign up failed'
   } finally {
@@ -37,8 +41,9 @@ async function onGoogle() {
   error.value = null
   submitting.value = true
   try {
-    await AuthService.signInWithGoogle()
-    router.push('/applicant')
+    const { credential, role } = await AuthService.signInWithGoogle()
+    primeProfileCache(credential.user.uid, role)
+    router.push({ name: postLoginRouteName(role) })
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Google sign up failed'
   } finally {
