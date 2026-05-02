@@ -127,16 +127,25 @@ function layout(body: string): string {
       <td align="center" style="padding:40px 16px 52px;">
         <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- Header -->
+          <!-- Accent bar -->
           <tr>
-            <td bgcolor="${VIOLET}" style="background-color:${VIOLET};border-radius:14px 14px 0 0;padding:22px 40px;">
-              <span style="font-family:${SERIF};font-size:21px;font-weight:700;color:#ffffff;letter-spacing:-0.2px;">STAIJA</span>
-            </td>
+            <td bgcolor="${VIOLET}" style="background-color:${VIOLET};border-radius:14px 14px 0 0;font-size:0;line-height:0;height:5px;">&nbsp;</td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 14px 14px;padding:40px 40px 44px;">
+            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 14px 14px;padding:36px 40px 44px;">
+              <!-- Wordmark -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 36px;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:10px;">
+                    <img src="https://staija.org/STAIJA.png" width="32" height="32" alt="" style="display:block;border:0;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-family:${SERIF};font-size:17px;font-weight:700;color:${INK};letter-spacing:-0.2px;">STAIJA</span>
+                  </td>
+                </tr>
+              </table>
               ${body}
             </td>
           </tr>
