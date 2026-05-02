@@ -21,3 +21,8 @@ export { contentfulWebhook } from './contentful'
 export { paystackWebhook, cancelSubscription } from './paystack'
 export { onApplicationStatusChange } from './email'
 export { subscribeNewsletter } from './newsletter'
+export {
+  inviteReferencesOnSubmit,
+  validateReferenceToken,
+  submitReferenceLetter,
+} from './references'

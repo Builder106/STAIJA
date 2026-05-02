@@ -51,7 +51,7 @@ const FEATURED_IMG = 'https://images.unsplash.com/photo-1625082361965-1139be6070
             <div class="flex flex-wrap gap-4">
               <UiButton
                 variant="gradient"
-                :to="'/programs/stepup-scholars'"
+                :to="'/apply/stepup-scholars'"
                 @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
               >
                 Apply to StepUp

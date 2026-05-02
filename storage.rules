@@ -1,0 +1,36 @@
+rules_version = "2";
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Application uploads (transcript / ID): only the applicant can write
+    // to their own folder; only admins / staff can read.
+    match /applications/{uid}/{rest=**} {
+      allow read: if request.auth != null && (
+        request.auth.uid == uid ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff']
+      );
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Reference letters: written exclusively by the `submitReferenceLetter`
+    // Cloud Function (admin SDK bypasses rules). No client writes; only
+    // staff/admin can read.
+    match /references/{rest=**} {
+      allow read: if request.auth != null &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff'];
+      allow write: if false;
+    }
+
+    // CMS / public assets if any (handled via Contentful, but allow public
+    // read here for any future public/ folder we might use).
+    match /public/{rest=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

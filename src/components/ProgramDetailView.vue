@@ -175,7 +175,7 @@ function toggleFaq(i: number) {
             :transition="{ duration: 0.4, delay: 0.4 }"
           >
             <UiButton
-              :to="'/signup'"
+              :to="`/apply/${slug}`"
               class="!bg-white !text-ink hover:!bg-paper hover:shadow-lg"
               @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_hero' })"
             >

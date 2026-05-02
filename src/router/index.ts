@@ -19,6 +19,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/get-involved', name: 'get-involved', component: () => import('../views/GetInvolved.vue'), meta: { title: 'Get Involved' } },
   { path: '/donate', name: 'donate', component: () => import('../views/Donate.vue'), meta: { title: 'Donate' } },
   { path: '/donor', name: 'donor-dashboard', component: () => import('../views/donor/DonorDashboard.vue'), meta: { title: 'My Donations — STAIJA', requiresAuth: true } },
+  { path: '/apply/:program', name: 'apply', component: () => import('../views/apply/Apply.vue'), meta: { title: 'Apply — STAIJA', requiresAuth: true } },
+  { path: '/refs/:token', name: 'reference-upload', component: () => import('../views/refs/ReferenceUpload.vue'), meta: { title: 'Submit a reference — STAIJA' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
@@ -35,7 +37,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/applicant', name: 'applicant-dashboard', component: () => import('../views/applicant/ApplicantDashboard.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications', name: 'applicant-applications', component: () => import('../views/applicant/ApplicantApplications.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/new', name: 'new-application', component: () => import('../views/applicant/NewApplication.vue'), meta: { title: 'New Application — STAIJA', requiresAuth: true, permissions: ['apply_to_programs'] } },
-  { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/applicant/ApplicantViewApplication.vue'), meta: { title: 'Application Details — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
+  { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/apply/Status.vue'), meta: { title: 'Application Status — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/:id/edit', name: 'edit-application', component: () => import('../views/applicant/EditApplication.vue'), meta: { title: 'Edit Application — STAIJA', requiresAuth: true, permissions: ['edit_own_applications'] } },
 
   // Student routes
