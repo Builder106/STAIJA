@@ -16,44 +16,10 @@ interface Coverage {
   date: string
 }
 
-const COVERAGE: Coverage[] = [
-  {
-    outlet: 'Tech Review Africa',
-    quote: 'Quietly building the most robust pipeline of scientific talent on the continent.',
-    url: 'https://example.com/tech-review-africa-staija',
-    date: 'Mar 2026',
-  },
-  {
-    outlet: 'Daily Science',
-    quote: "STAIJA's model proves that high schoolers can conduct rigorous, publishable research.",
-    url: 'https://example.com/daily-science-staija',
-    date: 'Feb 2026',
-  },
-  {
-    outlet: 'The Lagos Times',
-    quote: 'A masterclass in community-driven STEM education.',
-    url: 'https://example.com/lagos-times-staija',
-    date: 'Nov 2025',
-  },
-  {
-    outlet: 'BBC Africa',
-    quote: "Reframing what's possible for Nigerian high schoolers in research.",
-    url: 'https://example.com/bbc-africa-staija',
-    date: 'Sep 2025',
-  },
-  {
-    outlet: 'Nature Africa',
-    quote: 'A working blueprint for democratizing lab access in low-resource settings.',
-    url: 'https://example.com/nature-africa-staija',
-    date: 'Jul 2025',
-  },
-  {
-    outlet: 'TechCabal',
-    quote: 'Africa’s answer to the pipeline problem starts in a Lagos classroom.',
-    url: 'https://example.com/techcabal-staija',
-    date: 'Apr 2025',
-  },
-]
+// Real press coverage goes here once it lands. Until then, the Coverage
+// section below renders nothing rather than fabricated quotes attributed
+// to publications that haven't actually written about STAIJA.
+const COVERAGE: Coverage[] = []
 
 const ASSETS = [
   {
@@ -188,8 +154,8 @@ const COLOR_TOKENS = [
       </Container>
     </Section>
 
-    <!-- Coverage -->
-    <Section class="bg-white border-t hairline-ink">
+    <!-- Coverage (only renders once we have real press hits) -->
+    <Section v-if="COVERAGE.length > 0" class="bg-white border-t hairline-ink">
       <Container class="max-w-4xl">
         <div class="mb-12">
           <Eyebrow class="text-brand-violet mb-4 block">Coverage</Eyebrow>

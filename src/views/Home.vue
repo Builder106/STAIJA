@@ -299,20 +299,5 @@ onMounted(async () => {
       </Container>
     </Section>
 
-    <!-- Partners -->
-    <Section class="bg-paper">
-      <Container>
-        <Eyebrow class="text-center text-brand-violet mb-10 block">
-          Supported by global partners
-        </Eyebrow>
-        <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale">
-          <span class="font-display text-2xl font-bold">Acme Corp</span>
-          <span class="font-sans text-xl font-bold tracking-widest">GLOBEX</span>
-          <span class="font-display text-2xl italic">Stark Labs</span>
-          <span class="font-sans text-xl font-semibold">Massive Dynamic</span>
-          <span class="font-display text-2xl">Soylent</span>
-        </div>
-      </Container>
-    </Section>
   </div>
 </template>

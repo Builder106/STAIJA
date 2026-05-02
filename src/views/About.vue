@@ -30,11 +30,6 @@ const ADVISORS = [
   'Niyi Yusuf',
 ]
 
-const PRESS = [
-  { source: 'Tech Review Africa', quote: 'Quietly building the most robust pipeline of scientific talent on the continent.' },
-  { source: 'Daily Science', quote: "STAIJA's model proves that high schoolers can conduct rigorous, publishable research." },
-  { source: 'The Lagos Times', quote: 'A masterclass in community-driven STEM education.' },
-]
 </script>
 
 <template>
@@ -111,30 +106,5 @@ const PRESS = [
       </Container>
     </Section>
 
-    <!-- Partners & Funders -->
-    <Section class="bg-paper !py-24 border-t hairline-ink">
-      <Container>
-        <Eyebrow class="text-center text-ink/40 mb-12 block">Backed by</Eyebrow>
-        <div class="flex flex-wrap justify-center gap-12 md:gap-24 opacity-40 grayscale">
-          <span class="font-display text-3xl font-bold">Foundation X</span>
-          <span class="font-sans text-2xl font-bold tracking-widest">TECHCORP</span>
-          <span class="font-display text-3xl italic">Global Health Inst.</span>
-          <span class="font-sans text-2xl font-semibold">Africa Innovates</span>
-        </div>
-      </Container>
-    </Section>
-
-    <!-- Press -->
-    <Section class="bg-ink !py-24 text-white">
-      <Container>
-        <Eyebrow class="text-white/40 mb-16 block text-center">In the Press</Eyebrow>
-        <div class="grid md:grid-cols-3 gap-12 text-center">
-          <div v-for="press in PRESS" :key="press.source" class="flex flex-col items-center gap-6">
-            <span class="font-display text-xl font-bold text-brand-sky">{{ press.source }}</span>
-            <p class="text-lg text-white/80 italic leading-relaxed m-0">"{{ press.quote }}"</p>
-          </div>
-        </div>
-      </Container>
-    </Section>
   </div>
 </template>
