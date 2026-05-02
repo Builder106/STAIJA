@@ -5,6 +5,7 @@ import { Icon } from '@iconify/vue'
 import UiButton from './ui/UiButton.vue'
 import Container from './ui/Container.vue'
 import { useAuth } from '../composables/useAuth'
+import { donationsEnabled } from '../config/features'
 
 const isScrolled = ref(false)
 const mobileOpen = ref(false)
@@ -61,6 +62,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
         <div class="hidden lg:flex items-center gap-4">
           <template v-if="isAuthenticated">
             <RouterLink
+              v-if="donationsEnabled"
               to="/donor"
               class="text-sm font-medium text-ink/70 hover:text-brand-violet transition-colors focus-ring-brand rounded-sm"
             >
@@ -83,7 +85,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
               Sign in
             </RouterLink>
           </template>
-          <UiButton variant="primary" :to="'/donate'">Donate</UiButton>
+          <UiButton v-if="donationsEnabled" variant="primary" :to="'/donate'">Donate</UiButton>
         </div>
 
         <button
@@ -127,7 +129,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
               <UiButton v-else variant="secondary" class="w-full justify-center" :to="'/login'">
                 Sign in
               </UiButton>
-              <UiButton variant="primary" class="w-full justify-center" :to="'/donate'">
+              <UiButton v-if="donationsEnabled" variant="primary" class="w-full justify-center" :to="'/donate'">
                 Donate
               </UiButton>
             </div>

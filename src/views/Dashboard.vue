@@ -54,7 +54,7 @@
               <Icon icon="lucide:calendar" class="icon" />
               Events
             </button>
-            <button @click="navigateTo('/donate')" class="btn-action">
+            <button v-if="donationsEnabled" @click="navigateTo('/donate')" class="btn-action">
               <Icon icon="lucide:heart" class="icon" />
               Donate
             </button>
@@ -141,6 +141,7 @@ import { useRouter } from 'vue-router'
 import { AuthService, DatabaseService, PermissionService, type UserProfile } from '../services/firebase'
 import { Timestamp } from 'firebase/firestore'
 import { Icon } from '@iconify/vue'
+import { donationsEnabled } from '../config/features'
 
 const router = useRouter()
 

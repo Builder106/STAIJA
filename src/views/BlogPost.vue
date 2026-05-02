@@ -10,6 +10,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import { getBlogPost, type BlogPost } from '../services/content'
+import { donationsEnabled } from '../config/features'
 
 const route = useRoute()
 const post = ref<BlogPost | null>(null)
@@ -165,7 +166,7 @@ onMounted(load)
           </article>
         </div>
 
-        <div class="mt-16 pt-12 border-t hairline-ink text-center">
+        <div v-if="donationsEnabled" class="mt-16 pt-12 border-t hairline-ink text-center">
           <Heading :level="3" class="mb-4">Inspired by this story?</Heading>
           <Body class="mb-8">Your support makes these experiences possible for more students across Africa.</Body>
           <UiButton variant="primary" :to="'/donate'">Donate to STAIJA</UiButton>

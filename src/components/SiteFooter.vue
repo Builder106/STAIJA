@@ -7,6 +7,7 @@ import UiButton from './ui/UiButton.vue'
 import LocaleSwitcher from './LocaleSwitcher.vue'
 import { trackNewsletterSignup } from '../services/analytics'
 import { getAppConfig } from '../utils/env'
+import { donationsEnabled } from '../config/features'
 
 const year = computed(() => new Date().getFullYear())
 
@@ -169,7 +170,7 @@ async function handleNewsletter(e: Event) {
             <li><RouterLink to="/get-involved" class="hover:text-white transition-colors">Get Involved</RouterLink></li>
             <li><RouterLink to="/contact" class="hover:text-white transition-colors">Contact</RouterLink></li>
             <li><RouterLink to="/press" class="hover:text-white transition-colors">Press</RouterLink></li>
-            <li><RouterLink to="/donate" class="hover:text-white transition-colors">Donate</RouterLink></li>
+            <li v-if="donationsEnabled"><RouterLink to="/donate" class="hover:text-white transition-colors">Donate</RouterLink></li>
           </ul>
         </div>
 
@@ -181,7 +182,7 @@ async function handleNewsletter(e: Event) {
           <ul class="flex flex-col gap-3 text-sm text-paper/85 list-none p-0 m-0">
             <li><RouterLink to="/login" class="hover:text-white transition-colors">Sign in</RouterLink></li>
             <li><RouterLink to="/signup" class="hover:text-white transition-colors">Apply</RouterLink></li>
-            <li><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
+            <li v-if="donationsEnabled"><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
           </ul>
         </div>
       </div>

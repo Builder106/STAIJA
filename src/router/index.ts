@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { auth } from '../config/firebase.ts'
 import { DatabaseService, PermissionService, type Permission } from '../services/firebase.ts'
+import { donationsEnabled } from '../config/features.ts'
 
 // Extend the RouteMeta interface to include our custom properties
 declare module 'vue-router' {
@@ -18,7 +19,18 @@ const routes: RouteRecordRaw[] = [
   { path: '/programs/dynamerge', name: 'dynamerge', component: () => import('../views/Dynamerge.vue'), meta: { title: 'Dynamerge' } },
   { path: '/get-involved', name: 'get-involved', component: () => import('../views/GetInvolved.vue'), meta: { title: 'Get Involved' } },
   { path: '/donate', name: 'donate', component: () => import('../views/Donate.vue'), meta: { title: 'Donate' } },
-  { path: '/donor', name: 'donor-dashboard', component: () => import('../views/donor/DonorDashboard.vue'), meta: { title: 'My Donations — STAIJA', requiresAuth: true } },
+  {
+    path: '/donor',
+    name: 'donor-dashboard',
+    component: () => import('../views/donor/DonorDashboard.vue'),
+    meta: { title: 'My Donations — STAIJA', requiresAuth: true },
+    // Donations gated behind compliance — no donor records exist yet,
+    // so the dashboard would be empty and confusing. Redirect home.
+    beforeEnter: (_to, _from, next) => {
+      if (!donationsEnabled) return next({ name: 'home' })
+      next()
+    },
+  },
   { path: '/apply/:program', name: 'apply', component: () => import('../views/apply/Apply.vue'), meta: { title: 'Apply — STAIJA', requiresAuth: true } },
   { path: '/refs/:token', name: 'reference-upload', component: () => import('../views/refs/ReferenceUpload.vue'), meta: { title: 'Submit a reference — STAIJA' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },

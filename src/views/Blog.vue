@@ -11,6 +11,7 @@ import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import { getBlogPosts, type BlogPost, type BlogProgram, type BlogTopic } from '../services/content'
+import { donationsEnabled } from '../config/features'
 
 type FilterChip = { label: string; program?: BlogProgram | 'all'; topic?: BlogTopic | 'all' }
 const filters: FilterChip[] = [
@@ -217,8 +218,8 @@ onMounted(load)
       </Container>
     </Section>
 
-    <!-- Donate Prompt -->
-    <Section class="bg-paper border-t hairline-ink text-center">
+    <!-- Donate Prompt (hidden until compliance is complete) -->
+    <Section v-if="donationsEnabled" class="bg-paper border-t hairline-ink text-center">
       <Container class="max-w-2xl flex flex-col items-center">
         <Heading :level="2" class="mb-4">Power more stories.</Heading>
         <Body large class="mb-8 text-ink/70">

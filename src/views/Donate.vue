@@ -12,6 +12,7 @@ import UiCard from '../components/ui/UiCard.vue'
 import { trackDonateStart } from '../services/analytics'
 import { donate as launchPaystack, formatNaira } from '../services/donations'
 import { auth } from '../config/firebase'
+import { donationsEnabled } from '../config/features'
 
 type Frequency = 'one-time' | 'monthly'
 
@@ -113,7 +114,26 @@ async function handleDonateClick() {
 </script>
 
 <template>
-  <div class="flex flex-col bg-paper">
+  <!-- Compliance-pending placeholder. Renders the full page below only
+       when donationsEnabled flips true in src/config/features.ts. -->
+  <div v-if="!donationsEnabled" class="flex flex-col bg-paper">
+    <Section class="!py-24">
+      <Container class="max-w-2xl text-center flex flex-col items-center gap-6">
+        <Eyebrow class="text-brand-violet">Donations</Eyebrow>
+        <Heading :level="1">Coming soon.</Heading>
+        <Body large class="text-ink/70">
+          We're finishing the compliance work needed to accept donations
+          responsibly. The donation page will return as soon as that's
+          done. Thanks for your patience — and for wanting to support
+          STAIJA scholars.
+        </Body>
+        <UiButton variant="secondary" :to="'/'" class="mt-2">
+          Back to home
+        </UiButton>
+      </Container>
+    </Section>
+  </div>
+  <div v-else class="flex flex-col bg-paper">
     <!-- Hero -->
     <Section class="!pb-16 md:!pb-24">
       <Container>
