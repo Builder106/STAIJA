@@ -6,29 +6,15 @@ import Heading from '../components/ui/Heading.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiCard from '../components/ui/UiCard.vue'
 
-const TEAM = [
-  { name: 'Dr. Amina Yusuf', title: 'Executive Director' },
-  { name: 'David Okafor', title: 'Director of Research' },
-  { name: 'Sarah Nwachukwu', title: 'Head of Programs' },
-  { name: 'Oluwaseun Adeyemi', title: 'Operations Lead' },
-  { name: 'Chidi Nnamdi', title: 'Mentorship Coordinator' },
-  { name: 'Amara Onwu', title: 'Community Manager' },
-  { name: 'Ken Ikemefuna', title: 'Data Scientist' },
-  { name: 'Nneka Eze', title: 'Communications Lead' },
-].map((m) => ({
-  ...m,
-  img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-  bio: 'Former researcher at MIT. Passionate about democratizing access to lab spaces across West Africa.',
-}))
-
-const ADVISORS = [
-  'Prof. Olabisi Ojo (Stanford)',
-  'Dr. Kwame Ndlovu (Oxford)',
-  'Funke Opeke (Tech Entrepreneur)',
-  'Dr. Ndidi Nnoli-Edozien',
-  'Tomiwa Alabi',
-  'Niyi Yusuf',
-]
+// Real team members and advisors go here once we're ready to list them.
+// Until then, the corresponding sections below render nothing rather
+// than showing the same stock photo eight times under made-up names.
+//
+// Shape for TEAM entries: { name, title, img, bio }
+// Shape for ADVISORS entries: a string like "Name (Affiliation)".
+interface TeamMember { name: string; title: string; img: string; bio: string }
+const TEAM: TeamMember[] = []
+const ADVISORS: string[] = []
 
 </script>
 
@@ -61,8 +47,8 @@ const ADVISORS = [
       </Container>
     </Section>
 
-    <!-- Leadership Grid -->
-    <Section class="bg-paper !py-24">
+    <!-- Leadership Grid (renders only once the TEAM list has real entries) -->
+    <Section v-if="TEAM.length > 0" class="bg-paper !py-24">
       <Container>
         <div class="text-center mb-16">
           <Heading :level="2">Leadership Team</Heading>
@@ -92,8 +78,8 @@ const ADVISORS = [
       </Container>
     </Section>
 
-    <!-- Board + Advisors -->
-    <Section class="bg-white !py-24 border-t hairline-ink">
+    <!-- Board + Advisors (renders only once the ADVISORS list has real entries) -->
+    <Section v-if="ADVISORS.length > 0" class="bg-white !py-24 border-t hairline-ink">
       <Container class="max-w-4xl text-center">
         <Heading :level="3" class="mb-12">Board & Advisors</Heading>
         <div class="flex flex-wrap justify-center gap-x-8 gap-y-4">
