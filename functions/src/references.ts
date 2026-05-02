@@ -179,18 +179,21 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
       const token = mintToken(applicationId, i, tokenSecret)
       const url = `${PUBLIC_BASE_URL}/refs/${token}`
 
-      const subject = `${applicantName} listed you as a reference for ${program}`
+      const relationship = r.relationship ? `their ${r.relationship}` : 'a reference'
+      const institution = r.institution ? ` at ${r.institution}` : ''
+      const subject = `${applicantName} has listed you as a reference for ${program}`
       const body = [
         `Hi ${r.name ?? 'there'},`,
         ``,
-        `${applicantName} is applying to ${program} at STAIJA and listed you as a reference (${r.relationship ?? 'reference'} at ${r.institution ?? 'their school'}).`,
+        `${applicantName} is applying to ${program} at STAIJA and has listed you as ${relationship}${institution}.`,
         ``,
-        `If you're willing to write a short recommendation, please upload it here:`,
+        `If you're willing to write a recommendation, you can upload your letter here:`,
         url,
         ``,
-        `The link is unique to you and stays open for ~90 days. A short, candid letter is more useful than a long generic one — focus on what you've actually seen them do.`,
+        `The link is personal to you and stays open for 90 days. There's no required format — a short, specific letter about what you've seen them do carries more weight than a long one.`,
         ``,
-        `Thanks for taking the time.`,
+        `If you have any questions, you can reach us at hello@staija.org.`,
+        ``,
         `— STAIJA`,
       ].join('\n')
 

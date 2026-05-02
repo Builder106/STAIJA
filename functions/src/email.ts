@@ -28,7 +28,7 @@ const FROM_ADDRESS = 'STAIJA <hello@staija.org>'
 interface ApplicationDoc {
   userId?: string
   program?: 'stepup_scholars' | 'dynamerge'
-  status?: 'draft' | 'submitted' | 'under-review' | 'accepted' | 'declined' | 'waitlisted'
+  status?: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected'
   personalInfo?: {
     firstName?: string
     lastName?: string
@@ -71,39 +71,45 @@ export const onApplicationStatusChange = onDocumentWritten(
     let body: string | null = null
 
     if (afterStatus === 'submitted') {
-      subject = `We got your ${programLabel} application`
+      subject = `Your ${programLabel} application is in`
       body = [
         `Hi ${firstName},`,
         ``,
-        `Thanks for applying to ${programLabel}. We've received your application and our team will review it within 5 business days.`,
+        `We've received your application to ${programLabel}.`,
         ``,
-        `Reference: ${applicationId}`,
+        `A reviewer will go through it within five business days. If we need anything from you in the meantime, we'll reach out directly.`,
         ``,
-        `If anything in your application changes, sign in to https://staija.org/applicant/applications and update it.`,
+        `Your reference number is ${applicationId} — keep it handy if you need to write to us.`,
         ``,
         `— STAIJA`,
       ].join('\n')
     } else if (afterStatus === 'accepted') {
-      subject = `You're in: ${programLabel}`
+      subject = `You've been accepted to ${programLabel}`
       body = [
         `Hi ${firstName},`,
         ``,
-        `Congratulations — you've been accepted to ${programLabel}. A program coordinator will email you within 48 hours with next steps, including the orientation date and your scholar agreement.`,
+        `Congratulations — your application to ${programLabel} has been accepted.`,
         ``,
-        `Reference: ${applicationId}`,
+        `A program coordinator will be in touch within 48 hours with everything you need to get started, including the orientation schedule and your scholar agreement.`,
         ``,
-        `Welcome aboard.`,
+        `Your reference number: ${applicationId}`,
+        ``,
+        `Welcome.`,
         `— STAIJA`,
       ].join('\n')
-    } else if (afterStatus === 'declined' || afterStatus === 'waitlisted') {
+    } else if (afterStatus === 'rejected') {
       subject = `An update on your ${programLabel} application`
       body = [
         `Hi ${firstName},`,
         ``,
-        `Thanks for putting in the work to apply to ${programLabel}. Your application has been reviewed — please sign in to https://staija.org/applicant/applications for the full update.`,
+        `There's an update on your ${programLabel} application.`,
         ``,
-        `Reference: ${applicationId}`,
+        `Sign in to your account to read the full update from the team:`,
+        `https://staija.org/applicant/applications`,
         ``,
+        `Your reference number: ${applicationId}`,
+        ``,
+        `Thank you for the time you put into your application.`,
         `— STAIJA`,
       ].join('\n')
     }
