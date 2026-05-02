@@ -72,7 +72,7 @@ function initAutoSave() {
   autoSave.value = useAutoSave(`apply.${program.value.slug}`, persistedRef)
   // After restore, hydrate the form state from the ref.
   watch(persistedRef, (v) => {
-    if (autoSave.value?.restored.value) {
+    if (autoSave.value?.restored) {
       eligibility.value = v.eligibility ?? {}
       fields.value = v.fields ?? {}
       references.value = v.references ?? references.value
@@ -441,7 +441,7 @@ function setTagsValue(name: string, value: string) {
                       </label>
                       <textarea
                         v-if="field.type === 'textarea'"
-                        v-model="fields[field.name]"
+                        v-model="(fields[field.name] as string)"
                         :rows="field.rows ?? 4"
                         :placeholder="field.placeholder"
                         :required="field.required"
@@ -640,8 +640,8 @@ function setTagsValue(name: string, value: string) {
                 Back
               </span>
             </UiButton>
-            <span v-if="autoSave?.lastSavedAt.value" class="text-xs text-ink/50 hidden sm:inline">
-              Draft saved · {{ autoSave.lastSavedAt.value.toLocaleTimeString() }}
+            <span v-if="autoSave?.lastSavedAt" class="text-xs text-ink/50 hidden sm:inline">
+              Draft saved · {{ autoSave.lastSavedAt.toLocaleTimeString() }}
             </span>
             <UiButton
               v-if="currentStep?.id !== 'review'"

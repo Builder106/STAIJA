@@ -54,10 +54,9 @@ const programSlug = computed(() => {
 const statusInfo = computed(() => {
   const s = application.value?.status
   if (s === 'submitted') return { label: 'Under review', tone: 'amber', desc: 'We have your application. A reviewer will get to it within 5 business days.' }
-  if (s === 'under-review') return { label: 'In active review', tone: 'sky', desc: "A reviewer is reading through it now. You'll hear from us soon." }
+  if (s === 'under_review') return { label: 'In active review', tone: 'sky', desc: "A reviewer is reading through it now. You'll hear from us soon." }
   if (s === 'accepted') return { label: 'Accepted', tone: 'emerald', desc: "You're in. Check your inbox for next steps." }
-  if (s === 'declined') return { label: 'Decision made', tone: 'rose', desc: 'A decision has been made. Check your inbox for the message from the team.' }
-  if (s === 'waitlisted') return { label: 'Waitlisted', tone: 'violet', desc: "You're on the waitlist. We may reach out if a spot opens." }
+  if (s === 'rejected') return { label: 'Decision made', tone: 'rose', desc: 'A decision has been made. Check your inbox for the message from the team.' }
   return { label: 'Draft', tone: 'ink', desc: 'You have an unfinished application. Pick up where you left off.' }
 })
 

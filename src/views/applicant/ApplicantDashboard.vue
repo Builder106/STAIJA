@@ -282,7 +282,7 @@ onMounted(loadData)
           class="mt-12 rounded-2xl border hairline-ink bg-paper p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
         >
           <div>
-            <Heading :level="4" class="mb-1">Apply to the other program too?</Heading>
+            <Heading :level="3" class="mb-1">Apply to the other program too?</Heading>
             <p class="text-sm text-ink/70 m-0">
               StepUp and Dynamerge are independent — you can apply to both.
             </p>

@@ -8,7 +8,6 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
-import UiChip from '../../components/ui/UiChip.vue'
 import { useAuth } from '../../composables/useAuth'
 import { getMyDonations, cancelMyDonation, formatNaira, type Donation } from '../../services/donations'
 
