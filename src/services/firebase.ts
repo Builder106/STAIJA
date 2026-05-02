@@ -11,7 +11,7 @@ export type {
   Program,
 } from './types'
 
-export { ROLE_PERMISSIONS, PermissionService } from './permissions'
+export { ROLE_PERMISSIONS, ALL_ROLES, ALL_PERMISSIONS, PermissionService } from './permissions'
 export { AuditService } from './audit'
 export { RoleTransitionService } from './roleTransition'
 export { AuthService } from './auth'

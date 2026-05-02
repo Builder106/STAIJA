@@ -14,13 +14,15 @@ export interface AuditLog {
   userAgent?: string
 }
 
-export type UserRole = 'admin' | 'content_editor' | 'alumni' | 'applicant' | 'staff' | 'student'
+export type UserRole = 'admin' | 'content_editor' | 'alumni' | 'applicant' | 'staff' | 'student' | 'mentor'
 
 export type PublicAssignableRole = 'applicant' | 'alumni'
 
 export type AdminAssignableRole = UserRole
 
-export type EmailLinkAssignableRole = 'applicant' | 'staff' | 'alumni'
+// Mentors are vetted/invited (not self-signup), but the invitation flow uses
+// the same email-link mechanism we use for staff onboarding.
+export type EmailLinkAssignableRole = 'applicant' | 'staff' | 'alumni' | 'mentor'
 
 export type Permission =
   | 'manage_users'
@@ -49,6 +51,8 @@ export type Permission =
   | 'participate_in_programs'
   | 'submit_program_work'
   | 'access_mentor_support'
+  | 'view_assigned_students'
+  | 'submit_mentor_feedback'
   | 'apply_to_programs'
   | 'view_own_applications'
   | 'edit_own_applications'

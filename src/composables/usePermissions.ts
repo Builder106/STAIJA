@@ -26,6 +26,7 @@ export function usePermissions(roleOverride?: () => UserRole | null) {
   const isContentEditor = computed(() => role.value ? PermissionService.isContentEditorRole(role.value) : false)
   const isAlumni = computed(() => role.value ? PermissionService.isAlumniRole(role.value) : false)
   const isStudent = computed(() => role.value ? PermissionService.isStudentRole(role.value) : false)
+  const isMentor = computed(() => role.value ? PermissionService.isMentorRole(role.value) : false)
 
   return {
     role,
@@ -36,5 +37,6 @@ export function usePermissions(roleOverride?: () => UserRole | null) {
     isContentEditor,
     isAlumni,
     isStudent,
+    isMentor,
   }
 }

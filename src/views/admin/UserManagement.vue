@@ -272,7 +272,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import { AuthService, PermissionService, AuditService, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
+import { AuthService, PermissionService, AuditService, ALL_ROLES, ALL_PERMISSIONS, type UserProfile, type UserRole, type Permission, type AuditLog } from '../../services/firebase'
 import { auth } from '../../config/firebase'
 
 // Reactive data
@@ -292,18 +292,11 @@ const currentUser = ref<any>(null)
 const userAuditLogs = ref<AuditLog[]>([])
 const message = ref<{ type: 'success' | 'error', text: string } | null>(null)
 
-// Computed properties
-const allRoles: UserRole[] = ['admin', 'staff', 'content_editor', 'alumni', 'student', 'applicant']
-
-const allPermissions: Permission[] = [
-  'manage_users', 'manage_roles', 'view_all_users', 'manage_system_settings',
-  'create_content', 'edit_content', 'delete_content', 'publish_content', 'manage_content_categories',
-  'view_applications', 'review_applications', 'manage_applications', 'export_applications',
-  'create_programs', 'edit_programs', 'delete_programs', 'manage_program_settings',
-  'access_alumni_portal', 'manage_alumni_profiles', 'share_alumni_stories', 'network_with_alumni',
-  'apply_to_programs', 'view_own_applications', 'edit_own_applications',
-  'view_public_content', 'contact_support', 'manage_profile'
-]
+// Driven from src/services/permissions.ts so new roles or permissions show
+// up in admin UIs automatically. Don't reintroduce hardcoded copies here —
+// they drift the moment someone adds a permission elsewhere.
+const allRoles: UserRole[] = ALL_ROLES
+const allPermissions: Permission[] = ALL_PERMISSIONS
 
 const filteredUsers = computed(() => {
   let filtered = users.value

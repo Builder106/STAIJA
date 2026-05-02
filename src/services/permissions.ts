@@ -82,8 +82,28 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_public_content',
     'contact_support',
     'manage_profile'
+  ],
+
+  mentor: [
+    'view_program_content',
+    'view_assigned_students',
+    'submit_mentor_feedback',
+    'access_mentor_support',
+    'view_public_content',
+    'contact_support',
+    'manage_profile'
   ]
 }
+
+// Derived runtime lists. Admin UIs that need to iterate every role or every
+// permission (e.g. UserManagement.vue) should import these instead of
+// hardcoding their own arrays — new roles or permissions then show up in
+// the admin dropdowns without an extra edit somewhere else.
+export const ALL_ROLES: UserRole[] =
+  Object.keys(ROLE_PERMISSIONS) as UserRole[]
+
+export const ALL_PERMISSIONS: Permission[] =
+  Array.from(new Set(Object.values(ROLE_PERMISSIONS).flat()))
 
 export class PermissionService {
   static hasPermission(userRole: UserRole, permission: Permission): boolean {
@@ -103,30 +123,43 @@ export class PermissionService {
     return ROLE_PERMISSIONS[role] || []
   }
 
+  // Identity checks: "is this user *exactly* this role?"
+  //
+  // `isStaffRole` is the one exception that returns true for admin too —
+  // admin is a strict superset of staff capabilities, and the router's
+  // post-login redirect cascade depends on admins matching it first so they
+  // land at /admin. The others are strict identity checks: an admin is not
+  // a content_editor / alumni / student / mentor, even though they have
+  // superset permissions. Use `hasPermission(role, '...')` to ask
+  // capability questions.
   static isAdminRole(role: UserRole): boolean {
-    return ['admin'].includes(role)
+    return role === 'admin'
   }
 
   static isStaffRole(role: UserRole): boolean {
-    return ['admin', 'staff'].includes(role)
+    return role === 'admin' || role === 'staff'
   }
 
   static isContentEditorRole(role: UserRole): boolean {
-    return ['admin', 'content_editor'].includes(role)
+    return role === 'content_editor'
   }
 
   static isAlumniRole(role: UserRole): boolean {
-    return ['admin', 'alumni'].includes(role)
+    return role === 'alumni'
   }
 
   static isStudentRole(role: UserRole): boolean {
-    return ['admin', 'student'].includes(role)
+    return role === 'student'
+  }
+
+  static isMentorRole(role: UserRole): boolean {
+    return role === 'mentor'
   }
 
   static canAssignRole(currentRole: UserRole, targetRole: UserRole): boolean {
     if (currentRole === 'admin') return true
     if (currentRole === 'staff') {
-      return ['applicant', 'staff', 'alumni'].includes(targetRole)
+      return ['applicant', 'staff', 'alumni', 'mentor'].includes(targetRole)
     }
     return false
   }
@@ -134,12 +167,21 @@ export class PermissionService {
   static isValidRoleTransition(currentRole: UserRole, newRole: UserRole): boolean {
     if (currentRole === newRole) return true
 
+    // Lifecycle transitions:
+    //   applicant → student (accepted) or alumni (accepted but program ended)
+    //   student → alumni (graduated) or applicant (re-applying to other program)
+    //   alumni → mentor (very common pattern), applicant, or student
+    //   mentor → staff (hired full-time) or alumni (mentor stint ended)
+    //   staff → admin, applicant, or mentor (staff who also mentor)
+    //   admin → staff, applicant, alumni, or mentor (mostly for testing)
+    //   content_editor → admin or staff (promotion paths)
     const allowedTransitions: Record<UserRole, UserRole[]> = {
       'applicant': ['student', 'alumni'],
       'student': ['alumni', 'applicant'],
-      'alumni': ['applicant', 'student'],
-      'staff': ['admin', 'applicant'],
-      'admin': ['staff', 'applicant', 'alumni'],
+      'alumni': ['applicant', 'student', 'mentor'],
+      'mentor': ['staff', 'alumni'],
+      'staff': ['admin', 'applicant', 'mentor'],
+      'admin': ['staff', 'applicant', 'alumni', 'mentor'],
       'content_editor': ['admin', 'staff']
     }
 
