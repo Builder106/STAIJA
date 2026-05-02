@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import UiButton from './ui/UiButton.vue'
 import Container from './ui/Container.vue'
 import { useAuth } from '../composables/useAuth'
+import { usePermissions } from '../composables/usePermissions'
 import { donationsEnabled } from '../config/features'
 
 const isScrolled = ref(false)
@@ -12,6 +13,20 @@ const mobileOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 const { isAuthenticated, displayName, signOut } = useAuth()
+const { isStaff, isContentEditor, isMentor, isStudent, isAlumni } = usePermissions()
+
+// Where the "Dashboard" link in the header points, by role. Mirrors the
+// router's post-login redirect cascade in src/router/index.ts so an
+// authenticated user lands at the same place via the header link as via
+// the post-login fallback.
+const dashboardPath = computed(() => {
+  if (isStaff.value) return '/admin'
+  if (isContentEditor.value) return '/content'
+  if (isStudent.value) return '/student'
+  if (isAlumni.value) return '/alumni'
+  if (isMentor.value) return '/mentor'
+  return '/applicant'
+})
 
 const navLinks = [
   { name: 'StepUp Scholars', href: '/programs/stepup-scholars' },
@@ -68,10 +83,17 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             >
               My donations
             </RouterLink>
-            <span class="text-sm text-ink/60 hidden xl:inline">{{ displayName }}</span>
+            <RouterLink
+              :to="dashboardPath"
+              class="text-sm font-semibold text-ink hover:text-brand-violet transition-colors focus-ring-brand rounded-sm flex items-center gap-2"
+            >
+              <Icon icon="lucide:layout-dashboard" width="16" />
+              <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>
+              <span class="xl:hidden">Dashboard</span>
+            </RouterLink>
             <button
               type="button"
-              class="text-sm font-semibold text-ink hover:text-ink/70 transition-colors focus-ring-brand rounded-sm"
+              class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
               @click="handleSignOut"
             >
               Sign out
@@ -123,9 +145,14 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
               {{ link.name }}
             </RouterLink>
             <div class="flex flex-col gap-3 mt-4">
-              <UiButton v-if="isAuthenticated" variant="secondary" class="w-full justify-center" @click="handleSignOut">
-                Sign out
-              </UiButton>
+              <template v-if="isAuthenticated">
+                <UiButton variant="primary" class="w-full justify-center" :to="dashboardPath">
+                  Go to dashboard
+                </UiButton>
+                <UiButton variant="secondary" class="w-full justify-center" @click="handleSignOut">
+                  Sign out
+                </UiButton>
+              </template>
               <UiButton v-else variant="secondary" class="w-full justify-center" :to="'/login'">
                 Sign in
               </UiButton>
