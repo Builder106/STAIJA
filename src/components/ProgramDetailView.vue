@@ -118,14 +118,14 @@ function toggleFaq(i: number) {
 <template>
   <div v-if="program" class="flex flex-col">
     <!-- Hero -->
-    <div class="relative min-h-[70vh] flex items-center bg-ink overflow-hidden">
+    <div class="relative min-h-svh flex items-center bg-ink overflow-hidden">
       <div class="absolute inset-0 z-0">
         <img :src="program.heroImg" :alt="program.name" class="w-full h-full object-cover opacity-40" />
         <div class="absolute inset-0 wash-violet-6 mix-blend-screen" />
         <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-transparent" />
       </div>
 
-      <Container class="relative z-10 pt-24 pb-16">
+      <Container class="relative z-10 py-24">
         <div class="max-w-3xl flex flex-col gap-6 text-paper">
           <Motion :initial="{ opacity: 0, y: 12 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
             <UiChip class="bg-paper/10 !text-paper border-paper/20">{{ program.eligibility }}</UiChip>
