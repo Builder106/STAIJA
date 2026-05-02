@@ -1,475 +1,295 @@
-<template>
-  <div class="admin-dashboard">
-    <div class="admin-header">
-      <h1>STAIJA Admin Dashboard</h1>
-      <div class="user-info">
-        <span>Welcome, {{ user?.displayName || user?.email }}</span>
-        <button @click="signOut" class="btn btn-outline btn-sm">Sign Out</button>
-      </div>
-    </div>
-
-    <div class="admin-layout">
-      <!-- Sidebar Navigation -->
-      <aside class="admin-sidebar">
-        <nav class="admin-nav">
-          <div class="nav-section">
-            <h3>Content Management</h3>
-            <ul class="nav-list">
-              <li>
-                <button 
-                  @click="activeTab = 'blog-posts'"
-                  :class="['nav-item', { active: activeTab === 'blog-posts' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:file-edit" /></span>
-                  Blog Posts
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'authors'"
-                  :class="['nav-item', { active: activeTab === 'authors' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:user" /></span>
-                  Authors
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'categories'"
-                  :class="['nav-item', { active: activeTab === 'categories' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:tag" /></span>
-                  Categories
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'programs'"
-                  :class="['nav-item', { active: activeTab === 'programs' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:graduation-cap" /></span>
-                  Programs
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'events'"
-                  :class="['nav-item', { active: activeTab === 'events' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:calendar" /></span>
-                  Events
-                </button>
-              </li>
-              <li>
-                <button
-                  @click="activeTab = 'alumni-stories'"
-                  :class="['nav-item', { active: activeTab === 'alumni-stories' }]"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:star" /></span>
-                  Alumni Stories
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div class="nav-section">
-            <h3>Administration</h3>
-            <ul class="nav-list">
-              <li>
-                <button
-                  @click="$router.push('/admin/users')"
-                  class="nav-item"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:users" /></span>
-                  Manage Users
-                </button>
-              </li>
-              <li>
-                <button
-                  @click="$router.push('/admin/applications')"
-                  class="nav-item"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:clipboard-list" /></span>
-                  Applications
-                </button>
-              </li>
-              <li>
-                <button
-                  @click="$router.push('/admin/programs')"
-                  class="nav-item"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:graduation-cap" /></span>
-                  Programs
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div class="nav-section">
-            <h3>Quick Actions</h3>
-            <ul class="nav-list">
-              <li>
-                <button 
-                  @click="createNewContent"
-                  class="nav-item btn-primary"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:plus" /></span>
-                  Create New {{ getCurrentContentTypeName() }}
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="viewAllContent"
-                  class="nav-item"
-                >
-                  <span class="nav-icon"><Icon icon="lucide:clipboard-list" /></span>
-                  View All {{ getCurrentContentTypeName() }}
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
-
-      <!-- Main Content Area -->
-      <main class="admin-main">
-        <div class="content-header">
-          <h2>{{ getCurrentContentTypeName() }} Management</h2>
-          <div class="content-actions">
-            <button @click="createNewContent" class="btn btn-primary">
-              Create New {{ getCurrentContentTypeName() }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Content Tabs -->
-        <div class="content-tabs">
-          <!-- Blog Posts Tab -->
-          <div v-if="activeTab === 'blog-posts'" class="tab-content">
-            <BlogPostEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Recent Blog Posts</h3>
-              <p>No blog posts found. Create your first blog post!</p>
-            </div>
-          </div>
-
-          <!-- Authors Tab -->
-          <div v-if="activeTab === 'authors'" class="tab-content">
-            <AuthorEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Authors</h3>
-              <p>No authors found. Create your first author!</p>
-            </div>
-          </div>
-
-          <!-- Categories Tab -->
-          <div v-if="activeTab === 'categories'" class="tab-content">
-            <CategoryEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Categories</h3>
-              <p>No categories found. Create your first category!</p>
-            </div>
-          </div>
-
-          <!-- Programs Tab -->
-          <div v-if="activeTab === 'programs'" class="tab-content">
-            <ProgramEditor v-if="showEditor" @saved="handleProgramSaved" @cancelled="showEditor = false" />
-            <ProgramList v-else @create="showEditor = true" @edit="handleProgramEdit" />
-          </div>
-
-          <!-- Events Tab -->
-          <div v-if="activeTab === 'events'" class="tab-content">
-            <EventEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Events</h3>
-              <p>No events found. Create your first event!</p>
-            </div>
-          </div>
-
-          <!-- Alumni Stories Tab -->
-          <div v-if="activeTab === 'alumni-stories'" class="tab-content">
-            <AlumniStoryEditor v-if="showEditor" />
-            <div v-else class="content-list">
-              <h3>Alumni Stories</h3>
-              <p>No alumni stories found. Create your first story!</p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useRouter } from 'vue-router'
-import { getAuth, signOut as firebaseSignOut, onAuthStateChanged, type User } from 'firebase/auth'
-import app from '../config/firebase'
-import BlogPostEditor from '../components/admin/BlogPostEditor.vue'
-import AuthorEditor from '../components/admin/AuthorEditor.vue'
-import CategoryEditor from '../components/admin/CategoryEditor.vue'
-import ProgramEditor from '../components/admin/ProgramEditor.vue'
-import ProgramList from '../components/admin/ProgramList.vue'
-import EventEditor from '../components/admin/EventEditor.vue'
-import AlumniStoryEditor from '../components/admin/AlumniStoryEditor.vue'
+import Container from '../components/ui/Container.vue'
+import Section from '../components/ui/Section.vue'
+import Heading from '../components/ui/Heading.vue'
+import Body from '../components/ui/Body.vue'
+import Eyebrow from '../components/ui/Eyebrow.vue'
+import UiCard from '../components/ui/UiCard.vue'
+import UiChip from '../components/ui/UiChip.vue'
+import { DatabaseService } from '../services/firebase'
+import type { Application } from '../services/firebase'
+import { useAuth } from '../composables/useAuth'
 
-const router = useRouter()
-const auth = getAuth(app)
+const { displayName } = useAuth()
 
-// State
-const user = ref<User | null>(null)
-const activeTab = ref('blog-posts')
-const showEditor = ref(false)
+const applications = ref<Application[]>([])
+const loading = ref(true)
+const error = ref('')
 
-// Computed
-const getCurrentContentTypeName = () => {
-  const names = {
-    'blog-posts': 'Blog Post',
-    'authors': 'Author',
-    'categories': 'Category',
-    'programs': 'Program',
-    'events': 'Event',
-    'alumni-stories': 'Alumni Story'
-  }
-  return names[activeTab.value as keyof typeof names] || 'Content'
-}
-
-// Methods
-const signOut = async () => {
-  try {
-    await firebaseSignOut(auth)
-    router.push('/login')
-  } catch (error) {
-    console.error('Error signing out:', error)
-  }
-}
-
-const createNewContent = () => {
-  showEditor.value = true
-}
-
-const viewAllContent = () => {
-  showEditor.value = false
-}
-
-const handleProgramSaved = (_programId: string) => {
-  showEditor.value = false
-}
-
-const handleProgramEdit = (_program: unknown) => {
-  showEditor.value = true
-}
-
-// Lifecycle
-onMounted(() => {
-  onAuthStateChanged(auth, (currentUser) => {
-    user.value = currentUser
-    if (!currentUser) {
-      router.push('/login')
-    }
-  })
+const firstName = computed(() => {
+  const name = displayName.value ?? ''
+  return name.split(/[\s@]/)[0] || 'there'
 })
+
+const submittedCount = computed(() =>
+  applications.value.filter((a) => a.status === 'submitted').length,
+)
+const underReviewCount = computed(() =>
+  applications.value.filter((a) => a.status === 'under_review').length,
+)
+const acceptedCount = computed(() =>
+  applications.value.filter((a) => a.status === 'accepted').length,
+)
+
+const pendingReview = computed(() =>
+  applications.value.filter((a) => a.status === 'submitted').slice(0, 5),
+)
+
+async function loadData() {
+  loading.value = true
+  error.value = ''
+  try {
+    applications.value = await DatabaseService.getAllApplications()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load admin data.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function programLabel(p: Application['program']) {
+  return p === 'stepup_scholars' ? 'StepUp Scholars' : 'Dynamerge'
+}
+
+function applicantName(a: Application): string {
+  const parts = [a.personalInfo?.firstName, a.personalInfo?.lastName].filter(Boolean)
+  return parts.length ? parts.join(' ') : (a.personalInfo?.email || 'Unnamed applicant')
+}
+
+function timeAgo(value: unknown): string {
+  const ms = Date.now() - toMillis(value)
+  const min = Math.floor(ms / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min} min ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr} hr ago`
+  const day = Math.floor(hr / 24)
+  if (day < 7) return `${day} day${day === 1 ? '' : 's'} ago`
+  return new Date(toMillis(value)).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  })
+}
+
+function toMillis(value: unknown): number {
+  if (value instanceof Date) return value.getTime()
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toDate' in value &&
+    typeof (value as { toDate: () => Date }).toDate === 'function'
+  ) {
+    return (value as { toDate: () => Date }).toDate().getTime()
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    return new Date(value).getTime()
+  }
+  return 0
+}
+
+onMounted(loadData)
 </script>
 
-<style scoped>
-.admin-dashboard {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
+<template>
+  <Section class="!pt-12 !pb-24">
+    <Container>
+      <!-- Greeting -->
+      <div class="flex flex-col gap-3 mb-12">
+        <Eyebrow class="text-brand-violet">Admin</Eyebrow>
+        <Heading :level="1">Hi, {{ firstName }}.</Heading>
+        <Body class="text-ink/70 max-w-xl">
+          Review applications, manage users, set up mentor pairings.
+          Editorial content lives in Contentful — the link is below.
+        </Body>
+      </div>
 
-.admin-header {
-  background: white;
-  border-bottom: 1px solid #e9ecef;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+      <div v-if="loading" class="flex items-center gap-3 text-ink/60">
+        <Icon icon="lucide:loader-2" width="18" class="animate-spin" />
+        Loading…
+      </div>
 
-.admin-header h1 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
-}
+      <div
+        v-else-if="error"
+        class="flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50/60 p-6 max-w-2xl"
+      >
+        <div class="flex items-center gap-3 text-red-700">
+          <Icon icon="lucide:alert-circle" width="20" />
+          <span class="font-semibold">Couldn't load admin data.</span>
+        </div>
+        <p class="text-sm text-ink/70 m-0">{{ error }}</p>
+        <button
+          type="button"
+          class="self-start text-sm font-semibold text-brand-violet hover:underline"
+          @click="loadData"
+        >
+          Try again
+        </button>
+      </div>
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+      <template v-else>
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+          <UiCard class="p-6 flex flex-col gap-2">
+            <Eyebrow class="text-brand-violet">Needs review</Eyebrow>
+            <div class="font-display text-4xl font-semibold tracking-tight text-ink">
+              {{ submittedCount }}
+            </div>
+            <p class="text-sm text-ink/60 m-0">Submitted, not yet opened</p>
+          </UiCard>
+          <UiCard class="p-6 flex flex-col gap-2">
+            <Eyebrow class="text-brand-violet">In review</Eyebrow>
+            <div class="font-display text-4xl font-semibold tracking-tight text-ink">
+              {{ underReviewCount }}
+            </div>
+            <p class="text-sm text-ink/60 m-0">Decision pending</p>
+          </UiCard>
+          <UiCard class="p-6 flex flex-col gap-2">
+            <Eyebrow class="text-brand-violet">Accepted</Eyebrow>
+            <div class="font-display text-4xl font-semibold tracking-tight text-ink">
+              {{ acceptedCount }}
+            </div>
+            <p class="text-sm text-ink/60 m-0">Across all cohorts</p>
+          </UiCard>
+        </div>
 
-.admin-layout {
-  display: flex;
-  min-height: calc(100vh - 80px);
-}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Pending applications (left, wider) -->
+          <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="flex items-end justify-between gap-4">
+              <Heading :level="2">Pending review</Heading>
+              <RouterLink
+                v-if="applications.length > 0"
+                to="/admin/applications"
+                class="text-sm font-semibold text-brand-violet hover:underline"
+              >
+                View all →
+              </RouterLink>
+            </div>
 
-.admin-sidebar {
-  width: 280px;
-  background: white;
-  border-right: 1px solid #e9ecef;
-  padding: 2rem 0;
-}
+            <div
+              v-if="pendingReview.length === 0"
+              class="rounded-2xl border hairline-ink p-8 text-center"
+            >
+              <Body class="text-ink/65 m-0">
+                No applications waiting on you.
+                <span v-if="applications.length === 0">
+                  Once applicants start submitting, they'll show up here.
+                </span>
+              </Body>
+            </div>
 
-.admin-nav {
-  padding: 0 1rem;
-}
+            <div v-else class="flex flex-col gap-3">
+              <RouterLink
+                v-for="app in pendingReview"
+                :key="app.id"
+                :to="`/admin/applications/${app.id}/review`"
+                class="block group focus-ring-brand rounded-2xl"
+              >
+                <UiCard hoverable class="p-5 flex items-center gap-4">
+                  <div class="flex-1 flex flex-col gap-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <h3 class="font-semibold text-base m-0 truncate">
+                        {{ applicantName(app) }}
+                      </h3>
+                      <UiChip>{{ programLabel(app.program) }}</UiChip>
+                    </div>
+                    <p class="text-sm text-ink/60 m-0">
+                      Submitted {{ timeAgo(app.submittedAt ?? app.createdAt) }}
+                    </p>
+                  </div>
+                  <Icon
+                    icon="lucide:arrow-right"
+                    width="18"
+                    class="text-brand-violet transition-transform group-hover:translate-x-1 shrink-0"
+                  />
+                </UiCard>
+              </RouterLink>
+            </div>
+          </div>
 
-.nav-section {
-  margin-bottom: 2rem;
-}
+          <!-- Quick actions (right, narrower) -->
+          <div class="flex flex-col gap-4">
+            <Heading :level="2">Quick actions</Heading>
+            <div class="flex flex-col gap-3">
+              <RouterLink
+                to="/admin/applications"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:clipboard-list" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Applications</span>
+                  <span class="text-sm text-ink/60">Review, accept, decline</span>
+                </div>
+              </RouterLink>
 
-.nav-section h3 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  padding-left: 0.5rem;
-}
+              <RouterLink
+                to="/admin/users"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:users" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Users &amp; roles</span>
+                  <span class="text-sm text-ink/60">Promote, demote, audit</span>
+                </div>
+              </RouterLink>
 
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+              <RouterLink
+                to="/admin/programs"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:settings" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Program settings</span>
+                  <span class="text-sm text-ink/60">Cohort dates, capacities</span>
+                </div>
+              </RouterLink>
 
-.nav-item {
-  width: 100%;
-  text-align: left;
-  padding: 0.75rem 1rem;
-  border: none;
-  background: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #495057;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
+              <a
+                href="https://app.contentful.com/spaces/zcw0qx1phkan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:file-text" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base flex items-center gap-1.5">
+                    Content (Contentful)
+                    <Icon icon="lucide:external-link" width="14" class="text-ink/50" />
+                  </span>
+                  <span class="text-sm text-ink/60">Blog, events, authors</span>
+                </div>
+              </a>
 
-.nav-item:hover {
-  background-color: #f8f9fa;
-  color: #2c3e50;
-}
-
-.nav-item.active {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  font-weight: 500;
-}
-
-.nav-item.btn-primary {
-  background-color: #1976d2;
-  color: white;
-}
-
-.nav-item.btn-primary:hover {
-  background-color: #1565c0;
-}
-
-.nav-icon {
-  font-size: 1.125rem;
-}
-
-.admin-main {
-  flex: 1;
-  padding: 2rem;
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.content-header h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.content-tabs {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.tab-content {
-  padding: 2rem;
-}
-
-.content-list {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: #6c757d;
-}
-
-.content-list h3 {
-  margin-bottom: 1rem;
-  color: #495057;
-}
-
-/* Button styles */
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background-color: #1976d2;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #1565c0;
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.btn-outline:hover {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.btn-sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .admin-layout {
-    flex-direction: column;
-  }
-  
-  .admin-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e9ecef;
-  }
-  
-  .admin-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-}
-</style>
+              <a
+                href="https://console.firebase.google.com/project/staija/firestore"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:database" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base flex items-center gap-1.5">
+                    Firestore
+                    <Icon icon="lucide:external-link" width="14" class="text-ink/50" />
+                  </span>
+                  <span class="text-sm text-ink/60">Mentor pairings, raw data</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Container>
+  </Section>
+</template>
