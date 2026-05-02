@@ -8,6 +8,7 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
+import IconPicker from '../../components/admin/IconPicker.vue'
 import {
   AuthService,
   DatabaseService,
@@ -411,18 +412,25 @@ const DYNAMERGE_SEED: SeedTemplate = {
             </div>
 
             <!-- Hero / pitch -->
-            <div class="flex flex-col gap-4">
-              <Eyebrow class="text-brand-violet">Hero</Eyebrow>
-              <label class="flex flex-col gap-1.5">
-                <span class="text-sm font-semibold text-ink/80">Pitch</span>
-                <textarea
-                  v-model="drafts[p.id].pitch"
-                  rows="3"
-                  class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20 leading-relaxed"
-                  placeholder="One-sentence summary that appears under the program name on the public page."
+            <details open class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
+                <Eyebrow class="text-brand-violet">Hero</Eyebrow>
+                <Icon
+                  icon="lucide:chevron-down"
+                  width="16"
+                  class="text-ink/50 transition-transform group-open:rotate-180"
                 />
-              </label>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </summary>
+              <div class="flex flex-col gap-4 pt-3">
+                <label class="flex flex-col gap-1.5">
+                  <span class="text-sm font-semibold text-ink/80">Pitch</span>
+                  <textarea
+                    v-model="drafts[p.id].pitch"
+                    rows="3"
+                    class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20 leading-relaxed"
+                    placeholder="One-sentence summary that appears under the program name on the public page."
+                  />
+                </label>
                 <label class="flex flex-col gap-1.5">
                   <span class="text-sm font-semibold text-ink/80">Eligibility line</span>
                   <input
@@ -432,294 +440,378 @@ const DYNAMERGE_SEED: SeedTemplate = {
                     class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
                   />
                 </label>
-                <label class="flex flex-col gap-1.5">
-                  <span class="text-sm font-semibold text-ink/80">Hero image URL</span>
-                  <input
-                    v-model="drafts[p.id].heroImg"
-                    type="url"
-                    placeholder="https://…"
-                    class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
-                  />
-                </label>
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
+                  <label class="flex flex-col gap-1.5">
+                    <span class="text-sm font-semibold text-ink/80">Hero image URL</span>
+                    <input
+                      v-model="drafts[p.id].heroImg"
+                      type="url"
+                      placeholder="https://…"
+                      class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
+                    />
+                  </label>
+                  <div
+                    v-if="drafts[p.id].heroImg"
+                    class="w-32 h-24 rounded-lg overflow-hidden border hairline-ink bg-ink/5 mt-7"
+                  >
+                    <img
+                      :src="drafts[p.id].heroImg"
+                      :alt="`${p.name} hero preview`"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            </details>
 
             <!-- Stats -->
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
+            <details class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
                 <Eyebrow class="text-brand-violet">Stats (hero strip)</Eyebrow>
-                <button
-                  type="button"
-                  class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
-                  @click="addStat(drafts[p.id])"
-                >
-                  <Icon icon="lucide:plus" width="14" /> Add stat
-                </button>
-              </div>
-              <div
-                v-if="drafts[p.id].stats.length === 0"
-                class="text-sm text-ink/50 italic"
-              >
-                No stats yet.
-              </div>
-              <div
-                v-for="(stat, i) in drafts[p.id].stats"
-                :key="i"
-                class="grid grid-cols-1 md:grid-cols-[200px_1fr_1fr_auto] gap-3 items-end p-4 rounded-xl border hairline-ink"
-              >
-                <label class="flex flex-col gap-1">
-                  <span class="text-xs font-semibold text-ink/70">Icon (lucide:…)</span>
-                  <input
-                    v-model="stat.icon"
-                    type="text"
-                    placeholder="lucide:users"
-                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-mono"
+                <div class="flex items-center gap-3 text-ink/50 text-sm">
+                  <span>{{ drafts[p.id].stats.length }} item{{ drafts[p.id].stats.length === 1 ? '' : 's' }}</span>
+                  <Icon
+                    icon="lucide:chevron-down"
+                    width="16"
+                    class="transition-transform group-open:rotate-180"
                   />
-                </label>
-                <label class="flex flex-col gap-1">
-                  <span class="text-xs font-semibold text-ink/70">Label</span>
-                  <input
-                    v-model="stat.label"
-                    type="text"
-                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                  />
-                </label>
-                <label class="flex flex-col gap-1">
-                  <span class="text-xs font-semibold text-ink/70">Value</span>
-                  <input
-                    v-model="stat.value"
-                    type="text"
-                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                  />
-                </label>
-                <button
-                  type="button"
-                  class="text-ink/50 hover:text-red-700 self-end p-2"
-                  :aria-label="`Remove stat ${stat.label}`"
-                  @click="drafts[p.id].stats.splice(i, 1)"
-                >
-                  <Icon icon="lucide:trash-2" width="16" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Features -->
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <Eyebrow class="text-brand-violet">Features ("Why join us")</Eyebrow>
-                <button
-                  type="button"
-                  class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
-                  @click="addFeature(drafts[p.id])"
-                >
-                  <Icon icon="lucide:plus" width="14" /> Add feature
-                </button>
-              </div>
-              <div
-                v-if="drafts[p.id].features.length === 0"
-                class="text-sm text-ink/50 italic"
-              >
-                No features yet.
-              </div>
-              <div
-                v-for="(feature, i) in drafts[p.id].features"
-                :key="i"
-                class="flex flex-col gap-3 p-4 rounded-xl border hairline-ink"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <input
-                    v-model="feature.title"
-                    type="text"
-                    placeholder="Feature title"
-                    class="flex-1 rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
-                  />
+                </div>
+              </summary>
+              <div class="flex flex-col gap-3 pt-3">
+                <div class="flex justify-end">
                   <button
                     type="button"
-                    class="text-ink/50 hover:text-red-700 p-2 shrink-0"
-                    :aria-label="`Remove feature ${feature.title}`"
-                    @click="drafts[p.id].features.splice(i, 1)"
+                    class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
+                    @click="addStat(drafts[p.id])"
                   >
-                    <Icon icon="lucide:trash-2" width="16" />
+                    <Icon icon="lucide:plus" width="14" /> Add stat
                   </button>
                 </div>
-                <textarea
-                  v-model="feature.desc"
-                  rows="2"
-                  placeholder="One- or two-sentence description"
-                  class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm leading-relaxed"
-                />
-                <input
-                  v-model="feature.img"
-                  type="url"
-                  placeholder="Image URL (https://…)"
-                  class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-mono"
-                />
-              </div>
-            </div>
-
-            <!-- Timeline -->
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <Eyebrow class="text-brand-violet">Timeline ("What you'll do")</Eyebrow>
-                <button
-                  type="button"
-                  class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
-                  @click="addTimelineStep(drafts[p.id])"
+                <div
+                  v-if="drafts[p.id].stats.length === 0"
+                  class="text-sm text-ink/50 italic"
                 >
-                  <Icon icon="lucide:plus" width="14" /> Add step
-                </button>
-              </div>
-              <div
-                v-if="drafts[p.id].timeline.length === 0"
-                class="text-sm text-ink/50 italic"
-              >
-                No timeline steps yet.
-              </div>
-              <div
-                v-for="(step, i) in drafts[p.id].timeline"
-                :key="i"
-                class="grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3 items-start p-4 rounded-xl border hairline-ink"
-              >
-                <label class="flex flex-col gap-1">
-                  <span class="text-xs font-semibold text-ink/70">When</span>
-                  <input
-                    v-model="step.date"
-                    type="text"
-                    placeholder="Month 1"
-                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                  />
-                </label>
-                <label class="flex flex-col gap-1">
-                  <span class="text-xs font-semibold text-ink/70">What happens</span>
-                  <textarea
-                    v-model="step.desc"
-                    rows="2"
-                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm leading-relaxed"
-                  />
-                </label>
-                <button
-                  type="button"
-                  class="text-ink/50 hover:text-red-700 self-start p-2 mt-5"
-                  :aria-label="`Remove timeline step ${step.date}`"
-                  @click="drafts[p.id].timeline.splice(i, 1)"
+                  No stats yet.
+                </div>
+                <div
+                  v-for="(stat, i) in drafts[p.id].stats"
+                  :key="i"
+                  class="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr_auto] gap-3 items-end p-4 rounded-xl border hairline-ink"
                 >
-                  <Icon icon="lucide:trash-2" width="16" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Eligibility list -->
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <Eyebrow class="text-brand-violet">Eligibility list ("Who it's for")</Eyebrow>
-                <button
-                  type="button"
-                  class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
-                  @click="addEligibilityItem(drafts[p.id])"
-                >
-                  <Icon icon="lucide:plus" width="14" /> Add requirement
-                </button>
-              </div>
-              <div
-                v-if="drafts[p.id].eligibilityList.length === 0"
-                class="text-sm text-ink/50 italic"
-              >
-                No requirements yet.
-              </div>
-              <div
-                v-for="(_, i) in drafts[p.id].eligibilityList"
-                :key="i"
-                class="flex items-center gap-3"
-              >
-                <input
-                  v-model="drafts[p.id].eligibilityList[i]"
-                  type="text"
-                  placeholder="One requirement per line"
-                  class="flex-1 rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  class="text-ink/50 hover:text-red-700 p-2"
-                  :aria-label="`Remove requirement ${i + 1}`"
-                  @click="drafts[p.id].eligibilityList.splice(i, 1)"
-                >
-                  <Icon icon="lucide:trash-2" width="16" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Mentors -->
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <Eyebrow class="text-brand-violet">Mentors</Eyebrow>
-                <button
-                  type="button"
-                  class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
-                  @click="addMentor(drafts[p.id])"
-                >
-                  <Icon icon="lucide:plus" width="14" /> Add mentor
-                </button>
-              </div>
-              <div
-                v-if="drafts[p.id].mentors.length === 0"
-                class="text-sm text-ink/50 italic"
-              >
-                No mentors yet.
-              </div>
-              <div
-                v-for="(mentor, i) in drafts[p.id].mentors"
-                :key="i"
-                class="flex flex-col gap-3 p-4 rounded-xl border hairline-ink"
-              >
-                <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
                   <label class="flex flex-col gap-1">
-                    <span class="text-xs font-semibold text-ink/70">Name</span>
+                    <span class="text-xs font-semibold text-ink/70">Icon</span>
+                    <IconPicker v-model="stat.icon" :aria-label="`Stat ${i + 1} icon`" />
+                  </label>
+                  <label class="flex flex-col gap-1">
+                    <span class="text-xs font-semibold text-ink/70">Label</span>
                     <input
-                      v-model="mentor.name"
+                      v-model="stat.label"
                       type="text"
-                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
+                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
                     />
                   </label>
                   <label class="flex flex-col gap-1">
-                    <span class="text-xs font-semibold text-ink/70">Title</span>
+                    <span class="text-xs font-semibold text-ink/70">Value</span>
                     <input
-                      v-model="mentor.title"
+                      v-model="stat.value"
                       type="text"
-                      placeholder="Postdoctoral Researcher"
                       class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
                     />
                   </label>
                   <button
                     type="button"
                     class="text-ink/50 hover:text-red-700 self-end p-2"
-                    :aria-label="`Remove mentor ${mentor.name}`"
-                    @click="drafts[p.id].mentors.splice(i, 1)"
+                    :aria-label="`Remove stat ${stat.label}`"
+                    @click="drafts[p.id].stats.splice(i, 1)"
                   >
                     <Icon icon="lucide:trash-2" width="16" />
                   </button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <label class="flex flex-col gap-1">
-                    <span class="text-xs font-semibold text-ink/70">Institution</span>
+              </div>
+            </details>
+
+            <!-- Features -->
+            <details class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
+                <Eyebrow class="text-brand-violet">Features ("Why join us")</Eyebrow>
+                <div class="flex items-center gap-3 text-ink/50 text-sm">
+                  <span>{{ drafts[p.id].features.length }} item{{ drafts[p.id].features.length === 1 ? '' : 's' }}</span>
+                  <Icon icon="lucide:chevron-down" width="16" class="transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              <div class="flex flex-col gap-3 pt-3">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
+                    @click="addFeature(drafts[p.id])"
+                  >
+                    <Icon icon="lucide:plus" width="14" /> Add feature
+                  </button>
+                </div>
+                <div
+                  v-if="drafts[p.id].features.length === 0"
+                  class="text-sm text-ink/50 italic"
+                >
+                  No features yet.
+                </div>
+                <div
+                  v-for="(feature, i) in drafts[p.id].features"
+                  :key="i"
+                  class="flex flex-col gap-3 p-4 rounded-xl border hairline-ink"
+                >
+                  <div class="flex items-start justify-between gap-3">
                     <input
-                      v-model="mentor.institution"
+                      v-model="feature.title"
                       type="text"
-                      placeholder="MIT"
+                      placeholder="Feature title"
+                      class="flex-1 rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
+                    />
+                    <button
+                      type="button"
+                      class="text-ink/50 hover:text-red-700 p-2 shrink-0"
+                      :aria-label="`Remove feature ${feature.title}`"
+                      @click="drafts[p.id].features.splice(i, 1)"
+                    >
+                      <Icon icon="lucide:trash-2" width="16" />
+                    </button>
+                  </div>
+                  <textarea
+                    v-model="feature.desc"
+                    rows="2"
+                    placeholder="One- or two-sentence description"
+                    class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm leading-relaxed"
+                  />
+                  <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-start">
+                    <input
+                      v-model="feature.img"
+                      type="url"
+                      placeholder="Image URL (https://…)"
+                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                    />
+                    <div
+                      v-if="feature.img"
+                      class="w-24 h-18 rounded-lg overflow-hidden border hairline-ink bg-ink/5"
+                    >
+                      <img
+                        :src="feature.img"
+                        :alt="feature.title || 'Feature preview'"
+                        class="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Timeline -->
+            <details class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
+                <Eyebrow class="text-brand-violet">Timeline ("What you'll do")</Eyebrow>
+                <div class="flex items-center gap-3 text-ink/50 text-sm">
+                  <span>{{ drafts[p.id].timeline.length }} step{{ drafts[p.id].timeline.length === 1 ? '' : 's' }}</span>
+                  <Icon icon="lucide:chevron-down" width="16" class="transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              <div class="flex flex-col gap-3 pt-3">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
+                    @click="addTimelineStep(drafts[p.id])"
+                  >
+                    <Icon icon="lucide:plus" width="14" /> Add step
+                  </button>
+                </div>
+                <div
+                  v-if="drafts[p.id].timeline.length === 0"
+                  class="text-sm text-ink/50 italic"
+                >
+                  No timeline steps yet.
+                </div>
+                <div
+                  v-for="(step, i) in drafts[p.id].timeline"
+                  :key="i"
+                  class="grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3 items-start p-4 rounded-xl border hairline-ink"
+                >
+                  <label class="flex flex-col gap-1">
+                    <span class="text-xs font-semibold text-ink/70">When</span>
+                    <input
+                      v-model="step.date"
+                      type="text"
+                      placeholder="Month 1"
                       class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
                     />
                   </label>
                   <label class="flex flex-col gap-1">
-                    <span class="text-xs font-semibold text-ink/70">Photo URL</span>
-                    <input
-                      v-model="mentor.img"
-                      type="url"
-                      placeholder="https://…"
-                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-mono"
+                    <span class="text-xs font-semibold text-ink/70">What happens</span>
+                    <textarea
+                      v-model="step.desc"
+                      rows="2"
+                      class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm leading-relaxed"
                     />
                   </label>
+                  <button
+                    type="button"
+                    class="text-ink/50 hover:text-red-700 self-start p-2 mt-5"
+                    :aria-label="`Remove timeline step ${step.date}`"
+                    @click="drafts[p.id].timeline.splice(i, 1)"
+                  >
+                    <Icon icon="lucide:trash-2" width="16" />
+                  </button>
                 </div>
               </div>
-            </div>
+            </details>
+
+            <!-- Eligibility list -->
+            <details class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
+                <Eyebrow class="text-brand-violet">Eligibility list ("Who it's for")</Eyebrow>
+                <div class="flex items-center gap-3 text-ink/50 text-sm">
+                  <span>{{ drafts[p.id].eligibilityList.length }} item{{ drafts[p.id].eligibilityList.length === 1 ? '' : 's' }}</span>
+                  <Icon icon="lucide:chevron-down" width="16" class="transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              <div class="flex flex-col gap-3 pt-3">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
+                    @click="addEligibilityItem(drafts[p.id])"
+                  >
+                    <Icon icon="lucide:plus" width="14" /> Add requirement
+                  </button>
+                </div>
+                <div
+                  v-if="drafts[p.id].eligibilityList.length === 0"
+                  class="text-sm text-ink/50 italic"
+                >
+                  No requirements yet.
+                </div>
+                <div
+                  v-for="(_, i) in drafts[p.id].eligibilityList"
+                  :key="i"
+                  class="flex items-center gap-3"
+                >
+                  <input
+                    v-model="drafts[p.id].eligibilityList[i]"
+                    type="text"
+                    placeholder="One requirement per line"
+                    class="flex-1 rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    class="text-ink/50 hover:text-red-700 p-2"
+                    :aria-label="`Remove requirement ${i + 1}`"
+                    @click="drafts[p.id].eligibilityList.splice(i, 1)"
+                  >
+                    <Icon icon="lucide:trash-2" width="16" />
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <!-- Mentors -->
+            <details class="group">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer list-none py-2">
+                <Eyebrow class="text-brand-violet">Mentors</Eyebrow>
+                <div class="flex items-center gap-3 text-ink/50 text-sm">
+                  <span>{{ drafts[p.id].mentors.length }} mentor{{ drafts[p.id].mentors.length === 1 ? '' : 's' }}</span>
+                  <Icon icon="lucide:chevron-down" width="16" class="transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              <div class="flex flex-col gap-3 pt-3">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-brand-violet hover:underline flex items-center gap-1"
+                    @click="addMentor(drafts[p.id])"
+                  >
+                    <Icon icon="lucide:plus" width="14" /> Add mentor
+                  </button>
+                </div>
+                <div
+                  v-if="drafts[p.id].mentors.length === 0"
+                  class="text-sm text-ink/50 italic"
+                >
+                  No mentors yet.
+                </div>
+                <div
+                  v-for="(mentor, i) in drafts[p.id].mentors"
+                  :key="i"
+                  class="flex gap-4 p-4 rounded-xl border hairline-ink"
+                >
+                  <div
+                    v-if="mentor.img"
+                    class="w-16 h-16 rounded-full overflow-hidden border hairline-ink bg-ink/5 shrink-0"
+                  >
+                    <img
+                      :src="mentor.img"
+                      :alt="mentor.name || 'Mentor preview'"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div
+                    v-else
+                    class="w-16 h-16 rounded-full bg-ink/5 flex items-center justify-center shrink-0 text-ink/30"
+                  >
+                    <Icon icon="lucide:user" width="24" />
+                  </div>
+                  <div class="flex-1 flex flex-col gap-3 min-w-0">
+                    <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                      <label class="flex flex-col gap-1">
+                        <span class="text-xs font-semibold text-ink/70">Name</span>
+                        <input
+                          v-model="mentor.name"
+                          type="text"
+                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm font-semibold"
+                        />
+                      </label>
+                      <label class="flex flex-col gap-1">
+                        <span class="text-xs font-semibold text-ink/70">Title</span>
+                        <input
+                          v-model="mentor.title"
+                          type="text"
+                          placeholder="Postdoctoral Researcher"
+                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        class="text-ink/50 hover:text-red-700 self-end p-2"
+                        :aria-label="`Remove mentor ${mentor.name}`"
+                        @click="drafts[p.id].mentors.splice(i, 1)"
+                      >
+                        <Icon icon="lucide:trash-2" width="16" />
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <label class="flex flex-col gap-1">
+                        <span class="text-xs font-semibold text-ink/70">Institution</span>
+                        <input
+                          v-model="mentor.institution"
+                          type="text"
+                          placeholder="MIT"
+                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label class="flex flex-col gap-1">
+                        <span class="text-xs font-semibold text-ink/70">Photo URL</span>
+                        <input
+                          v-model="mentor.img"
+                          type="url"
+                          placeholder="https://…"
+                          class="rounded-lg border hairline-ink bg-paper px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
 
             <!-- Application window -->
             <div class="flex flex-col gap-3">
