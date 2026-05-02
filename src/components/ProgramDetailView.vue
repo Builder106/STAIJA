@@ -217,35 +217,52 @@ function toggleFaq(i: number) {
     <!-- Timeline -->
     <Section class="bg-white">
       <Container>
-        <div class="max-w-3xl mx-auto">
+        <div class="max-w-4xl mx-auto">
           <Eyebrow class="text-brand-violet mb-4 block">Curriculum</Eyebrow>
           <Heading :level="2" class="mb-12">What you'll do.</Heading>
 
-          <div class="relative pl-8 md:pl-0">
-            <div class="absolute left-[11px] top-2 bottom-2 w-[2px] bg-gradient-brand md:hidden" />
-            <div class="flex flex-col gap-12">
-              <Motion
-                v-for="(step, i) in program.timeline"
-                :key="step.date"
-                class="relative flex flex-col md:flex-row md:items-start gap-4 md:gap-12"
-                :initial="{ opacity: 0, x: -20 }"
-                :while-in-view="{ opacity: 1, x: 0 }"
-                :viewport="{ once: true }"
-                :transition="{ duration: 0.4, delay: i * 0.1 }"
+          <ol class="list-none p-0 m-0 grid grid-cols-[auto_24px_1fr] md:grid-cols-[180px_24px_1fr] gap-x-5 md:gap-x-8">
+            <Motion
+              v-for="(step, i) in program.timeline"
+              :key="step.date"
+              as="li"
+              class="contents"
+              :initial="{ opacity: 0, x: -12 }"
+              :while-in-view="{ opacity: 1, x: 0 }"
+              :viewport="{ once: true, margin: '-50px' }"
+              :transition="{ duration: 0.4, delay: i * 0.08 }"
+            >
+              <!-- Date column -->
+              <div
+                class="font-display text-lg md:text-2xl text-ink/80 md:text-right pt-1 md:pt-0 self-start"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-12'"
               >
-                <div class="md:w-1/3 shrink-0 flex items-center gap-4 md:justify-end relative">
-                  <div class="absolute -left-8 top-1.5 w-3 h-3 rounded-full bg-brand-violet md:hidden" />
-                  <div class="font-display text-2xl text-ink md:text-right">{{ step.date }}</div>
-                  <div class="hidden md:flex items-center absolute left-full -translate-x-1/2 top-3">
-                    <div class="w-4 h-4 rounded-full bg-paper border-4 border-brand-violet z-10" />
-                  </div>
-                </div>
-                <div class="md:w-2/3 md:pl-8">
-                  <Body large>{{ step.desc }}</Body>
-                </div>
-              </Motion>
-            </div>
-          </div>
+                {{ step.date }}
+              </div>
+
+              <!-- Spine: vertical line + dot. The line is drawn from the
+                   top of every cell down to the next, except the last. -->
+              <div class="relative flex flex-col items-center self-stretch">
+                <span
+                  v-if="i !== program.timeline.length - 1"
+                  class="absolute top-3 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-brand"
+                  aria-hidden="true"
+                />
+                <span
+                  class="relative z-10 mt-2 w-4 h-4 rounded-full bg-paper border-[3px] border-brand-violet"
+                  aria-hidden="true"
+                />
+              </div>
+
+              <!-- Description column -->
+              <div
+                class="self-start"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-12'"
+              >
+                <Body large class="text-ink/80 leading-relaxed">{{ step.desc }}</Body>
+              </div>
+            </Motion>
+          </ol>
         </div>
       </Container>
     </Section>
