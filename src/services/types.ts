@@ -151,52 +151,57 @@ export interface Application {
   updatedAt: Date
 }
 
+// Program describes everything the public /programs/:slug page shows AND
+// the operational fields (cohort dates, status) the admin tracks. The
+// shape mirrors what src/components/ProgramDetailView.vue renders so the
+// component can read it directly without an adapter layer.
 export interface Program {
   id?: string
-  name: string
   slug: string
-  description: string
-  overview: string
-  benefits: string[]
-  requirements: string[]
-  applicationProcess: {
-    steps: Array<{
-      title: string
-      description: string
-      duration: string
-    }>
-    summary: {
-      totalTime: string
-      successRate: string
-      responseTime: string
-    }
-  }
-  dates: {
-    applicationStart: string
-    applicationEnd: string
-    programStart: string
-    programEnd: string
-    decisionsBy: string
-  }
-  eligibility: {
-    ageRange: string
-    educationLevel: string
-    location: string
-    otherRequirements: string[]
-  }
-  curriculum: {
-    duration: string
-    format: string
-    topics: string[]
-    activities: string[]
-  }
-  contact: {
-    email: string
-    phone?: string
-    additionalInfo?: string
-  }
+  name: string
+  pitch: string                  // hero subtitle paragraph
+  eligibility: string            // short eligibility line, e.g. "Ages 15–19 · Nigeria"
+  heroImg: string
+  stats: ProgramStat[]
+  features: ProgramFeature[]
+  timeline: ProgramTimelineStep[]
+  eligibilityList: string[]      // bullet list under "Who it's for"
+  mentors: ProgramMentor[]
+  dates: ProgramDates
   status: 'active' | 'inactive' | 'draft'
   createdAt: Date
   updatedAt: Date
   updatedBy: string
+}
+
+export interface ProgramStat {
+  icon: string
+  label: string
+  value: string
+}
+
+export interface ProgramFeature {
+  title: string
+  desc: string
+  img: string
+}
+
+export interface ProgramTimelineStep {
+  date: string
+  desc: string
+}
+
+export interface ProgramMentor {
+  name: string
+  title: string
+  institution: string
+  img: string
+}
+
+export interface ProgramDates {
+  applicationStart: string
+  applicationEnd: string
+  programStart: string
+  programEnd: string
+  decisionsBy: string
 }

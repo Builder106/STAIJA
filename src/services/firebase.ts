@@ -9,6 +9,11 @@ export type {
   ContentItem,
   Application,
   Program,
+  ProgramStat,
+  ProgramFeature,
+  ProgramTimelineStep,
+  ProgramMentor,
+  ProgramDates,
   MentorAssignment,
   MentorFeedback,
 } from './types'

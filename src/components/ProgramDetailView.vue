@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from './ui/Container.vue'
@@ -11,27 +11,18 @@ import UiButton from './ui/UiButton.vue'
 import UiCard from './ui/UiCard.vue'
 import UiChip from './ui/UiChip.vue'
 import { trackApplyClick } from '../services/analytics'
-
-type Stat = { icon: string; label: string; value: string }
-type Feature = { title: string; desc: string; img: string }
-type TimelineStep = { date: string; desc: string }
-type Mentor = { name: string; title: string; institution: string; img: string }
-
-type Program = {
-  name: string
-  pitch: string
-  eligibility: string
-  stats: Stat[]
-  heroImg: string
-  features: Feature[]
-  timeline: TimelineStep[]
-  eligibilityList: string[]
-  mentors: Mentor[]
-}
+import { ProgramService } from '../services/programService'
+import type { Program } from '../services/firebase'
 
 const props = defineProps<{ slug: 'stepup-scholars' | 'dynamerge' }>()
 
-const programs: Record<string, Program> = {
+// Fallback content used while no Program doc exists in Firestore yet.
+// Once an admin clicks "Create defaults" in /admin/programs, the seed
+// writes these same values to Firestore and ProgramDetailView starts
+// reading from there. Edits in the admin UI then flow through to the
+// public page on next load. Keeping the fallback also means a transient
+// Firestore outage doesn't blank the program pages.
+const FALLBACKS: Record<string, ProgramView> = {
   'stepup-scholars': {
     name: 'StepUp Scholars',
     pitch: 'A rigorous, Nigeria-based research incubator for high-school and gap-year students.',
@@ -100,7 +91,49 @@ const programs: Record<string, Program> = {
   },
 }
 
-const program = computed(() => programs[props.slug])
+// Start with the fallback already painted so the first paint isn't blank
+// while Firestore loads. The async fetch then replaces the content with
+// the canonical version if a Program doc exists.
+const program = ref<ProgramView | null>(FALLBACKS[props.slug] ?? null)
+
+async function loadProgram() {
+  program.value = FALLBACKS[props.slug] ?? null
+  try {
+    const fromStore = await ProgramService.getProgram(props.slug)
+    if (fromStore) program.value = toView(fromStore)
+  } catch {
+    // Network error / permission issue — keep the fallback in view.
+  }
+}
+
+function toView(p: Program): ProgramView {
+  return {
+    name: p.name,
+    pitch: p.pitch,
+    eligibility: p.eligibility,
+    stats: p.stats,
+    heroImg: p.heroImg,
+    features: p.features,
+    timeline: p.timeline,
+    eligibilityList: p.eligibilityList,
+    mentors: p.mentors,
+  }
+}
+
+onMounted(loadProgram)
+watch(() => props.slug, loadProgram)
+
+type ProgramView = {
+  name: string
+  pitch: string
+  eligibility: string
+  stats: { icon: string; label: string; value: string }[]
+  heroImg: string
+  features: { title: string; desc: string; img: string }[]
+  timeline: { date: string; desc: string }[]
+  eligibilityList: string[]
+  mentors: { name: string; title: string; institution: string; img: string }[]
+}
 
 const faqs = [
   { q: 'Is there an application fee?', a: 'No, applying to STAIJA programs is completely free.' },
