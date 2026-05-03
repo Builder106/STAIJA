@@ -60,6 +60,7 @@ export interface UserProfile {
   email: string
   displayName?: string
   photoURL?: string
+  bio?: string
   role: UserRole
   createdAt: Date
   updatedAt: Date

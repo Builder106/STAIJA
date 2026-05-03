@@ -52,10 +52,12 @@ service cloud.firestore {
       // for the admin user-management screen and the alumni directory).
       allow read: if isOwner(userId) || hasAnyRole(['staff', 'admin']);
 
-      // Users can update their own profile (except role)
+      // Users can update their own profile (except role). updatedAt is
+      // allowed because DatabaseService.updateUserProfile stamps it on
+      // every write.
       allow update: if isOwner(userId) &&
                    request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['displayName', 'photoURL', 'program', 'applicationStatus']);
+                   .hasOnly(['displayName', 'photoURL', 'bio', 'program', 'applicationStatus', 'updatedAt']);
 
       // Only admins can create users with roles
       allow create: if hasRole('admin') ||
