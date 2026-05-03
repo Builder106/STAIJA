@@ -63,8 +63,11 @@ service cloud.firestore {
                    (request.auth.uid == userId &&
                     request.resource.data.role in ['applicant', 'alumni']);
 
-      // Role assignment validation
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+      // Role assignment validation. updatedAt is allowed alongside role
+      // because DatabaseService.updateUserProfile always stamps it on
+      // every write — without it, every admin role change would be
+      // rejected as "insufficient permissions".
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'updatedAt']) &&
                    canAssignRole(request.resource.data.role) &&
                    isValidRoleTransition(resource.data.role, request.resource.data.role);
 
