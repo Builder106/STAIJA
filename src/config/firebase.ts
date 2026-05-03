@@ -5,7 +5,12 @@ import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
 import { getAnalytics } from 'firebase/analytics'
 import { getPerformance } from 'firebase/performance'
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  getToken,
+  type AppCheck,
+} from 'firebase/app-check'
 
 import { getFirebaseConfig } from '../utils/env.ts'
 
@@ -26,6 +31,7 @@ const app = initializeApp(firebaseConfig)
 // Firebase Console → App Check → Apps → ⋮ → Manage debug tokens. To pin a
 // specific token (so it survives reloads without re-registering), set
 // VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.
+let appCheck: AppCheck | null = null
 if (typeof window !== 'undefined') {
   if (import.meta.env.DEV) {
     const pinnedToken = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN as string | undefined
@@ -33,12 +39,26 @@ if (typeof window !== 'undefined') {
   }
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY as string | undefined
   if (recaptchaSiteKey) {
-    initializeAppCheck(app, {
+    appCheck = initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
       isTokenAutoRefreshEnabled: true,
     })
   } else if (import.meta.env.DEV) {
     console.warn('[firebase] VITE_RECAPTCHA_ENTERPRISE_SITE_KEY not set — App Check skipped')
+  }
+}
+
+// Fetch an App Check token for plain fetch() calls. onCall functions don't
+// need this — the Firebase SDK auto-attaches the token. Use only for raw
+// HTTPS endpoints (e.g. file uploads via multipart). Returns null if App
+// Check isn't initialized (e.g. site key missing).
+export async function getAppCheckToken(): Promise<string | null> {
+  if (!appCheck) return null
+  try {
+    const result = await getToken(appCheck, /* forceRefresh */ false)
+    return result.token
+  } catch {
+    return null
   }
 }
 

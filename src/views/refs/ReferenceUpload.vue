@@ -11,7 +11,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
-import { functions } from '../../config/firebase'
+import { functions, getAppCheckToken } from '../../config/firebase'
 import { getAppConfig } from '../../utils/env'
 
 interface ReferenceContext {
@@ -82,12 +82,20 @@ async function handleSubmit() {
   }
 
   try {
+    const appCheckToken = await getAppCheckToken()
+    if (!appCheckToken) {
+      throw new Error('App verification failed. Refresh the page and try again.')
+    }
+
     const formData = new FormData()
     formData.append('letter', file.value, file.value.name)
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'X-Reference-Token': token.value },
+      headers: {
+        'X-Reference-Token': token.value,
+        'X-Firebase-AppCheck': appCheckToken,
+      },
       body: formData,
     })
     if (!res.ok) {

@@ -246,7 +246,7 @@ export const submitReferenceLetter = onRequest(
       res.set('Access-Control-Allow-Origin', origin)
       res.set('Vary', 'Origin')
       res.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
-      res.set('Access-Control-Allow-Headers', 'Content-Type, X-Reference-Token')
+      res.set('Access-Control-Allow-Headers', 'Content-Type, X-Reference-Token, X-Firebase-AppCheck')
     }
     if (req.method === 'OPTIONS') {
       res.status(204).send('')
@@ -254,6 +254,21 @@ export const submitReferenceLetter = onRequest(
     }
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed')
+      return
+    }
+
+    // App Check: verify the browser-attached token before doing any work.
+    // The Firebase SDK doesn't auto-attach to plain fetch (only to onCall),
+    // so the client side has to fetch a token via getToken() and pass it.
+    const appCheckToken = req.header('x-firebase-appcheck') as string | undefined
+    if (!appCheckToken) {
+      res.status(401).json({ error: 'Missing App Check token.' })
+      return
+    }
+    try {
+      await admin.appCheck().verifyToken(appCheckToken)
+    } catch {
+      res.status(401).json({ error: 'Invalid App Check token.' })
       return
     }
 
