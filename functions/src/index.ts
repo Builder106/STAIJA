@@ -27,6 +27,7 @@ export {
 export { onUserCreated } from './welcome'
 export { sendReferenceReminders } from './referenceReminders'
 export { deleteAccount } from './account'
+export { adminListUsers } from './adminUsers'
 
 // paystack.ts and newsletter.ts are intentionally NOT re-exported here.
 //
