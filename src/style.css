@@ -12,8 +12,14 @@
   --color-brand-violet: #8B55FF;
   --color-brand-sky: #5EDBE7;
 
-  --font-display: 'Playfair Display', serif;
+  /* Display headline face. IBM Plex Sans was chosen for its research /
+     scientific posture — quiet authority instead of editorial drama
+     (Playfair Display, the previous choice, was reading as fashion-mag).
+     Plex Sans pairs cleanly with Plex Mono for accents (eyebrows, data
+     labels, slug fields) which is the strongest "lab notebook" tell. */
+  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
   --font-sans: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   --radius-xl: 12px;
   --radius-2xl: 16px;
@@ -65,9 +71,9 @@
   background-color: rgba(139, 85, 255, 0.2);
 }
 
-/* Apply Playfair as the heading default but DON'T force a color — pages
-   set text colors via Tailwind utilities (e.g., text-paper in the dark
-   footer would be overridden if we forced text-ink here). */
+/* Apply the display face as the heading default but DON'T force a color
+   — pages set text colors via Tailwind utilities (e.g., text-paper in
+   the dark footer would be overridden if we forced text-ink here). */
 .brand-surface h1,
 .brand-surface h2,
 .brand-surface h3,
