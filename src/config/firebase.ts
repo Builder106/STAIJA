@@ -21,12 +21,16 @@ const app = initializeApp(firebaseConfig)
 // Initialize App Check (browser only — App Check has no Node equivalent and
 // would crash SSR or test runs). Uses reCAPTCHA Enterprise.
 //
-// For local dev: open the browser console once, set
-//   self.FIREBASE_APPCHECK_DEBUG_TOKEN = true
-// reload, copy the printed debug token, and register it in
-// Firebase Console → App Check → Apps → ⋮ → Manage debug tokens.
-// The Vite dev server will then bypass the reCAPTCHA challenge.
+// In dev, App Check is forced into debug mode: on the first load, Firebase
+// prints a fresh debug token to the console. Copy it once and register it in
+// Firebase Console → App Check → Apps → ⋮ → Manage debug tokens. To pin a
+// specific token (so it survives reloads without re-registering), set
+// VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.
 if (typeof window !== 'undefined') {
+  if (import.meta.env.DEV) {
+    const pinnedToken = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN as string | undefined
+    ;(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = pinnedToken ?? true
+  }
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY as string | undefined
   if (recaptchaSiteKey) {
     initializeAppCheck(app, {
