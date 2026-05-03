@@ -101,7 +101,13 @@ const loadProfiles = async () => {
     // For Phase 3B MVP, client-side filtering of "alumni" role users is acceptable
     const q = query(collection(db, 'users'), where('role', 'in', ['alumni', 'admin']), limit(50))
     const snap = await getDocs(q)
-    profiles.value = snap.docs.map(d => ({ uid: d.id, ...d.data() } as AlumniProfile))
+    // directoryHidden=true is an opt-out from this directory. Filtering
+    // client-side because adding a where('directoryHidden', '!=', true)
+    // would also exclude every existing doc that hasn't been touched
+    // since the field was introduced.
+    profiles.value = snap.docs
+      .map(d => ({ uid: d.id, ...d.data() } as AlumniProfile & { directoryHidden?: boolean }))
+      .filter(p => !p.directoryHidden)
   } catch (e) {
     console.error('Failed to load directory', e)
   } finally {

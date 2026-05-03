@@ -2,6 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { httpsCallable } from 'firebase/functions'
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  sendEmailVerification,
+  updatePassword,
+} from 'firebase/auth'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
@@ -15,6 +21,7 @@ import { functions } from '../../config/firebase'
 import { AuthService } from '../../services/auth'
 import { DatabaseService } from '../../services/database'
 import { StorageService } from '../../services/storageService'
+import type { EmailPreferences } from '../../services/types'
 
 const router = useRouter()
 const { user, userProfile, displayName, signOut, refreshProfile } = useAuth()
@@ -23,11 +30,7 @@ const { user, userProfile, displayName, signOut, refreshProfile } = useAuth()
 
 const BIO_MAX = 280
 
-const form = ref({
-  displayName: '',
-  bio: '',
-  photoURL: '',
-})
+const form = ref({ displayName: '', bio: '', photoURL: '' })
 const original = ref({ displayName: '', bio: '', photoURL: '' })
 
 watch(
@@ -73,12 +76,9 @@ async function handleAvatar(event: Event) {
     const path = `avatars/${user.value.uid}/${Date.now()}_${file.name}`
     const url = await StorageService.uploadFile(file, path)
     form.value.photoURL = url
-    // Mirror the URL onto the Firebase Auth user immediately so it shows
-    // up wherever the SDK reads displayName/photoURL directly.
     await AuthService.updateProfile({ photoURL: url })
   } catch (err) {
-    const msg = (err as { message?: string }).message ?? 'Upload failed.'
-    saveError.value = msg
+    saveError.value = (err as { message?: string }).message ?? 'Upload failed.'
   } finally {
     uploading.value = false
     input.value = ''
@@ -111,8 +111,7 @@ async function handleSave() {
     saveSuccess.value = true
     setTimeout(() => (saveSuccess.value = false), 3000)
   } catch (err) {
-    const msg = (err as { message?: string }).message ?? 'Could not save changes.'
-    saveError.value = msg
+    saveError.value = (err as { message?: string }).message ?? 'Could not save changes.'
   } finally {
     saving.value = false
   }
@@ -135,8 +134,6 @@ function getInitials(name: string | null | undefined) {
 
 function formatDate(date: unknown): string {
   if (!date) return '—'
-  // Firestore Timestamp has a toDate() method; ISO string and Date both
-  // pass through new Date() fine.
   const candidate =
     typeof (date as { toDate?: () => Date })?.toDate === 'function'
       ? (date as { toDate: () => Date }).toDate()
@@ -144,6 +141,224 @@ function formatDate(date: unknown): string {
   const d = new Date(candidate as Date | string)
   if (Number.isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+// --- Notifications ----------------------------------------------------
+
+const notifKeys: { key: keyof EmailPreferences; label: string; description: string }[] = [
+  {
+    key: 'eventReminders',
+    label: 'Event reminders',
+    description: 'Reminders before workshops, info sessions, and other events you registered for.',
+  },
+  {
+    key: 'mentorNotifications',
+    label: 'Mentor notifications',
+    description: 'New feedback from your mentor, session check-ins, and assignment updates.',
+  },
+  {
+    key: 'productUpdates',
+    label: 'Product updates',
+    description: 'Occasional notes about new STAIJA features or programs.',
+  },
+  {
+    key: 'newsletter',
+    label: 'Newsletter',
+    description: "STAIJA's monthly newsletter with stories from current students and alumni.",
+  },
+]
+
+const notifPrefs = ref<EmailPreferences>({})
+const notifOriginal = ref<EmailPreferences>({})
+watch(
+  userProfile,
+  (p) => {
+    notifPrefs.value = { ...(p?.emailPreferences ?? {}) }
+    notifOriginal.value = { ...notifPrefs.value }
+  },
+  { immediate: true },
+)
+
+const notifDirty = computed(() =>
+  notifKeys.some((k) => isEnabled(notifPrefs.value, k.key) !== isEnabled(notifOriginal.value, k.key)),
+)
+const notifSaving = ref(false)
+const notifMessage = ref<string | null>(null)
+
+function isEnabled(prefs: EmailPreferences, key: keyof EmailPreferences): boolean {
+  // Default to true: missing field means "opted in" so we don't silently
+  // mute users who predate the toggles.
+  return prefs[key] !== false
+}
+
+function toggleNotif(key: keyof EmailPreferences) {
+  notifPrefs.value = { ...notifPrefs.value, [key]: !isEnabled(notifPrefs.value, key) }
+}
+
+async function saveNotifs() {
+  if (!user.value || !notifDirty.value) return
+  notifSaving.value = true
+  notifMessage.value = null
+  try {
+    await DatabaseService.updateUserProfile(user.value.uid, {
+      emailPreferences: { ...notifPrefs.value },
+    })
+    notifOriginal.value = { ...notifPrefs.value }
+    await refreshProfile()
+    notifMessage.value = 'Saved.'
+    setTimeout(() => (notifMessage.value = null), 3000)
+  } catch (err) {
+    notifMessage.value = (err as { message?: string }).message ?? 'Could not save preferences.'
+  } finally {
+    notifSaving.value = false
+  }
+}
+
+// --- Security ---------------------------------------------------------
+
+const hasPasswordProvider = computed(
+  () => user.value?.providerData?.some((p) => p.providerId === 'password') ?? false,
+)
+const sendingVerification = ref(false)
+const verificationMessage = ref<string | null>(null)
+
+async function resendVerification() {
+  if (!user.value || sendingVerification.value) return
+  sendingVerification.value = true
+  verificationMessage.value = null
+  try {
+    await sendEmailVerification(user.value)
+    verificationMessage.value = `Verification email sent to ${user.value.email}.`
+  } catch (err) {
+    verificationMessage.value = (err as { message?: string }).message ?? 'Could not send.'
+  } finally {
+    sendingVerification.value = false
+  }
+}
+
+const showPwForm = ref(false)
+const pwCurrent = ref('')
+const pwNew = ref('')
+const pwNewConfirm = ref('')
+const pwSaving = ref(false)
+const pwError = ref<string | null>(null)
+const pwSuccess = ref(false)
+
+const pwValid = computed(
+  () =>
+    pwCurrent.value.length > 0 &&
+    pwNew.value.length >= 8 &&
+    pwNew.value === pwNewConfirm.value,
+)
+
+async function changePassword() {
+  if (!pwValid.value || !user.value || !user.value.email || pwSaving.value) return
+  pwSaving.value = true
+  pwError.value = null
+  pwSuccess.value = false
+  try {
+    const cred = EmailAuthProvider.credential(user.value.email, pwCurrent.value)
+    await reauthenticateWithCredential(user.value, cred)
+    await updatePassword(user.value, pwNew.value)
+    pwCurrent.value = ''
+    pwNew.value = ''
+    pwNewConfirm.value = ''
+    showPwForm.value = false
+    pwSuccess.value = true
+    setTimeout(() => (pwSuccess.value = false), 4000)
+  } catch (err) {
+    const code = (err as { code?: string }).code
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      pwError.value = 'Current password is incorrect.'
+    } else if (code === 'auth/weak-password') {
+      pwError.value = 'New password is too weak. Use at least 8 characters.'
+    } else {
+      pwError.value = (err as { message?: string }).message ?? 'Could not change password.'
+    }
+  } finally {
+    pwSaving.value = false
+  }
+}
+
+const signingOutEverywhere = ref(false)
+const signOutMessage = ref<string | null>(null)
+
+async function signOutEverywhere() {
+  if (signingOutEverywhere.value) return
+  signingOutEverywhere.value = true
+  signOutMessage.value = null
+  try {
+    const callable = httpsCallable<Record<string, never>, { ok: boolean }>(
+      functions,
+      'signOutEverywhere',
+    )
+    await callable({})
+    await signOut()
+    router.replace({ path: '/login', query: { signedOutEverywhere: '1' } })
+  } catch (err) {
+    signOutMessage.value =
+      (err as { message?: string }).message ?? 'Could not sign out other sessions.'
+    signingOutEverywhere.value = false
+  }
+}
+
+// --- Privacy ----------------------------------------------------------
+
+const directoryHidden = ref(false)
+watch(
+  userProfile,
+  (p) => {
+    directoryHidden.value = p?.directoryHidden === true
+  },
+  { immediate: true },
+)
+const showDirectoryToggle = computed(() =>
+  ['alumni', 'admin'].includes(userProfile.value?.role ?? ''),
+)
+const directorySaving = ref(false)
+
+async function toggleDirectory() {
+  if (!user.value || directorySaving.value) return
+  directorySaving.value = true
+  const next = !directoryHidden.value
+  try {
+    await DatabaseService.updateUserProfile(user.value.uid, { directoryHidden: next })
+    directoryHidden.value = next
+    await refreshProfile()
+  } catch (err) {
+    console.error('toggle directory', err)
+  } finally {
+    directorySaving.value = false
+  }
+}
+
+const exporting = ref(false)
+const exportError = ref<string | null>(null)
+
+async function exportData() {
+  if (exporting.value) return
+  exporting.value = true
+  exportError.value = null
+  try {
+    const callable = httpsCallable<Record<string, never>, Record<string, unknown>>(
+      functions,
+      'exportUserData',
+    )
+    const result = await callable({})
+    const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `staija-export-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    exportError.value = (err as { message?: string }).message ?? 'Could not export data.'
+  } finally {
+    exporting.value = false
+  }
 }
 
 // --- Account deletion -------------------------------------------------
@@ -157,7 +372,6 @@ const showConfirm = ref(false)
 const confirmText = ref('')
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
-
 const confirmReady = computed(() => confirmText.value.trim() === 'DELETE')
 
 async function handleDelete() {
@@ -165,16 +379,13 @@ async function handleDelete() {
   deleting.value = true
   deleteError.value = null
   try {
-    const callable = httpsCallable<Record<string, never>, { ok: boolean; partialFailures?: string[] }>(
-      functions,
-      'deleteAccount',
-    )
+    const callable = httpsCallable<Record<string, never>, { ok: boolean }>(functions, 'deleteAccount')
     await callable({})
     await signOut()
     router.replace({ path: '/', query: { deleted: '1' } })
   } catch (err) {
-    const message = (err as { message?: string }).message ?? 'Could not delete your account. Try again.'
-    deleteError.value = message
+    deleteError.value =
+      (err as { message?: string }).message ?? 'Could not delete your account. Try again.'
   } finally {
     deleting.value = false
   }
@@ -204,7 +415,6 @@ async function handleDelete() {
           </Body>
 
           <div class="flex flex-col gap-6">
-            <!-- Avatar -->
             <div class="flex items-center gap-5">
               <div
                 class="w-20 h-20 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center text-xl font-semibold flex-shrink-0 overflow-hidden"
@@ -240,11 +450,8 @@ async function handleDelete() {
               </div>
             </div>
 
-            <!-- Display name -->
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
-                Display name
-              </label>
+              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Display name</label>
               <input
                 v-model="form.displayName"
                 type="text"
@@ -254,16 +461,10 @@ async function handleDelete() {
               />
             </div>
 
-            <!-- Bio -->
             <div class="flex flex-col gap-2">
               <div class="flex items-end justify-between">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
-                  Bio
-                </label>
-                <span
-                  class="text-xs"
-                  :class="bioOver ? 'text-red-600 font-semibold' : 'text-ink/40'"
-                >
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Bio</label>
+                <span class="text-xs" :class="bioOver ? 'text-red-600 font-semibold' : 'text-ink/40'">
                   {{ form.bio.length }} / {{ BIO_MAX }}
                 </span>
               </div>
@@ -277,8 +478,7 @@ async function handleDelete() {
 
             <p v-if="saveError" class="text-sm text-red-700">{{ saveError }}</p>
             <p v-else-if="saveSuccess" class="text-sm text-emerald-700">
-              <Icon icon="lucide:check" width="14" class="inline -mt-0.5" />
-              Saved.
+              <Icon icon="lucide:check" width="14" class="inline -mt-0.5" /> Saved.
             </p>
 
             <div class="flex flex-wrap gap-3 pt-2">
@@ -286,9 +486,7 @@ async function handleDelete() {
                 <Icon v-if="saving" icon="lucide:loader-2" width="14" class="animate-spin" />
                 {{ saving ? 'Saving…' : 'Save changes' }}
               </UiButton>
-              <UiButton variant="secondary" :disabled="!dirty || saving" @click="handleReset">
-                Reset
-              </UiButton>
+              <UiButton variant="secondary" :disabled="!dirty || saving" @click="handleReset">Reset</UiButton>
             </div>
           </div>
         </UiCard>
@@ -297,9 +495,7 @@ async function handleDelete() {
         <UiCard class="p-6 md:p-10 bg-white">
           <Eyebrow class="text-ink/60 mb-3 block">Account</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Account info</Heading>
-          <Body class="text-ink/60 text-sm mb-6">
-            Read-only. Email and role are managed by an admin.
-          </Body>
+          <Body class="text-ink/60 text-sm mb-6">Read-only. Email and role are managed by an admin.</Body>
           <dl class="flex flex-col gap-3 text-sm">
             <div class="flex justify-between gap-4">
               <dt class="text-ink/60">Email</dt>
@@ -322,6 +518,213 @@ async function handleDelete() {
               <dd class="text-ink">{{ formatDate(userProfile?.createdAt) }}</dd>
             </div>
           </dl>
+        </UiCard>
+
+        <!-- Notifications -->
+        <UiCard class="p-6 md:p-10 bg-white">
+          <Eyebrow class="text-brand-violet mb-3 block">Notifications</Eyebrow>
+          <Heading :level="2" class="mb-2 text-xl">Email preferences</Heading>
+          <Body class="text-ink/60 text-sm mb-6">
+            Transactional emails (welcome, application status, password resets, reference invites)
+            are always sent — they're tied to your account.
+          </Body>
+
+          <div class="flex flex-col divide-y divide-ink/10">
+            <label
+              v-for="entry in notifKeys"
+              :key="entry.key"
+              class="flex items-start gap-4 py-4 cursor-pointer first:pt-0 last:pb-0"
+            >
+              <button
+                type="button"
+                class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors mt-0.5"
+                :class="isEnabled(notifPrefs, entry.key) ? 'bg-brand-violet' : 'bg-ink/20'"
+                role="switch"
+                :aria-checked="isEnabled(notifPrefs, entry.key)"
+                @click.prevent="toggleNotif(entry.key)"
+              >
+                <span
+                  class="inline-block h-5 w-5 rounded-full bg-white shadow translate-y-0.5 transition-transform"
+                  :class="isEnabled(notifPrefs, entry.key) ? 'translate-x-5' : 'translate-x-0.5'"
+                />
+              </button>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-ink">{{ entry.label }}</div>
+                <div class="text-xs text-ink/60 mt-0.5">{{ entry.description }}</div>
+              </div>
+            </label>
+          </div>
+
+          <p v-if="notifMessage" class="text-sm text-emerald-700 mt-4">{{ notifMessage }}</p>
+
+          <div class="pt-6">
+            <UiButton variant="primary" :disabled="!notifDirty || notifSaving" @click="saveNotifs">
+              <Icon v-if="notifSaving" icon="lucide:loader-2" width="14" class="animate-spin" />
+              {{ notifSaving ? 'Saving…' : 'Save preferences' }}
+            </UiButton>
+          </div>
+        </UiCard>
+
+        <!-- Security -->
+        <UiCard class="p-6 md:p-10 bg-white">
+          <Eyebrow class="text-brand-violet mb-3 block">Security</Eyebrow>
+          <Heading :level="2" class="mb-2 text-xl">Sign-in & sessions</Heading>
+          <Body class="text-ink/60 text-sm mb-6">Keep your account secure.</Body>
+
+          <div class="flex flex-col gap-6">
+            <!-- Email verification -->
+            <div class="flex items-start justify-between gap-4 pb-6 border-b hairline-ink">
+              <div class="flex-1">
+                <div class="text-sm font-medium text-ink mb-1">Email verification</div>
+                <div class="text-xs text-ink/60">
+                  <template v-if="user?.emailVerified">
+                    <Icon icon="lucide:badge-check" width="12" class="inline -mt-0.5 text-emerald-600" />
+                    Your email is verified.
+                  </template>
+                  <template v-else>Your email isn't verified yet.</template>
+                </div>
+                <p v-if="verificationMessage" class="text-xs text-emerald-700 mt-2">{{ verificationMessage }}</p>
+              </div>
+              <UiButton
+                v-if="!user?.emailVerified"
+                variant="secondary"
+                :disabled="sendingVerification"
+                @click="resendVerification"
+              >
+                <Icon v-if="sendingVerification" icon="lucide:loader-2" width="14" class="animate-spin" />
+                {{ sendingVerification ? 'Sending…' : 'Send verification' }}
+              </UiButton>
+            </div>
+
+            <!-- Password change -->
+            <div v-if="hasPasswordProvider" class="pb-6 border-b hairline-ink">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-ink mb-1">Password</div>
+                  <div class="text-xs text-ink/60">Change your sign-in password.</div>
+                </div>
+                <UiButton
+                  v-if="!showPwForm"
+                  variant="secondary"
+                  @click="showPwForm = true; pwError = null"
+                >
+                  Change password
+                </UiButton>
+              </div>
+
+              <div v-if="showPwForm" class="flex flex-col gap-3 mt-5">
+                <input
+                  v-model="pwCurrent"
+                  type="password"
+                  placeholder="Current password"
+                  autocomplete="current-password"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                />
+                <input
+                  v-model="pwNew"
+                  type="password"
+                  placeholder="New password (8+ characters)"
+                  autocomplete="new-password"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                />
+                <input
+                  v-model="pwNewConfirm"
+                  type="password"
+                  placeholder="Confirm new password"
+                  autocomplete="new-password"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                />
+                <p v-if="pwError" class="text-sm text-red-700">{{ pwError }}</p>
+                <div class="flex gap-2 pt-1">
+                  <UiButton variant="primary" :disabled="!pwValid || pwSaving" @click="changePassword">
+                    <Icon v-if="pwSaving" icon="lucide:loader-2" width="14" class="animate-spin" />
+                    {{ pwSaving ? 'Saving…' : 'Update password' }}
+                  </UiButton>
+                  <UiButton
+                    variant="secondary"
+                    :disabled="pwSaving"
+                    @click="showPwForm = false; pwCurrent = ''; pwNew = ''; pwNewConfirm = ''; pwError = null"
+                  >
+                    Cancel
+                  </UiButton>
+                </div>
+              </div>
+              <p v-if="pwSuccess" class="text-sm text-emerald-700 mt-3">
+                <Icon icon="lucide:check" width="14" class="inline -mt-0.5" /> Password updated.
+              </p>
+            </div>
+
+            <!-- Sign out everywhere -->
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="text-sm font-medium text-ink mb-1">Sign out of all devices</div>
+                <div class="text-xs text-ink/60">
+                  Invalidates every signed-in browser, phone, or tab. Useful if you suspect someone
+                  else has access. Other devices will be asked to sign in again within an hour.
+                </div>
+                <p v-if="signOutMessage" class="text-xs text-red-700 mt-2">{{ signOutMessage }}</p>
+              </div>
+              <UiButton variant="secondary" :disabled="signingOutEverywhere" @click="signOutEverywhere">
+                <Icon v-if="signingOutEverywhere" icon="lucide:loader-2" width="14" class="animate-spin" />
+                {{ signingOutEverywhere ? 'Signing out…' : 'Sign out everywhere' }}
+              </UiButton>
+            </div>
+          </div>
+        </UiCard>
+
+        <!-- Privacy -->
+        <UiCard class="p-6 md:p-10 bg-white">
+          <Eyebrow class="text-brand-violet mb-3 block">Privacy</Eyebrow>
+          <Heading :level="2" class="mb-2 text-xl">Visibility & data</Heading>
+          <Body class="text-ink/60 text-sm mb-6">Control what's visible and download a copy of your data.</Body>
+
+          <div class="flex flex-col gap-6">
+            <!-- Directory visibility (alumni) -->
+            <label
+              v-if="showDirectoryToggle"
+              class="flex items-start justify-between gap-4 cursor-pointer pb-6 border-b hairline-ink"
+            >
+              <div class="flex-1">
+                <div class="text-sm font-medium text-ink mb-1">Show me in the alumni directory</div>
+                <div class="text-xs text-ink/60">
+                  When off, your profile is hidden from other alumni searching the directory.
+                  You can still send and receive connection requests directly.
+                </div>
+              </div>
+              <button
+                type="button"
+                class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors mt-0.5"
+                :class="!directoryHidden ? 'bg-brand-violet' : 'bg-ink/20'"
+                role="switch"
+                :aria-checked="!directoryHidden"
+                :disabled="directorySaving"
+                @click.prevent="toggleDirectory"
+              >
+                <span
+                  class="inline-block h-5 w-5 rounded-full bg-white shadow translate-y-0.5 transition-transform"
+                  :class="!directoryHidden ? 'translate-x-5' : 'translate-x-0.5'"
+                />
+              </button>
+            </label>
+
+            <!-- Data export -->
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="text-sm font-medium text-ink mb-1">Export your data</div>
+                <div class="text-xs text-ink/60">
+                  Download a JSON file containing every record we hold about you — profile,
+                  applications, donations, notifications, audit log, and signed download URLs
+                  for any files you've uploaded.
+                </div>
+                <p v-if="exportError" class="text-xs text-red-700 mt-2">{{ exportError }}</p>
+              </div>
+              <UiButton variant="secondary" :disabled="exporting" @click="exportData">
+                <Icon v-if="exporting" icon="lucide:loader-2" width="14" class="animate-spin" />
+                <Icon v-else icon="lucide:download" width="14" />
+                {{ exporting ? 'Preparing…' : 'Download' }}
+              </UiButton>
+            </div>
+          </div>
         </UiCard>
 
         <!-- Danger zone -->

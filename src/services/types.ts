@@ -55,6 +55,16 @@ export type Permission =
   | 'contact_support'
   | 'manage_profile'
 
+export interface EmailPreferences {
+  // Transactional email (welcome, application status, reference invites,
+  // password resets) is not opt-out-able and is intentionally NOT listed
+  // here. These flags only cover non-essential / marketing-adjacent sends.
+  eventReminders?: boolean
+  mentorNotifications?: boolean
+  productUpdates?: boolean
+  newsletter?: boolean
+}
+
 export interface UserProfile {
   uid: string
   email: string
@@ -66,6 +76,11 @@ export interface UserProfile {
   updatedAt: Date
   program?: 'stepup_scholars' | 'dynamerge'
   applicationStatus?: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected'
+  // Privacy: hide profile from the alumni directory (default visible).
+  directoryHidden?: boolean
+  // Email preferences. Missing or undefined means "opted in" — the existing
+  // user base predates this field and we don't want to silently mute them.
+  emailPreferences?: EmailPreferences
 }
 
 // A mentor↔student pairing for the duration of a program.
