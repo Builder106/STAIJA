@@ -9,6 +9,7 @@ import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
+import RichText from '../components/learn/RichText.vue'
 import { getBlogPost, type BlogPost } from '../services/content'
 import { donationsEnabled } from '../config/features'
 
@@ -125,44 +126,8 @@ onMounted(load)
             </button>
           </div>
 
-          <article class="flex flex-col gap-6 max-w-none w-full text-ink/80 leading-relaxed">
-            <p class="text-base leading-relaxed m-0">
-              It was 2:00 PM on a Tuesday when the hum of the air conditioning died. In a lab in
-              Lagos, this is not an uncommon occurrence, but today it mattered. I was in the
-              middle of running a Polymerase Chain Reaction (PCR) test for my final StepUp
-              project on soil microbiomes.
-            </p>
-            <h2 class="font-display text-3xl font-semibold mt-4 m-0 text-ink">The clock is ticking</h2>
-            <p class="m-0">
-              A PCR machine relies on precise temperature cycling. If the machine loses power
-              mid-cycle, your samples—hours of careful pipetting and precious reagents—can be
-              compromised. My mentor, Dr. Amina, always told me, "Science isn't just about what
-              happens when everything works perfectly. It's about how you respond when it
-              doesn't."
-            </p>
-            <blockquote class="font-display text-2xl italic border-l-4 border-brand-violet pl-6 py-2 text-ink m-0">
-              "Science isn't just about what happens when everything works perfectly. It's about
-              how you respond when it doesn't."
-            </blockquote>
-            <p class="m-0">
-              We had exactly a four-minute window before the internal temperature of the
-              thermocycler would drift too far from the protocol. I didn't panic. Instead, I
-              remembered our contingency plan.
-            </p>
-            <h2 class="font-display text-3xl font-semibold mt-4 m-0 text-ink">Resourcefulness as a skill</h2>
-            <p class="m-0">
-              While my peers in well-funded labs abroad might take stable electricity for
-              granted, we have learned to engineer resilience into our protocols. We immediately
-              moved the samples to a pre-prepared insulated cooler with temperature-calibrated
-              gel packs, pausing the reaction physically until the backup generator kicked in.
-            </p>
-            <p class="m-0">Ten minutes later, the lights flickered back on. We resumed the cycle. The results? Flawless.</p>
-            <p class="m-0">
-              This experience taught me that true innovation isn't just about new discoveries;
-              it's about making science happen against the odds. When I present this research
-              next month, the data will speak for itself, but the story behind the data is what
-              makes me a scientist.
-            </p>
+          <article class="flex flex-col max-w-none w-full text-ink/80 leading-relaxed">
+            <RichText :body="post.body" />
           </article>
         </div>
 

@@ -36,6 +36,12 @@ interface ContentfulEntryPayload {
 const COLLECTION_MAP: Record<string, string> = {
   blogPost: 'cms_blogPosts',
   event: 'cms_events',
+  // LMS content types — see /Users/.../misty-nibbling-steele.md plan for
+  // shape. Same flatten + soft-delete behavior; no special handling.
+  course: 'cms_courses',
+  module: 'cms_modules',
+  lesson: 'cms_lessons',
+  assignmentSpec: 'cms_assignmentSpecs',
 }
 
 export const contentfulWebhook = onRequest(

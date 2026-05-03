@@ -18,7 +18,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'manage_alumni_profiles',
     'view_public_content',
     'contact_support',
-    'manage_profile'
+    'manage_profile',
+    'grade_submissions',
+    'manage_cohorts',
+    'manage_sessions'
   ],
 
   staff: [
@@ -31,7 +34,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'access_alumni_portal',
     'view_public_content',
     'contact_support',
-    'manage_profile'
+    'manage_profile',
+    'grade_submissions',
+    'manage_cohorts',
+    'manage_sessions'
   ],
 
   alumni: [
@@ -58,6 +64,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'access_student_portal',
     'participate_in_programs',
     'submit_program_work',
+    'submit_assignments',
     'access_mentor_support',
     'view_public_content',
     'contact_support',
@@ -68,6 +75,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'view_program_content',
     'view_assigned_students',
     'submit_mentor_feedback',
+    'grade_submissions',
+    'manage_sessions',
     'access_mentor_support',
     'view_public_content',
     'contact_support',

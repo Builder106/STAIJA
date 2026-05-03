@@ -21,7 +21,10 @@ const { isStaff, isMentor, isStudent, isAlumni } = usePermissions()
 // the post-login fallback.
 const dashboardPath = computed(() => {
   if (isStaff.value) return '/admin'
-  if (isStudent.value) return '/student'
+  // Students land in the LMS directly. The legacy /student dashboard
+  // is kept around with quick-link buttons that all point to /learn,
+  // but going straight there is the better UX for active learners.
+  if (isStudent.value) return '/learn'
   if (isAlumni.value) return '/alumni'
   if (isMentor.value) return '/mentor'
   return '/applicant'

@@ -39,6 +39,35 @@ service firebase.storage {
         request.resource.contentType.matches('image/.*');
     }
 
+    // User avatar uploads. Owner writes their own (2 MB cap, image MIME),
+    // any authenticated user can read (avatars surface in the alumni
+    // directory and mentor lists). The default-deny match below was
+    // silently blocking writes from /account/settings before this rule.
+    match /avatars/{uid}/{rest=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.size < 2 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // LMS assignment submissions. Path is submissions/{uid}/{enrollmentId}/
+    // so ownership is enforceable directly here. Staff/admin can read all;
+    // mentors can read for their assigned students (rule grants mentor
+    // role broadly here — finer-grained mentor↔student check is done at
+    // the Firestore document layer where assignment_submissions has the
+    // mentorId denormalized). 10 MB cap matches the default
+    // assignmentSpec.maxFileSizeMb in Contentful.
+    match /submissions/{uid}/{rest=**} {
+      allow read: if request.auth != null && (
+        request.auth.uid == uid ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'mentor']
+      );
+      allow write: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.size < 10 * 1024 * 1024;
+    }
+
     // Default deny.
     match /{allPaths=**} {
       allow read, write: if false;

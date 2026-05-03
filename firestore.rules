@@ -156,6 +156,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // LMS course content mirror. Read-locked to authenticated users — course
+    // content shouldn't be public. Writes are server-only (Contentful webhook
+    // via admin SDK, same as the cms_* collections above).
+    match /cms_courses/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    match /cms_modules/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    match /cms_lessons/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    match /cms_assignmentSpecs/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // Audit logs collection rules (for tracking role changes)
     match /audit_logs/{logId} {
       // Only admins can read audit logs
@@ -196,6 +216,76 @@ service cloud.firestore {
                        request.resource.data.mentorId == resource.data.mentorId &&
                        request.resource.data.studentId == resource.data.studentId;
       allow delete: if hasAnyRole(['staff', 'admin']);
+    }
+
+    // --- LMS operational collections -----------------------------------
+    //
+    // All writes go through Cloud Functions (admin SDK bypasses these
+    // rules). Direct client writes are denied so business rules — like
+    // "you can only enroll yourself if a callable says so", or "grade
+    // updates only flip approved fields" — live in one place.
+
+    // Cohorts: course cycles. Any authenticated user can read — the
+    // data here is operational metadata, not sensitive (no PII), and
+    // students need to read their own cohort to render the dashboard.
+    // Direct staff/admin writes from /admin/cohorts; the enrollment
+    // flow goes through enrollStudent (which reads but doesn't write
+    // cohorts) so there's no callable to gate it on.
+    match /cohorts/{cohortId} {
+      allow read: if isAuthenticated();
+      allow create, update: if hasAnyRole(['staff', 'admin']);
+      allow delete: if hasRole('admin');
+    }
+
+    // Enrollments. Student or assigned mentor can read their own;
+    // staff/admin can read all. Writes are server-only.
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.mentorId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow write: if false;
+    }
+
+    // Lesson progress. Owner can read, mentor can read for their
+    // assigned student, staff/admin all access. Writes are server-only
+    // so completion can't be self-serviced from a tampered client.
+    match /lesson_progress/{progressId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow write: if false;
+    }
+
+    // Assignment submissions. Student creates own, reads own; mentor
+    // reads + grades their assigned students'; staff/admin all access.
+    // Grading writes go through gradeSubmission to keep the side-effect
+    // (notification, audit) coupled.
+    match /assignment_submissions/{submissionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.mentorId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow write: if false;
+    }
+
+    // Live sessions. Cohort members and staff/admin can read.
+    match /live_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Session RSVPs. Owner can read own; staff/admin all access. Writes
+    // server-only so RSVP triggers attendance/notification side-effects.
+    match /session_rsvps/{rsvpId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        hasAnyRole(['staff', 'admin'])
+      );
+      allow write: if false;
     }
   }
 }

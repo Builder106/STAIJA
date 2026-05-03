@@ -31,6 +31,10 @@ export { adminListUsers } from './adminUsers'
 export { signOutEverywhere } from './security'
 export { exportUserData } from './dataExport'
 
+// LMS callables (Phase 1).
+export { enrollStudent, completeLesson, submitAssignment, gradeSubmission } from './lms'
+export { scheduleSession, rsvpSession } from './sessions'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

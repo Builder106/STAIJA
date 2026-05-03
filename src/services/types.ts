@@ -54,6 +54,11 @@ export type Permission =
   | 'view_public_content'
   | 'contact_support'
   | 'manage_profile'
+  // LMS permissions (Phase 1)
+  | 'submit_assignments'
+  | 'grade_submissions'
+  | 'manage_cohorts'
+  | 'manage_sessions'
 
 export interface EmailPreferences {
   // Transactional email (welcome, application status, reference invites,
@@ -232,4 +237,161 @@ export interface ProgramHistorySnapshot {
   data: Program
   savedAt: Date
   savedBy: string
+}
+
+// --- LMS types ----------------------------------------------------------
+//
+// Editorial content lives in Contentful, mirrored to Firestore via
+// functions/src/contentful.ts. Operational data (cohorts, enrollments,
+// progress, submissions, sessions) is Firestore-native.
+
+// Mirror of a Contentful `course` entry. `_sys` carries the publish metadata
+// the webhook stamps onto every mirrored doc.
+export interface CmsCourse {
+  slug: string
+  title: string
+  program: 'stepup_scholars' | 'dynamerge'
+  summary?: string
+  coverImage?: { url: string; title?: string } | string
+  modules?: { sys: { id: string } }[]
+  estimatedHours?: number
+  track?: string
+  published?: boolean
+  version?: string
+  _sys?: { id: string; contentType: string; createdAt: string; updatedAt: string; mirroredAt: string }
+}
+
+export interface CmsModule {
+  slug: string
+  title: string
+  summary?: string
+  lessons?: { sys: { id: string } }[]
+  unlockRule?: 'sequential' | 'open'
+  assignments?: { sys: { id: string } }[]
+  _sys?: CmsCourse['_sys']
+}
+
+export interface CmsLesson {
+  slug: string
+  title: string
+  body?: unknown // Contentful Rich Text document
+  videoUrl?: string
+  attachments?: { url: string; title?: string }[]
+  estimatedMinutes?: number
+  completionCriteria?: 'viewed' | 'assignment_submitted' | 'quiz_passed'
+  _sys?: CmsCourse['_sys']
+}
+
+export interface CmsAssignmentSpec {
+  slug: string
+  title: string
+  instructions?: unknown // Contentful Rich Text document
+  submissionType: 'text' | 'file' | 'link' | 'text_or_file'
+  maxFileSizeMb?: number
+  acceptedFileTypes?: string[]
+  dueOffsetDays?: number
+  _sys?: CmsCourse['_sys']
+}
+
+// A cycle of a course. StepUp / Dynamerge run as cohorts with set start
+// and end dates, a roster of students, and a pool of mentors.
+export interface Cohort {
+  id?: string
+  program: 'stepup_scholars' | 'dynamerge'
+  courseSlug: string
+  // Pinned at cohort creation so editing the course in Contentful doesn't
+  // retroactively change the syllabus for an in-flight cohort.
+  courseVersion: string
+  name?: string
+  startDate: Date
+  endDate: Date
+  mentorPool: string[] // mentor uids; round-robin assigned at enroll
+  status: 'planned' | 'active' | 'completed'
+  // Students accepted before the cohort starts wait here. onCohortStart
+  // (Phase 2) drains them into enrollments at kickoff.
+  queuedStudentIds?: string[]
+  createdAt: Date
+  createdBy?: string
+}
+
+// A student-in-cohort relationship. The doc id is `${studentId}_${cohortId}`
+// so re-enrolling the same student into the same cohort is idempotent.
+export interface Enrollment {
+  id?: string
+  studentId: string
+  cohortId: string
+  courseSlug: string
+  program: 'stepup_scholars' | 'dynamerge'
+  // Denormalized at enroll time. The matching mentor_assignments row is
+  // the canonical pairing; this copy keeps reads fast.
+  mentorId: string
+  status: 'active' | 'completed' | 'withdrawn'
+  enrolledAt: Date
+  completedAt?: Date
+}
+
+// Per-lesson, per-enrollment state. Doc id is
+// `${enrollmentId}_${lessonSlug}`.
+export interface LessonProgress {
+  id?: string
+  enrollmentId: string
+  studentId: string
+  lessonSlug: string
+  moduleSlug: string
+  status: 'not_started' | 'viewed' | 'completed'
+  firstViewedAt?: Date
+  completedAt?: Date
+}
+
+export interface AssignmentSubmission {
+  id?: string
+  enrollmentId: string
+  studentId: string
+  // Denormalized so mentor queries don't require a second hop.
+  mentorId: string
+  assignmentSlug: string
+  // Optional — most assignments are tied to a lesson, but rubric-only
+  // capstone submissions may not be.
+  lessonSlug?: string
+  submissionType: 'text' | 'file' | 'link'
+  textContent?: string
+  fileUrl?: string
+  fileName?: string
+  linkUrl?: string
+  submittedAt: Date
+  status: 'submitted' | 'returned' | 'graded'
+  grade?: number
+  mentorComment?: string
+  gradedAt?: Date
+  gradedBy?: string
+}
+
+// A scheduled live mentor session for a cohort. Operational, not
+// editorial — never lives in Contentful.
+export interface LiveSession {
+  id?: string
+  cohortId: string
+  courseSlug: string
+  title: string
+  description?: string
+  startsAt: Date
+  endsAt: Date
+  meetingUrl: string
+  meetingProvider: 'zoom' | 'meet' | 'other'
+  hostUid: string
+  recordingUrl?: string
+  status: 'scheduled' | 'live' | 'completed' | 'cancelled'
+  createdAt: Date
+  createdBy: string
+}
+
+// A student's RSVP for a session. Doc id is
+// `${sessionId}_${studentId}`.
+export interface SessionRsvp {
+  id?: string
+  sessionId: string
+  studentId: string
+  rsvped: 'yes' | 'no' | 'maybe'
+  attended?: boolean
+  respondedAt: Date
 }

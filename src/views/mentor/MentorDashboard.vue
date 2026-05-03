@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
@@ -8,19 +9,28 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiChip from '../../components/ui/UiChip.vue'
+import UiButton from '../../components/ui/UiButton.vue'
 import { AuthService, MentorService, type AssignedStudent } from '../../services/firebase'
+import { SubmissionService } from '../../services/learn'
 import { useAuth } from '../../composables/useAuth'
 
 const { displayName } = useAuth()
 
 const assignments = ref<AssignedStudent[]>([])
+const ungradedByStudent = ref<Record<string, number>>({})
 const loading = ref(true)
 const error = ref('')
+
+let queueUnsub: (() => void) | null = null
 
 const firstName = computed(() => {
   const name = displayName.value ?? ''
   return name.split(/[\s@]/)[0] || 'there'
 })
+
+const totalUngraded = computed(() =>
+  Object.values(ungradedByStudent.value).reduce((a, b) => a + b, 0),
+)
 
 async function loadData() {
   loading.value = true
@@ -29,12 +39,27 @@ async function loadData() {
     const currentUser = AuthService.getCurrentUser()
     if (!currentUser) return
     assignments.value = await MentorService.getAssignedStudents(currentUser.uid)
+
+    // Live-counting ungraded submissions for the badge. Snapshot updates
+    // whenever a student submits or this mentor grades, so the badge is
+    // current without needing to refresh.
+    queueUnsub = SubmissionService.subscribeMentorQueue(currentUser.uid, (subs) => {
+      const tally: Record<string, number> = {}
+      for (const s of subs) {
+        tally[s.studentId] = (tally[s.studentId] ?? 0) + 1
+      }
+      ungradedByStudent.value = tally
+    })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load your assigned students.'
   } finally {
     loading.value = false
   }
 }
+
+onUnmounted(() => {
+  if (queueUnsub) queueUnsub()
+})
 
 function programLabel(p: AssignedStudent['program']) {
   return p === 'stepup_scholars' ? 'StepUp Scholars' : 'Dynamerge'
@@ -50,13 +75,27 @@ onMounted(loadData)
 <template>
   <Section class="!pt-12 !pb-24">
     <Container>
-      <div class="flex flex-col gap-3 mb-12">
+      <div class="flex flex-col gap-3 mb-8">
         <Eyebrow class="text-brand-violet">Mentor portal</Eyebrow>
         <Heading :level="1">Hi, {{ firstName }}.</Heading>
         <Body class="text-ink/70 max-w-xl">
-          Your assigned students are listed below. Click into one to see your
-          previous notes and leave new feedback.
+          Your assigned students are listed below. Click a card to see their progress and
+          submissions, or jump straight to feedback.
         </Body>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mb-10">
+        <UiButton variant="secondary" :to="'/learn/mentor/schedule'">
+          <Icon icon="lucide:calendar-plus" width="14" />
+          Schedule live session
+        </UiButton>
+        <span
+          v-if="totalUngraded > 0"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+        >
+          <Icon icon="lucide:bell" width="12" />
+          {{ totalUngraded }} ungraded submission{{ totalUngraded === 1 ? '' : 's' }}
+        </span>
       </div>
 
       <div v-if="loading" class="flex items-center gap-3 text-ink/60">
@@ -105,7 +144,7 @@ onMounted(loadData)
         <RouterLink
           v-for="a in assignments"
           :key="a.id ?? `${a.mentorId}-${a.studentId}`"
-          :to="`/mentor/feedback/${a.studentId}`"
+          :to="`/learn/mentor/students/${a.studentId}`"
           class="block group focus-ring-brand rounded-2xl"
         >
           <UiCard hoverable class="p-6 flex items-center gap-6">
@@ -115,13 +154,19 @@ onMounted(loadData)
                   {{ studentLabel(a) }}
                 </h3>
                 <UiChip>{{ programLabel(a.program) }}</UiChip>
+                <span
+                  v-if="ungradedByStudent[a.studentId]"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 ring-1 ring-red-200"
+                >
+                  {{ ungradedByStudent[a.studentId] }} ungraded
+                </span>
               </div>
               <p v-if="a.student?.email" class="text-sm text-ink/60 m-0">
                 {{ a.student.email }}
               </p>
             </div>
             <div class="flex items-center gap-2 text-sm font-semibold text-brand-violet shrink-0">
-              <span class="hidden sm:inline">Leave feedback</span>
+              <span class="hidden sm:inline">View student</span>
               <Icon
                 icon="lucide:arrow-right"
                 width="18"

@@ -386,6 +386,111 @@ export function welcomeEmail(params: {
   return { html, text }
 }
 
+export function enrollmentEmail(params: {
+  firstName: string
+  programLabel: string
+  courseUrl: string
+}): { html: string; text: string } {
+  const { firstName, programLabel, courseUrl } = params
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading("You're enrolled.")}
+    ${p(`Hi ${firstName},`)}
+    ${p(`Welcome to ${programLabel}. Your course is ready and your mentor is paired up — open the dashboard whenever you have a few minutes to start.`)}
+    ${p(`Lessons are async. You'll have live mentor sessions on the cohort calendar, and assignments come with their own deadlines. Take it at the pace that fits.`, 'margin-bottom:0;')}
+    ${button('Open my course', courseUrl)}
+    ${divider()}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `Welcome to ${programLabel}. Your course is ready and your mentor is paired up — open the dashboard whenever you have a few minutes to start.`,
+    ``,
+    `Lessons are async. You'll have live mentor sessions on the cohort calendar, and assignments come with their own deadlines. Take it at the pace that fits.`,
+    ``,
+    `Open your course: ${courseUrl}`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
+export function submissionGradedEmail(params: {
+  firstName: string
+  assignmentSlug: string
+  grade?: number
+  mentorComment: string
+  submissionUrl: string
+}): { html: string; text: string } {
+  const { firstName, grade, mentorComment, submissionUrl } = params
+
+  const html = layout(`
+    ${eyebrow('Submission graded')}
+    ${heading('Your mentor reviewed your submission.')}
+    ${p(`Hi ${firstName},`)}
+    ${typeof grade === 'number' ? p(`Grade: <strong>${grade}</strong>.`) : ''}
+    ${mentorComment ? p(`Mentor comment: ${mentorComment}`) : ''}
+    ${p(`The full review is on your submission page.`, 'margin-bottom:0;')}
+    ${button('View submission', submissionUrl)}
+    ${divider()}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    typeof grade === 'number' ? `Grade: ${grade}.` : '',
+    mentorComment ? `Mentor comment: ${mentorComment}` : '',
+    ``,
+    `The full review is on your submission page.`,
+    ``,
+    `View submission: ${submissionUrl}`,
+    ``,
+    `— STAIJA`,
+  ]
+    .filter((l) => l !== '')
+    .join('\n')
+
+  return { html, text }
+}
+
+export function sessionInviteEmail(params: {
+  firstName: string
+  sessionTitle: string
+  startsAt: string // human-readable
+  meetingUrl: string
+}): { html: string; text: string } {
+  const { firstName, sessionTitle, startsAt, meetingUrl } = params
+
+  const html = layout(`
+    ${eyebrow('Live session')}
+    ${heading(sessionTitle)}
+    ${p(`Hi ${firstName},`)}
+    ${p(`Your cohort has a live session scheduled for <strong>${startsAt}</strong>.`)}
+    ${p(`Use the link below to join — it'll stay the same throughout the cohort if your mentor reuses it.`, 'margin-bottom:0;')}
+    ${button('Join session', meetingUrl)}
+    ${divider()}
+    ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `Your cohort has a live session scheduled: ${sessionTitle}`,
+    `Time: ${startsAt}`,
+    ``,
+    `Join: ${meetingUrl}`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
 export function accountDeletedEmail(params: {
   firstName: string
 }): { html: string; text: string } {

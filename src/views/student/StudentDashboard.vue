@@ -31,8 +31,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button @click="$router.push('/student/program')" class="btn-primary">
-                View Program Content
+              <button @click="$router.push('/learn')" class="btn-primary">
+                Open my course
               </button>
             </div>
           </div>
@@ -54,8 +54,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button @click="$router.push('/student/assignments')" class="btn-primary">
-                View Assignments
+              <button @click="$router.push('/learn')" class="btn-primary">
+                View assignments
               </button>
             </div>
           </div>
@@ -81,8 +81,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button @click="$router.push('/student/progress')" class="btn-secondary">
-                View Detailed Progress
+              <button @click="$router.push('/learn')" class="btn-secondary">
+                View detailed progress
               </button>
             </div>
           </div>
@@ -121,8 +121,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button @click="$router.push('/events')" class="btn-secondary">
-                View All Events
+              <button @click="$router.push('/learn/sessions')" class="btn-secondary">
+                View live sessions
               </button>
             </div>
           </div>

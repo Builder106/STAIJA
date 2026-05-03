@@ -67,6 +67,23 @@ const routes: RouteRecordRaw[] = [
   { path: '/admin/applications/:id/review', name: 'admin-review-application', component: () => import('../views/admin/ReviewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
   { path: '/admin/programs', name: 'admin-programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
+  { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/enroll', name: 'admin-enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+
+  // LMS routes — student-facing
+  { path: '/learn', name: 'learn-home', component: () => import('../views/learn/CourseHome.vue'), meta: { title: 'My course — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/course/:slug', name: 'learn-course', component: () => import('../views/learn/CourseHome.vue'), meta: { title: 'Course — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/module/:slug', name: 'learn-module', component: () => import('../views/learn/ModuleView.vue'), meta: { title: 'Module — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/lesson/:slug', name: 'learn-lesson', component: () => import('../views/learn/LessonView.vue'), meta: { title: 'Lesson — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/assignment/:slug', name: 'learn-assignment', component: () => import('../views/learn/AssignmentView.vue'), meta: { title: 'Assignment — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/submissions/:id', name: 'learn-submission', component: () => import('../views/learn/SubmissionDetail.vue'), meta: { title: 'Submission — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/sessions', name: 'learn-sessions', component: () => import('../views/learn/SessionsList.vue'), meta: { title: 'Sessions — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+  { path: '/learn/sessions/:id', name: 'learn-session', component: () => import('../views/learn/SessionDetail.vue'), meta: { title: 'Session — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
+
+  // LMS routes — mentor-facing
+  { path: '/learn/mentor/students/:studentId', name: 'learn-mentor-student', component: () => import('../views/learn/mentor/StudentDetail.vue'), meta: { title: 'Student — STAIJA', requiresAuth: true, permissions: ['view_assigned_students'] } },
+  { path: '/learn/mentor/submissions/:id', name: 'learn-mentor-submission', component: () => import('../views/learn/mentor/SubmissionReview.vue'), meta: { title: 'Review submission — STAIJA', requiresAuth: true, permissions: ['grade_submissions'] } },
+  { path: '/learn/mentor/schedule', name: 'learn-mentor-schedule', component: () => import('../views/learn/mentor/ScheduleSession.vue'), meta: { title: 'Schedule session — STAIJA', requiresAuth: true, permissions: ['manage_sessions'] } },
 
   // /content/* in-app CMS was retired in favour of Contentful (see commit
   // history). Editorial workflows now live at app.contentful.com — admins
