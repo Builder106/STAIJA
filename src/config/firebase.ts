@@ -26,14 +26,23 @@ const app = initializeApp(firebaseConfig)
 // Initialize App Check (browser only — App Check has no Node equivalent and
 // would crash SSR or test runs). Uses reCAPTCHA Enterprise.
 //
-// In dev, App Check is forced into debug mode: on the first load, Firebase
-// prints a fresh debug token to the console. Copy it once and register it in
-// Firebase Console → App Check → Apps → ⋮ → Manage debug tokens. To pin a
-// specific token (so it survives reloads without re-registering), set
-// VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.
+// On localhost, App Check is forced into debug mode: on the first load,
+// Firebase prints a fresh debug token to the console. Copy it once and
+// register it in Firebase Console → App Check → Apps → ⋮ → Manage debug
+// tokens. To pin a specific token (so it survives reloads without
+// re-registering), set VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.
+//
+// We gate this on hostname rather than import.meta.env.DEV because the
+// build flag can be wrong (e.g. NODE_ENV misconfigured on the host),
+// which would silently ship debug-mode App Check to production.
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1')
+
 let appCheck: AppCheck | null = null
 if (typeof window !== 'undefined') {
-  if (import.meta.env.DEV) {
+  if (isLocalhost) {
     const pinnedToken = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN as string | undefined
     ;(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = pinnedToken ?? true
   }
@@ -43,7 +52,7 @@ if (typeof window !== 'undefined') {
       provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
       isTokenAutoRefreshEnabled: true,
     })
-  } else if (import.meta.env.DEV) {
+  } else if (isLocalhost) {
     console.warn('[firebase] VITE_RECAPTCHA_ENTERPRISE_SITE_KEY not set — App Check skipped')
   }
 }
@@ -83,7 +92,7 @@ export const functions = getFunctions(app)
 let analytics: any = null
 let performance: any = null
 
-if (typeof window !== 'undefined' && import.meta.env.NODE_ENV === 'production') {
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
   analytics = getAnalytics(app)
   performance = getPerformance(app)
 }
