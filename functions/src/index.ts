@@ -30,6 +30,7 @@ export { deleteAccount } from './account'
 export { adminListUsers } from './adminUsers'
 export { signOutEverywhere } from './security'
 export { exportUserData } from './dataExport'
+export { setNewsletterSubscription } from './newsletterSubscription'
 
 // paystack.ts and newsletter.ts are intentionally NOT re-exported here.
 //

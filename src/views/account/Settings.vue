@@ -203,6 +203,29 @@ async function saveNotifs() {
     await DatabaseService.updateUserProfile(user.value.uid, {
       emailPreferences: { ...notifPrefs.value },
     })
+
+    // Newsletter is the only category live today (Mailgun list managed
+    // outside Firestore). Sync membership to match the toggle so the
+    // user actually stops receiving sends.
+    const newsletterChanged =
+      isEnabled(notifPrefs.value, 'newsletter') !== isEnabled(notifOriginal.value, 'newsletter')
+    if (newsletterChanged) {
+      try {
+        const callable = httpsCallable<{ subscribed: boolean }, { ok: boolean }>(
+          functions,
+          'setNewsletterSubscription',
+        )
+        await callable({ subscribed: isEnabled(notifPrefs.value, 'newsletter') })
+      } catch (err) {
+        console.error('Newsletter subscription update failed', err)
+        notifMessage.value =
+          'Saved, but the newsletter subscription change is taking longer than expected.'
+        notifOriginal.value = { ...notifPrefs.value }
+        await refreshProfile()
+        return
+      }
+    }
+
     notifOriginal.value = { ...notifPrefs.value }
     await refreshProfile()
     notifMessage.value = 'Saved.'
