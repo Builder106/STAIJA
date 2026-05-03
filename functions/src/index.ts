@@ -30,7 +30,10 @@ export { deleteAccount } from './account'
 export { adminListUsers } from './adminUsers'
 export { signOutEverywhere } from './security'
 export { exportUserData } from './dataExport'
-export { setNewsletterSubscription } from './newsletterSubscription'
+
+// setNewsletterSubscription is intentionally not re-exported until
+// MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
+// list exists. Same gating pattern as subscribeNewsletter above.
 
 // paystack.ts and newsletter.ts are intentionally NOT re-exported here.
 //

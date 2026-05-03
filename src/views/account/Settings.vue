@@ -145,6 +145,10 @@ function formatDate(date: unknown): string {
 
 // --- Notifications ----------------------------------------------------
 
+// Newsletter is omitted until the Mailgun mailing list is set up
+// (MAILGUN_LIST_ADDRESS secret + setNewsletterSubscription re-exported
+// from functions/src/index.ts). Showing a toggle that doesn't actually
+// affect Mailgun list membership would mislead users.
 const notifKeys: { key: keyof EmailPreferences; label: string; description: string }[] = [
   {
     key: 'eventReminders',
@@ -160,11 +164,6 @@ const notifKeys: { key: keyof EmailPreferences; label: string; description: stri
     key: 'productUpdates',
     label: 'Product updates',
     description: 'Occasional notes about new STAIJA features or programs.',
-  },
-  {
-    key: 'newsletter',
-    label: 'Newsletter',
-    description: "STAIJA's monthly newsletter with stories from current students and alumni.",
   },
 ]
 
@@ -203,29 +202,6 @@ async function saveNotifs() {
     await DatabaseService.updateUserProfile(user.value.uid, {
       emailPreferences: { ...notifPrefs.value },
     })
-
-    // Newsletter is the only category live today (Mailgun list managed
-    // outside Firestore). Sync membership to match the toggle so the
-    // user actually stops receiving sends.
-    const newsletterChanged =
-      isEnabled(notifPrefs.value, 'newsletter') !== isEnabled(notifOriginal.value, 'newsletter')
-    if (newsletterChanged) {
-      try {
-        const callable = httpsCallable<{ subscribed: boolean }, { ok: boolean }>(
-          functions,
-          'setNewsletterSubscription',
-        )
-        await callable({ subscribed: isEnabled(notifPrefs.value, 'newsletter') })
-      } catch (err) {
-        console.error('Newsletter subscription update failed', err)
-        notifMessage.value =
-          'Saved, but the newsletter subscription change is taking longer than expected.'
-        notifOriginal.value = { ...notifPrefs.value }
-        await refreshProfile()
-        return
-      }
-    }
-
     notifOriginal.value = { ...notifPrefs.value }
     await refreshProfile()
     notifMessage.value = 'Saved.'
