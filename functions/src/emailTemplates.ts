@@ -386,6 +386,37 @@ export function welcomeEmail(params: {
   return { html, text }
 }
 
+export function accountDeletedEmail(params: {
+  firstName: string
+}): { html: string; text: string } {
+  const { firstName } = params
+
+  const html = layout(`
+    ${eyebrow('Account deleted')}
+    ${heading('Your STAIJA account is gone.')}
+    ${p(`Hi ${firstName},`)}
+    ${p(`We've removed your STAIJA account and the personal data tied to it — your profile, applications, uploaded files, and any connections you'd made.`)}
+    ${p(`Some records have been retained where required: donation receipts (with your name removed) for tax and accounting, and audit logs for compliance. Mentor feedback you wrote about students stays with the program.`)}
+    ${p(`If you didn't initiate this deletion, please write to us right away at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, 'margin-bottom:0;')}
+    ${divider()}
+    ${p('— STAIJA', 'margin-top:0;margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `We've removed your STAIJA account and the personal data tied to it — your profile, applications, uploaded files, and any connections you'd made.`,
+    ``,
+    `Some records have been retained where required: donation receipts (with your name removed) for tax and accounting, and audit logs for compliance. Mentor feedback you wrote about students stays with the program.`,
+    ``,
+    `If you didn't initiate this deletion, please write to us right away at hello@staija.org.`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
 export function newApplicationStaffNotificationEmail(params: {
   applicantName: string
   applicantEmail: string

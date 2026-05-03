@@ -72,6 +72,9 @@ const routes: RouteRecordRaw[] = [
   // history). Editorial workflows now live at app.contentful.com — admins
   // get a deep-link from /admin's Quick Actions panel.
 
+  // Account settings (all authenticated users)
+  { path: '/account/settings', name: 'account-settings', component: () => import('../views/account/Settings.vue'), meta: { title: 'Account Settings — STAIJA', requiresAuth: true } },
+
   // Email Link Authentication
   { path: '/auth/email-link-callback', name: 'email-link-callback', component: () => import('../views/auth/EmailLinkCallback.vue'), meta: { title: 'Sign In — STAIJA' } },
 

@@ -90,6 +90,12 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
               <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>
               <span class="xl:hidden">Dashboard</span>
             </RouterLink>
+            <RouterLink
+              to="/account/settings"
+              class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
+            >
+              Settings
+            </RouterLink>
             <button
               type="button"
               class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
@@ -147,6 +153,9 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
               <template v-if="isAuthenticated">
                 <UiButton variant="primary" class="w-full justify-center" :to="dashboardPath">
                   Go to dashboard
+                </UiButton>
+                <UiButton variant="secondary" class="w-full justify-center" :to="'/account/settings'">
+                  Settings
                 </UiButton>
                 <UiButton variant="secondary" class="w-full justify-center" @click="handleSignOut">
                   Sign out
