@@ -203,6 +203,7 @@ export const cancelSubscription = onCall<{ subscriptionCode: string }>(
     region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
+    enforceAppCheck: true,
   },
   async (request) => {
     if (!request.auth) {

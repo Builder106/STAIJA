@@ -190,6 +190,7 @@ export const validateReferenceToken = onCall<{ token: string }>(
     secrets: [REFERENCE_TOKEN_SECRET],
     region: 'us-central1',
     cors: true,
+    enforceAppCheck: true,
   },
   async (request) => {
     const token = request.data?.token
