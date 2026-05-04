@@ -59,10 +59,14 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
   >
     <Container>
       <div class="flex items-center justify-between">
-        <RouterLink to="/" class="flex items-center gap-2 focus-ring-brand rounded-sm">
-          <span class="font-display font-bold text-2xl tracking-tighter text-gradient-brand">
-            STAIJA
-          </span>
+        <RouterLink to="/" class="flex items-center gap-2 focus-ring-brand rounded-sm" aria-label="STAIJA — home">
+          <img
+            src="/STAIJA.png"
+            alt="STAIJA"
+            width="40"
+            height="40"
+            class="h-10 w-10 rounded-md"
+          />
         </RouterLink>
 
         <nav class="hidden lg:flex items-center gap-8">

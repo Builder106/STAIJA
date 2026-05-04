@@ -20,8 +20,8 @@
 
 const VIOLET = '#8B55FF'
 const INK = '#0E1217'
-const PAPER = '#FAF7F2'
-const OUTER_BG = '#EDEAE2'  // slightly darker than paper for outer background
+const PAPER = '#F1F5F9'  // slate-100 — keeps in sync with --color-paper in src/style.css
+const OUTER_BG = '#E2E8F0'  // slate-200 — slightly darker than paper for outer background
 const MUTED = '#9C9087'
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 const SERIF = "Georgia, 'Times New Roman', serif"

@@ -58,10 +58,20 @@ onMounted(async () => {
 
 <template>
   <div class="flex flex-col">
-    <!-- Hero -->
-    <Section class="!pt-8 !pb-16 md:!pt-16 md:!pb-24 wash-violet-6">
+    <!-- Hero — gradient-forward "brand-mark territory". The site is
+         otherwise paper/ink/editorial; the hero is where the brand
+         gradient gets to be loud, so the page feels like a cousin of
+         the violet→cyan logo instead of a foil to it. -->
+    <Section class="!pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white">
+      <!-- Soft accent glow behind the Lottie. Hidden on small screens
+           where the artwork stacks below the copy and the glow would
+           wash out the headline. -->
+      <div
+        class="hidden lg:block absolute -right-24 top-1/2 -translate-y-1/2 w-[640px] h-[640px] gradient-blob pointer-events-none"
+        aria-hidden="true"
+      />
       <Container>
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center relative">
           <Motion
             :initial="{ opacity: 0, y: 12 }"
             :animate="{ opacity: 1, y: 0 }"
@@ -69,22 +79,22 @@ onMounted(async () => {
             class="flex flex-col gap-8 max-w-xl"
           >
             <Heading :level="1">
-              Africa's next <span class="text-brand-violet">scientist-leaders</span> start here.
+              Africa's next <span class="italic">scientist-leaders</span> start here.
             </Heading>
-            <Body large>
+            <Body large class="!text-white/85">
               We nurture ambitious high-school and gap-year students through
               intensive research programs, mentorship, and a pan-African
               community of practice.
             </Body>
             <div class="flex flex-wrap gap-4">
               <UiButton
-                variant="gradient"
+                variant="on-gradient"
                 :to="'/apply/stepup-scholars'"
                 @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
               >
                 Apply to StepUp
               </UiButton>
-              <UiButton variant="secondary" href="#programs">
+              <UiButton variant="on-gradient-ghost" href="#programs">
                 Explore programs
               </UiButton>
             </div>
@@ -96,7 +106,7 @@ onMounted(async () => {
             :transition="{ duration: 0.5, delay: 0.2 }"
             class="relative w-full aspect-[4/3] lg:aspect-square flex items-center justify-center"
           >
-            <HeroLottie class="w-full h-full max-w-[560px]" />
+            <HeroLottie class="w-full h-full max-w-[560px] relative" />
           </Motion>
         </div>
       </Container>

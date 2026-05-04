@@ -53,15 +53,23 @@ async function handleNewsletter(e: Event) {
 </script>
 
 <template>
-  <footer class="bg-ink text-paper py-16 md:py-20">
+  <footer class="bg-ink text-paper py-16 md:py-20 relative">
+    <!-- Gradient hairline at the top edge — continuity with the hero so
+         the brand gradient bookends the page instead of appearing only
+         once at the top. -->
+    <div class="absolute top-0 left-0 right-0 h-[2px] hairline-gradient" aria-hidden="true" />
     <Container>
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-y-12 gap-x-8 lg:gap-x-12">
         <!-- Brand + tagline + social + newsletter -->
         <div class="col-span-2 lg:col-span-2 flex flex-col gap-6 max-w-md">
-          <RouterLink to="/" class="inline-block focus-ring-brand rounded-sm">
-            <span class="font-display font-bold text-2xl tracking-tighter text-gradient-brand">
-              STAIJA
-            </span>
+          <RouterLink to="/" class="inline-flex items-center focus-ring-brand rounded-sm" aria-label="STAIJA — home">
+            <img
+              src="/STAIJA.png"
+              alt="STAIJA"
+              width="48"
+              height="48"
+              class="h-12 w-12 rounded-md"
+            />
           </RouterLink>
           <p class="text-paper/70 text-sm leading-relaxed m-0">
             Nurturing Africa's next generation of scientist-leaders through research,

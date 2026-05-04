@@ -7,7 +7,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #FAF7F2;
+  /* Page surface. Token is named `paper` for historical reasons but the
+     value is now slate-100 — a cool, slate-gray light surface that sits
+     in natural conversation with the violet→cyan brand gradient. The
+     previous warm cream (#FAF7F2) read as editorial/parchment and
+     fought the cool gradient logo; slate keeps the surface restrained
+     while letting the brand mark feel at home on the page. */
+  --color-paper: #F1F5F9;
   --color-ink: #0E1217;
   --color-brand-violet: #8B55FF;
   --color-brand-sky: #5EDBE7;
@@ -30,6 +36,25 @@
 
 @layer utilities {
   .bg-gradient-brand {
+    background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
+  }
+  /* Hero gradient — angled violet→sky with a deeper violet anchor on the
+     left so the surface has dimension. Used full-bleed on landing-page
+     heroes that are meant to read as "brand-mark territory" rather than
+     editorial paper. */
+  .bg-gradient-hero {
+    background-image:
+      radial-gradient(60% 80% at 80% 30%, rgba(94, 219, 231, 0.55) 0%, transparent 60%),
+      linear-gradient(135deg, #6B3FE0 0%, var(--color-brand-violet) 45%, var(--color-brand-sky) 100%);
+  }
+  /* Soft radial accent for placement behind hero artwork (Lottie, image,
+     etc.) — looks like a glow. Layer absolutely. */
+  .gradient-blob {
+    background-image: radial-gradient(closest-side, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+    filter: blur(8px);
+  }
+  /* 2-px gradient stripe for section transitions and footer top edge. */
+  .hairline-gradient {
     background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
   }
   .border-gradient-brand {
@@ -56,50 +81,67 @@
     outline-offset: 2px;
     border-radius: 2px;
   }
+  /* On gradient/dark surfaces, focus rings need to switch to a light
+     color so they remain visible. */
+  .focus-ring-inverse:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 }
 
 /* Brand-surface scope — applied on the layout root for redesigned pages so
-   the legacy dashboard CSS (white bg, blue/purple) remains intact. */
-.brand-surface {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+   the legacy dashboard CSS (white bg, blue/purple) remains intact.
 
-.brand-surface ::selection {
-  background-color: rgba(139, 85, 255, 0.2);
-}
+   These rules MUST live in the `base` layer so Tailwind utilities (in the
+   `utilities` layer, which is declared after `base`) can override them.
+   Unlayered rules win over layered rules at equal specificity, which
+   previously caused `.brand-surface a { color: inherit }` to beat the
+   `text-ink` / `text-white` utilities applied to RouterLink buttons —
+   making CTA text invisible when its parent surface forced a color
+   (e.g. the new gradient hero with `text-white`). */
+@layer base {
+  .brand-surface {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-/* Apply the display face as the heading default but DON'T force a color
-   — pages set text colors via Tailwind utilities (e.g., text-paper in
-   the dark footer would be overridden if we forced text-ink here). */
-.brand-surface h1,
-.brand-surface h2,
-.brand-surface h3,
-.brand-surface h4,
-.brand-surface h5,
-.brand-surface h6,
-.brand-surface .font-display {
-  font-family: var(--font-display);
-  margin: 0;
-}
+  .brand-surface ::selection {
+    background-color: rgba(139, 85, 255, 0.2);
+  }
 
-.brand-surface p {
-  margin: 0;
-  color: inherit;
-}
+  /* Apply the display face as the heading default but DON'T force a color
+     — pages set text colors via Tailwind utilities (e.g., text-paper in
+     the dark footer would be overridden if we forced text-ink here). */
+  .brand-surface h1,
+  .brand-surface h2,
+  .brand-surface h3,
+  .brand-surface h4,
+  .brand-surface h5,
+  .brand-surface h6,
+  .brand-surface .font-display {
+    font-family: var(--font-display);
+    margin: 0;
+  }
 
-.brand-surface a {
-  color: inherit;
-  text-decoration: none;
-}
-.brand-surface a:hover {
-  text-decoration: none;
-  color: inherit;
-}
-.brand-surface *:focus {
-  outline: none;
+  .brand-surface p {
+    margin: 0;
+    color: inherit;
+  }
+
+  .brand-surface a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .brand-surface a:hover {
+    text-decoration: none;
+    color: inherit;
+  }
+  .brand-surface *:focus {
+    outline: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

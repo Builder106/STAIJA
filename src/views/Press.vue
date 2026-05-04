@@ -46,7 +46,7 @@ const COLOR_TOKENS = [
   { name: 'Brand Violet', hex: '#8B55FF', swatch: 'bg-brand-violet' },
   { name: 'Brand Sky', hex: '#5EDBE7', swatch: 'bg-brand-sky' },
   { name: 'Ink', hex: '#0E1217', swatch: 'bg-ink' },
-  { name: 'Paper', hex: '#FAF7F2', swatch: 'bg-paper border hairline-ink' },
+  { name: 'Slate', hex: '#F1F5F9', swatch: 'bg-paper border hairline-ink' },
 ]
 </script>
 
