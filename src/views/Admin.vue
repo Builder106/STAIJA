@@ -11,8 +11,14 @@ import UiChip from '../components/ui/UiChip.vue'
 import { DatabaseService } from '../services/firebase'
 import type { Application } from '../services/firebase'
 import { useAuth } from '../composables/useAuth'
+import { usePermissions } from '../composables/usePermissions'
 
 const { displayName } = useAuth()
+// `isAdmin` is strict — staff is NOT admin. We use it to hide tiles that
+// link to admin-only screens (Users & roles, Firestore raw access).
+// `isStaff` returns true for staff AND admin in this codebase, so it's
+// not a useful distinguisher here — we explicitly check isAdmin.
+const { isAdmin } = usePermissions()
 
 const applications = ref<Application[]>([])
 const loading = ref(true)
@@ -226,6 +232,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
+                v-if="isAdmin"
                 to="/admin/users"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
@@ -251,6 +258,32 @@ onMounted(loadData)
                 </div>
               </RouterLink>
 
+              <RouterLink
+                to="/admin/cohorts"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:layers" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Cohorts</span>
+                  <span class="text-sm text-ink/60">Course cycles, mentor pools</span>
+                </div>
+              </RouterLink>
+
+              <RouterLink
+                to="/admin/enroll"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:user-plus" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Enroll student</span>
+                  <span class="text-sm text-ink/60">Place student into a cohort</span>
+                </div>
+              </RouterLink>
+
               <a
                 href="https://app.contentful.com/spaces/zcw0qx1phkan/"
                 target="_blank"
@@ -270,6 +303,7 @@ onMounted(loadData)
               </a>
 
               <a
+                v-if="isAdmin"
                 href="https://console.firebase.google.com/project/staija/firestore"
                 target="_blank"
                 rel="noopener noreferrer"
