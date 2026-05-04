@@ -70,6 +70,18 @@ const routes: RouteRecordRaw[] = [
   { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/enroll', name: 'admin-enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
 
+  // LMS content authoring (STAIJA-native wrapper around Contentful Management API).
+  // Both staff and admin can manage course content via manage_cohorts permission.
+  { path: '/admin/content', name: 'admin-content', component: () => import('../views/admin/content/ContentHome.vue'), meta: { title: 'Course content — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/courses', name: 'admin-content-courses', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Courses — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/courses/:id', name: 'admin-content-course-edit', component: () => import('../views/admin/content/CourseEdit.vue'), meta: { title: 'Edit course — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/modules', name: 'admin-content-modules', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Modules — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/modules/:id', name: 'admin-content-module-edit', component: () => import('../views/admin/content/ModuleEdit.vue'), meta: { title: 'Edit module — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/lessons', name: 'admin-content-lessons', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Lessons — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/lessons/:id', name: 'admin-content-lesson-edit', component: () => import('../views/admin/content/LessonEdit.vue'), meta: { title: 'Edit lesson — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/assignments', name: 'admin-content-assignments', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Assignments — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/assignments/:id', name: 'admin-content-assignment-edit', component: () => import('../views/admin/content/AssignmentEdit.vue'), meta: { title: 'Edit assignment — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+
   // LMS routes — student-facing
   { path: '/learn', name: 'learn-home', component: () => import('../views/learn/CourseHome.vue'), meta: { title: 'My course — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
   { path: '/learn/course/:slug', name: 'learn-course', component: () => import('../views/learn/CourseHome.vue'), meta: { title: 'Course — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },

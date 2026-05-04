@@ -1,0 +1,216 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import Container from '../../../components/ui/Container.vue'
+import Section from '../../../components/ui/Section.vue'
+import Heading from '../../../components/ui/Heading.vue'
+import Eyebrow from '../../../components/ui/Eyebrow.vue'
+import UiCard from '../../../components/ui/UiCard.vue'
+import UiButton from '../../../components/ui/UiButton.vue'
+import RichTextEditor from '../../../components/admin/RichTextEditor.vue'
+import {
+  getEntry,
+  createEntry,
+  updateEntry,
+  publishEntry,
+  type LessonFields,
+} from '../../../services/lmsContent'
+import { emptyDocument } from '../../../services/richTextSerializer'
+import type { Document } from '@contentful/rich-text-types'
+
+const route = useRoute()
+const router = useRouter()
+
+const isNew = computed(() => route.params.id === 'new' || !route.params.id)
+const id = ref<string | null>(isNew.value ? null : (route.params.id as string))
+const loading = ref(!isNew.value)
+const saving = ref(false)
+const publishing = ref(false)
+const error = ref<string | null>(null)
+const isPublished = ref(false)
+
+const form = ref<LessonFields>({
+  slug: '',
+  title: '',
+  body: emptyDocument(),
+  videoUrl: '',
+  estimatedMinutes: undefined,
+  completionCriteria: 'viewed',
+})
+
+async function load() {
+  if (!id.value) return
+  loading.value = true
+  try {
+    const entry = await getEntry(id.value)
+    isPublished.value = entry.isPublished
+    const f = entry.fields
+    form.value = {
+      slug: (f.slug as string) ?? '',
+      title: (f.title as string) ?? '',
+      body: (f.body as Document) ?? emptyDocument(),
+      videoUrl: (f.videoUrl as string) ?? '',
+      estimatedMinutes: f.estimatedMinutes as number | undefined,
+      completionCriteria: ((f.completionCriteria as 'viewed' | 'assignment_submitted' | 'quiz_passed') ?? 'viewed'),
+    }
+  } catch (err) {
+    error.value = (err as { message?: string }).message ?? 'Failed to load lesson.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const canSave = computed(
+  () => !!form.value.slug.trim() && !!form.value.title.trim() && !saving.value,
+)
+
+async function save() {
+  if (!canSave.value) return
+  saving.value = true
+  error.value = null
+  try {
+    if (id.value) {
+      await updateEntry(id.value, { type: 'lesson', fields: form.value })
+    } else {
+      const created = await createEntry({ type: 'lesson', fields: form.value })
+      id.value = created.id
+      router.replace({ path: `/admin/content/lessons/${created.id}` })
+    }
+  } catch (err) {
+    error.value = (err as { message?: string }).message ?? 'Save failed.'
+  } finally {
+    saving.value = false
+  }
+}
+
+async function saveAndPublish() {
+  if (!canSave.value) return
+  publishing.value = true
+  error.value = null
+  try {
+    let entryId = id.value
+    if (entryId) {
+      await updateEntry(entryId, { type: 'lesson', fields: form.value })
+    } else {
+      const created = await createEntry({ type: 'lesson', fields: form.value })
+      entryId = created.id
+      id.value = created.id
+      router.replace({ path: `/admin/content/lessons/${created.id}` })
+    }
+    await publishEntry(entryId!)
+    isPublished.value = true
+  } catch (err) {
+    error.value = (err as { message?: string }).message ?? 'Publish failed.'
+  } finally {
+    publishing.value = false
+  }
+}
+
+onMounted(load)
+</script>
+
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section class="!pt-10 !pb-6 border-b hairline-ink">
+      <Container class="max-w-3xl">
+        <RouterLink
+          to="/admin/content/lessons"
+          class="text-xs text-ink/60 hover:text-ink mb-3 inline-flex items-center gap-1"
+        >
+          <Icon icon="lucide:arrow-left" width="12" /> All lessons
+        </RouterLink>
+        <Eyebrow class="text-brand-violet mb-2 block">Lesson</Eyebrow>
+        <Heading :level="1" class="mb-2">
+          {{ isNew ? 'New lesson' : (form.title || 'Edit lesson') }}
+        </Heading>
+        <span
+          v-if="!isNew"
+          class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold"
+          :class="isPublished ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
+        >
+          {{ isPublished ? 'Published' : 'Draft' }}
+        </span>
+      </Container>
+    </Section>
+
+    <Section class="!py-10">
+      <Container class="max-w-3xl flex flex-col gap-6">
+        <UiCard v-if="loading" class="p-10 bg-white text-center">
+          <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
+        </UiCard>
+
+        <template v-else>
+          <UiCard class="p-6 md:p-8 bg-white flex flex-col gap-5">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
+                <input v-model="form.slug" type="text" class="input" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Estimated minutes</label>
+                <input v-model.number="form.estimatedMinutes" type="number" min="1" class="input" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Title</label>
+              <input v-model="form.title" type="text" class="input" />
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Video URL</label>
+                <input
+                  v-model="form.videoUrl"
+                  type="url"
+                  class="input"
+                  placeholder="https://www.youtube.com/watch?v=…"
+                />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Completion criteria</label>
+                <select v-model="form.completionCriteria" class="input">
+                  <option value="viewed">Viewed — opening counts</option>
+                  <option value="assignment_submitted">Assignment submitted</option>
+                  <option value="quiz_passed">Quiz passed (Phase 3)</option>
+                </select>
+              </div>
+            </div>
+          </UiCard>
+
+          <UiCard class="p-6 md:p-8 bg-white">
+            <Heading :level="2" class="text-base mb-3">Body</Heading>
+            <RichTextEditor v-model="form.body!" />
+          </UiCard>
+
+          <p v-if="error" class="text-sm text-red-700">{{ error }}</p>
+
+          <div class="flex flex-wrap gap-2">
+            <UiButton variant="secondary" :disabled="!canSave || saving" @click="save">
+              <Icon v-if="saving" icon="lucide:loader-2" width="14" class="animate-spin" />
+              {{ saving ? 'Saving…' : 'Save draft' }}
+            </UiButton>
+            <UiButton variant="primary" :disabled="!canSave || publishing" @click="saveAndPublish">
+              <Icon v-if="publishing" icon="lucide:loader-2" width="14" class="animate-spin" />
+              {{ publishing ? 'Publishing…' : 'Save & publish' }}
+            </UiButton>
+          </div>
+        </template>
+      </Container>
+    </Section>
+  </div>
+</template>
+
+<style scoped>
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(14, 18, 23, 0.08);
+  background: #fff;
+  font-size: 0.875rem;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 85, 255, 0.5);
+}
+</style>

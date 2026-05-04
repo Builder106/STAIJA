@@ -284,21 +284,35 @@ onMounted(loadData)
                 </div>
               </RouterLink>
 
-              <a
-                href="https://app.contentful.com/spaces/zcw0qx1phkan/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <RouterLink
+                to="/admin/content"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
                   <Icon icon="lucide:file-text" width="20" class="text-brand-violet" />
                 </div>
                 <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Course content</span>
+                  <span class="text-sm text-ink/60">Courses, modules, lessons, assignments</span>
+                </div>
+              </RouterLink>
+
+              <a
+                v-if="isAdmin"
+                href="https://app.contentful.com/spaces/zcw0qx1phkan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:external-link" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
                   <span class="font-semibold text-base flex items-center gap-1.5">
-                    Content (Contentful)
+                    Contentful (raw)
                     <Icon icon="lucide:external-link" width="14" class="text-ink/50" />
                   </span>
-                  <span class="text-sm text-ink/60">Blog, events, authors</span>
+                  <span class="text-sm text-ink/60">Blog, events, advanced edits</span>
                 </div>
               </a>
 
