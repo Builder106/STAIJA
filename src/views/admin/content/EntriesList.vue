@@ -220,6 +220,19 @@ onMounted(load)
                     {{ fmtUpdated(e) }}
                   </td>
                   <td class="px-5 py-3 text-right whitespace-nowrap">
+                    <!-- Duplicate is course-only for now: it preserves
+                         the metadata and references the same modules,
+                         then bumps the version year (e.g. 2025-spring
+                         becomes 2026-spring). The actual prefill happens
+                         in CourseEdit on mount via the `from` query. -->
+                    <RouterLink
+                      v-if="meta.type === 'course'"
+                      :to="`/admin/content/courses/new?from=${e.id}`"
+                      class="text-xs font-medium text-ink/70 hover:text-brand-violet hover:underline"
+                    >
+                      Duplicate
+                    </RouterLink>
+                    <span v-if="meta.type === 'course'" class="text-ink/20 mx-2">·</span>
                     <button
                       type="button"
                       class="text-xs font-medium text-brand-violet hover:underline disabled:text-ink/30 disabled:no-underline disabled:cursor-not-allowed"

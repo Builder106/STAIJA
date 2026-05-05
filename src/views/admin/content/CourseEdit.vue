@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from '../../../components/ui/Container.vue'
@@ -14,7 +14,14 @@ import {
   createEntry,
   updateEntry,
   publishEntry,
+  slugify,
+  currentTermVersion,
+  normalizeVersion,
+  computeCourseEstimatedHours,
+  listTracksForProgram,
+  buildDuplicateCourseFields,
   type CourseFields,
+  type ComputedHours,
 } from '../../../services/lmsContent'
 
 const route = useRoute()
@@ -28,6 +35,11 @@ const publishing = ref(false)
 const error = ref<string | null>(null)
 const isPublished = ref(false)
 
+// `slugTouched` flips true the moment the editor types into the slug
+// field directly OR when we pre-fill the slug from a duplicate source.
+// While false, the slug auto-derives from the title via slugify().
+const slugTouched = ref(false)
+
 const form = ref<CourseFields>({
   slug: '',
   title: '',
@@ -37,11 +49,28 @@ const form = ref<CourseFields>({
   estimatedHours: undefined,
   track: '',
   published: false,
-  version: '',
+  // Pre-fill version with the current term so a fresh new-course form
+  // has a sensible default — editors can still edit it freely.
+  version: isNew.value ? currentTermVersion() : '',
   coverImage: undefined,
 })
 
 async function load() {
+  // Duplicate flow: /admin/content/courses/new?from=<sourceId>
+  if (isNew.value && route.query.from && typeof route.query.from === 'string') {
+    loading.value = true
+    try {
+      form.value = await buildDuplicateCourseFields(route.query.from)
+      // Slug was set from `${source}-copy`, so don't auto-clobber it
+      // when the editor edits the title afterwards.
+      slugTouched.value = !!form.value.slug
+    } catch (err) {
+      error.value = (err as { message?: string }).message ?? 'Failed to load source course.'
+    } finally {
+      loading.value = false
+    }
+    return
+  }
   if (!id.value) return
   loading.value = true
   try {
@@ -60,6 +89,9 @@ async function load() {
       version: (f.version as string) ?? '',
       coverImage: extractRefId(f.coverImage),
     }
+    // Existing courses always carry a slug — never auto-rewrite it
+    // when the editor changes the title (would break links/imports).
+    slugTouched.value = true
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Failed to load course.'
   } finally {
@@ -77,19 +109,92 @@ function extractRefId(value: unknown): string | undefined {
   return (value as { sys?: { id?: string } })?.sys?.id
 }
 
+// Auto-derive slug from title for new courses until the editor types
+// into the slug field directly. Existing courses keep their slug
+// stable regardless of title edits (load() sets slugTouched=true).
+watch(
+  () => form.value.title,
+  (newTitle) => {
+    if (slugTouched.value) return
+    form.value.slug = slugify(newTitle ?? '')
+  },
+)
+
+function onVersionBlur() {
+  form.value.version = normalizeVersion(form.value.version)
+}
+
+// ---- Computed estimated hours ----
+
+const computedHours = ref<ComputedHours | null>(null)
+const computingHours = ref(false)
+
+watch(
+  () => form.value.modules?.slice(),
+  async (modules) => {
+    if (!modules || modules.length === 0) {
+      computedHours.value = null
+      return
+    }
+    computingHours.value = true
+    try {
+      computedHours.value = await computeCourseEstimatedHours(modules)
+    } catch {
+      computedHours.value = null
+    } finally {
+      computingHours.value = false
+    }
+  },
+  { immediate: true, deep: true },
+)
+
+const showComputedHours = computed(
+  () => !!computedHours.value && computedHours.value.lessonCount > 0,
+)
+
+// ---- Track chip-autocomplete ----
+
+const availableTracks = ref<string[]>([])
+
+async function loadTracks() {
+  try {
+    availableTracks.value = await listTracksForProgram(form.value.program)
+  } catch {
+    availableTracks.value = []
+  }
+}
+
+// Reload track suggestions when the editor switches programs — e.g.
+// flipping from StepUp Scholars to Dynamerge should swap the
+// suggested chips, not show the wrong program's tracks.
+watch(() => form.value.program, loadTracks)
+
 const canSave = computed(
   () => !!form.value.slug.trim() && !!form.value.title.trim() && !!form.value.version.trim() && !saving.value,
 )
+
+function buildPayload(): { type: 'course'; fields: CourseFields } {
+  // When we have a computed hour total from real lesson data, persist
+  // it so readers (student LMS, course cards) don't have to re-walk
+  // the module graph. Editor-typed values stay untouched when no
+  // lessons exist yet.
+  const fields: CourseFields = { ...form.value }
+  if (showComputedHours.value && computedHours.value) {
+    fields.estimatedHours = computedHours.value.hours
+  }
+  return { type: 'course', fields }
+}
 
 async function save() {
   if (!canSave.value) return
   saving.value = true
   error.value = null
   try {
+    const payload = buildPayload()
     if (id.value) {
-      await updateEntry(id.value, { type: 'course', fields: form.value })
+      await updateEntry(id.value, payload)
     } else {
-      const created = await createEntry({ type: 'course', fields: form.value })
+      const created = await createEntry(payload)
       id.value = created.id
       router.replace({ path: `/admin/content/courses/${created.id}` })
     }
@@ -106,10 +211,11 @@ async function saveAndPublish() {
   error.value = null
   try {
     let entryId = id.value
+    const payload = buildPayload()
     if (entryId) {
-      await updateEntry(entryId, { type: 'course', fields: form.value })
+      await updateEntry(entryId, payload)
     } else {
-      const created = await createEntry({ type: 'course', fields: form.value })
+      const created = await createEntry(payload)
       entryId = created.id
       id.value = created.id
       router.replace({ path: `/admin/content/courses/${created.id}` })
@@ -123,7 +229,10 @@ async function saveAndPublish() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  await loadTracks()
+})
 </script>
 
 <template>
@@ -136,9 +245,11 @@ onMounted(load)
         >
           <Icon icon="lucide:arrow-left" width="12" /> All courses
         </RouterLink>
-        <Eyebrow class="text-brand-violet mb-2 block">Course</Eyebrow>
+        <Eyebrow class="text-brand-violet mb-2 block">
+          Course<span v-if="isNew && route.query.from"> · duplicated draft</span>
+        </Eyebrow>
         <Heading :level="1" class="mb-2">
-          {{ isNew ? 'New course' : (form.title || 'Edit course') }}
+          {{ isNew ? (route.query.from ? 'Duplicate course' : 'New course') : (form.title || 'Edit course') }}
         </Heading>
         <span
           v-if="!isNew"
@@ -158,20 +269,40 @@ onMounted(load)
 
         <template v-else>
           <UiCard class="p-6 md:p-8 bg-white flex flex-col gap-5">
+            <!-- Title comes first so the auto-derived slug below has
+                 something to work from. -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Title</label>
+              <input v-model="form.title" type="text" class="input" placeholder="Foundations of Statistics" />
+            </div>
+
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
-                <input v-model="form.slug" type="text" class="input" placeholder="stepup-foundations" />
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide flex items-center gap-2">
+                  Slug
+                  <span v-if="isNew && !slugTouched && form.slug" class="text-[10px] text-ink/50 normal-case font-medium">
+                    auto from title
+                  </span>
+                </label>
+                <input
+                  v-model="form.slug"
+                  type="text"
+                  class="input font-mono"
+                  placeholder="stepup-foundations"
+                  @input="slugTouched = true"
+                />
               </div>
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Version</label>
-                <input v-model="form.version" type="text" class="input" placeholder="2026-spring" />
+                <input
+                  v-model="form.version"
+                  type="text"
+                  class="input font-mono"
+                  placeholder="2026-spring"
+                  @blur="onVersionBlur"
+                />
+                <p class="text-[11px] text-ink/50">Format: <span class="font-mono">YYYY-spring|summer|fall</span>. "Spring 2026" auto-corrects.</p>
               </div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Title</label>
-              <input v-model="form.title" type="text" class="input" />
             </div>
 
             <div class="grid md:grid-cols-2 gap-4">
@@ -184,7 +315,32 @@ onMounted(load)
               </div>
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Estimated hours</label>
-                <input v-model.number="form.estimatedHours" type="number" min="0" class="input" />
+                <!-- When the course has lessons, the total is computed
+                     from their estimatedMinutes — editor-typed values
+                     would only go stale. Falls back to a numeric input
+                     when no lessons exist yet. -->
+                <div
+                  v-if="showComputedHours"
+                  class="input flex items-baseline gap-2 cursor-default bg-ink/[0.03]"
+                >
+                  <span class="font-semibold">{{ computedHours?.hours ?? 0 }}</span>
+                  <span class="text-ink/60">hours</span>
+                  <span class="text-[11px] text-ink/50 ml-auto">
+                    sum of {{ computedHours?.lessonCount }} lesson{{ computedHours?.lessonCount === 1 ? '' : 's' }}
+                  </span>
+                </div>
+                <input
+                  v-else
+                  v-model.number="form.estimatedHours"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  class="input"
+                  :placeholder="form.modules && form.modules.length > 0 ? 'No lessons with durations yet' : 'Will be computed once lessons exist'"
+                />
+                <p v-if="computingHours" class="text-[11px] text-ink/50 inline-flex items-center gap-1">
+                  <Icon icon="lucide:loader-2" width="10" class="animate-spin" /> recalculating
+                </p>
               </div>
             </div>
 
@@ -198,7 +354,30 @@ onMounted(load)
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
                   Track <span class="text-ink/40 normal-case">(optional)</span>
                 </label>
-                <input v-model="form.track" type="text" class="input" placeholder="e.g. core, leadership" />
+                <input
+                  v-model="form.track"
+                  type="text"
+                  class="input"
+                  placeholder="e.g. core, leadership"
+                  list="track-suggestions"
+                />
+                <datalist id="track-suggestions">
+                  <option v-for="t in availableTracks" :key="t" :value="t" />
+                </datalist>
+                <!-- Visible chip suggestions: clicking fills the field.
+                     Filters out the current value so the active chip
+                     doesn't sit redundantly below its own input. -->
+                <div v-if="availableTracks.length > 0" class="flex flex-wrap gap-1.5 mt-0.5">
+                  <button
+                    v-for="t in availableTracks.filter((x) => x !== form.track)"
+                    :key="t"
+                    type="button"
+                    class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-ink/5 text-ink/70 hover:bg-brand-violet/10 hover:text-brand-violet transition-colors"
+                    @click="form.track = t"
+                  >
+                    {{ t }}
+                  </button>
+                </div>
               </div>
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Published flag</label>

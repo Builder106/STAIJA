@@ -286,6 +286,175 @@ export async function deleteEntry(id: string): Promise<void> {
   await fresh.delete()
 }
 
+// ---------- Smart-form helpers ----------
+
+/**
+ * Convert any string into a kebab-case slug. Strips diacritics, drops
+ * non-alphanumerics, collapses runs of '-'. Used to derive a slug from
+ * a course/module/lesson title until the editor types into the slug
+ * field directly.
+ */
+export function slugify(input: string): string {
+  return input
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/** Term names this LMS uses, ordered by month. */
+const TERM_BY_MONTH = ['spring', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'summer', 'fall', 'fall', 'fall', 'fall'] as const
+
+/**
+ * Best-guess "current term version" for a fresh course. Maps month
+ * ranges Jan-Apr → spring, May-Aug → summer, Sep-Dec → fall. Returns
+ * a canonical "{year}-{term}" string ready to drop into the version
+ * field.
+ */
+export function currentTermVersion(date: Date = new Date()): string {
+  const year = date.getFullYear()
+  const term = TERM_BY_MONTH[date.getMonth()]
+  return `${year}-${term}`
+}
+
+/**
+ * Normalize free-form version input to canonical "{year}-{term}".
+ * Accepts "Spring 2026", "spring 2026", "2026 Spring", "2026-Spring",
+ * "2026-spring" and similar. If the input doesn't contain both a
+ * 4-digit year and a known term word, returns the input lowercased
+ * with whitespace trimmed (no surprise rewrites).
+ */
+export function normalizeVersion(input: string): string {
+  const raw = input.trim()
+  if (!raw) return raw
+  const yearMatch = raw.match(/(\d{4})/)
+  const termMatch = raw.toLowerCase().match(/(spring|summer|fall|autumn|winter)/)
+  if (!yearMatch || !termMatch) return raw.toLowerCase()
+  const term = termMatch[1] === 'autumn' ? 'fall' : termMatch[1]
+  return `${yearMatch[1]}-${term}`
+}
+
+/** Year-bump a version string for the duplicate flow: "2025-spring"
+ * becomes "2026-spring". Falls back to the current term if the input
+ * doesn't look like a "{year}-{term}" string. */
+function bumpVersion(v: string): string {
+  const m = v.match(/^(\d{4})-(.+)$/)
+  if (!m) return currentTermVersion()
+  const year = parseInt(m[1], 10)
+  if (Number.isNaN(year)) return currentTermVersion()
+  return `${year + 1}-${m[2]}`
+}
+
+export interface ComputedHours {
+  minutes: number
+  hours: number
+  lessonCount: number
+  moduleCount: number
+}
+
+/**
+ * Sum estimatedMinutes across all lessons inside the given modules.
+ * Two API calls: modules (to read their lesson references), then
+ * lessons. `hours` is rounded to one decimal place — readers shouldn't
+ * see "12.3333..." in the UI.
+ */
+export async function computeCourseEstimatedHours(moduleIds: string[]): Promise<ComputedHours> {
+  if (!moduleIds.length) return { minutes: 0, hours: 0, lessonCount: 0, moduleCount: 0 }
+  const env = await getEnvironment()
+  const modulesResult = await env.getEntries({
+    content_type: 'module',
+    'sys.id[in]': moduleIds.join(','),
+    limit: 100,
+  })
+  const lessonIds = modulesResult.items.flatMap((m) => {
+    const lessonsField = (m.fields as Record<string, unknown>).lessons as Record<string, unknown> | undefined
+    const localized = lessonsField?.[LOCALE]
+    if (!Array.isArray(localized)) return []
+    return localized
+      .map((l) => (l as { sys?: { id?: string } })?.sys?.id)
+      .filter((v): v is string => !!v)
+  })
+  if (!lessonIds.length) {
+    return { minutes: 0, hours: 0, lessonCount: 0, moduleCount: modulesResult.items.length }
+  }
+  const lessonsResult = await env.getEntries({
+    content_type: 'lesson',
+    'sys.id[in]': lessonIds.join(','),
+    limit: 200,
+  })
+  const minutes = lessonsResult.items.reduce((sum, l) => {
+    const f = (l.fields as Record<string, unknown>).estimatedMinutes as Record<string, unknown> | undefined
+    const m = f?.[LOCALE]
+    return sum + (typeof m === 'number' ? m : 0)
+  }, 0)
+  return {
+    minutes,
+    hours: Math.round((minutes / 60) * 10) / 10,
+    lessonCount: lessonsResult.items.length,
+    moduleCount: modulesResult.items.length,
+  }
+}
+
+/**
+ * Distinct, non-empty `track` values across all courses in a program.
+ * Used to populate chip-autocomplete suggestions on the course form so
+ * editors reuse existing tracks instead of inventing new ones every time.
+ */
+export async function listTracksForProgram(program: 'stepup_scholars' | 'dynamerge'): Promise<string[]> {
+  const env = await getEnvironment()
+  const result = await env.getEntries({
+    content_type: 'course',
+    'fields.program': program,
+    limit: 200,
+  })
+  const set = new Set<string>()
+  for (const c of result.items) {
+    const trackField = (c.fields as Record<string, unknown>).track as Record<string, unknown> | undefined
+    const t = trackField?.[LOCALE]
+    if (typeof t === 'string' && t.trim()) set.add(t.trim())
+  }
+  return Array.from(set).sort()
+}
+
+/**
+ * Build a draft `CourseFields` object from an existing course, ready
+ * to feed into a fresh form. Modules are kept by reference (linked,
+ * not deep-copied) so the new term reuses the same curriculum nodes —
+ * editors who want to fork modules should duplicate them separately.
+ *
+ * The returned course is unsaved; the caller decides when to persist.
+ * `published` is forced false so duplicates always start as drafts.
+ */
+export async function buildDuplicateCourseFields(sourceId: string): Promise<CourseFields> {
+  const source = await getEntry(sourceId)
+  const f = source.fields
+  const sourceSlug = typeof f.slug === 'string' ? f.slug : ''
+  const sourceVersion = typeof f.version === 'string' ? f.version : ''
+  return {
+    slug: sourceSlug ? `${sourceSlug}-copy` : '',
+    title: typeof f.title === 'string' ? f.title : '',
+    program: ((f.program as 'stepup_scholars' | 'dynamerge') ?? 'stepup_scholars'),
+    summary: typeof f.summary === 'string' ? f.summary : '',
+    modules: extractRefIdsFromField(f.modules),
+    estimatedHours: typeof f.estimatedHours === 'number' ? f.estimatedHours : undefined,
+    track: typeof f.track === 'string' ? f.track : '',
+    published: false,
+    version: bumpVersion(sourceVersion),
+    coverImage: extractRefIdFromField(f.coverImage),
+  }
+}
+
+function extractRefIdsFromField(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((v) => (v as { sys?: { id?: string } })?.sys?.id)
+    .filter((v): v is string => !!v)
+}
+function extractRefIdFromField(value: unknown): string | undefined {
+  return (value as { sys?: { id?: string } })?.sys?.id
+}
+
 // ---------- Asset upload ----------
 
 export interface UploadAssetResult {
