@@ -12,7 +12,8 @@
     "avatars:generate": "tsx tools/avatars/generate.ts",
     "avatars:label": "tsx tools/avatars/parse-and-label.ts",
     "avatars:clean": "tsx tools/avatars/clean.ts",
-    "avatars:thumbs": "tsx tools/avatars/thumbs.ts"
+    "avatars:thumbs": "tsx tools/avatars/thumbs.ts",
+    "social:capture": "node tools/social/capture.cjs"
   },
   "dependencies": {
     "@contentful/rich-text-html-renderer": "^17.2.2",

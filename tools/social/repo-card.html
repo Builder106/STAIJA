@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>STAIJA — repo social card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* Brand tokens, mirrored from src/style.css */
+    :root {
+      --paper: #F1F5F9;
+      --ink: #0E1217;
+      --violet: #8B55FF;
+      --sky: #5EDBE7;
+      --paper-static: #F1F5F9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1280px; height: 640px; }
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .card {
+      width: 1280px;
+      height: 640px;
+      display: grid;
+      grid-template-columns: 576px 704px;
+    }
+
+    /* Left slab — violet → cyan gradient at 135deg.
+       Diagonal direction matches the homepage hero so the card
+       feels like a slice of the same surface. */
+    .slab {
+      background: linear-gradient(135deg, var(--violet) 0%, var(--sky) 100%);
+      padding: 80px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--paper-static);
+    }
+
+    .eyebrow {
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.72;
+    }
+
+    .programs {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .program {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-weight: 600;
+      font-size: 52px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .program-divider {
+      width: 64px;
+      height: 2px;
+      background: rgba(241, 245, 249, 0.45);
+      margin: 8px 0;
+      border: 0;
+    }
+
+    .slab-footer {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      opacity: 0.78;
+    }
+
+    /* Right slab — slate paper, ink type. Logo + wordmark on top,
+       big tagline in the middle, URL pinned bottom-right. */
+    .paper {
+      padding: 80px 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand img {
+      width: 56px;
+      height: 56px;
+      display: block;
+    }
+
+    .wordmark {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-weight: 700;
+      font-size: 44px;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .tagline {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-weight: 600;
+      font-size: 56px;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      max-width: 540px;
+    }
+
+    .tagline em {
+      font-style: italic;
+      font-weight: 700;
+    }
+
+    .url {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      opacity: 0.6;
+      align-self: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <section class="slab" aria-label="Programs">
+      <div>
+        <div class="eyebrow">Programs</div>
+        <div class="programs">
+          <span class="program">StepUp Scholars</span>
+          <hr class="program-divider" />
+          <span class="program">Dynamerge</span>
+        </div>
+      </div>
+      <div class="slab-footer">github.com/Builder106/STAIJA</div>
+    </section>
+
+    <section class="paper" aria-label="STAIJA">
+      <div class="brand">
+        <img src="../../public/STAIJA.png" alt="" />
+        <span class="wordmark">STAIJA</span>
+      </div>
+
+      <p class="tagline">
+        Africa's next <em>scientist-leaders</em> start here.
+      </p>
+
+      <div class="url">staija.org</div>
+    </section>
+  </main>
+</body>
+</html>
