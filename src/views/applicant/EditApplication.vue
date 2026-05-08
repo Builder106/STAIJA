@@ -15,6 +15,31 @@
     </div>
 
     <div v-else-if="application && application.status === 'draft'" class="form-container">
+      <!-- Restore prompt — only surfaces when local draft is newer than
+           server state. We never silently clobber server data because
+           the user might have edited from another device. -->
+      <div v-if="restorePromptVisible" class="restore-banner" role="status">
+        <div class="restore-banner-text">
+          <strong>You have unsaved local changes</strong>
+          <span>Saved {{ pendingDraftAt?.toLocaleString() }} — newer than the server copy.</span>
+        </div>
+        <div class="restore-banner-actions">
+          <button type="button" class="restore-btn-secondary" @click="discardLocalDraft">Discard</button>
+          <button type="button" class="restore-btn-primary" @click="acceptLocalDraft">Restore</button>
+        </div>
+      </div>
+
+      <div class="autosave-status" :data-status="autoSaveStatus">
+        <span v-if="autoSaveStatus === 'saving'">Saving draft…</span>
+        <span v-else-if="autoSaveStatus === 'saved' && autoSavedAt">
+          Draft saved at {{ autoSavedAt.toLocaleTimeString() }}
+        </span>
+        <span v-else-if="autoSaveStatus === 'error'">
+          Couldn't save draft locally. Your work in this tab is safe; submit to save to the server.
+        </span>
+        <span v-else>Auto-saves every 30 seconds.</span>
+      </div>
+
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>Program</label>
@@ -63,9 +88,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { DatabaseService, type Application } from '../../services/firebase'
+import { useAutoSave } from '../../composables/useAutoSave'
 
 const router = useRouter()
 const route = useRoute()
@@ -85,9 +111,27 @@ const form = ref({
   experience: ''
 })
 
+// Per-application autosave key. `apply.edit.{id}` keeps drafts scoped
+// per application — editing two drafts in two tabs doesn't cross-talk.
+// `skipRestore: true` because we need to load from Firestore first and
+// only consider restoring if the local draft is newer than the server
+// copy. Restoring blindly would clobber edits made from another device.
+const applicationId = route.params.id as string
+const autoSaveKey = `apply.edit.${applicationId}`
+const {
+  status: autoSaveStatus,
+  lastSavedAt: autoSavedAt,
+  clear: clearDraft,
+  peek: peekDraft,
+  restore: restoreDraft,
+} = useAutoSave(autoSaveKey, form, { skipRestore: true })
+
+const restorePromptVisible = ref(false)
+const pendingDraftAt = ref<Date | null>(null)
+
 const loadApplication = async () => {
   try {
-    const app = await DatabaseService.getApplication(route.params.id as string)
+    const app = await DatabaseService.getApplication(applicationId)
     if (app) {
       application.value = app
       form.value = {
@@ -96,6 +140,7 @@ const loadApplication = async () => {
         motivation: app.motivation,
         experience: app.experience
       }
+      maybePromptRestore(app.updatedAt)
     }
   } catch (err: any) {
     error.value = err.message
@@ -104,9 +149,44 @@ const loadApplication = async () => {
   }
 }
 
+// Compare local-draft timestamp against the server's updatedAt and
+// only show the restore prompt when local is strictly newer. Equal
+// timestamps are treated as already-in-sync (the server copy IS the
+// last save) so we don't nag the user about no-op restores.
+function maybePromptRestore(serverUpdatedAt: Date | string | undefined) {
+  const draftAt = peekDraft()
+  if (!draftAt) return
+  const serverAt = serverUpdatedAt ? new Date(serverUpdatedAt as string | Date) : null
+  if (serverAt && draftAt.getTime() <= serverAt.getTime()) {
+    // Local draft is stale (or equal). Treat as no-op; clean it up so
+    // we don't keep prompting on every visit.
+    clearDraft()
+    return
+  }
+  pendingDraftAt.value = draftAt
+  restorePromptVisible.value = true
+}
+
+function acceptLocalDraft() {
+  restoreDraft()
+  restorePromptVisible.value = false
+}
+
+function discardLocalDraft() {
+  clearDraft()
+  restorePromptVisible.value = false
+  pendingDraftAt.value = null
+}
+
 const saveDraft = async () => {
   if (application.value?.id) {
-    await DatabaseService.updateApplication(application.value.id, form.value as unknown as Partial<Application>)
+    await DatabaseService.updateApplication(
+      application.value.id,
+      form.value as unknown as Partial<Application>,
+    )
+    // Server is now authoritative — drop the local copy so the next
+    // visit doesn't prompt to restore the same content we just saved.
+    clearDraft()
     router.push('/applicant/applications')
   }
 }
@@ -118,9 +198,20 @@ const handleSubmit = async () => {
       status: 'submitted',
       submittedAt: new Date()
     } as unknown as Partial<Application>)
+    clearDraft()
     router.push('/applicant/applications')
   }
 }
+
+// Watch route param changes so the autosave key follows the right
+// application if the user navigates between two edit pages without a
+// full reload (rare but cheap to handle).
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId && newId !== oldId) loadApplication()
+  },
+)
 
 onMounted(() => {
   loadApplication()
@@ -143,6 +234,75 @@ onMounted(() => {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.restore-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.restore-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.restore-banner-text strong {
+  font-weight: 600;
+}
+
+.restore-banner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.restore-btn-primary,
+.restore-btn-secondary {
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.restore-btn-primary {
+  background: #92400e;
+  color: white;
+}
+
+.restore-btn-secondary {
+  background: white;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.autosave-status {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.autosave-status[data-status='saving'] {
+  color: #92400e;
+}
+
+.autosave-status[data-status='error'] {
+  color: #b91c1c;
+}
+
+.autosave-status[data-status='saved'] {
+  color: #15803d;
 }
 
 .form-group {

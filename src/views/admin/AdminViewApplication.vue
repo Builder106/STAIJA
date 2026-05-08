@@ -15,6 +15,35 @@
     </div>
 
     <div v-else-if="application" class="application-content">
+      <!-- Failed-email banner — only renders when Mailgun rejected the
+           last applicant-facing send. Retry re-derives the email from
+           the current status so a typo'd address fixed since the
+           failure picks up automatically. -->
+      <div v-if="application.lastEmailFailure" class="email-failure-banner" role="status">
+        <div class="email-failure-text">
+          <strong>Couldn't email the applicant.</strong>
+          <span>
+            {{ failureKindLabel(application.lastEmailFailure.kind) }} email to
+            <code>{{ application.lastEmailFailure.to }}</code>
+            failed{{ failureWhen ? ` ${failureWhen}` : '' }}.
+          </span>
+          <span class="email-failure-detail">{{ application.lastEmailFailure.error }}</span>
+        </div>
+        <div class="email-failure-actions">
+          <button
+            type="button"
+            class="email-failure-retry"
+            :disabled="retrying"
+            @click="retryEmail"
+          >
+            {{ retrying ? 'Retrying…' : 'Retry email' }}
+          </button>
+        </div>
+      </div>
+      <div v-if="retryMessage" class="email-retry-result" :data-tone="retryTone">
+        {{ retryMessage }}
+      </div>
+
       <!-- Application Info -->
       <div class="app-info">
         <h2>{{ application.personalInfo.firstName }} {{ application.personalInfo.lastName }}</h2>
@@ -81,9 +110,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { httpsCallable } from 'firebase/functions'
 import { DatabaseService, type Application } from '../../services/firebase'
+import { functions } from '../../config/firebase'
 
 const router = useRouter()
 const route = useRoute()
@@ -91,6 +122,10 @@ const route = useRoute()
 const application = ref<Application | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+const retrying = ref(false)
+const retryMessage = ref('')
+const retryTone = ref<'success' | 'error'>('success')
 
 const loadApplication = async () => {
   try {
@@ -102,6 +137,53 @@ const loadApplication = async () => {
     error.value = err.message
   } finally {
     loading.value = false
+  }
+}
+
+function failureKindLabel(kind: 'submitted' | 'accepted' | 'rejected'): string {
+  if (kind === 'submitted') return 'Submission-confirmation'
+  if (kind === 'accepted') return 'Acceptance'
+  return 'Status-update'
+}
+
+// Coerce the assorted shapes Firestore returns for timestamps into a
+// readable relative phrase. Firestore Web SDK returns Timestamp; if the
+// doc was just written by a server function we may still see a raw
+// Date. Anything else falls through to "" (the banner just omits the time).
+const failureWhen = computed(() => {
+  const ts = application.value?.lastEmailFailure?.attemptedAt
+  if (!ts) return ''
+  const d =
+    ts instanceof Date
+      ? ts
+      : typeof (ts as { toDate?: () => Date }).toDate === 'function'
+        ? (ts as { toDate: () => Date }).toDate()
+        : null
+  if (!d) return ''
+  return d.toLocaleString()
+})
+
+async function retryEmail() {
+  if (!application.value?.id || retrying.value) return
+  retrying.value = true
+  retryMessage.value = ''
+  try {
+    const fn = httpsCallable<
+      { applicationId: string },
+      { ok: boolean; kind: string; to: string }
+    >(functions, 'retryApplicationEmail')
+    const res = await fn({ applicationId: application.value.id })
+    retryMessage.value = `Email re-sent to ${res.data.to}.`
+    retryTone.value = 'success'
+    // Reload so the banner clears (lastEmailFailure was deleted on
+    // success by the function).
+    await loadApplication()
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Retry failed.'
+    retryMessage.value = msg
+    retryTone.value = 'error'
+  } finally {
+    retrying.value = false
   }
 }
 
@@ -143,6 +225,88 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.email-failure-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #b91c1c;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  color: #7f1d1d;
+}
+
+.email-failure-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.email-failure-text strong {
+  font-weight: 600;
+}
+
+.email-failure-text code {
+  background: rgba(127, 29, 29, 0.08);
+  padding: 0 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.email-failure-detail {
+  font-size: 0.8rem;
+  color: rgba(127, 29, 29, 0.75);
+  font-family: ui-monospace, 'Courier New', monospace;
+  word-break: break-word;
+}
+
+.email-failure-actions {
+  flex-shrink: 0;
+}
+
+.email-failure-retry {
+  background: #b91c1c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.email-failure-retry:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.email-failure-retry:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.email-retry-result {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.email-retry-result[data-tone='success'] {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.email-retry-result[data-tone='error'] {
+  background: #fef2f2;
+  color: #7f1d1d;
+  border: 1px solid #fecaca;
 }
 
 .app-info {

@@ -257,6 +257,27 @@
           </div>
         </div>
 
+        <!-- Documents -->
+        <div class="form-section">
+          <h3>Documents</h3>
+          <p class="section-description">
+            Upload your most recent academic transcript. Images compress in your browser to
+            under 2&nbsp;MB before upload — PDFs pass through unchanged. ID verification only
+            happens after acceptance, with guardian consent for under-18 scholars.
+          </p>
+
+          <div class="form-stack">
+            <FileUpload
+              label="Academic transcript *"
+              accept="image/*,application/pdf"
+              :max-size-bytes="2_000_000"
+              @update:file="(f) => { transcriptFile = f; transcriptError = '' }"
+              @error="(msg) => transcriptError = msg"
+            />
+            <p v-if="transcriptError" class="file-error">{{ transcriptError }}</p>
+          </div>
+        </div>
+
         <!-- References -->
         <div class="form-section">
           <h3>References</h3>
@@ -350,7 +371,7 @@
             class="btn-primary"
           >
             <span v-if="loading" class="spinner"></span>
-            {{ loading ? 'Submitting...' : 'Submit Application' }}
+            {{ uploadingFiles ? 'Uploading documents…' : loading ? 'Submitting…' : 'Submit Application' }}
           </button>
         </div>
       </form>
@@ -381,8 +402,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
-import { DatabaseService, AuthService } from '../../services/firebase'
+import { DatabaseService, AuthService, StorageService } from '../../services/firebase'
 import { useAutoSave } from '../../composables/useAutoSave'
+import FileUpload from '../../components/ui/FileUpload.vue'
 
 const router = useRouter()
 
@@ -428,6 +450,15 @@ const form = ref({
 const loading = ref(false)
 const error = ref('')
 const showSuccessModal = ref(false)
+
+// File-upload state. The transcript stays in-memory until submit —
+// uploaded to Firebase Storage at `applications/{uid}/{applicationId}/`
+// (see PRD §4.3) only after createApplication() returns the doc ID,
+// because the path requires it. Per-file errors render inline so a
+// failed compression doesn't block the rest of the form.
+const transcriptFile = ref<File | null>(null)
+const transcriptError = ref('')
+const uploadingFiles = ref(false)
 
 // Auto-save: persist the draft to localStorage every 30s and on tab close.
 // Restored automatically on mount; cleared on successful submit.
@@ -500,7 +531,40 @@ const handleSubmit = async () => {
   await submitApplication('submitted')
 }
 
+// Submit-time gate — drafts can save without a transcript; final
+// submit can't (PRD §4.3 names transcript as the required upload).
+const hasRequiredFiles = computed(() => !!transcriptFile.value)
+
+function fileExt(file: File): string {
+  const name = file.name
+  const idx = name.lastIndexOf('.')
+  if (idx <= 0 || idx === name.length - 1) return 'bin'
+  return name.slice(idx + 1).toLowerCase()
+}
+
+async function uploadApplicationFiles(uid: string, applicationId: string) {
+  if (!transcriptFile.value) return null
+  try {
+    const url = await StorageService.uploadFile(
+      transcriptFile.value,
+      `applications/${uid}/${applicationId}/transcript.${fileExt(transcriptFile.value)}`,
+    )
+    return { transcript: url }
+  } catch (err) {
+    // Surface the failure but don't unwind the application doc — the
+    // applicant can retry the upload from the applications list.
+    const msg = err instanceof Error ? err.message : 'Upload failed'
+    error.value = `Transcript didn't upload: ${msg}. You can retry from your applications list.`
+    return null
+  }
+}
+
 const submitApplication = async (status: 'draft' | 'submitted') => {
+  if (status === 'submitted' && !hasRequiredFiles.value) {
+    error.value = 'Please attach your academic transcript before submitting.'
+    return
+  }
+
   loading.value = true
   error.value = ''
 
@@ -524,7 +588,22 @@ const submitApplication = async (status: 'draft' | 'submitted') => {
       submittedAt: status === 'submitted' ? new Date() : undefined
     }
 
-    await DatabaseService.createApplication(applicationData)
+    const applicationId = await DatabaseService.createApplication(applicationData)
+
+    // Upload selected documents now that the application exists — the
+    // Storage path requires the application ID. Only-on-create: editing
+    // attached files later happens via EditApplication.vue.
+    if (transcriptFile.value) {
+      uploadingFiles.value = true
+      try {
+        const documents = await uploadApplicationFiles(currentUser.uid, applicationId)
+        if (documents && Object.keys(documents).length > 0) {
+          await DatabaseService.updateApplication(applicationId, { documents })
+        }
+      } finally {
+        uploadingFiles.value = false
+      }
+    }
 
     // The draft is persisted on the server now — wipe the local copy
     // so we don't restore stale state on the next visit.
@@ -623,6 +702,21 @@ onMounted(() => {
   color: var(--color-text-secondary);
   margin-bottom: 1rem;
   font-size: 0.9rem;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
 }
 
 .form-row {

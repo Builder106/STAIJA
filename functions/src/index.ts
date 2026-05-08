@@ -18,7 +18,7 @@ import * as admin from 'firebase-admin'
 admin.initializeApp()
 
 export { contentfulWebhook } from './contentful'
-export { onApplicationStatusChange } from './email'
+export { onApplicationStatusChange, retryApplicationEmail } from './email'
 export {
   inviteReferencesOnSubmit,
   validateReferenceToken,
