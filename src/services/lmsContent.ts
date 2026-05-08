@@ -144,7 +144,7 @@ function shapeFields(payload: LmsFields): Record<string, unknown> {
     case 'course': {
       const f = payload.fields
       return clean({
-        slug: L(f.slug),
+        slug: L(normalizeSlug(f.slug)),
         title: L(f.title),
         program: L(f.program),
         summary: L(f.summary),
@@ -159,7 +159,7 @@ function shapeFields(payload: LmsFields): Record<string, unknown> {
     case 'module': {
       const f = payload.fields
       return clean({
-        slug: L(f.slug),
+        slug: L(normalizeSlug(f.slug)),
         title: L(f.title),
         summary: L(f.summary),
         lessons: L(refsArray(f.lessons, 'Entry')),
@@ -170,7 +170,7 @@ function shapeFields(payload: LmsFields): Record<string, unknown> {
     case 'lesson': {
       const f = payload.fields
       return clean({
-        slug: L(f.slug),
+        slug: L(normalizeSlug(f.slug)),
         title: L(f.title),
         body: L(f.body),
         videoUrl: L(f.videoUrl),
@@ -182,7 +182,7 @@ function shapeFields(payload: LmsFields): Record<string, unknown> {
     case 'assignmentSpec': {
       const f = payload.fields
       return clean({
-        slug: L(f.slug),
+        slug: L(normalizeSlug(f.slug)),
         title: L(f.title),
         instructions: L(f.instructions),
         submissionType: L(f.submissionType),
@@ -301,6 +301,52 @@ export function slugify(input: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+}
+
+/**
+ * Normalize an editor-provided slug to the canonical form. Same rules
+ * as slugify() — kept as a separate export so the call sites read as
+ * "I'm cleaning a slug the user typed" instead of "I'm deriving a slug
+ * from a title", which is what slugify() reads as.
+ *
+ * Lowercase enforcement is the contract here: every slug that reaches
+ * Contentful via shapeFields() runs through this, so URL paths stay
+ * consistent regardless of what an editor typed.
+ */
+export function normalizeSlug(input: string | undefined | null): string {
+  if (!input) return ''
+  return slugify(input)
+}
+
+/**
+ * Identify which video host a lesson's URL points at. Mirrors the
+ * host-detection branches in [LessonView.vue](../views/learn/LessonView.vue)
+ * that rewrite watch-page URLs to embed form. Exported so the
+ * authoring UI ([LessonEdit.vue](../views/admin/content/LessonEdit.vue))
+ * can show a live "what we detected" hint without re-implementing the
+ * branches and risking drift.
+ *
+ * Return values:
+ *   - 'youtube' / 'vimeo' — known providers, will be auto-converted to
+ *     embed URLs at render time
+ *   - 'other'   — parses as a URL but isn't one of the recognized hosts;
+ *     the lesson player will load it raw and depend on the host's
+ *     iframe-embed permissions
+ *   - 'invalid' — the input doesn't parse as a URL at all
+ *   - null      — empty / whitespace input
+ */
+export type VideoProvider = 'youtube' | 'vimeo' | 'other' | 'invalid'
+export function detectVideoProvider(input: string | undefined | null): VideoProvider | null {
+  const raw = (input ?? '').trim()
+  if (!raw) return null
+  try {
+    const u = new URL(raw)
+    if (u.hostname.includes('youtube.com') || u.hostname === 'youtu.be') return 'youtube'
+    if (u.hostname.includes('vimeo.com')) return 'vimeo'
+    return 'other'
+  } catch {
+    return 'invalid'
+  }
 }
 
 /** Term names this LMS uses, ordered by month. */
@@ -432,7 +478,7 @@ export async function buildDuplicateCourseFields(sourceId: string): Promise<Cour
   const sourceSlug = typeof f.slug === 'string' ? f.slug : ''
   const sourceVersion = typeof f.version === 'string' ? f.version : ''
   return {
-    slug: sourceSlug ? `${sourceSlug}-copy` : '',
+    slug: sourceSlug ? normalizeSlug(`${sourceSlug}-copy`) : '',
     title: typeof f.title === 'string' ? f.title : '',
     program: ((f.program as 'stepup_scholars' | 'dynamerge') ?? 'stepup_scholars'),
     summary: typeof f.summary === 'string' ? f.summary : '',

@@ -8,12 +8,15 @@ import Heading from '../../../components/ui/Heading.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
 import UiButton from '../../../components/ui/UiButton.vue'
+import UiSelect from '../../../components/ui/UiSelect.vue'
 import RichTextEditor from '../../../components/admin/RichTextEditor.vue'
 import {
   getEntry,
   createEntry,
   updateEntry,
   publishEntry,
+  normalizeSlug,
+  detectVideoProvider,
   type LessonFields,
 } from '../../../services/lmsContent'
 import { emptyDocument } from '../../../services/richTextSerializer'
@@ -64,6 +67,11 @@ async function load() {
 const canSave = computed(
   () => !!form.value.slug.trim() && !!form.value.title.trim() && !saving.value,
 )
+
+// Pure detection lives in lmsContent so it can be unit-tested and
+// re-used by any preview surface. Hint text in the template branches
+// on this value.
+const videoProvider = computed(() => detectVideoProvider(form.value.videoUrl))
 
 async function save() {
   if (!canSave.value) return
@@ -145,7 +153,14 @@ onMounted(load)
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
-                <input v-model="form.slug" type="text" class="input" />
+                <input
+                  :value="form.slug"
+                  type="text"
+                  class="input font-mono"
+                  @input="form.slug = ($event.target as HTMLInputElement).value.toLowerCase()"
+                  @blur="form.slug = normalizeSlug(form.slug)"
+                />
+                <p class="text-[11px] text-ink/50">Lowercase letters, numbers, and hyphens only. Anything else gets normalized on save.</p>
               </div>
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Estimated minutes</label>
@@ -158,21 +173,42 @@ onMounted(load)
             </div>
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Video URL</label>
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                  Video URL <span class="text-ink/40 normal-case">(optional)</span>
+                </label>
                 <input
                   v-model="form.videoUrl"
                   type="url"
                   class="input"
                   placeholder="https://www.youtube.com/watch?v=…"
                 />
+                <p v-if="videoProvider === 'youtube'" class="text-[11px] text-emerald-700 inline-flex items-center gap-1">
+                  <Icon icon="lucide:check-circle-2" width="11" /> YouTube link — embeds inline in the lesson player.
+                </p>
+                <p v-else-if="videoProvider === 'vimeo'" class="text-[11px] text-emerald-700 inline-flex items-center gap-1">
+                  <Icon icon="lucide:check-circle-2" width="11" /> Vimeo link — embeds inline in the lesson player.
+                </p>
+                <p v-else-if="videoProvider === 'other'" class="text-[11px] text-amber-700 inline-flex items-center gap-1">
+                  <Icon icon="lucide:alert-triangle" width="11" /> Not a YouTube or Vimeo URL — the player loads it raw, which only works if the host allows iframe embedding.
+                </p>
+                <p v-else-if="videoProvider === 'invalid'" class="text-[11px] text-red-700 inline-flex items-center gap-1">
+                  <Icon icon="lucide:x-circle" width="11" /> Doesn't look like a URL.
+                </p>
+                <p v-else class="text-[11px] text-ink/50">
+                  Paste a YouTube or Vimeo watch-page link. The lesson player auto-converts it to an embed. Leave blank for a text-only lesson.
+                </p>
               </div>
               <div class="flex flex-col gap-2">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Completion criteria</label>
-                <select v-model="form.completionCriteria" class="input">
-                  <option value="viewed">Viewed — opening counts</option>
-                  <option value="assignment_submitted">Assignment submitted</option>
-                  <option value="quiz_passed">Quiz passed (Phase 3)</option>
-                </select>
+                <label for="lesson-completion-criteria" class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Completion criteria</label>
+                <UiSelect
+                  id="lesson-completion-criteria"
+                  v-model="form.completionCriteria"
+                  :options="[
+                    { value: 'viewed', label: 'Viewed', hint: 'Opening counts' },
+                    { value: 'assignment_submitted', label: 'Assignment submitted' },
+                    { value: 'quiz_passed', label: 'Quiz passed', hint: 'Coming soon', disabled: true },
+                  ]"
+                />
               </div>
             </div>
           </UiCard>

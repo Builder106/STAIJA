@@ -6,6 +6,7 @@ import Section from '../../../components/ui/Section.vue'
 import Heading from '../../../components/ui/Heading.vue'
 import Body from '../../../components/ui/Body.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
+import LmsOnboarding from '../../../components/admin/LmsOnboarding.vue'
 
 const tiles = [
   { to: '/admin/content/courses', icon: 'lucide:book-open', title: 'Courses', desc: 'Top-level units. Pin a version, link to modules.' },
@@ -30,8 +31,10 @@ const tiles = [
     </Section>
 
     <Section class="!py-10">
-      <Container>
-        <div class="grid sm:grid-cols-2 gap-4 max-w-3xl">
+      <Container class="flex flex-col gap-8 max-w-3xl">
+        <LmsOnboarding />
+
+        <div class="grid sm:grid-cols-2 gap-4">
           <RouterLink
             v-for="t in tiles"
             :key="t.to"

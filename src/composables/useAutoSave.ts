@@ -42,6 +42,21 @@ export interface AutoSaveHandle {
   flush: () => void
   /** Wipe the saved draft. Call after a successful submit. */
   clear: () => void
+  /**
+   * Non-destructive read of the stored draft's savedAt timestamp.
+   * Returns null if no draft exists, the draft is past TTL, or
+   * storage is unavailable. Useful for "editing an existing record"
+   * flows that need to compare local-draft freshness against a
+   * server `updatedAt` before deciding to restore.
+   */
+  peek: () => Date | null
+  /**
+   * Destructive — pulls the stored draft into state if one exists
+   * within TTL. Returns true if state was overwritten. Designed for
+   * `skipRestore: true` callers that want to make the restore
+   * decision themselves after loading remote data.
+   */
+  restore: () => boolean
 }
 
 export function useAutoSave<T extends object>(
@@ -92,28 +107,41 @@ export function useAutoSave<T extends object>(
     }
   }
 
-  function restore() {
+  function readDraft(): StoredDraft<T> | null {
     const storage = safeStorage()
-    if (!storage) return
+    if (!storage) return null
     const raw = storage.getItem(fullKey)
-    if (!raw) return
+    if (!raw) return null
     try {
       const parsed = JSON.parse(raw) as StoredDraft<T>
-      if (parsed.v !== 1 || typeof parsed.savedAt !== 'number') return
+      if (parsed.v !== 1 || typeof parsed.savedAt !== 'number') return null
       if (Date.now() - parsed.savedAt > TTL_MS) {
         storage.removeItem(fullKey)
-        return
+        return null
       }
-      // Shallow-merge: only override keys that were saved, so the form's
-      // default shape (any new fields added since the draft) survives.
-      Object.assign(state.value as object, parsed.data)
-      restored.value = true
-      lastSavedAt.value = new Date(parsed.savedAt)
-      status.value = 'saved'
+      return parsed
     } catch (err) {
-      console.warn('[useAutoSave] restore failed; clearing draft', err)
+      console.warn('[useAutoSave] read failed; clearing draft', err)
       storage.removeItem(fullKey)
+      return null
     }
+  }
+
+  function peek(): Date | null {
+    const draft = readDraft()
+    return draft ? new Date(draft.savedAt) : null
+  }
+
+  function restore(): boolean {
+    const draft = readDraft()
+    if (!draft) return false
+    // Shallow-merge: only override keys that were saved, so the form's
+    // default shape (any new fields added since the draft) survives.
+    Object.assign(state.value as object, draft.data)
+    restored.value = true
+    lastSavedAt.value = new Date(draft.savedAt)
+    status.value = 'saved'
+    return true
   }
 
   function flush() {
@@ -167,5 +195,5 @@ export function useAutoSave<T extends object>(
     }
   })
 
-  return { restored, status, lastSavedAt, flush, clear }
+  return { restored, status, lastSavedAt, flush, clear, peek, restore }
 }

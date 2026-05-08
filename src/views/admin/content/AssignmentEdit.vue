@@ -8,12 +8,14 @@ import Heading from '../../../components/ui/Heading.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
 import UiButton from '../../../components/ui/UiButton.vue'
+import UiSelect from '../../../components/ui/UiSelect.vue'
 import RichTextEditor from '../../../components/admin/RichTextEditor.vue'
 import {
   getEntry,
   createEntry,
   updateEntry,
   publishEntry,
+  normalizeSlug,
   type AssignmentSpecFields,
 } from '../../../services/lmsContent'
 import { emptyDocument } from '../../../services/richTextSerializer'
@@ -158,16 +160,27 @@ onMounted(load)
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
-                <input v-model="form.slug" type="text" class="input" />
+                <input
+                  :value="form.slug"
+                  type="text"
+                  class="input font-mono"
+                  @input="form.slug = ($event.target as HTMLInputElement).value.toLowerCase()"
+                  @blur="form.slug = normalizeSlug(form.slug)"
+                />
+                <p class="text-[11px] text-ink/50">Lowercase letters, numbers, and hyphens only. Anything else gets normalized on save.</p>
               </div>
               <div class="flex flex-col gap-2">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Submission type</label>
-                <select v-model="form.submissionType" class="input">
-                  <option value="text">Text only</option>
-                  <option value="file">File only</option>
-                  <option value="link">Link only</option>
-                  <option value="text_or_file">Text or file</option>
-                </select>
+                <label for="assignment-submission-type" class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Submission type</label>
+                <UiSelect
+                  id="assignment-submission-type"
+                  v-model="form.submissionType"
+                  :options="[
+                    { value: 'text', label: 'Text only' },
+                    { value: 'file', label: 'File only' },
+                    { value: 'link', label: 'Link only' },
+                    { value: 'text_or_file', label: 'Text or file' },
+                  ]"
+                />
               </div>
             </div>
             <div class="flex flex-col gap-2">

@@ -8,12 +8,14 @@ import Heading from '../../../components/ui/Heading.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
 import UiButton from '../../../components/ui/UiButton.vue'
+import UiSelect from '../../../components/ui/UiSelect.vue'
 import EntryReferencePicker from '../../../components/admin/EntryReferencePicker.vue'
 import {
   getEntry,
   createEntry,
   updateEntry,
   publishEntry,
+  normalizeSlug,
   type ModuleFields,
 } from '../../../services/lmsContent'
 
@@ -150,14 +152,25 @@ onMounted(load)
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
-                <input v-model="form.slug" type="text" class="input" />
+                <input
+                  :value="form.slug"
+                  type="text"
+                  class="input font-mono"
+                  @input="form.slug = ($event.target as HTMLInputElement).value.toLowerCase()"
+                  @blur="form.slug = normalizeSlug(form.slug)"
+                />
+                <p class="text-[11px] text-ink/50">Lowercase letters, numbers, and hyphens only. Anything else gets normalized on save.</p>
               </div>
               <div class="flex flex-col gap-2">
-                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Unlock rule</label>
-                <select v-model="form.unlockRule" class="input">
-                  <option value="sequential">Sequential — finish lessons in order</option>
-                  <option value="open">Open — students can jump around</option>
-                </select>
+                <label for="module-unlock-rule" class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Unlock rule</label>
+                <UiSelect
+                  id="module-unlock-rule"
+                  v-model="form.unlockRule"
+                  :options="[
+                    { value: 'sequential', label: 'Sequential', hint: 'Finish lessons in order' },
+                    { value: 'open', label: 'Open', hint: 'Students can jump around' },
+                  ]"
+                />
               </div>
             </div>
             <div class="flex flex-col gap-2">
