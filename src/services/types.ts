@@ -75,6 +75,12 @@ export interface UserProfile {
   email: string
   displayName?: string
   photoURL?: string
+  // Index into the avatar `PORTRAITS` library — set when the user
+  // explicitly picks a portrait from the gallery rather than accepting
+  // the deterministic seed-based default. `null` means "no override,
+  // use the seed". Resolved alongside `photoURL` by `resolveAvatarSrc`
+  // (uploaded photo wins over picked slot wins over seed).
+  avatarSlot?: number | null
   bio?: string
   role: UserRole
   createdAt: Date
@@ -163,6 +169,19 @@ export interface Application {
     cv?: string
     transcript?: string
     recommendationLetter?: string
+  }
+  /**
+   * Set by `onApplicationStatusChange` when Mailgun rejects the
+   * applicant-facing email. Cleared automatically on a successful
+   * retry. Surfaces a "Retry email" banner on the admin application
+   * view ([AdminViewApplication.vue](../views/admin/AdminViewApplication.vue))
+   * which calls the `retryApplicationEmail` callable.
+   */
+  lastEmailFailure?: {
+    kind: 'submitted' | 'accepted' | 'rejected'
+    to: string
+    attemptedAt: Date
+    error: string
   }
   submittedAt?: Date
   reviewedAt?: Date

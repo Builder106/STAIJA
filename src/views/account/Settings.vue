@@ -16,6 +16,14 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
+import AnimatedAvatar from '../../components/avatars/AnimatedAvatar.vue'
+import AvatarPicker from '../../components/avatars/AvatarPicker.vue'
+import LottieAvatar from '../../components/avatars/LottieAvatar.vue'
+import { avatarSeedFor, resolveAvatarSrc } from '../../services/avatar'
+import {
+  hasLottieForSlot,
+  loadLottieForSlot,
+} from '../../services/avatar/lotties'
 import { useAuth } from '../../composables/useAuth'
 import { functions } from '../../config/firebase'
 import { AuthService } from '../../services/auth'
@@ -30,8 +38,15 @@ const { user, userProfile, displayName, signOut, refreshProfile } = useAuth()
 
 const BIO_MAX = 280
 
-const form = ref({ displayName: '', bio: '', photoURL: '' })
-const original = ref({ displayName: '', bio: '', photoURL: '' })
+interface ProfileForm {
+  displayName: string
+  bio: string
+  photoURL: string
+  avatarSlot: number | null
+}
+
+const form = ref<ProfileForm>({ displayName: '', bio: '', photoURL: '', avatarSlot: null })
+const original = ref<ProfileForm>({ displayName: '', bio: '', photoURL: '', avatarSlot: null })
 
 watch(
   userProfile,
@@ -39,6 +54,7 @@ watch(
     form.value.displayName = p?.displayName ?? ''
     form.value.bio = p?.bio ?? ''
     form.value.photoURL = p?.photoURL ?? ''
+    form.value.avatarSlot = p?.avatarSlot ?? null
     original.value = { ...form.value }
   },
   { immediate: true },
@@ -48,7 +64,8 @@ const dirty = computed(
   () =>
     form.value.displayName !== original.value.displayName ||
     form.value.bio !== original.value.bio ||
-    form.value.photoURL !== original.value.photoURL,
+    form.value.photoURL !== original.value.photoURL ||
+    form.value.avatarSlot !== original.value.avatarSlot,
 )
 const bioOver = computed(() => form.value.bio.length > BIO_MAX)
 const canSave = computed(() => dirty.value && !bioOver.value && !saving.value && !uploading.value)
@@ -85,24 +102,48 @@ async function handleAvatar(event: Event) {
   }
 }
 
+// --- Avatar picker ---------------------------------------------------
+
+const pickerOpen = ref(false)
+
+function openPicker() {
+  pickerOpen.value = true
+}
+
+function applyPickedSlot(slot: number | null) {
+  // Picking a slot is a deliberate choice. Drop the uploaded photo so
+  // the picked portrait is the one that renders. The user can re-upload
+  // any time; the slot persists underneath.
+  form.value.avatarSlot = slot
+  if (slot !== null) form.value.photoURL = ''
+}
+
 async function handleSave() {
   if (!canSave.value || !user.value) return
   saving.value = true
   saveError.value = null
   saveSuccess.value = false
   try {
-    const updates: Record<string, string> = {}
+    const updates: Record<string, string | number | null> = {}
     if (form.value.displayName !== original.value.displayName)
       updates.displayName = form.value.displayName.trim()
     if (form.value.bio !== original.value.bio) updates.bio = form.value.bio.trim()
     if (form.value.photoURL !== original.value.photoURL) updates.photoURL = form.value.photoURL
+    if (form.value.avatarSlot !== original.value.avatarSlot)
+      updates.avatarSlot = form.value.avatarSlot
 
     await DatabaseService.updateUserProfile(user.value.uid, updates)
 
     if ('displayName' in updates || 'photoURL' in updates) {
       await AuthService.updateProfile({
-        displayName: updates.displayName ?? form.value.displayName,
-        photoURL: updates.photoURL ?? form.value.photoURL,
+        displayName:
+          typeof updates.displayName === 'string'
+            ? updates.displayName
+            : form.value.displayName,
+        photoURL:
+          typeof updates.photoURL === 'string'
+            ? updates.photoURL
+            : form.value.photoURL,
       })
     }
 
@@ -131,6 +172,58 @@ function getInitials(name: string | null | undefined) {
     .toUpperCase()
     .slice(0, 2)
 }
+
+// Avatar shown in the profile editor. Uses the resolver in the
+// avatar service so the precedence (uploaded > picked slot > seeded
+// default) stays in one place.
+const avatarSeed = computed(() =>
+  user.value
+    ? avatarSeedFor({ uid: user.value.uid, email: user.value.email })
+    : 'staija-default',
+)
+
+const resolvedAvatarSrc = computed(() => {
+  if (!user.value) return null
+  return resolveAvatarSrc({
+    photoURL: form.value.photoURL || null,
+    avatarSlot: form.value.avatarSlot,
+    seed: avatarSeed.value,
+  })
+})
+
+// True when the resolved avatar is the user's uploaded photo (vs.
+// generated). Affects which display container the markup uses.
+const showingUploadedPhoto = computed(() => Boolean(form.value.photoURL))
+
+// The actual slot whose portrait is currently displayed. Used to
+// decide whether to swap in the Lottie variant. `null` when no
+// generated avatar applies (uploaded photo or pre-load).
+const UNIVERSAL_DEFAULT_SLOT = 6
+const displayedSlot = computed<number | null>(() => {
+  if (!user.value || form.value.photoURL) return null
+  return typeof form.value.avatarSlot === 'number'
+    ? form.value.avatarSlot
+    : UNIVERSAL_DEFAULT_SLOT
+})
+
+const lottieAvailable = computed(() =>
+  displayedSlot.value !== null && hasLottieForSlot(displayedSlot.value),
+)
+
+// Lazily-loaded Lottie JSON for the displayed slot. Reloaded when
+// the slot changes (picker apply, photo upload/clear).
+const lottieAnimation = ref<Record<string, unknown> | null>(null)
+watch(
+  displayedSlot,
+  async (slot) => {
+    if (slot === null || !hasLottieForSlot(slot)) {
+      lottieAnimation.value = null
+      return
+    }
+    lottieAnimation.value = await loadLottieForSlot(slot)
+  },
+  { immediate: true },
+)
 
 function formatDate(date: unknown): string {
   if (!date) return '—'
@@ -406,7 +499,7 @@ async function handleDelete() {
     <Section class="!py-12">
       <Container class="max-w-3xl flex flex-col gap-8">
         <!-- Profile editor -->
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Eyebrow class="text-brand-violet mb-3 block">Profile</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Public profile</Heading>
           <Body class="text-ink/60 text-sm mb-8">
@@ -415,11 +508,36 @@ async function handleDelete() {
 
           <div class="flex flex-col gap-6">
             <div class="flex items-center gap-5">
+              <!--
+                Lottie variant when an animation exists for the user's
+                slot, otherwise AnimatedAvatar. state="idle" runs the
+                shared breath cycle (1.8% scale, 4.2s sine, infinite,
+                phase-jittered per mount). Now safe to leave on with
+                PNG rendering — the bitmap is rasterized once and
+                composited via GPU.
+              -->
+              <LottieAvatar
+                v-if="lottieAvailable && lottieAnimation && !showingUploadedPhoto"
+                :animation-data="lottieAnimation"
+                :fallback-src="resolvedAvatarSrc!"
+                :alt="`${displayName ?? 'Your'} avatar`"
+                :size="80"
+                class="flex-shrink-0"
+              />
+              <AnimatedAvatar
+                v-else-if="resolvedAvatarSrc && !showingUploadedPhoto"
+                :src="resolvedAvatarSrc"
+                :alt="`${displayName ?? 'Your'} avatar`"
+                state="idle"
+                :size="80"
+                class="flex-shrink-0"
+              />
               <div
+                v-else
                 class="w-20 h-20 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center text-xl font-semibold flex-shrink-0 overflow-hidden"
               >
                 <img
-                  v-if="form.photoURL"
+                  v-if="showingUploadedPhoto"
                   :src="form.photoURL"
                   alt=""
                   class="w-full h-full object-cover"
@@ -427,27 +545,45 @@ async function handleDelete() {
                 <span v-else>{{ getInitials(displayName) }}</span>
               </div>
               <div class="flex flex-col gap-2">
-                <label
-                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border hairline-ink text-xs font-medium cursor-pointer hover:bg-ink/5 transition-colors w-fit"
-                  :class="uploading ? 'opacity-50 pointer-events-none' : ''"
-                >
-                  <Icon
-                    :icon="uploading ? 'lucide:loader-2' : 'lucide:upload'"
-                    width="14"
-                    :class="uploading ? 'animate-spin' : ''"
-                  />
-                  {{ uploading ? 'Uploading…' : 'Upload photo' }}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    :disabled="uploading"
-                    @change="handleAvatar"
-                  />
-                </label>
-                <p class="text-xs text-ink/50">PNG or JPG, max 2 MB.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <label
+                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border hairline-ink text-xs font-medium cursor-pointer hover:bg-ink/5 transition-colors w-fit"
+                    :class="uploading ? 'opacity-50 pointer-events-none' : ''"
+                  >
+                    <Icon
+                      :icon="uploading ? 'lucide:loader-2' : 'lucide:upload'"
+                      width="14"
+                      :class="uploading ? 'animate-spin' : ''"
+                    />
+                    {{ uploading ? 'Uploading…' : 'Upload photo' }}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      :disabled="uploading"
+                      @change="handleAvatar"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border hairline-ink text-xs font-medium hover:bg-ink/5 transition-colors w-fit"
+                    @click="openPicker"
+                  >
+                    <Icon icon="lucide:images" width="14" />
+                    Choose from gallery
+                  </button>
+                </div>
+                <p class="text-xs text-ink/50">PNG or JPG, max 2 MB. Or pick a portrait from the gallery.</p>
               </div>
             </div>
+
+            <AvatarPicker
+              :open="pickerOpen"
+              :current="form.avatarSlot"
+              :seed="avatarSeed"
+              @close="pickerOpen = false"
+              @apply="applyPickedSlot"
+            />
 
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Display name</label>
@@ -456,7 +592,7 @@ async function handleDelete() {
                 type="text"
                 placeholder="Your name"
                 maxlength="80"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
               />
             </div>
 
@@ -471,7 +607,7 @@ async function handleDelete() {
                 v-model="form.bio"
                 rows="4"
                 placeholder="A short intro — what you're studying, what you're curious about."
-                class="w-full px-4 py-3 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
+                class="w-full px-4 py-3 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
               ></textarea>
             </div>
 
@@ -491,7 +627,7 @@ async function handleDelete() {
         </UiCard>
 
         <!-- Account info (read-only) -->
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Eyebrow class="text-ink/60 mb-3 block">Account</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Account info</Heading>
           <Body class="text-ink/60 text-sm mb-6">Read-only. Email and role are managed by an admin.</Body>
@@ -520,7 +656,7 @@ async function handleDelete() {
         </UiCard>
 
         <!-- Notifications -->
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Eyebrow class="text-brand-violet mb-3 block">Notifications</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Email preferences</Heading>
           <Body class="text-ink/60 text-sm mb-6">
@@ -565,7 +701,7 @@ async function handleDelete() {
         </UiCard>
 
         <!-- Security -->
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Eyebrow class="text-brand-violet mb-3 block">Security</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Sign-in & sessions</Heading>
           <Body class="text-ink/60 text-sm mb-6">Keep your account secure.</Body>
@@ -617,21 +753,21 @@ async function handleDelete() {
                   type="password"
                   placeholder="Current password"
                   autocomplete="current-password"
-                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
                 <input
                   v-model="pwNew"
                   type="password"
                   placeholder="New password (8+ characters)"
                   autocomplete="new-password"
-                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
                 <input
                   v-model="pwNewConfirm"
                   type="password"
                   placeholder="Confirm new password"
                   autocomplete="new-password"
-                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
                 <p v-if="pwError" class="text-sm text-red-700">{{ pwError }}</p>
                 <div class="flex gap-2 pt-1">
@@ -672,7 +808,7 @@ async function handleDelete() {
         </UiCard>
 
         <!-- Privacy -->
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Eyebrow class="text-brand-violet mb-3 block">Privacy</Eyebrow>
           <Heading :level="2" class="mb-2 text-xl">Visibility & data</Heading>
           <Body class="text-ink/60 text-sm mb-6">Control what's visible and download a copy of your data.</Body>
@@ -727,7 +863,7 @@ async function handleDelete() {
         </UiCard>
 
         <!-- Danger zone -->
-        <UiCard class="p-6 md:p-10 bg-white border border-red-200">
+        <UiCard class="p-6 md:p-10 bg-surface border border-red-200">
           <Eyebrow class="text-red-700 mb-3 block">Danger zone</Eyebrow>
           <Heading :level="2" class="mb-3 text-xl">Delete your account</Heading>
           <Body class="text-ink/70 mb-2">
@@ -768,7 +904,7 @@ async function handleDelete() {
                 placeholder="DELETE"
                 autocomplete="off"
                 spellcheck="false"
-                class="w-full px-4 py-3 rounded-md border hairline-ink bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-3 rounded-md border hairline-ink bg-surface font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 :disabled="deleting"
               />
               <p v-if="deleteError" class="text-sm text-red-700">{{ deleteError }}</p>

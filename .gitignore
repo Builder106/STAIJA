@@ -38,3 +38,10 @@ docs/
 
 # Email preview output
 functions/email-previews/
+
+# Avatar generation pipeline intermediates — only the cleaned SVGs that
+# land in src/services/avatar/parts.ts belong in the repo.
+tools/avatars/raw/
+tools/avatars/traced/
+tools/avatars/clean/
+.vercel

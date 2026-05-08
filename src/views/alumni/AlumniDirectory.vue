@@ -20,7 +20,13 @@
     <div v-else class="grid">
       <div v-for="profile in filteredProfiles" :key="profile.uid" class="profile-card">
         <div class="profile-header">
-          <img :src="profile.photoURL || '/default-avatar.png'" alt="Avatar" class="avatar" />
+          <AnimatedAvatar
+            :src="resolveAvatarSrc({ photoURL: profile.photoURL, avatarSlot: profile.avatarSlot, seed: profile.uid })"
+            :alt="`${profile.displayName} avatar`"
+            state="idle"
+            :size="64"
+            class="avatar-anim"
+          />
           <div class="info">
             <h3>{{ profile.displayName }}</h3>
             <p class="headline">{{ profile.headline || 'Alumni' }}</p>
@@ -48,12 +54,15 @@ import { db } from '../../config/firebase'
 import { collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { AuthService } from '../../services/firebase'
 import ConnectionButton from '../../components/alumni/ConnectionButton.vue'
+import AnimatedAvatar from '../../components/avatars/AnimatedAvatar.vue'
+import { resolveAvatarSrc } from '../../services/avatar'
 import { Icon } from '@iconify/vue'
 
 interface AlumniProfile {
   uid: string
   displayName: string
   photoURL?: string
+  avatarSlot?: number | null
   headline?: string
   location?: string
   skills?: string[]
@@ -130,7 +139,7 @@ onMounted(loadProfiles)
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
 .profile-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 1rem; }
 .profile-header { display: flex; gap: 1rem; align-items: flex-start; }
-.avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #eee; }
+.avatar-anim { flex-shrink: 0; }
 .info h3 { margin: 0; font-size: 1.1rem; }
 .headline { margin: 0.2rem 0; color: #666; font-size: 0.9rem; }
 .location { margin: 0; color: #888; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; }

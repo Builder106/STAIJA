@@ -14,7 +14,12 @@
     <form @submit.prevent="save">
       <div class="avatar-section">
         <div class="avatar-preview">
-          <img :src="form.photoURL || '/default-avatar.png'" alt="Profile Photo" />
+          <AnimatedAvatar
+            :src="resolveAvatarSrc({ photoURL: form.photoURL, avatarSlot: form.avatarSlot, seed: currentUid })"
+            alt="Profile Photo"
+            state="hero"
+            :size="100"
+          />
         </div>
         <div class="avatar-actions">
           <label class="btn-outline">
@@ -82,10 +87,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { AuthService, StorageService, type UserProfile } from '../../services/firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../config/firebase'
+import AnimatedAvatar from '../../components/avatars/AnimatedAvatar.vue'
+import { resolveAvatarSrc } from '../../services/avatar'
 
 type AlumniProfile = UserProfile & {
   headline?: string
@@ -104,6 +111,7 @@ type AlumniProfile = UserProfile & {
 const form = ref({
   displayName: '',
   photoURL: '',
+  avatarSlot: null as number | null,
   headline: '',
   bio: '',
   location: '',
@@ -116,6 +124,10 @@ const form = ref({
   },
   visibility: 'public' as 'public' | 'private'
 })
+
+const currentUid = computed(
+  () => AuthService.getCurrentUser()?.uid ?? 'staija-default',
+)
 
 const newSkill = ref('')
 const saving = ref(false)
@@ -134,6 +146,7 @@ const load = async () => {
     const data = snap.data() as AlumniProfile
     form.value.displayName = data.displayName || user.displayName || ''
     form.value.photoURL = data.photoURL || user.photoURL || ''
+    form.value.avatarSlot = data.avatarSlot ?? null
     form.value.headline = data.headline || ''
     form.value.bio = data.bio || ''
     form.value.location = data.location || ''
@@ -241,7 +254,7 @@ onMounted(load)
 
 /* Avatar */
 .avatar-section { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
-.avatar-preview img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background: #eee; }
+.avatar-preview { display: flex; }
 .uploading { font-size: 0.8rem; color: #666; margin-left: 0.5rem; }
 
 /* Inputs */
