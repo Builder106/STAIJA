@@ -26,22 +26,19 @@
   },
   "home": {
     "hero": {
-      "headlinePart1": "Africa's next",
+      "headline": "Africa's next {accent} start here.",
       "headlineAccent": "scientist-leaders",
-      "headlinePart2": "start here.",
       "dek": "We nurture ambitious high-school and gap-year students through intensive research programs, mentorship, and a pan-African community of practice.",
       "ctaPrimary": "Apply to StepUp",
       "ctaSecondary": "Explore programs"
     },
     "stats": {
-      "scholarsTrained": "Scholars trained",
-      "scholarsCaption": "Across 18 Nigerian states",
-      "countries": "Countries",
-      "countriesCaption": "Represented in Dynamerge",
-      "papers": "Research papers",
-      "papersCaption": "Published or presented",
-      "mentors": "Mentors",
-      "mentorsCaption": "From top global institutions"
+      "studentsReached": "Students reached",
+      "studentsReachedCaption": "Across StepUp + Dynamerge since 2023",
+      "talkAttendees": "Talk attendees",
+      "talkAttendeesCaption": "At STAIJA Talks and public events",
+      "programs": "Programs",
+      "programsCaption": "StepUp Scholars · Dynamerge"
     },
     "programs": {
       "eyebrow": "Our Programs",
@@ -55,19 +52,14 @@
       "learnMore": "Learn more"
     },
     "featured": {
-      "eyebrow": "Featured Scholar",
-      "quote": "STAIJA didn't just teach me how to run a PCR test. They taught me how to ask questions that matter to my community.",
-      "name": "Chinedu Okafor",
-      "role": "StepUp Scholar '24 · Lagos, Nigeria",
-      "readMore": "Read Chinedu's story"
+      "eyebrow": "Featured Story",
+      "byline": "By {author}",
+      "readMore": "Read full story"
     },
     "events": {
       "eyebrow": "Community",
       "heading": "Upcoming events.",
       "viewAll": "View all events"
-    },
-    "partners": {
-      "eyebrow": "Supported by global partners"
     }
   },
   "donate": {

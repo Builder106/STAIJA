@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from '../components/ui/Container.vue'
@@ -15,11 +16,27 @@ import HeroLottie from '../components/HeroLottie.vue'
 import { trackApplyClick } from '../services/analytics'
 import { getBlogPosts, getEvents, type BlogPost, type EventItem } from '../services/content'
 
-const stats = [
-  { eyebrow: 'Students reached', number: '100', caption: 'Across StepUp + Dynamerge since 2023' },
-  { eyebrow: 'Talk attendees', number: '200', caption: 'At STAIJA Talks and public events' },
-  { eyebrow: 'Programs', number: '2', caption: 'StepUp Scholars · Dynamerge' },
-]
+const { t, locale } = useI18n()
+
+// Stats: numbers stay hardcoded (they're data, not language) but the
+// eyebrow + caption flow through i18n. Recomputed on locale change.
+const stats = computed(() => [
+  {
+    eyebrow: t('home.stats.studentsReached'),
+    number: '100',
+    caption: t('home.stats.studentsReachedCaption'),
+  },
+  {
+    eyebrow: t('home.stats.talkAttendees'),
+    number: '200',
+    caption: t('home.stats.talkAttendeesCaption'),
+  },
+  {
+    eyebrow: t('home.stats.programs'),
+    number: '2',
+    caption: t('home.stats.programsCaption'),
+  },
+])
 
 // Featured story + upcoming events read from Contentful via the content
 // service. Sections render only when real entries exist — no fallback to
@@ -28,16 +45,20 @@ const stats = [
 const featuredStory = ref<BlogPost | null>(null)
 const upcomingEvents = ref<EventItem[]>([])
 
+// Pass the active locale to Intl so dates localize alongside the rest
+// of the page. Browsers unfamiliar with a given BCP47 code (e.g. 'yo')
+// fall back to the user's system default, which is acceptable for
+// short month/day strings.
 const featuredEyebrow = computed(() => {
   if (!featuredStory.value) return ''
   const d = new Date(featuredStory.value.publishedAt)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 
 function eventDateParts(iso: string) {
   const d = new Date(iso)
   return {
-    month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+    month: d.toLocaleString(locale.value, { month: 'short' }).toUpperCase(),
     day: d.getDate(),
   }
 }
@@ -79,12 +100,20 @@ onMounted(async () => {
             class="flex flex-col gap-8 max-w-xl"
           >
             <Heading :level="1">
-              Africa's next <span class="italic">scientist-leaders</span> start here.
+              <!-- i18n-t with a slot for the accent so translators can
+                   move the italicized word to wherever the sentence
+                   structure demands in their language. Yorùbá word
+                   order isn't a 1:1 with English — a 3-part split
+                   (part1 / accent / part2) wouldn't survive contact
+                   with the language. -->
+              <i18n-t keypath="home.hero.headline" tag="span">
+                <template #accent>
+                  <span class="italic">{{ t('home.hero.headlineAccent') }}</span>
+                </template>
+              </i18n-t>
             </Heading>
             <Body large class="!text-white/85">
-              We nurture ambitious high-school and gap-year students through
-              intensive research programs, mentorship, and a pan-African
-              community of practice.
+              {{ t('home.hero.dek') }}
             </Body>
             <div class="flex flex-wrap gap-4">
               <UiButton
@@ -92,10 +121,10 @@ onMounted(async () => {
                 :to="'/apply/stepup-scholars'"
                 @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
               >
-                Apply to StepUp
+                {{ t('home.hero.ctaPrimary') }}
               </UiButton>
               <UiButton variant="on-gradient-ghost" href="#programs">
-                Explore programs
+                {{ t('home.hero.ctaSecondary') }}
               </UiButton>
             </div>
           </Motion>
@@ -136,12 +165,12 @@ onMounted(async () => {
     </Section>
 
     <!-- Programs Split -->
-    <Section id="programs" class="bg-white">
+    <Section id="programs" class="bg-surface">
       <Container>
         <div class="flex flex-col gap-12">
           <div class="max-w-2xl">
-            <Eyebrow class="text-brand-violet mb-4 block">Our Programs</Eyebrow>
-            <Heading :level="2">Two paths to accelerated impact.</Heading>
+            <Eyebrow class="text-brand-violet mb-4 block">{{ t('home.programs.eyebrow') }}</Eyebrow>
+            <Heading :level="2">{{ t('home.programs.heading') }}</Heading>
           </div>
 
           <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
@@ -155,19 +184,20 @@ onMounted(async () => {
                 <div class="absolute top-0 left-0 right-0 h-[4px] bg-gradient-brand" />
                 <div class="p-8 md:p-10 flex flex-col h-full gap-6">
                   <div class="flex justify-between items-start gap-4">
+                    <!-- Program names ("StepUp Scholars" / "Dynamerge")
+                         are proper nouns — left untranslated. Same
+                         convention applies in nav, footer, etc. -->
                     <Heading :level="3">StepUp Scholars</Heading>
-                    <UiChip>In-person</UiChip>
+                    <UiChip>{{ t('home.programs.stepupChip') }}</UiChip>
                   </div>
                   <Body class="flex-1">
-                    A rigorous, Nigeria-based research incubator for high-school
-                    and gap-year students. Access world-class labs, receive a
-                    stipend, and publish your first paper.
+                    {{ t('home.programs.stepupBlurb') }}
                   </Body>
                   <div class="pt-6 border-t hairline-ink flex items-center justify-between">
-                    <span class="text-sm font-semibold text-ink/60">Ages 15–19 · Nigeria</span>
+                    <span class="text-sm font-semibold text-ink/60">{{ t('home.programs.stepupAge') }}</span>
                     <UiButton variant="tertiary" :to="'/programs/stepup-scholars'" class="text-brand-violet">
                       <span class="flex items-center gap-1 group">
-                        Learn more
+                        {{ t('home.programs.learnMore') }}
                         <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
                       </span>
                     </UiButton>
@@ -187,18 +217,16 @@ onMounted(async () => {
                 <div class="p-8 md:p-10 flex flex-col h-full gap-6">
                   <div class="flex justify-between items-start gap-4">
                     <Heading :level="3">Dynamerge</Heading>
-                    <UiChip>Virtual</UiChip>
+                    <UiChip>{{ t('home.programs.dynamergeChip') }}</UiChip>
                   </div>
                   <Body class="flex-1">
-                    A pan-African virtual summer bootcamp connecting ambitious
-                    students with global mentors. Four weeks of intense
-                    learning, collaboration, and skill-building.
+                    {{ t('home.programs.dynamergeBlurb') }}
                   </Body>
                   <div class="pt-6 border-t hairline-ink flex items-center justify-between">
-                    <span class="text-sm font-semibold text-ink/60">Ages 15–20 · Pan-African</span>
+                    <span class="text-sm font-semibold text-ink/60">{{ t('home.programs.dynamergeAge') }}</span>
                     <UiButton variant="tertiary" :to="'/programs/dynamerge'" class="text-brand-violet">
                       <span class="flex items-center gap-1 group">
-                        Learn more
+                        {{ t('home.programs.learnMore') }}
                         <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
                       </span>
                     </UiButton>
@@ -238,14 +266,17 @@ onMounted(async () => {
             :viewport="{ once: true }"
             :transition="{ duration: 0.6, delay: 0.2 }"
           >
-            <Eyebrow class="text-brand-violet">Featured Story · {{ featuredEyebrow }}</Eyebrow>
+            <Eyebrow class="text-brand-violet">{{ t('home.featured.eyebrow') }} · {{ featuredEyebrow }}</Eyebrow>
+            <!-- Story title + dek come from CMS — they're translator-
+                 owned at the Contentful layer (locale variants per
+                 entry), not via i18n keys here. -->
             <Heading :level="2">{{ featuredStory.title }}</Heading>
             <Body>{{ featuredStory.dek }}</Body>
             <div class="mt-2 flex flex-col gap-4">
-              <div class="text-sm text-ink/70">By {{ featuredStory.author }}</div>
+              <div class="text-sm text-ink/70">{{ t('home.featured.byline', { author: featuredStory.author }) }}</div>
               <UiButton variant="tertiary" :to="`/blog/${featuredStory.slug}`" class="self-start text-brand-violet">
                 <span class="flex items-center gap-1 group">
-                  Read full story
+                  {{ t('home.featured.readMore') }}
                   <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
                 </span>
               </UiButton>
@@ -256,16 +287,16 @@ onMounted(async () => {
     </Section>
 
     <!-- Upcoming Events (renders only when CMS has at least one upcoming event) -->
-    <Section v-if="upcomingEvents.length > 0" class="bg-white border-y hairline-ink">
+    <Section v-if="upcomingEvents.length > 0" class="bg-surface border-y hairline-ink">
       <Container>
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div class="max-w-2xl">
-            <Eyebrow class="text-brand-violet mb-4 block">Community</Eyebrow>
-            <Heading :level="2">Upcoming events.</Heading>
+            <Eyebrow class="text-brand-violet mb-4 block">{{ t('home.events.eyebrow') }}</Eyebrow>
+            <Heading :level="2">{{ t('home.events.heading') }}</Heading>
           </div>
           <UiButton variant="tertiary" :to="'/events'">
             <span class="flex items-center gap-1 group pb-1">
-              View all events
+              {{ t('home.events.viewAll') }}
               <Icon icon="lucide:arrow-right" width="16" class="transition-transform group-hover:translate-x-1" />
             </span>
           </UiButton>

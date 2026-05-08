@@ -21,9 +21,17 @@ export interface LocaleEntry {
   nativeLabel: string // shown to native speakers in their own script
 }
 
+// Locales the LocaleSwitcher exposes to end-users. Yorùbá ('yo') is
+// **deliberately not listed** here despite yo.json being registered in
+// the i18n messages map below — see PRD Decision §16.13. Showing a
+// Yorùbá option while yo.json is empty (or worse, machine-translated)
+// would be a footgun for the audience PRD §3 describes: they pick it,
+// see English fall-throughs, and conclude the site doesn't actually
+// serve them. Re-add `{ code: 'yo', label: 'Yoruba', nativeLabel: 'Yorùbá' }`
+// here once a Yorùbá-speaking reviewer is in the loop AND yo.json has
+// the priority surfaces (Home + StepUp + Donate per PRD §4.12) covered.
 export const SUPPORTED_LOCALES: LocaleEntry[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
-  { code: 'yo', label: 'Yoruba', nativeLabel: 'Yorùbá' },
 ]
 
 const STORAGE_KEY = 'staija.locale'

@@ -69,6 +69,10 @@ const routes: RouteRecordRaw[] = [
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
   { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/enroll', name: 'admin-enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  // Temporary — Phase 1 avatar motion preview. Any signed-in user can
+  // view it (no permission gate) so dev/staging accounts without an
+  // admin role still see the route. Delete once avatar work ships.
+  { path: '/admin/avatar-preview', name: 'admin-avatar-preview', component: () => import('../views/admin/AvatarPreview.vue'), meta: { title: 'Avatar preview — STAIJA', requiresAuth: true } },
 
   // LMS content authoring (STAIJA-native wrapper around Contentful Management API).
   // Both staff and admin can manage course content via manage_cohorts permission.
