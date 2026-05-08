@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>STAIJA — repo banner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --paper: #F1F5F9;
+      --ink: #0E1217;
+      --violet: #8B55FF;
+      --sky: #5EDBE7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1600px; height: 400px; }
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    body[data-theme="light"] { background: var(--paper); color: var(--ink); }
+    body[data-theme="dark"]  { background: var(--ink);   color: var(--paper); }
+
+    .banner {
+      width: 1600px;
+      height: 400px;
+      padding: 64px 96px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .brand img {
+      width: 96px;
+      height: 96px;
+      display: block;
+    }
+
+    .wordmark {
+      font-weight: 700;
+      font-size: 104px;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .tagline {
+      font-weight: 500;
+      font-size: 32px;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      max-width: 920px;
+    }
+
+    .tagline em {
+      font-style: normal;
+      font-weight: 700;
+      color: var(--violet);
+    }
+    body[data-theme="dark"] .tagline em { color: var(--sky); }
+
+    .programs {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 14px;
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .pill {
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: 1.5px solid currentColor;
+      opacity: 0.85;
+    }
+  </style>
+  <script>
+    /* The capture script appends ?theme=light or ?theme=dark.
+       Default to light if no param so the file is also openable
+       directly in a browser for tweaking. */
+    (function () {
+      var theme = new URLSearchParams(location.search).get('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.setAttribute('data-theme', theme);
+      });
+    })();
+  </script>
+</head>
+<body>
+  <div class="banner">
+    <div class="left">
+      <div class="brand">
+        <img src="../../public/STAIJA.png" alt="" />
+        <span class="wordmark">STAIJA</span>
+      </div>
+      <p class="tagline">
+        Web platform for Nigeria's <em>STEM scholars</em> and <em>scientist-leaders</em>.
+      </p>
+    </div>
+    <div class="programs" aria-label="Programs">
+      <span class="pill">StepUp Scholars</span>
+      <span class="pill">Dynamerge</span>
+    </div>
+  </div>
+</body>
+</html>

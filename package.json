@@ -13,7 +13,9 @@
     "avatars:label": "tsx tools/avatars/parse-and-label.ts",
     "avatars:clean": "tsx tools/avatars/clean.ts",
     "avatars:thumbs": "tsx tools/avatars/thumbs.ts",
-    "social:capture": "node tools/social/capture.cjs"
+    "social:capture": "node tools/social/capture.cjs",
+    "banner:capture": "node tools/banner/capture.cjs",
+    "demo": "DEMO=1 bddgen --config playwright.demo.config.ts && DEMO=1 playwright test --config playwright.demo.config.ts"
   },
   "dependencies": {
     "@contentful/rich-text-html-renderer": "^17.2.2",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@huggingface/inference": "^4.13.15",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.1.12",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
@@ -44,6 +47,7 @@
     "happy-dom": "^20.9.0",
     "jimp": "^1.6.1",
     "playwright": "^1.59.1",
+    "playwright-bdd": "^8.5.0",
     "potrace": "^2.1.8",
     "svgo": "^4.0.1",
     "tailwindcss": "^4.1.12",

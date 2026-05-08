@@ -45,3 +45,9 @@ tools/avatars/raw/
 tools/avatars/traced/
 tools/avatars/clean/
 .vercel
+
+# Playwright demo intermediates — only the converted .mp4s in e2e/videos/
+# are tracked. test-results/ holds raw .webm captures + per-test folders
+# that the reporter consumes and discards.
+test-results/
+.features-gen/
