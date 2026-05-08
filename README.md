@@ -127,6 +127,6 @@ firebase deploy --only firestore,storage
 | Doc | Contents |
 |---|---|
 | [`docs/INFRASTRUCTURE.md`](./docs/INFRASTRUCTURE.md) | Service costs, Firebase Blaze notes, Mailgun setup, secret rotation |
-| [`docs/PRD.md`](./docs/PRD.md) | Product requirements |
-| [`docs/PLAN.md`](./docs/PLAN.md) | Technical implementation plan |
+| [`docs/PRD.md`](./docs/PRD.md) | Product requirements — single source of truth for scope, status, and roadmap |
 | [`docs/CONTEXT.md`](./docs/CONTEXT.md) | Project background and mission |
+| [`docs/M*-CHECKLIST.md`](./docs/) | Per-milestone integration checklists referenced from PRD §17 |
