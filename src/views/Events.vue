@@ -55,7 +55,7 @@ function formatDate(iso: string) {
           brightest young minds and the mentors who support them.
         </Body>
 
-        <div class="flex justify-center gap-2 bg-white p-1.5 rounded-full border hairline-ink shadow-sm w-fit mx-auto">
+        <div class="flex justify-center gap-2 bg-surface p-1.5 rounded-full border hairline-ink shadow-sm w-fit mx-auto">
           <button
             type="button"
             class="px-6 py-2.5 rounded-full text-sm font-semibold transition-all focus-ring-brand"
@@ -76,7 +76,7 @@ function formatDate(iso: string) {
       </Container>
     </Section>
 
-    <Section class="!pt-8 !pb-24 flex-1 bg-white border-t hairline-ink">
+    <Section class="!pt-8 !pb-24 flex-1 bg-surface border-t hairline-ink">
       <Container class="max-w-4xl">
         <Motion
           :key="String(tab) + (loading ? 'loading' : 'content')"
@@ -89,7 +89,7 @@ function formatDate(iso: string) {
             <UiCard
               v-for="i in 3"
               :key="i"
-              class="flex flex-col md:flex-row gap-6 p-6 md:p-8 animate-pulse !border-ink/5 bg-white"
+              class="flex flex-col md:flex-row gap-6 p-6 md:p-8 animate-pulse !border-ink/5 bg-surface"
             >
               <div class="bg-ink/5 w-20 h-24 rounded-lg shrink-0" />
               <div class="flex flex-col justify-center flex-1 gap-3 w-full">
@@ -136,7 +136,7 @@ function formatDate(iso: string) {
               :transition="{ delay: i * 0.1 }"
             >
               <RouterLink :to="`/events/${event.slug}`" class="group block focus-ring-brand rounded-2xl">
-                <UiCard class="flex flex-col md:flex-row items-start md:items-center gap-6 p-6 md:p-8 hover:shadow-md transition-shadow bg-white">
+                <UiCard class="flex flex-col md:flex-row items-start md:items-center gap-6 p-6 md:p-8 hover:shadow-md transition-shadow bg-surface">
                   <div class="bg-ink/5 rounded-xl px-5 py-4 text-center min-w-[80px] shrink-0 border hairline-ink group-hover:bg-brand-violet/5 group-hover:!border-brand-violet/20 transition-colors">
                     <div class="text-sm font-semibold text-ink/60 uppercase tracking-widest group-hover:text-brand-violet transition-colors">
                       {{ formatDate(event.datetime).month }}

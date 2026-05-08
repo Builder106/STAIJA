@@ -37,10 +37,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="relative inline-block">
+  <!-- Auto-hide when only one locale is exposed. Avoids a single-item
+       dropdown when SUPPORTED_LOCALES has been pared back (see PRD
+       Decision §16.13) — also means the switcher self-restores the
+       moment another locale gets added back to the array. -->
+  <div v-if="SUPPORTED_LOCALES.length > 1" ref="root" class="relative inline-block">
+    <!-- Switcher mounts inside the always-dark SiteFooter, so all
+         color references use `*-static` tokens to stay coherent with
+         that surface across themes (the popover would invert-and-look-
+         broken if it used the flipping ink/paper tokens). -->
     <button
       type="button"
-      class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-paper/10 text-sm font-semibold text-paper/80 hover:text-paper hover:border-paper/20 transition-colors focus-ring-brand"
+      class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-paper-static/10 text-sm font-semibold text-paper-static/80 hover:text-paper-static hover:border-paper-static/20 transition-colors focus-ring-brand"
       :aria-expanded="open"
       aria-haspopup="listbox"
       @click="open = !open"
@@ -57,14 +65,14 @@ onBeforeUnmount(() => {
     <ul
       v-if="open"
       role="listbox"
-      class="absolute right-0 bottom-full mb-2 min-w-[160px] bg-ink border border-paper/10 rounded-xl shadow-xl py-1 z-50"
+      class="absolute right-0 bottom-full mb-2 min-w-[160px] bg-ink-static border border-paper-static/10 rounded-xl shadow-xl py-1 z-50"
     >
       <li v-for="loc in SUPPORTED_LOCALES" :key="loc.code">
         <button
           type="button"
           role="option"
           :aria-selected="loc.code === current.code"
-          class="w-full text-left px-4 py-2 text-sm font-medium text-paper/80 hover:bg-paper/5 hover:text-paper transition-colors flex items-center justify-between"
+          class="w-full text-left px-4 py-2 text-sm font-medium text-paper-static/80 hover:bg-paper-static/5 hover:text-paper-static transition-colors flex items-center justify-between"
           @click="pick(loc.code)"
         >
           <span>{{ loc.nativeLabel }}</span>

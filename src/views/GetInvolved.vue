@@ -87,7 +87,7 @@ const activeContent = computed(() => content[activeTab.value])
           Whether you have an hour a month or a lab to share, there's a place for you in the STAIJA community. Choose a path below to apply.
         </Body>
 
-        <div class="flex flex-wrap justify-center gap-4 bg-white p-2 rounded-2xl border hairline-ink shadow-sm w-fit mx-auto">
+        <div class="flex flex-wrap justify-center gap-4 bg-surface p-2 rounded-2xl border hairline-ink shadow-sm w-fit mx-auto">
           <button
             v-for="tab in tabs"
             :key="tab.id"
@@ -126,14 +126,14 @@ const activeContent = computed(() => content[activeTab.value])
                 </li>
               </ul>
             </div>
-            <UiCard class="p-5 bg-white !border-brand-violet/20 shadow-sm relative overflow-hidden">
+            <UiCard class="p-5 bg-surface !border-brand-violet/20 shadow-sm relative overflow-hidden">
               <div class="absolute top-0 left-0 w-1 h-full bg-gradient-brand" />
               <h4 class="font-semibold text-sm uppercase tracking-wider text-ink/40 mb-2 m-0">What success looks like</h4>
               <p class="text-ink font-medium leading-relaxed m-0">"{{ activeContent.success }}"</p>
             </UiCard>
           </div>
 
-          <UiCard class="md:col-span-7 p-8 md:p-10 bg-white">
+          <UiCard class="md:col-span-7 p-8 md:p-10 bg-surface">
             <form class="flex flex-col gap-6" @submit="handleInquirySubmit">
               <div class="mb-2">
                 <Heading :level="3" class="!text-2xl mb-2">Application Form</Heading>
@@ -144,14 +144,14 @@ const activeContent = computed(() => content[activeTab.value])
                 <label class="text-sm font-semibold text-ink/80">{{ field.label }}</label>
                 <textarea
                   v-if="field.type === 'textarea'"
-                  class="w-full border hairline-ink rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm resize-y bg-white"
+                  class="w-full border hairline-ink rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm resize-y bg-surface"
                   :placeholder="`Enter your ${field.label.toLowerCase()}`"
                   required
                 />
                 <input
                   v-else
                   :type="field.type"
-                  class="w-full border hairline-ink rounded-xl p-4 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                  class="w-full border hairline-ink rounded-xl p-4 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                   :placeholder="`Enter your ${field.label.toLowerCase()}`"
                   required
                 />

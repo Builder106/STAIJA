@@ -56,7 +56,7 @@ async function onGoogle() {
   <div class="flex flex-col bg-paper min-h-screen">
     <Section class="!py-8 md:!py-16 flex-1 flex flex-col justify-center">
       <Container class="max-w-6xl">
-        <div class="grid lg:grid-cols-2 bg-white rounded-[24px] border hairline-ink overflow-hidden shadow-sm min-h-[600px]">
+        <div class="grid lg:grid-cols-2 bg-surface rounded-[24px] border hairline-ink overflow-hidden shadow-sm min-h-[600px]">
           <!-- Form -->
           <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
             <div class="max-w-md w-full mx-auto">
@@ -75,7 +75,7 @@ async function onGoogle() {
                       required
                       autocomplete="given-name"
                       placeholder="Amina"
-                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                     />
                   </div>
                   <div class="flex flex-col gap-2">
@@ -86,7 +86,7 @@ async function onGoogle() {
                       required
                       autocomplete="family-name"
                       placeholder="Yusuf"
-                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                      class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                     />
                   </div>
                 </div>
@@ -98,7 +98,7 @@ async function onGoogle() {
                     required
                     autocomplete="email"
                     placeholder="name@example.com"
-                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                   />
                 </div>
                 <div class="flex flex-col gap-2">
@@ -110,7 +110,7 @@ async function onGoogle() {
                     minlength="8"
                     autocomplete="new-password"
                     placeholder="Create a strong password"
-                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                   />
                   <p class="text-xs text-ink/50 mt-1 m-0">Must be at least 8 characters long.</p>
                 </div>

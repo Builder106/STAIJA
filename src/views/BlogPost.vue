@@ -109,7 +109,7 @@ onMounted(load)
       </Container>
     </Section>
 
-    <Section class="!pt-16 !pb-24 bg-white">
+    <Section class="!pt-16 !pb-24 bg-surface">
       <Container class="max-w-3xl">
         <div class="flex flex-col md:flex-row gap-12 relative">
           <!-- Social Share Sidebar -->

@@ -6,8 +6,21 @@
 
 @import "tailwindcss";
 
+/* Enable a `dark:` variant that activates when [data-theme="dark"] is
+   set on <html>. We prefer a data attribute over a class so:
+     1. Three-state ("light", "dark", "system") is explicit, not implicit
+     2. The init script in index.html can set this before Vue mounts
+        without colliding with any other classes
+   Tailwind v4 syntax — see https://tailwindcss.com/docs/dark-mode */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
-  /* Page surface. Token is named `paper` for historical reasons but the
+  /* Light-mode defaults. Dark-mode values are overridden in the
+     [data-theme="dark"] block below — token-flip means existing
+     `bg-paper`, `text-ink`, `border-ink/10`, etc. utilities pick up
+     dark variants without per-call-site changes.
+
+     Page surface. Token is named `paper` for historical reasons but the
      value is now slate-100 — a cool, slate-gray light surface that sits
      in natural conversation with the violet→cyan brand gradient. The
      previous warm cream (#FAF7F2) read as editorial/parchment and
@@ -17,6 +30,22 @@
   --color-ink: #0E1217;
   --color-brand-violet: #8B55FF;
   --color-brand-sky: #5EDBE7;
+  /* New token. `surface` is the "elevated card" color that used to be
+     literal `bg-white` everywhere. In dark mode it becomes a
+     slightly-lighter-than-paper gray so cards read as raised. Replace
+     `bg-white` with `bg-surface` on neutral cards (NOT on gradient
+     overlays or buttons that should stay literal white). */
+  --color-surface: #FFFFFF;
+
+  /* Static (non-themed) variants of paper/ink. These do NOT flip in
+     dark mode. Use for surfaces that are *intentionally* dark or
+     light regardless of the user's theme — e.g. the always-dark
+     ProgramDetailView hero, SiteFooter, and LocaleSwitcher popover.
+     Without these, those surfaces invert in dark mode and read as
+     pale/washed-out. The naming convention: `*-static` means "this
+     color is locked to its light-mode value forever". */
+  --color-ink-static: #0E1217;
+  --color-paper-static: #F1F5F9;
 
   /* Display headline face. IBM Plex Sans was chosen for its research /
      scientific posture — quiet authority instead of editorial drama
@@ -33,6 +62,53 @@
 
 @source "./**/*.{vue,ts,js,html}";
 @source "../index.html";
+
+/* Dark-mode token overrides. Triggered by `data-theme="dark"` on the
+   <html> element (set by the init script in index.html before first
+   paint, then maintained by useTheme).
+
+   Design choices:
+   - `paper` → near-black anchored on ink #0E1217 so the brand violet
+     keeps its presence (a too-blue dark would mute it).
+   - `ink` → slate-100 for body text — same as the light-mode paper, so
+     contrast against the new dark surface is the inverse of light mode.
+   - `surface` → #1A1F26, a touch lighter than paper, so cards read as
+     raised even when both surfaces are dark.
+
+   The footer's `bg-ink text-paper` pattern naturally inverts under this
+   scheme: in dark mode it becomes a light-on-dark surface (paper text
+   on ink bg) which is the same VISUAL relationship — bright text on
+   dark — just at different absolute values. */
+[data-theme="dark"] {
+  --color-paper: #0B0E12;
+  /* Ink chosen for WCAG AA headroom on low-opacity utilities. At
+     #F0F4F8: text-ink on paper hits ~16:1 (AAA), text-ink/70 ~9.5:1
+     (AAA), text-ink/60 ~7.0:1 (AAA), text-ink/50 ~5.0:1 (AA pass for
+     normal text with margin). #E5EAF0 had text-ink/50 at ~4.4:1 —
+     AA borderline. The bump is barely visible at full opacity but
+     buys a real readability margin where the design uses faded text. */
+  --color-ink: #F0F4F8;
+  --color-surface: #1A1F26;
+}
+
+/* Themed utility overrides — for the few utilities that hardcode
+   ink-derived rgba() literals instead of consuming the token. These
+   need explicit dark variants so they don't punch through the new
+   surfaces. */
+[data-theme="dark"] .hairline-ink {
+  border-color: rgba(240, 244, 248, 0.1);
+}
+[data-theme="dark"] .wash-ink-6 {
+  background-color: rgba(240, 244, 248, 0.06);
+}
+[data-theme="dark"] .gradient-blob {
+  /* Soft white glow loses contrast on a dark surface — inverse it to a
+     subtle dark glow that still reads as artwork-backing. */
+  background-image: radial-gradient(closest-side, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
+}
+[data-theme="dark"] .brand-surface ::selection {
+  background-color: rgba(139, 85, 255, 0.35);
+}
 
 @layer utilities {
   .bg-gradient-brand {
@@ -112,9 +188,14 @@
     background-color: rgba(139, 85, 255, 0.2);
   }
 
-  /* Apply the display face as the heading default but DON'T force a color
-     — pages set text colors via Tailwind utilities (e.g., text-paper in
-     the dark footer would be overridden if we forced text-ink here). */
+  /* Apply the display face as the heading default. `color: inherit`
+     defeats the legacy.css global `h1...h6 { color: var(--neutral-900) }`
+     rule that hardcodes a dark color regardless of theme — without this
+     override, headings on .brand-surface go invisible in dark mode
+     (dark text on dark bg). Inheritance means the parent's color wins,
+     which is `.brand-surface { color: var(--color-ink) }` for paper
+     surfaces and locally-set utilities (e.g. `text-paper` on the dark
+     footer) elsewhere. Both flip correctly in dark mode. */
   .brand-surface h1,
   .brand-surface h2,
   .brand-surface h3,
@@ -123,11 +204,20 @@
   .brand-surface h6,
   .brand-surface .font-display {
     font-family: var(--font-display);
+    color: inherit;
     margin: 0;
   }
 
   .brand-surface p {
     margin: 0;
+    color: inherit;
+  }
+
+  /* Same legacy-rule defeat as headings: legacy.css has
+     `li { color: var(--neutral-700); }` which doesn't theme. Without
+     this override, list items inside .brand-surface stay gray in
+     dark mode and read as washed-out. */
+  .brand-surface li {
     color: inherit;
   }
 

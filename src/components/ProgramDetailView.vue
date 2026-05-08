@@ -150,18 +150,21 @@ function toggleFaq(i: number) {
 
 <template>
   <div v-if="program" class="flex flex-col">
-    <!-- Hero -->
-    <div class="relative min-h-svh flex items-center bg-ink overflow-hidden">
+    <!-- Hero — intentionally always-dark regardless of theme. Uses
+         `*-static` color tokens so the dark hero treatment doesn't
+         invert in dark mode (which would produce pale washed-out
+         heroes with dark text on the photo). -->
+    <div class="relative min-h-svh flex items-center bg-ink-static overflow-hidden">
       <div class="absolute inset-0 z-0">
         <img :src="program.heroImg" :alt="program.name" class="w-full h-full object-cover opacity-40" />
         <div class="absolute inset-0 wash-violet-6 mix-blend-screen" />
-        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-transparent" />
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-static via-ink-static/60 to-transparent" />
       </div>
 
       <Container class="relative z-10 py-24">
-        <div class="max-w-3xl flex flex-col gap-6 text-paper">
+        <div class="max-w-3xl flex flex-col gap-6 text-paper-static">
           <Motion :initial="{ opacity: 0, y: 12 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
-            <UiChip class="bg-paper/10 !text-paper border-paper/20">{{ program.eligibility }}</UiChip>
+            <UiChip class="bg-paper-static/10 !text-paper-static border-paper-static/20">{{ program.eligibility }}</UiChip>
           </Motion>
 
           <Motion
@@ -175,7 +178,7 @@ function toggleFaq(i: number) {
           </Motion>
 
           <Motion
-            class="text-lg md:text-xl text-paper/80 leading-relaxed max-w-2xl"
+            class="text-lg md:text-xl text-paper-static/80 leading-relaxed max-w-2xl"
             as="p"
             :initial="{ opacity: 0, y: 12 }"
             :animate="{ opacity: 1, y: 0 }"
@@ -185,17 +188,17 @@ function toggleFaq(i: number) {
           </Motion>
 
           <Motion
-            class="flex flex-wrap gap-6 mt-4 pt-8 border-t border-paper/20"
+            class="flex flex-wrap gap-6 mt-4 pt-8 border-t border-paper-static/20"
             :initial="{ opacity: 0 }"
             :animate="{ opacity: 1 }"
             :transition="{ duration: 0.4, delay: 0.3 }"
           >
             <div v-for="stat in program.stats" :key="stat.label" class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-paper/10 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-paper-static/10 flex items-center justify-center">
                 <Icon :icon="stat.icon" width="20" class="text-white" />
               </div>
               <div>
-                <div class="text-xs text-paper/60 uppercase tracking-widest font-semibold">{{ stat.label }}</div>
+                <div class="text-xs text-paper-static/60 uppercase tracking-widest font-semibold">{{ stat.label }}</div>
                 <div class="text-sm font-semibold text-white">{{ stat.value }}</div>
               </div>
             </div>
@@ -209,7 +212,7 @@ function toggleFaq(i: number) {
           >
             <UiButton
               :to="`/apply/${slug}`"
-              class="!bg-white !text-ink hover:!bg-paper hover:shadow-lg"
+              class="!bg-white !text-ink-static hover:!bg-paper-static hover:shadow-lg"
               @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_hero' })"
             >
               Apply to {{ program.name }}
@@ -248,13 +251,13 @@ function toggleFaq(i: number) {
     </Section>
 
     <!-- Timeline -->
-    <Section class="bg-white">
+    <Section class="bg-surface">
       <Container>
         <div class="max-w-4xl mx-auto">
           <Eyebrow class="text-brand-violet mb-4 block">Curriculum</Eyebrow>
           <Heading :level="2" class="mb-12">What you'll do.</Heading>
 
-          <ol class="list-none p-0 m-0 grid grid-cols-[auto_24px_1fr] md:grid-cols-[180px_24px_1fr] gap-x-5 md:gap-x-8">
+          <ol class="list-none p-0 m-0 grid grid-cols-[auto_28px_1fr] md:grid-cols-[180px_28px_1fr] gap-x-5 md:gap-x-8">
             <Motion
               v-for="(step, i) in program.timeline"
               :key="step.date"
@@ -265,32 +268,37 @@ function toggleFaq(i: number) {
               :viewport="{ once: true, margin: '-50px' }"
               :transition="{ duration: 0.4, delay: i * 0.08 }"
             >
-              <!-- Date column -->
+              <!-- Date column. The Month label IS the sequence — the
+                   spine dot deliberately doesn't show a step number on
+                   top of it (had "1, 2, 3, 4" there before but two
+                   parallel numbering schemes for the same row read as
+                   confusing rather than reinforcing). -->
               <div
-                class="font-display text-lg md:text-2xl text-ink/80 md:text-right pt-1 md:pt-0 self-start"
-                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-12'"
+                class="font-display text-lg md:text-2xl font-semibold text-ink md:text-right pt-2 self-start"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-14'"
               >
                 {{ step.date }}
               </div>
 
-              <!-- Spine: vertical line + dot. The line is drawn from the
-                   top of every cell down to the next, except the last. -->
+              <!-- Spine: gradient dot anchors the row; the connecting
+                   line runs behind it (z-0) and is hidden on the last
+                   row since there's nothing below to connect to. -->
               <div class="relative flex flex-col items-center self-stretch">
                 <span
                   v-if="i !== program.timeline.length - 1"
-                  class="absolute top-3 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-brand"
+                  class="absolute top-7 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-brand-violet/20"
                   aria-hidden="true"
                 />
                 <span
-                  class="relative z-10 mt-2 w-4 h-4 rounded-full bg-paper border-[3px] border-brand-violet"
+                  class="relative z-10 mt-2 w-7 h-7 rounded-full bg-gradient-to-br from-brand-violet to-brand-sky shadow-lg shadow-brand-violet/25 ring-4 ring-surface"
                   aria-hidden="true"
                 />
               </div>
 
               <!-- Description column -->
               <div
-                class="self-start"
-                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-12'"
+                class="self-start pt-2"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-14'"
               >
                 <Body large class="text-ink/80 leading-relaxed">{{ step.desc }}</Body>
               </div>
@@ -303,7 +311,7 @@ function toggleFaq(i: number) {
     <!-- Who it's for -->
     <Section class="bg-paper border-y hairline-ink">
       <Container>
-        <div class="max-w-4xl mx-auto bg-white rounded-3xl p-8 md:p-12 shadow-sm border hairline-ink flex flex-col md:flex-row gap-12">
+        <div class="max-w-4xl mx-auto bg-surface rounded-3xl p-8 md:p-12 shadow-sm border hairline-ink flex flex-col md:flex-row gap-12">
           <div class="md:w-1/3">
             <Heading :level="2" class="mb-4">Who it's for</Heading>
             <p class="text-ink/60 text-sm">
@@ -322,7 +330,7 @@ function toggleFaq(i: number) {
     </Section>
 
     <!-- Mentors -->
-    <Section class="bg-white">
+    <Section class="bg-surface">
       <Container>
         <div class="text-center mb-12">
           <Heading :level="2">Learn from the best.</Heading>

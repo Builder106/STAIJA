@@ -67,7 +67,7 @@ const COLOR_TOKENS = [
     </Section>
 
     <!-- Press contact -->
-    <Section class="bg-white border-y hairline-ink">
+    <Section class="bg-surface border-y hairline-ink">
       <Container class="max-w-3xl">
         <div class="grid md:grid-cols-2 gap-8 items-start">
           <div>
@@ -155,7 +155,7 @@ const COLOR_TOKENS = [
     </Section>
 
     <!-- Coverage (only renders once we have real press hits) -->
-    <Section v-if="COVERAGE.length > 0" class="bg-white border-t hairline-ink">
+    <Section v-if="COVERAGE.length > 0" class="bg-surface border-t hairline-ink">
       <Container class="max-w-4xl">
         <div class="mb-12">
           <Eyebrow class="text-brand-violet mb-4 block">Coverage</Eyebrow>

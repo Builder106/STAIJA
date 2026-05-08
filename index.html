@@ -9,6 +9,37 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>STAIJA</title>
     <meta name="description" content="STAIJA nurtures Africa’s next generation of scientist‑leaders through research programs, mentorship and community." />
+    <!-- Mobile browser chrome color. Updated live by useTheme on theme
+         change; this default matches the light-mode paper color. -->
+    <meta name="theme-color" content="#F1F5F9" />
+    <!-- No-flash theme init. Runs synchronously before the body parses
+         so [data-theme="..."] is set before the first paint — without
+         this, dark-mode users see a white flash while Vue boots. Mirror
+         of useTheme's resolution logic; keep them in sync. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('staija.theme')
+          var choice =
+            stored === 'light' || stored === 'dark' || stored === 'system'
+              ? stored
+              : 'system'
+          var resolved =
+            choice === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : choice
+          document.documentElement.dataset.theme = resolved
+          document.documentElement.style.colorScheme = resolved
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) meta.content = resolved === 'dark' ? '#0B0E12' : '#F1F5F9'
+        } catch (e) {
+          /* localStorage unavailable in sandbox / private mode — fall
+             through to default light. */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

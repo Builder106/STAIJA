@@ -165,7 +165,7 @@ async function handleDonateClick() {
               class="w-full h-full object-cover"
               loading="lazy"
             />
-            <div class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg z-20 border hairline-ink">
+            <div class="absolute bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-sm p-4 rounded-xl shadow-lg z-20 border hairline-ink">
               <p class="font-sans font-medium text-sm text-ink mb-1 m-0">
                 "₦25,000 funded Aisha's first research stipend."
               </p>
@@ -177,7 +177,7 @@ async function handleDonateClick() {
     </Section>
 
     <!-- Tier Picker -->
-    <Section class="bg-white border-y hairline-ink relative z-10 !py-20">
+    <Section class="bg-surface border-y hairline-ink relative z-10 !py-20">
       <Container class="max-w-4xl flex flex-col items-center">
         <div class="bg-paper p-1 rounded-full flex border hairline-ink mb-12 shadow-sm w-full max-w-[320px]">
           <button
@@ -207,7 +207,7 @@ async function handleDonateClick() {
             :transition="{ duration: 0.15 }"
           >
             <div
-              class="relative h-full rounded-2xl p-6 cursor-pointer flex flex-col gap-4 text-center transition-all bg-white"
+              class="relative h-full rounded-2xl p-6 cursor-pointer flex flex-col gap-4 text-center transition-all bg-surface"
               :class="
                 selectedTier === tier.id
                   ? 'border-2 border-transparent border-gradient-brand shadow-lg'
@@ -343,7 +343,7 @@ async function handleDonateClick() {
               { q: 'How do I update my monthly giving?', a: 'You will receive a secure donor portal link in your receipt email where you can pause, cancel, or change your amount at any time.' },
             ]"
             :key="faq.q"
-            class="p-6 bg-white"
+            class="p-6 bg-surface"
           >
             <h4 class="font-semibold text-lg mb-2 m-0">{{ faq.q }}</h4>
             <p class="text-ink/70 text-sm leading-relaxed m-0">{{ faq.a }}</p>

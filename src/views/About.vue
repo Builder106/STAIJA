@@ -31,7 +31,7 @@ const ADVISORS: string[] = []
     </Section>
 
     <!-- Story -->
-    <Section class="bg-white !py-24 border-y hairline-ink">
+    <Section class="bg-surface !py-24 border-y hairline-ink">
       <Container class="max-w-3xl">
         <div class="flex flex-col gap-8 text-lg md:text-xl text-ink/80 leading-relaxed font-sans">
           <p class="m-0">
@@ -62,7 +62,7 @@ const ADVISORS: string[] = []
             :viewport="{ once: true }"
             :transition="{ delay: (i % 4) * 0.1 }"
           >
-            <UiCard class="overflow-hidden bg-white group">
+            <UiCard class="overflow-hidden bg-surface group">
               <div class="aspect-square relative overflow-hidden border-b hairline-ink">
                 <div class="absolute inset-0 wash-violet-6 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity z-10" />
                 <img :src="member.img" :alt="member.name" class="w-full h-full object-cover" loading="lazy" />
@@ -79,7 +79,7 @@ const ADVISORS: string[] = []
     </Section>
 
     <!-- Board + Advisors (renders only once the ADVISORS list has real entries) -->
-    <Section v-if="ADVISORS.length > 0" class="bg-white !py-24 border-t hairline-ink">
+    <Section v-if="ADVISORS.length > 0" class="bg-surface !py-24 border-t hairline-ink">
       <Container class="max-w-4xl text-center">
         <Heading :level="3" class="mb-12">Board & Advisors</Heading>
         <div class="flex flex-wrap justify-center gap-x-8 gap-y-4">

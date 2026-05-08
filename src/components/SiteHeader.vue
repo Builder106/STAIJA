@@ -4,6 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import UiButton from './ui/UiButton.vue'
 import Container from './ui/Container.vue'
+import ThemeToggle from './ThemeToggle.vue'
 import { useAuth } from '../composables/useAuth'
 import { usePermissions } from '../composables/usePermissions'
 import { donationsEnabled } from '../config/features'
@@ -81,6 +82,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
         </nav>
 
         <div class="hidden lg:flex items-center gap-4">
+          <ThemeToggle />
           <template v-if="isAuthenticated">
             <RouterLink
               v-if="donationsEnabled"
@@ -122,15 +124,20 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
           <UiButton v-if="donationsEnabled" variant="primary" :to="'/donate'">Donate</UiButton>
         </div>
 
-        <button
-          type="button"
-          class="lg:hidden p-2 -mr-2 text-ink focus-ring-brand rounded-md"
-          :aria-label="mobileOpen ? 'Close menu' : 'Open menu'"
-          :aria-expanded="mobileOpen"
-          @click="mobileOpen = !mobileOpen"
-        >
-          <Icon :icon="mobileOpen ? 'lucide:x' : 'lucide:menu'" width="24" height="24" />
-        </button>
+        <!-- Mobile-only cluster: theme toggle next to the hamburger so
+             flipping the theme doesn't require opening the menu first. -->
+        <div class="lg:hidden flex items-center gap-1 -mr-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            class="p-2 text-ink focus-ring-brand rounded-md"
+            :aria-label="mobileOpen ? 'Close menu' : 'Open menu'"
+            :aria-expanded="mobileOpen"
+            @click="mobileOpen = !mobileOpen"
+          >
+            <Icon :icon="mobileOpen ? 'lucide:x' : 'lucide:menu'" width="24" height="24" />
+          </button>
+        </div>
       </div>
     </Container>
 

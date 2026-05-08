@@ -101,7 +101,7 @@ onMounted(load)
                   class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
-              <div class="lg:col-span-2 p-8 md:p-12 flex flex-col justify-center bg-white h-full">
+              <div class="lg:col-span-2 p-8 md:p-12 flex flex-col justify-center bg-surface h-full">
                 <Eyebrow class="text-brand-violet mb-4">{{ eyebrowFor(featured) }}</Eyebrow>
                 <Heading :level="2" class="!text-3xl md:!text-4xl mb-4 group-hover:text-brand-violet transition-colors">
                   {{ featured.title }}
@@ -129,7 +129,7 @@ onMounted(load)
               class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold font-sans border transition-colors whitespace-nowrap"
               :class="activeFilter.label === f.label
                 ? 'bg-gradient-brand text-white border-transparent shadow-sm'
-                : 'bg-white text-ink border-ink/10 hover:border-ink/20'"
+                : 'bg-surface text-ink border-ink/10 hover:border-ink/20'"
               @click="activeFilter = f"
             >
               {{ f.label }}
@@ -141,14 +141,14 @@ onMounted(load)
               v-model="search"
               type="text"
               placeholder="Search stories..."
-              class="w-full pl-10 pr-4 py-2 bg-white border hairline-ink rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet/20 focus:border-brand-violet transition-all"
+              class="w-full pl-10 pr-4 py-2 bg-surface border hairline-ink rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet/20 focus:border-brand-violet transition-all"
             />
           </div>
         </div>
       </Container>
     </Section>
 
-    <Section class="!pt-12 !pb-24 bg-white">
+    <Section class="!pt-12 !pb-24 bg-surface">
       <Container>
         <div v-if="error" role="alert" class="mb-8 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           {{ error }}

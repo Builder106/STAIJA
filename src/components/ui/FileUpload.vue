@@ -103,7 +103,7 @@ function clear() {
 
     <div
       v-else
-      class="flex items-center gap-3 border hairline-ink rounded-xl px-4 py-3 bg-white"
+      class="flex items-center gap-3 border hairline-ink rounded-xl px-4 py-3 bg-surface"
     >
       <Icon
         :icon="isImage ? 'lucide:image' : 'lucide:file-text'"

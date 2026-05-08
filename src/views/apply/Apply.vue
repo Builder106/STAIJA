@@ -371,8 +371,8 @@ function setTagsValue(name: string, value: string) {
               :class="i < stepIndex
                 ? 'bg-brand-violet text-white border-brand-violet'
                 : i === stepIndex
-                ? 'bg-white text-brand-violet border-brand-violet'
-                : 'bg-white text-ink/40 border-ink/15'"
+                ? 'bg-surface text-brand-violet border-brand-violet'
+                : 'bg-surface text-ink/40 border-ink/15'"
             >
               <Icon v-if="i < stepIndex" icon="lucide:check" width="14" />
               <span v-else>{{ i + 1 }}</span>
@@ -391,7 +391,7 @@ function setTagsValue(name: string, value: string) {
 
     <Section class="!py-12">
       <Container class="max-w-3xl">
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <Motion
             :key="currentStep.id"
             :initial="{ opacity: 0, y: 10 }"
@@ -445,20 +445,20 @@ function setTagsValue(name: string, value: string) {
                         :rows="field.rows ?? 4"
                         :placeholder="field.placeholder"
                         :required="field.required"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white resize-y"
+                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface resize-y"
                       />
                       <input
                         v-else-if="field.type === 'tags'"
                         :value="tagsValue(field.name)"
                         :placeholder="field.placeholder ?? 'Comma-separated'"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                         @input="(e) => setTagsValue(field.name, (e.target as HTMLInputElement).value)"
                       />
                       <select
                         v-else-if="field.type === 'select'"
                         v-model="fields[field.name]"
                         :required="field.required"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                       >
                         <option value="">Choose…</option>
                         <option v-for="o in field.options" :key="o" :value="o">{{ o }}</option>
@@ -469,7 +469,7 @@ function setTagsValue(name: string, value: string) {
                         :type="field.type === 'number' ? 'number' : field.type"
                         :placeholder="field.placeholder"
                         :required="field.required"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white"
+                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                       />
                       <p v-if="field.helpText" class="text-xs text-ink/50 m-0">{{ field.helpText }}</p>
                     </div>
@@ -515,7 +515,7 @@ function setTagsValue(name: string, value: string) {
                         v-model="ref_.name"
                         type="text"
                         required
-                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                       />
                     </div>
                     <div class="flex flex-col gap-1">
@@ -524,7 +524,7 @@ function setTagsValue(name: string, value: string) {
                         v-model="ref_.email"
                         type="email"
                         required
-                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                       />
                     </div>
                     <div class="flex flex-col gap-1">
@@ -533,7 +533,7 @@ function setTagsValue(name: string, value: string) {
                         v-model="ref_.institution"
                         type="text"
                         required
-                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                       />
                     </div>
                     <div class="flex flex-col gap-1">
@@ -543,7 +543,7 @@ function setTagsValue(name: string, value: string) {
                         type="text"
                         placeholder="e.g. Physics teacher"
                         required
-                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                        class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                       />
                     </div>
                   </div>

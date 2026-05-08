@@ -35,7 +35,7 @@ function handleSubmit(e: Event) {
 
         <div class="grid lg:grid-cols-12 gap-16 items-start">
           <div class="lg:col-span-7">
-            <UiCard class="p-8 md:p-10 bg-white">
+            <UiCard class="p-8 md:p-10 bg-surface">
               <Motion
                 v-if="submitted"
                 :initial="{ opacity: 0, scale: 0.95 }"
@@ -60,17 +60,17 @@ function handleSubmit(e: Event) {
                 <div class="grid md:grid-cols-2 gap-6">
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Full Name</label>
-                    <input type="text" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="Amina Yusuf" />
+                    <input type="text" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="Amina Yusuf" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Email Address</label>
-                    <input type="email" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="amina@example.com" />
+                    <input type="email" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="amina@example.com" />
                   </div>
                 </div>
 
                 <div class="flex flex-col gap-2">
                   <label class="text-sm font-semibold text-ink/80">Subject</label>
-                  <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white">
+                  <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
                     <option value="">Select a topic</option>
                     <option value="programs">Program Inquiry (StepUp / Dynamerge)</option>
                     <option value="partnership">Partnership or Sponsorship</option>
@@ -81,7 +81,7 @@ function handleSubmit(e: Event) {
 
                 <div class="flex flex-col gap-2">
                   <label class="text-sm font-semibold text-ink/80">Message</label>
-                  <textarea required class="border hairline-ink rounded-xl px-4 py-3 min-h-[160px] resize-y focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" placeholder="How can we help you?" />
+                  <textarea required class="border hairline-ink rounded-xl px-4 py-3 min-h-[160px] resize-y focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="How can we help you?" />
                 </div>
 
                 <UiButton variant="primary" type="submit" class="w-full md:w-auto !h-12 text-base mt-2 group">
@@ -98,7 +98,7 @@ function handleSubmit(e: Event) {
             <div>
               <Heading :level="3" class="mb-6">Contact Information</Heading>
               <div class="flex flex-col gap-6">
-                <a href="mailto:hello@staija.org" class="flex items-start gap-4 p-4 rounded-xl hover:bg-white border border-transparent hover:border-ink/10 transition-all group">
+                <a href="mailto:hello@staija.org" class="flex items-start gap-4 p-4 rounded-xl hover:bg-surface border border-transparent hover:border-ink/10 transition-all group">
                   <div class="w-10 h-10 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center shrink-0 mt-1">
                     <Icon icon="lucide:mail" width="20" />
                   </div>
@@ -127,7 +127,7 @@ function handleSubmit(e: Event) {
 
             <div class="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-ink/5 border hairline-ink relative flex items-center justify-center">
               <div class="absolute inset-0 bg-cover bg-center opacity-30 grayscale" style="background-image:url('https://images.unsplash.com/photo-1524661135-423995f22d0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080')" />
-              <div class="bg-white p-3 rounded-full shadow-lg z-10 flex items-center gap-2">
+              <div class="bg-surface p-3 rounded-full shadow-lg z-10 flex items-center gap-2">
                 <Icon icon="lucide:map-pin" width="20" class="text-brand-violet" />
                 <span class="font-semibold text-sm pr-2">STAIJA HQ</span>
               </div>
@@ -136,7 +136,7 @@ function handleSubmit(e: Event) {
             <div>
               <Heading :level="3" class="mb-4 !text-lg">Follow Us</Heading>
               <div class="flex gap-4">
-                <a v-for="social in ['Twitter', 'LinkedIn', 'Instagram']" :key="social" href="#" class="px-4 py-2 rounded-full border hairline-ink text-sm font-semibold hover:!border-brand-violet hover:!text-brand-violet transition-colors bg-white">
+                <a v-for="social in ['Twitter', 'LinkedIn', 'Instagram']" :key="social" href="#" class="px-4 py-2 rounded-full border hairline-ink text-sm font-semibold hover:!border-brand-violet hover:!text-brand-violet transition-colors bg-surface">
                   {{ social }}
                 </a>
               </div>

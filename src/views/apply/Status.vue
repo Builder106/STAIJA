@@ -161,7 +161,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
     <Section class="!py-12">
       <Container class="max-w-3xl flex flex-col gap-6">
         <!-- References -->
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <div class="flex items-start justify-between gap-4 mb-5">
             <div>
               <h2 class="font-display text-xl font-semibold m-0 text-ink">References</h2>
@@ -193,7 +193,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
         </UiCard>
 
         <!-- Personal info recap -->
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <h2 class="font-display text-xl font-semibold mb-5 m-0 text-ink">Personal</h2>
           <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div class="flex flex-col">
@@ -225,7 +225,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
         </UiCard>
 
         <!-- Motivation -->
-        <UiCard v-if="application.motivation || application.experience" class="p-6 md:p-8 bg-white">
+        <UiCard v-if="application.motivation || application.experience" class="p-6 md:p-8 bg-surface">
           <h2 class="font-display text-xl font-semibold mb-5 m-0 text-ink">In your words</h2>
           <div v-if="application.researchInterests?.length" class="mb-5 flex flex-wrap gap-2">
             <span

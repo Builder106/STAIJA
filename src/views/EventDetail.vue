@@ -118,7 +118,7 @@ function handleRSVP(e: Event) {
             <Motion :initial="{ opacity: 0, x: -10 }" :animate="{ opacity: 1, x: 0 }" :transition="{ delay: 0.2 }">
               <UiChip class="mb-4 bg-ink !text-white !border-transparent">{{ event.type }}</UiChip>
               <Heading :level="1" class="mb-6">{{ event.title }}</Heading>
-              <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-4 border-y hairline-ink bg-white/50 px-2">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-4 border-y hairline-ink bg-surface/50 px-2">
                 <div class="flex items-center gap-3 text-ink font-semibold">
                   <Icon icon="lucide:calendar" width="20" class="text-brand-violet" /> {{ formattedDate }}
                 </div>
@@ -126,7 +126,7 @@ function handleRSVP(e: Event) {
                   <Icon icon="lucide:clock" width="20" class="text-brand-violet" /> {{ formattedTime }} ({{ event.timezone }})
                 </div>
               </div>
-              <div class="flex items-center gap-3 py-4 border-b hairline-ink bg-white/50 px-2 text-ink font-semibold">
+              <div class="flex items-center gap-3 py-4 border-b hairline-ink bg-surface/50 px-2 text-ink font-semibold">
                 <Icon :icon="event.isVirtual ? 'lucide:video' : 'lucide:map-pin'" width="20" class="text-brand-violet" />
                 {{ event.location }}
               </div>
@@ -139,7 +139,7 @@ function handleRSVP(e: Event) {
           </div>
 
           <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-32">
-            <UiCard class="p-8 bg-white shadow-xl shadow-ink/5 !border-2 !border-brand-violet/10">
+            <UiCard class="p-8 bg-surface shadow-xl shadow-ink/5 !border-2 !border-brand-violet/10">
               <Motion
                 v-if="rsvpState === 'success'"
                 :initial="{ opacity: 0, scale: 0.95 }"
@@ -165,15 +165,15 @@ function handleRSVP(e: Event) {
                 <form class="flex flex-col gap-5" @submit="handleRSVP">
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Full Name</label>
-                    <input type="text" required placeholder="Amina Yusuf" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" />
+                    <input type="text" required placeholder="Amina Yusuf" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Email Address</label>
-                    <input type="email" required placeholder="amina@example.com" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white" />
+                    <input type="email" required placeholder="amina@example.com" class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Are you a prospective student?</label>
-                    <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-white">
+                    <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
                       <option value="">Select an option</option>
                       <option value="yes">Yes, I want to apply</option>
                       <option value="no">No, I'm a parent/educator/mentor</option>
