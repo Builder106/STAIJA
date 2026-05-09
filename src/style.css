@@ -15,7 +15,7 @@
 @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  /* Light-mode defaults. Dark-mode values are overridden in the
+   /* Light-mode defaults. Dark-mode values are overridden in the
      [data-theme="dark"] block below — token-flip means existing
      `bg-paper`, `text-ink`, `border-ink/10`, etc. utilities pick up
      dark variants without per-call-site changes.
@@ -26,38 +26,38 @@
      previous warm cream (#FAF7F2) read as editorial/parchment and
      fought the cool gradient logo; slate keeps the surface restrained
      while letting the brand mark feel at home on the page. */
-  --color-paper: #F1F5F9;
-  --color-ink: #0E1217;
-  --color-brand-violet: #8B55FF;
-  --color-brand-sky: #5EDBE7;
-  /* New token. `surface` is the "elevated card" color that used to be
+   --color-paper: #F1F5F9;
+   --color-ink: #0E1217;
+   --color-brand-violet: #8B55FF;
+   --color-brand-sky: #5EDBE7;
+   /* New token. `surface` is the "elevated card" color that used to be
      literal `bg-white` everywhere. In dark mode it becomes a
      slightly-lighter-than-paper gray so cards read as raised. Replace
      `bg-white` with `bg-surface` on neutral cards (NOT on gradient
      overlays or buttons that should stay literal white). */
-  --color-surface: #FFFFFF;
+   --color-surface: #FFFFFF;
 
-  /* Static (non-themed) variants of paper/ink. These do NOT flip in
+   /* Static (non-themed) variants of paper/ink. These do NOT flip in
      dark mode. Use for surfaces that are *intentionally* dark or
      light regardless of the user's theme — e.g. the always-dark
      ProgramDetailView hero, SiteFooter, and LocaleSwitcher popover.
      Without these, those surfaces invert in dark mode and read as
      pale/washed-out. The naming convention: `*-static` means "this
      color is locked to its light-mode value forever". */
-  --color-ink-static: #0E1217;
-  --color-paper-static: #F1F5F9;
+   --color-ink-static: #0E1217;
+   --color-paper-static: #F1F5F9;
 
-  /* Display headline face. IBM Plex Sans was chosen for its research /
+   /* Display headline face. IBM Plex Sans was chosen for its research /
      scientific posture — quiet authority instead of editorial drama
      (Playfair Display, the previous choice, was reading as fashion-mag).
      Plex Sans pairs cleanly with Plex Mono for accents (eyebrows, data
      labels, slug fields) which is the strongest "lab notebook" tell. */
-  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+   --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+   --font-sans: 'Inter', sans-serif;
+   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+   --radius-xl: 12px;
+   --radius-2xl: 16px;
 }
 
 @source "./**/*.{vue,ts,js,html}";
@@ -80,15 +80,15 @@
    on ink bg) which is the same VISUAL relationship — bright text on
    dark — just at different absolute values. */
 [data-theme="dark"] {
-  --color-paper: #0B0E12;
-  /* Ink chosen for WCAG AA headroom on low-opacity utilities. At
+   --color-paper: #0B0E12;
+   /* Ink chosen for WCAG AA headroom on low-opacity utilities. At
      #F0F4F8: text-ink on paper hits ~16:1 (AAA), text-ink/70 ~9.5:1
      (AAA), text-ink/60 ~7.0:1 (AAA), text-ink/50 ~5.0:1 (AA pass for
      normal text with margin). #E5EAF0 had text-ink/50 at ~4.4:1 —
      AA borderline. The bump is barely visible at full opacity but
      buys a real readability margin where the design uses faded text. */
-  --color-ink: #F0F4F8;
-  --color-surface: #1A1F26;
+   --color-ink: #F0F4F8;
+   --color-surface: #1A1F26;
 }
 
 /* Themed utility overrides — for the few utilities that hardcode
@@ -96,74 +96,87 @@
    need explicit dark variants so they don't punch through the new
    surfaces. */
 [data-theme="dark"] .hairline-ink {
-  border-color: rgba(240, 244, 248, 0.1);
+   border-color: rgba(240, 244, 248, 0.1);
 }
+
 [data-theme="dark"] .wash-ink-6 {
-  background-color: rgba(240, 244, 248, 0.06);
+   background-color: rgba(240, 244, 248, 0.06);
 }
+
 [data-theme="dark"] .gradient-blob {
-  /* Soft white glow loses contrast on a dark surface — inverse it to a
+   /* Soft white glow loses contrast on a dark surface — inverse it to a
      subtle dark glow that still reads as artwork-backing. */
-  background-image: radial-gradient(closest-side, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
+   background-image: radial-gradient(closest-side, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
 }
+
 [data-theme="dark"] .brand-surface ::selection {
-  background-color: rgba(139, 85, 255, 0.35);
+   background-color: rgba(139, 85, 255, 0.35);
 }
 
 @layer utilities {
-  .bg-gradient-brand {
-    background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
-  }
-  /* Hero gradient — angled violet→sky with a deeper violet anchor on the
+   .bg-gradient-brand {
+      background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
+   }
+
+   /* Hero gradient — angled violet→sky with a deeper violet anchor on the
      left so the surface has dimension. Used full-bleed on landing-page
      heroes that are meant to read as "brand-mark territory" rather than
      editorial paper. */
-  .bg-gradient-hero {
-    background-image:
-      radial-gradient(60% 80% at 80% 30%, rgba(94, 219, 231, 0.55) 0%, transparent 60%),
-      linear-gradient(135deg, #6B3FE0 0%, var(--color-brand-violet) 45%, var(--color-brand-sky) 100%);
-  }
-  /* Soft radial accent for placement behind hero artwork (Lottie, image,
+   .bg-gradient-hero {
+      background-image:
+         radial-gradient(60% 80% at 80% 30%, rgba(94, 219, 231, 0.55) 0%, transparent 60%),
+         linear-gradient(135deg, #6B3FE0 0%, var(--color-brand-violet) 45%, var(--color-brand-sky) 100%);
+   }
+
+   /* Soft radial accent for placement behind hero artwork (Lottie, image,
      etc.) — looks like a glow. Layer absolutely. */
-  .gradient-blob {
-    background-image: radial-gradient(closest-side, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
-    filter: blur(8px);
-  }
-  /* 2-px gradient stripe for section transitions and footer top edge. */
-  .hairline-gradient {
-    background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
-  }
-  .border-gradient-brand {
-    border-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%) 1;
-  }
-  .text-gradient-brand {
-    background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-  }
-  .wash-violet-6 {
-    background-color: rgba(139, 85, 255, 0.06);
-  }
-  .wash-ink-6 {
-    background-color: rgba(14, 18, 23, 0.06);
-  }
-  .hairline-ink {
-    border-color: rgba(14, 18, 23, 0.08);
-  }
-  .focus-ring-brand:focus-visible {
-    outline: 2px solid rgba(139, 85, 255, 0.6);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
-  /* On gradient/dark surfaces, focus rings need to switch to a light
+   .gradient-blob {
+      background-image: radial-gradient(closest-side, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(8px);
+   }
+
+   /* 2-px gradient stripe for section transitions and footer top edge. */
+   .hairline-gradient {
+      background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
+   }
+
+   .border-gradient-brand {
+      border-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%) 1;
+   }
+
+   .text-gradient-brand {
+      background-image: linear-gradient(90deg, var(--color-brand-violet) 0%, var(--color-brand-sky) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+   }
+
+   .wash-violet-6 {
+      background-color: rgba(139, 85, 255, 0.06);
+   }
+
+   .wash-ink-6 {
+      background-color: rgba(14, 18, 23, 0.06);
+   }
+
+   .hairline-ink {
+      border-color: rgba(14, 18, 23, 0.08);
+   }
+
+   .focus-ring-brand:focus-visible {
+      outline: 2px solid rgba(139, 85, 255, 0.6);
+      outline-offset: 2px;
+      border-radius: 2px;
+   }
+
+   /* On gradient/dark surfaces, focus rings need to switch to a light
      color so they remain visible. */
-  .focus-ring-inverse:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.85);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
+   .focus-ring-inverse:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.85);
+      outline-offset: 2px;
+      border-radius: 2px;
+   }
 }
 
 /* Brand-surface scope — applied on the layout root for redesigned pages so
@@ -177,18 +190,18 @@
    making CTA text invisible when its parent surface forced a color
    (e.g. the new gradient hero with `text-white`). */
 @layer base {
-  .brand-surface {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-  }
+   .brand-surface {
+      background-color: var(--color-paper);
+      color: var(--color-ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+   }
 
-  .brand-surface ::selection {
-    background-color: rgba(139, 85, 255, 0.2);
-  }
+   .brand-surface ::selection {
+      background-color: rgba(139, 85, 255, 0.2);
+   }
 
-  /* Apply the display face as the heading default. `color: inherit`
+   /* Apply the display face as the heading default. `color: inherit`
      defeats the legacy.css global `h1...h6 { color: var(--neutral-900) }`
      rule that hardcodes a dark color regardless of theme — without this
      override, headings on .brand-surface go invisible in dark mode
@@ -196,50 +209,62 @@
      which is `.brand-surface { color: var(--color-ink) }` for paper
      surfaces and locally-set utilities (e.g. `text-paper` on the dark
      footer) elsewhere. Both flip correctly in dark mode. */
-  .brand-surface h1,
-  .brand-surface h2,
-  .brand-surface h3,
-  .brand-surface h4,
-  .brand-surface h5,
-  .brand-surface h6,
-  .brand-surface .font-display {
-    font-family: var(--font-display);
-    color: inherit;
-    margin: 0;
-  }
+   .brand-surface h1,
+   .brand-surface h2,
+   .brand-surface h3,
+   .brand-surface h4,
+   .brand-surface h5,
+   .brand-surface h6,
+   .brand-surface .font-display {
+      font-family: var(--font-display);
+      color: inherit;
+      margin: 0;
+   }
 
-  .brand-surface p {
-    margin: 0;
-    color: inherit;
-  }
+   .brand-surface p {
+      margin: 0;
+      color: inherit;
+   }
 
-  /* Same legacy-rule defeat as headings: legacy.css has
+   /* Same legacy-rule defeat as headings: legacy.css has
      `li { color: var(--neutral-700); }` which doesn't theme. Without
      this override, list items inside .brand-surface stay gray in
      dark mode and read as washed-out. */
-  .brand-surface li {
-    color: inherit;
-  }
+   .brand-surface li {
+      color: inherit;
+   }
 
-  .brand-surface a {
-    color: inherit;
-    text-decoration: none;
-  }
-  .brand-surface a:hover {
-    text-decoration: none;
-    color: inherit;
-  }
-  .brand-surface *:focus {
-    outline: none;
-  }
+   .brand-surface a {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+   }
+
+   .brand-surface a:hover {
+      text-decoration: none;
+      color: inherit;
+   }
+
+   .brand-surface button {
+      cursor: pointer;
+   }
+
+   .brand-surface button:disabled {
+      cursor: not-allowed;
+   }
+
+   .brand-surface *:focus {
+      outline: none;
+   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brand-surface *,
-  .brand-surface *::before,
-  .brand-surface *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+
+   .brand-surface *,
+   .brand-surface *::before,
+   .brand-surface *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+   }
 }
