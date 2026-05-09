@@ -12,9 +12,12 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { installAnalyticsRouter } from './services/analytics'
 import { i18n, currentLocale } from './i18n'
 import { inject } from '@vercel/analytics'
+import { injectSpeedInsights } from '@vercel/speed-insights'
 
 // Inject Vercel Analytics
 inject()
+// Inject Vercel Speed Insights
+injectSpeedInsights()
 
 // Wait for Firebase Auth to initialize before mounting the app
 let app: ReturnType<typeof createApp> | undefined
