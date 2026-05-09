@@ -107,11 +107,14 @@ const nextStepKey = computed(() => {
 })
 
 // Hide once everything is done OR the editor has dismissed it.
-// `loading` keeps the card mounted on first paint so we don't show
-// "0/4 complete" before counts arrive — flashes a wrong story.
+// Stay hidden while counts are loading so the card doesn't flash in
+// for the ~500ms–2s the Contentful query takes on populated workspaces
+// (which is the common case once any content exists). On a brand-new
+// workspace we accept a small pop-in once counts return — onboarding
+// isn't time-sensitive on the first visit.
 const visible = computed(() => {
   if (dismissed.value) return false
-  if (loading.value) return true
+  if (loading.value) return false
   return !allDone.value
 })
 
@@ -225,12 +228,5 @@ function isDone(step: Step) {
         </RouterLink>
       </li>
     </ol>
-
-    <!-- Loading skeleton flash-protection: keep the layout stable
-         while counts come back so the eye doesn't snap. -->
-    <div v-if="loading" class="text-[11px] text-ink/45 inline-flex items-center gap-1.5">
-      <Icon icon="lucide:loader-2" width="11" class="animate-spin" />
-      Checking your workspace…
-    </div>
   </div>
 </template>
