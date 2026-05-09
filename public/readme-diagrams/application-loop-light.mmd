@@ -1,0 +1,46 @@
+%%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#e8eaed', 'primaryTextColor': '#111827', 'primaryBorderColor': '#6B7280', 'secondaryColor': '#f3f4f6', 'tertiaryColor': '#e5e7eb', 'actorBkg': '#f9fafb', 'actorBorder': '#6B7280', 'actorTextColor': '#111827', 'actorLineColor': '#9CA3AF', 'signalColor': '#374151', 'signalTextColor': '#374151', 'labelBoxBkgColor': '#f3f4f6', 'labelBoxBorderColor': '#9CA3AF', 'labelTextColor': '#111827', 'loopTextColor': '#374151', 'noteBorderColor': '#9CA3AF', 'noteBkgColor': '#f3f4f6', 'noteTextColor': '#111827', 'activationBorderColor': '#6B7280', 'activationBkgColor': '#e5e7eb', 'sequenceNumberColor': '#ffffff'}}}%%
+sequenceDiagram
+    autonumber
+    actor Applicant
+    actor Staff
+    actor Mentor
+    participant STAIJA
+    participant Firestore
+    participant Mailgun
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Sign up & apply
+        Applicant->>STAIJA: Sign up (email or Google)
+        STAIJA->>Firestore: users.create (role=applicant)
+        Applicant->>STAIJA: Submit StepUp Scholars / Dynamerge form
+        STAIJA->>Firestore: applications.create (status=pending)
+        STAIJA->>Mailgun: "We received your application"
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Staff review
+        Staff->>STAIJA: Open admin review queue
+        STAIJA->>Firestore: applications where status=pending
+        Staff->>STAIJA: Approve / reject (with notes)
+        STAIJA->>Firestore: applications.update + roleTransition (applicant → student)
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Cohort & mentor pairing
+        STAIJA->>Firestore: enrollments.create (cohort)
+        STAIJA->>Firestore: mentors.match (assignment)
+        STAIJA->>Mailgun: "You're in" + mentor intro
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Program (LMS)
+        Applicant->>STAIJA: Lessons, assignments, sessions
+        Mentor->>STAIJA: Schedule sessions, leave feedback
+        STAIJA->>Firestore: progress, sessionNotes, feedback
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Alumni
+        STAIJA->>Firestore: roleTransition (student → alumni)
+        STAIJA->>Mailgun: Graduation email + alumni resources
+    end
