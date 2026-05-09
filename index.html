@@ -9,6 +9,37 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>STAIJA</title>
     <meta name="description" content="STAIJA nurtures Africa’s next generation of scientist‑leaders through research programs, mentorship and community." />
+
+    <!-- Canonical URL — kept absolute so social scrapers and search
+         engines resolve it regardless of which preview/staging host the
+         page was crawled from. -->
+    <link rel="canonical" href="https://staija.org/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, iMessage, Slack, …).
+         These are static and apply to every route — Vite SPA can't ship
+         per-route OG tags without prerendering, and social scrapers
+         don't run JS. If/when we add SSR or a prerender step, these
+         become per-route. -->
+    <meta property="og:site_name" content="STAIJA" />
+    <meta property="og:title" content="STAIJA — Africa’s next generation of scientist-leaders" />
+    <meta property="og:description" content="Research programs, mentorship, and community for high-school and gap-year students across Africa." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://staija.org/" />
+    <meta property="og:image" content="https://staija.org/og-image.png" />
+    <meta property="og:image:width" content="2560" />
+    <meta property="og:image:height" content="1280" />
+    <meta property="og:image:alt" content="STAIJA — nurturing Africa’s next generation of scientist-leaders." />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card — falls back to OG for fields it doesn't own, but
+         summary_large_image must be declared explicitly to get the wide
+         preview instead of a square thumbnail. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="STAIJA — Africa’s next generation of scientist-leaders" />
+    <meta name="twitter:description" content="Research programs, mentorship, and community for high-school and gap-year students across Africa." />
+    <meta name="twitter:image" content="https://staija.org/og-image.png" />
+    <meta name="twitter:image:alt" content="STAIJA — nurturing Africa’s next generation of scientist-leaders." />
+
     <!-- Mobile browser chrome color. Updated live by useTheme on theme
          change; this default matches the light-mode paper color. -->
     <meta name="theme-color" content="#F1F5F9" />
