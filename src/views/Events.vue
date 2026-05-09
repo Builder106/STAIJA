@@ -48,7 +48,7 @@ function formatDate(iso: string) {
   <div class="flex flex-col bg-paper min-h-screen">
     <Section class="!pb-8 !pt-16 md:!pt-24 text-center">
       <Container class="max-w-2xl">
-        <Eyebrow class="text-brand-violet mb-4 block">Community</Eyebrow>
+        <Eyebrow class="text-brand-violet mb-4 block text-[25px]">Community</Eyebrow>
         <Heading :level="1" class="mb-6">Gather with <span class="text-brand-violet">us</span>.</Heading>
         <Body large class="mb-12">
           From virtual demo days to in-person symposiums, our events bring together the

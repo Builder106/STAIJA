@@ -21,9 +21,9 @@ const ADVISORS: string[] = []
 <template>
   <div class="flex flex-col bg-paper min-h-screen">
     <!-- Hero -->
-    <Section class="!py-24 md:!py-32">
+    <Section class="!py-24 md:!py-32 min-h-screen flex items-center justify-center">
       <Container class="max-w-4xl text-center flex flex-col items-center">
-        <Eyebrow class="text-brand-violet mb-8 block">Our Mission</Eyebrow>
+        <Eyebrow class="text-brand-violet mb-8 block text-[25px]">Our Mission</Eyebrow>
         <blockquote class="font-display text-4xl md:text-5xl lg:text-6xl italic leading-tight text-ink m-0">
           "Talent is evenly distributed across the continent. Opportunity, equipment, and mentorship are not. We are here to balance the equation."
         </blockquote>
@@ -35,7 +35,7 @@ const ADVISORS: string[] = []
       <Container class="max-w-3xl">
         <div class="flex flex-col gap-8 text-lg md:text-xl text-ink/80 leading-relaxed font-sans">
           <p class="m-0">
-            <span class="font-semibold text-brand-violet">STAIJA</span> began in 2018 in a borrowed classroom at the University of Lagos. Our founders—three Nigerian doctoral students who had struggled to find rigorous research opportunities during their own undergraduate years—wanted to build the bridge they never had.
+            <span class="font-semibold text-brand-violet">STAIJA</span> began in 2023 by students about to enter college who wanted to prepare high school students for their own college journeys.
           </p>
           <p class="m-0">
             What started as a weekend seminar for 15 ambitious high-schoolers has grown into a pan-African ecosystem. We realized early on that simply teaching students <em>about</em> science wasn't enough; they needed to <em>do</em> science. They needed pipettes, sequencers, clean data sets, and mentors who treated them as future peers, not just students.
