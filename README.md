@@ -12,8 +12,8 @@ Web platform for STAIJA's StepUp Scholars and Dynamerge programs — application
 The applicant → student → alumni loop, end-to-end:
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/image/README/application-loop-dark.png">
-  <img alt="Sequence diagram of the applicant to student to alumni loop" src="docs/image/README/application-loop-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="public/readme-diagrams/application-loop-dark.png">
+  <img alt="Sequence diagram of the applicant to student to alumni loop" src="public/readme-diagrams/application-loop-light.png">
 </picture>
 
 Side flows (donations via Paystack, newsletter via Mailgun, CMS content from Contentful → Firestore via webhook) feed the same Firestore + Functions backbone.
