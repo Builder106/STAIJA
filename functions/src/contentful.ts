@@ -51,6 +51,10 @@ export const contentfulWebhook = onRequest(
     region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 60,
+    // Webhook callers (Contentful) can't sign GCP IAM tokens, so the
+    // Cloud Run service must accept unauthenticated invocations.
+    // Auth is enforced inside the handler via the x-staija-token check.
+    invoker: 'public',
   },
   async (req, res) => {
     if (req.method !== 'POST') {
@@ -58,16 +62,39 @@ export const contentfulWebhook = onRequest(
       return
     }
 
-    const provided = req.header('x-webhook-secret')
+    // Header name is intentionally generic — Contentful's webhook UI
+    // shows headers in plain text, so calling it `x-webhook-secret`
+    // would advertise that the value is sensitive. The Firebase secret
+    // it compares against keeps its descriptive name.
+    const provided = req.header('x-staija-token')
     if (!provided || provided !== CONTENTFUL_WEBHOOK_SECRET.value()) {
       res.status(401).send('Unauthorized')
       return
     }
 
     const topic = (req.header('x-contentful-topic') || '') as ContentfulTopic
-    const payload = req.body as ContentfulEntryPayload
+
+    // Contentful sends `Content-Type: application/vnd.contentful.management.v1+json`,
+    // which Cloud Functions' default body-parser doesn't recognize, leaving
+    // req.body either an empty object or a Buffer. Fall back to parsing
+    // req.rawBody ourselves whenever the structured body is missing.
+    let payload = req.body as ContentfulEntryPayload | undefined
+    if (!payload?.sys?.id) {
+      try {
+        const raw = (req as unknown as { rawBody?: Buffer }).rawBody
+        const text = raw ? raw.toString('utf-8') : typeof req.body === 'string' ? req.body : ''
+        if (text) payload = JSON.parse(text) as ContentfulEntryPayload
+      } catch (e) {
+        console.error('[contentfulWebhook] rawBody parse failed:', e)
+      }
+    }
 
     if (!payload?.sys?.id || !payload.sys.contentType?.sys.id) {
+      console.warn('[contentfulWebhook] Malformed payload', {
+        topic,
+        contentType: req.header('content-type'),
+        bodyType: typeof req.body,
+      })
       res.status(400).send('Malformed Contentful payload')
       return
     }

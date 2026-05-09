@@ -15,6 +15,9 @@
       "avatars:thumbs": "tsx tools/avatars/thumbs.ts",
       "social:capture": "node tools/social/capture.cjs",
       "banner:capture": "node tools/banner/capture.cjs",
+      "lms:seed": "tsx tools/lms-seed/seed.ts seed",
+      "lms:clear": "tsx tools/lms-seed/seed.ts clear",
+      "lms:republish": "tsx tools/lms-seed/seed.ts republish",
       "demo": "DEMO=1 bddgen --config playwright.demo.config.ts && DEMO=1 playwright test --config playwright.demo.config.ts"
    },
    "dependencies": {

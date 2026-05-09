@@ -1,0 +1,50 @@
+// Trigger one publish event and immediately check delivery activity.
+
+import { config as loadEnv } from 'dotenv'
+loadEnv({ path: '.env' })
+loadEnv({ path: '.env.local', override: true })
+
+import contentful from 'contentful-management'
+const { createClient } = contentful
+
+async function main() {
+  const env = await createClient({
+    accessToken: process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN!,
+  })
+    .getSpace(process.env.VITE_CONTENTFUL_SPACE_ID!)
+    .then((s) => s.getEnvironment(process.env.VITE_CONTENTFUL_ENV_ID!))
+
+  console.log(`env=${process.env.VITE_CONTENTFUL_ENV_ID}`)
+
+  // Pick a known demo entry and republish it.
+  const id = 'demo-stepup-research-foundations'
+  const entry = await env.getEntry(id)
+  console.log(`entry: ${id} version=${entry.sys.version} publishedVersion=${entry.sys.publishedVersion}`)
+
+  if (entry.sys.publishedVersion) await entry.unpublish()
+  const fresh = await env.getEntry(id)
+  const published = await fresh.publish()
+  console.log(`republished. version=${published.sys.version} publishedVersion=${published.sys.publishedVersion}`)
+
+  // Wait briefly, then check webhook delivery activity.
+  console.log('\nwaiting 8s for delivery to settle...')
+  await new Promise((r) => setTimeout(r, 8_000))
+
+  const space = await createClient({
+    accessToken: process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN!,
+  }).getSpace(process.env.VITE_CONTENTFUL_SPACE_ID!)
+  const hooks = await space.getWebhooks()
+  for (const hook of hooks.items) {
+    const calls = await hook.getCalls()
+    console.log(`\n${hook.name}: ${calls.items.length} call(s)`)
+    for (const c of calls.items.slice(0, 5)) {
+      console.log(`  ${c.statusCode}  ${c.requestAt}  ${c.eventType}`)
+      if (c.errors?.length) console.log(`    errors: ${JSON.stringify(c.errors)}`)
+    }
+  }
+}
+
+main().catch((e) => {
+  console.error('Failed:', e instanceof Error ? e.message : e)
+  process.exitCode = 1
+})
