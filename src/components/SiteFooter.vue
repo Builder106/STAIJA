@@ -8,6 +8,19 @@ import LocaleSwitcher from './LocaleSwitcher.vue'
 import { trackNewsletterSignup } from '../services/analytics'
 import { getAppConfig } from '../utils/env'
 import { donationsEnabled } from '../config/features'
+import { useAuth } from '../composables/useAuth'
+import { usePermissions } from '../composables/usePermissions'
+
+const { isAuthenticated } = useAuth()
+const { isStaff, isStudent, isAlumni, isMentor } = usePermissions()
+
+const dashboardPath = computed(() => {
+  if (isStaff.value) return '/admin'
+  if (isStudent.value) return '/learn'
+  if (isAlumni.value) return '/alumni'
+  if (isMentor.value) return '/mentor'
+  return '/applicant'
+})
 
 const year = computed(() => new Date().getFullYear())
 
@@ -99,7 +112,7 @@ async function handleNewsletter(e: Event) {
               <Icon icon="mdi:instagram" width="18" height="18" />
             </a>
             <a
-              href="https://www.linkedin.com/company/staija-ng/"
+              href="https://www.linkedin.com/company/staija/"
               target="_blank"
               rel="noopener"
               aria-label="Follow us on LinkedIn"
@@ -192,9 +205,16 @@ async function handleNewsletter(e: Event) {
             Account
           </h3>
           <ul class="flex flex-col gap-3 text-sm text-paper-static/85 list-none p-0 m-0">
-            <li><RouterLink to="/login" class="hover:text-white transition-colors">Sign in</RouterLink></li>
-            <li><RouterLink to="/signup" class="hover:text-white transition-colors">Apply</RouterLink></li>
-            <li v-if="donationsEnabled"><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
+            <template v-if="isAuthenticated">
+              <li><RouterLink :to="dashboardPath" class="hover:text-white transition-colors">Dashboard</RouterLink></li>
+              <li><RouterLink to="/account/settings" class="hover:text-white transition-colors">Settings</RouterLink></li>
+              <li v-if="donationsEnabled"><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
+            </template>
+            <template v-else>
+              <li><RouterLink to="/login" class="hover:text-white transition-colors">Sign in</RouterLink></li>
+              <li><RouterLink to="/signup" class="hover:text-white transition-colors">Apply</RouterLink></li>
+              <li v-if="donationsEnabled"><RouterLink to="/donor" class="hover:text-white transition-colors">My donations</RouterLink></li>
+            </template>
           </ul>
         </div>
       </div>

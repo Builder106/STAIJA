@@ -8,12 +8,21 @@ import ThemeToggle from './ThemeToggle.vue'
 import { useAuth } from '../composables/useAuth'
 import { usePermissions } from '../composables/usePermissions'
 import { donationsEnabled } from '../config/features'
+import { resolveAvatarSrc } from '../services/avatar'
 
 const isScrolled = ref(false)
 const mobileOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
-const { isAuthenticated, displayName, signOut } = useAuth()
+const { isAuthenticated, displayName, signOut, user, userProfile } = useAuth()
+
+const avatarSrc = computed(() =>
+  resolveAvatarSrc({
+    photoURL: userProfile.value?.photoURL,
+    avatarSlot: userProfile.value?.avatarSlot,
+    seed: user.value?.uid ?? '',
+  })
+)
 const { isStaff, isMentor, isStudent, isAlumni } = usePermissions()
 
 // Where the "Dashboard" link in the header points, by role. Mirrors the
@@ -93,11 +102,14 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             </RouterLink>
             <RouterLink
               :to="dashboardPath"
-              class="text-sm font-semibold text-ink hover:text-brand-violet transition-colors focus-ring-brand rounded-sm flex items-center gap-2"
+              class="text-sm font-semibold text-ink hover:text-brand-violet transition-colors focus-ring-brand rounded-full flex items-center gap-2"
             >
-              <Icon icon="lucide:layout-dashboard" width="16" />
+              <img
+                :src="avatarSrc"
+                :alt="displayName ?? 'Avatar'"
+                class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-violet/30 shrink-0"
+              />
               <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>
-              <span class="xl:hidden">Dashboard</span>
             </RouterLink>
             <RouterLink
               to="/account/settings"
@@ -105,13 +117,13 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             >
               Settings
             </RouterLink>
-            <button
+            <UiButton
+              variant="secondary"
               type="button"
-              class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
               @click="handleSignOut"
             >
               Sign out
-            </button>
+            </UiButton>
           </template>
           <template v-else>
             <UiButton variant="secondary" :to="'/login'">

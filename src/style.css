@@ -89,6 +89,7 @@
      buys a real readability margin where the design uses faded text. */
    --color-ink: #F0F4F8;
    --color-surface: #1A1F26;
+   --scrollbar-track: #0B0E12;
 }
 
 /* Themed utility overrides — for the few utilities that hardcode
@@ -268,3 +269,29 @@
       transition-duration: 0.01ms !important;
    }
 }
+
+@layer base {
+   html {
+      --scrollbar-track: transparent;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-brand-violet) var(--scrollbar-track);
+   }
+
+   ::-webkit-scrollbar {
+      width: 6px;
+   }
+
+   ::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+   }
+
+   ::-webkit-scrollbar-thumb {
+      background: var(--color-brand-violet);
+      border-radius: 9999px;
+   }
+
+   ::-webkit-scrollbar-thumb:hover {
+      background: #7A44EE;
+   }
+}
+
