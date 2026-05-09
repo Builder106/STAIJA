@@ -35,6 +35,10 @@ export { exportUserData } from './dataExport'
 export { enrollStudent, completeLesson, submitAssignment, gradeSubmission } from './lms'
 export { scheduleSession, rsvpSession } from './sessions'
 
+// AI-powered course outliner (Groq-backed). Requires GROQ_API_KEY,
+// CONTENTFUL_MANAGEMENT_TOKEN, and CONTENTFUL_SPACE_ID in Secret Manager.
+export { outlineCourse } from './aiOutline'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

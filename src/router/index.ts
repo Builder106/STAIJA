@@ -77,6 +77,7 @@ const routes: RouteRecordRaw[] = [
   // LMS content authoring (STAIJA-native wrapper around Contentful Management API).
   // Both staff and admin can manage course content via manage_cohorts permission.
   { path: '/admin/content', name: 'admin-content', component: () => import('../views/admin/content/ContentHome.vue'), meta: { title: 'Course content — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/outline', name: 'admin-content-outline', component: () => import('../views/admin/content/CourseOutline.vue'), meta: { title: 'AI course outliner — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/content/courses', name: 'admin-content-courses', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Courses — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/content/courses/:id', name: 'admin-content-course-edit', component: () => import('../views/admin/content/CourseEdit.vue'), meta: { title: 'Edit course — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/content/modules', name: 'admin-content-modules', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Modules — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
