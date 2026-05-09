@@ -99,6 +99,16 @@ onMounted(async () => {
             :transition="{ duration: 0.32, ease: 'easeOut' }"
             class="flex flex-col gap-8 max-w-xl"
           >
+            <a
+              href="https://github.com/Builder106/STAIJA"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium text-white/90 border border-white/20 rounded-full hover:bg-white/10 hover:text-white transition-colors w-fit group"
+            >
+              <Icon icon="lucide:github" class="w-4 h-4" />
+              {{ t('home.hero.githubPill') }}
+              <Icon icon="lucide:arrow-right" class="w-4 h-4 text-white/40 group-hover:text-white/80 transition-colors" />
+            </a>
             <Heading :level="1">
               <!-- i18n-t with a slot for the accent so translators can
                    move the italicized word to wherever the sentence
