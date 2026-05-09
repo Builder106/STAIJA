@@ -1,6 +1,13 @@
 // Last-resort: delete the existing webhook and recreate it via API,
 // guaranteeing every field is exactly right (no UI copy-paste artifacts,
 // no leading whitespace in name, etc).
+//
+// The webhook URL and shared token are read from .env.local — never
+// hardcode them here. A previous version of this file embedded the
+// token literal and got picked up by GitGuardian; rotation followed.
+// Set:
+//   STAIJA_WEBHOOK_URL=https://contentfulwebhook-...-uc.a.run.app
+//   STAIJA_WEBHOOK_TOKEN=<the same value bound to CONTENTFUL_WEBHOOK_SECRET>
 
 import { config as loadEnv } from 'dotenv'
 loadEnv({ path: '.env' })
@@ -9,8 +16,13 @@ loadEnv({ path: '.env.local', override: true })
 import contentful from 'contentful-management'
 const { createClient } = contentful
 
-const URL = 'https://contentfulwebhook-lyeekzilaq-uc.a.run.app'
-const TOKEN = 'izJwH4qWUuGeUXp6dM046KsfVpcyQ6t209PXS9s7mMo='
+const URL = process.env.STAIJA_WEBHOOK_URL
+const TOKEN = process.env.STAIJA_WEBHOOK_TOKEN
+
+if (!URL || !TOKEN) {
+  console.error('Set STAIJA_WEBHOOK_URL and STAIJA_WEBHOOK_TOKEN in .env.local before running.')
+  process.exit(1)
+}
 
 async function main() {
   const space = await createClient({

@@ -23,12 +23,20 @@ async function main() {
   }
 
   // Raw dump first — surfaces fields the SDK doesn't pretty-print
-  // (notably any environment scoping).
+  // (notably any environment scoping). Header values are redacted
+  // because some of them are shared secrets and printing them was the
+  // root cause of an earlier credential leak into a transcript.
   for (const hook of hooks.items) {
     const raw = (hook as unknown as { toPlainObject?: () => unknown }).toPlainObject?.() ?? hook
-    console.log('--- raw webhook config ---')
-    console.log(JSON.stringify(raw, null, 2))
-    console.log('--------------------------')
+    const redacted = JSON.parse(JSON.stringify(raw)) as { headers?: Array<{ value?: string }> }
+    if (Array.isArray(redacted.headers)) {
+      for (const h of redacted.headers) {
+        if (h.value) h.value = '<redacted>'
+      }
+    }
+    console.log('--- raw webhook config (header values redacted) ---')
+    console.log(JSON.stringify(redacted, null, 2))
+    console.log('---------------------------------------------------')
   }
 
   for (const hook of hooks.items) {
@@ -37,7 +45,7 @@ async function main() {
     console.log(`  active:   ${hook.active}`)
     console.log(`  topics:   ${(hook.topics ?? []).join(', ') || '(all)'}`)
     console.log(`  filters:  ${JSON.stringify(hook.filters ?? [])}`)
-    console.log(`  headers:  ${(hook.headers ?? []).map((h) => `${h.key}=${h.secret ? '<redacted>' : (h.value ?? '')}`).join(', ') || '(none)'}`)
+    console.log(`  headers:  ${(hook.headers ?? []).map((h) => `${h.key}=<redacted>`).join(', ') || '(none)'}`)
     console.log(`  contentType: ${hook.transformation?.contentType ?? '(default)'}`)
     // Contentful environment scope — when present, the webhook only fires
     // for events in those envs. Empty/undefined = all environments.
