@@ -33,10 +33,17 @@
 // Load .env first, then layer .env.local on top so a per-machine
 // override (e.g. VITE_CONTENTFUL_ENV_ID=staging) wins over the
 // committed defaults — the same precedence Vite itself uses for the
-// app build.
+// app build. A `--env=<name>` CLI flag wins over both, for the rare
+// case (one-off seeding into master, switching to a feature env) where
+// you need to bypass .env.local without renaming files.
 import { config as loadEnv } from 'dotenv'
 loadEnv({ path: '.env' })
 loadEnv({ path: '.env.local', override: true })
+
+const cliEnvFlag = process.argv.find((a) => a.startsWith('--env='))
+if (cliEnvFlag) {
+  process.env.VITE_CONTENTFUL_ENV_ID = cliEnvFlag.slice('--env='.length)
+}
 
 // contentful-management ships a CJS default export; under ESM (Node's
 // "type": "module"), named imports aren't synthesized, so we grab
