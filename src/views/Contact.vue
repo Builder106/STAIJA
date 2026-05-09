@@ -58,20 +58,20 @@ function handleSubmit(e: Event) {
                 class="flex flex-col gap-6"
                 @submit="handleSubmit"
               >
-                <div class="grid md:grid-cols-2 gap-6">
-                  <div class="flex flex-col gap-2">
+                <div class="grid md:grid-cols-2 gap-6 min-w-0">
+                  <div class="flex flex-col gap-2 min-w-0">
                     <label class="text-sm font-semibold text-ink/80">Full Name</label>
-                    <input type="text" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="Amina Yusuf" />
+                    <input type="text" required class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="Amina Yusuf" />
                   </div>
-                  <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-2 min-w-0">
                     <label class="text-sm font-semibold text-ink/80">Email Address</label>
-                    <input type="email" required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="amina@example.com" />
+                    <input type="email" required class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="amina@example.com" />
                   </div>
                 </div>
 
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2 min-w-0">
                   <label class="text-sm font-semibold text-ink/80">Subject</label>
-                  <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
+                  <select required class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
                     <option value="">Select a topic</option>
                     <option value="programs">Program Inquiry (StepUp / Dynamerge)</option>
                     <option value="partnership">Partnership or Sponsorship</option>
@@ -80,9 +80,9 @@ function handleSubmit(e: Event) {
                   </select>
                 </div>
 
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2 min-w-0">
                   <label class="text-sm font-semibold text-ink/80">Message</label>
-                  <textarea required class="border hairline-ink rounded-xl px-4 py-3 min-h-[160px] resize-y focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="How can we help you?" />
+                  <textarea required class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 min-h-[160px] resize-y focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface" placeholder="How can we help you?" />
                 </div>
 
                 <UiButton variant="primary" type="submit" class="w-full md:w-auto !h-12 text-base mt-2 group">
