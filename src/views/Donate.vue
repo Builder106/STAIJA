@@ -9,6 +9,8 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import ScrollReveal from '../components/motion/ScrollReveal.vue'
+import Magnetic from '../components/motion/Magnetic.vue'
 import { trackDonateStart } from '../services/analytics'
 import { donate as launchPaystack, formatNaira } from '../services/donations'
 import { auth } from '../config/firebase'
@@ -259,18 +261,20 @@ async function handleDonateClick() {
           </div>
         </div>
 
-        <UiButton
-          variant="gradient"
-          class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
-          :disabled="submitting"
-          @click="handleDonateClick"
-        >
-          <span v-if="submitting">Opening checkout…</span>
-          <span v-else>
-            Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
-            <span v-if="currentAmountKobo() > 0" class="opacity-80">· {{ formatNaira(currentAmountKobo()) }}</span>
-          </span>
-        </UiButton>
+        <Magnetic class="w-full max-w-[320px]">
+          <UiButton
+            variant="gradient"
+            class="w-full !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
+            :disabled="submitting"
+            @click="handleDonateClick"
+          >
+            <span v-if="submitting">Opening checkout…</span>
+            <span v-else>
+              Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
+              <span v-if="currentAmountKobo() > 0" class="opacity-80">· {{ formatNaira(currentAmountKobo()) }}</span>
+            </span>
+          </UiButton>
+        </Magnetic>
 
         <div v-if="errorMessage" role="alert" class="mt-4 max-w-[400px] text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           {{ errorMessage }}
@@ -299,7 +303,7 @@ async function handleDonateClick() {
     <Section class="bg-ink text-white !py-24">
       <Container>
         <div class="grid md:grid-cols-2 gap-16 items-center">
-          <div>
+          <ScrollReveal>
             <Eyebrow class="text-white/50 mb-4 block">Transparency</Eyebrow>
             <Heading :level="2" class="mb-6 !text-white">Where the money goes.</Heading>
             <Body large class="!text-white/80 mb-8">
@@ -313,16 +317,16 @@ async function handleDonateClick() {
                 <span class="text-white/70">{{ seg.name }}</span>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div class="flex items-center justify-center">
+          <ScrollReveal :delay="0.15" class="flex items-center justify-center">
             <div
               class="relative w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full"
               :style="{ background: donutGradient }"
             >
               <div class="absolute inset-[18%] rounded-full bg-ink" />
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </Container>
     </Section>
@@ -336,18 +340,20 @@ async function handleDonateClick() {
         </div>
 
         <div class="flex flex-col gap-4">
-          <UiCard
-            v-for="faq in [
+          <ScrollReveal
+            v-for="(faq, i) in [
               { q: 'Is my donation tax-deductible?', a: 'Yes, STAIJA is a registered 501(c)(3) in the US and a registered NGO in Nigeria.' },
               { q: 'Can I sponsor a specific student?', a: 'We pool donations to ensure all accepted students receive equitable support, but at the ₦100k tier, we will pair you with a cohort and send personalized updates.' },
               { q: 'How do I update my monthly giving?', a: 'You will receive a secure donor portal link in your receipt email where you can pause, cancel, or change your amount at any time.' },
             ]"
             :key="faq.q"
-            class="p-6 bg-surface"
+            :delay="i * 0.08"
           >
-            <h4 class="font-semibold text-lg mb-2 m-0">{{ faq.q }}</h4>
-            <p class="text-ink/70 text-sm leading-relaxed m-0">{{ faq.a }}</p>
-          </UiCard>
+            <UiCard class="p-6 bg-surface">
+              <h4 class="font-semibold text-lg mb-2 m-0">{{ faq.q }}</h4>
+              <p class="text-ink/70 text-sm leading-relaxed m-0">{{ faq.a }}</p>
+            </UiCard>
+          </ScrollReveal>
         </div>
       </Container>
     </Section>

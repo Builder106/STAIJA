@@ -10,6 +10,8 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import RichText from '../components/learn/RichText.vue'
+import Parallax from '../components/motion/Parallax.vue'
+import ScrollProgress from '../components/motion/ScrollProgress.vue'
 import { getBlogPost, type BlogPost } from '../services/content'
 import { donationsEnabled } from '../config/features'
 
@@ -50,6 +52,7 @@ onMounted(load)
 
 <template>
   <div class="flex flex-col bg-paper min-h-screen">
+    <ScrollProgress />
     <Section v-if="loading && !post" class="!pt-8 !pb-16">
       <Container class="max-w-3xl flex flex-col gap-6">
         <div class="h-3 w-40 bg-ink/5 rounded animate-pulse" />
@@ -104,7 +107,9 @@ onMounted(load)
           :transition="{ duration: 0.5, delay: 0.2 }"
         >
           <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
-          <img :src="post.hero" :alt="post.title" class="w-full h-full object-cover" />
+          <Parallax :speed="-0.2" :distance="100" class="absolute inset-0">
+            <img :src="post.hero" :alt="post.title" class="w-full h-full object-cover scale-110" />
+          </Parallax>
         </Motion>
       </Container>
     </Section>

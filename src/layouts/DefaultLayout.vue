@@ -8,7 +8,11 @@ import SiteFooter from '../components/SiteFooter.vue'
   <div class="brand-surface min-h-screen flex flex-col bg-paper">
     <SiteHeader />
     <main class="flex-1 flex flex-col">
-      <RouterView />
+      <RouterView v-slot="{ Component, route }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </Transition>
+      </RouterView>
     </main>
     <SiteFooter />
   </div>

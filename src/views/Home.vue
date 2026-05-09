@@ -13,6 +13,9 @@ import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import UiChip from '../components/ui/UiChip.vue'
 import HeroLottie from '../components/HeroLottie.vue'
+import CountUp from '../components/motion/CountUp.vue'
+import Hairline from '../components/motion/Hairline.vue'
+import Magnetic from '../components/motion/Magnetic.vue'
 import { trackApplyClick } from '../services/analytics'
 import { getBlogPosts, getEvents, type BlogPost, type EventItem } from '../services/content'
 
@@ -23,17 +26,17 @@ const { t, locale } = useI18n()
 const stats = computed(() => [
   {
     eyebrow: t('home.stats.studentsReached'),
-    number: '100',
+    number: 100,
     caption: t('home.stats.studentsReachedCaption'),
   },
   {
     eyebrow: t('home.stats.talkAttendees'),
-    number: '200',
+    number: 200,
     caption: t('home.stats.talkAttendeesCaption'),
   },
   {
     eyebrow: t('home.stats.programs'),
-    number: '2',
+    number: 2,
     caption: t('home.stats.programsCaption'),
   },
 ])
@@ -126,16 +129,20 @@ onMounted(async () => {
               {{ t('home.hero.dek') }}
             </Body>
             <div class="flex flex-wrap gap-4">
-              <UiButton
-                variant="on-gradient"
-                :to="'/apply/stepup-scholars'"
-                @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
-              >
-                {{ t('home.hero.ctaPrimary') }}
-              </UiButton>
-              <UiButton variant="on-gradient-ghost" href="#programs">
-                {{ t('home.hero.ctaSecondary') }}
-              </UiButton>
+              <Magnetic>
+                <UiButton
+                  variant="on-gradient"
+                  :to="'/apply/stepup-scholars'"
+                  @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
+                >
+                  {{ t('home.hero.ctaPrimary') }}
+                </UiButton>
+              </Magnetic>
+              <Magnetic>
+                <UiButton variant="on-gradient-ghost" href="#programs">
+                  {{ t('home.hero.ctaSecondary') }}
+                </UiButton>
+              </Magnetic>
             </div>
           </Motion>
 
@@ -151,8 +158,9 @@ onMounted(async () => {
       </Container>
     </Section>
 
+    <Hairline />
     <!-- Impact Strip -->
-    <Section class="!py-12 border-y hairline-ink bg-paper/50">
+    <Section class="!py-12 bg-paper/50">
       <Container>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           <Motion
@@ -166,7 +174,7 @@ onMounted(async () => {
           >
             <Eyebrow class="text-brand-violet">{{ stat.eyebrow }}</Eyebrow>
             <div class="font-display text-4xl md:text-5xl font-semibold tracking-tight text-brand-violet">
-              {{ stat.number }}
+              <CountUp :value="stat.number" :locale="locale" />
             </div>
             <p class="text-sm text-ink/70">{{ stat.caption }}</p>
           </Motion>
@@ -174,6 +182,7 @@ onMounted(async () => {
       </Container>
     </Section>
 
+    <Hairline />
     <!-- Programs Split -->
     <Section id="programs" class="bg-surface">
       <Container>
@@ -296,8 +305,9 @@ onMounted(async () => {
       </Container>
     </Section>
 
+    <Hairline v-if="upcomingEvents.length > 0" />
     <!-- Upcoming Events (renders only when CMS has at least one upcoming event) -->
-    <Section v-if="upcomingEvents.length > 0" class="bg-surface border-y hairline-ink">
+    <Section v-if="upcomingEvents.length > 0" class="bg-surface">
       <Container>
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div class="max-w-2xl">

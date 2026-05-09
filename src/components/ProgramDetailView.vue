@@ -10,6 +10,7 @@ import Eyebrow from './ui/Eyebrow.vue'
 import UiButton from './ui/UiButton.vue'
 import UiCard from './ui/UiCard.vue'
 import UiChip from './ui/UiChip.vue'
+import Parallax from './motion/Parallax.vue'
 import { trackApplyClick } from '../services/analytics'
 import { ProgramService } from '../services/programService'
 import type { Program } from '../services/firebase'
@@ -156,7 +157,9 @@ function toggleFaq(i: number) {
          heroes with dark text on the photo). -->
     <div class="relative min-h-svh flex items-center bg-ink-static overflow-hidden">
       <div class="absolute inset-0 z-0">
-        <img :src="program.heroImg" :alt="program.name" class="w-full h-full object-cover opacity-40" />
+        <Parallax :speed="-0.25" :distance="120" class="absolute inset-0">
+          <img :src="program.heroImg" :alt="program.name" class="w-full h-full object-cover opacity-40 scale-110" />
+        </Parallax>
         <div class="absolute inset-0 wash-violet-6 mix-blend-screen" />
         <div class="absolute inset-0 bg-gradient-to-t from-ink-static via-ink-static/60 to-transparent" />
       </div>

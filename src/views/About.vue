@@ -5,6 +5,8 @@ import Section from '../components/ui/Section.vue'
 import Heading from '../components/ui/Heading.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import ScrollReveal from '../components/motion/ScrollReveal.vue'
+import Hairline from '../components/motion/Hairline.vue'
 
 // Real team members and advisors go here once we're ready to list them.
 // Until then, the corresponding sections below render nothing rather
@@ -30,19 +32,26 @@ const ADVISORS: string[] = []
       </Container>
     </Section>
 
+    <Hairline />
     <!-- Story -->
-    <Section class="bg-surface !py-24 border-y hairline-ink">
+    <Section class="bg-surface !py-24">
       <Container class="max-w-3xl">
         <div class="flex flex-col gap-8 text-lg md:text-xl text-ink/80 leading-relaxed font-sans">
-          <p class="m-0">
-            <span class="font-semibold text-brand-violet">STAIJA</span> began in 2023 by students about to enter college who wanted to prepare high school students for their own college journeys.
-          </p>
-          <p class="m-0">
-            What started as a weekend seminar for 15 ambitious high-schoolers has grown into a pan-African ecosystem. We realized early on that simply teaching students <em>about</em> science wasn't enough; they needed to <em>do</em> science. They needed pipettes, sequencers, clean data sets, and mentors who treated them as future peers, not just students.
-          </p>
-          <p class="m-0">
-            Today, STAIJA runs two flagship programs — StepUp Scholars in Nigeria and Dynamerge across Africa — and hosts the STAIJA Talks series for the wider community. Around 100 students have come through our programs over the last three years, and roughly 200 more have joined us at Talks. Our alumni are publishing papers, founding startups, and reshaping the narrative of African innovation.
-          </p>
+          <ScrollReveal>
+            <p class="m-0">
+              <span class="font-semibold text-brand-violet">STAIJA</span> began in 2023 by students about to enter college who wanted to prepare high school students for their own college journeys.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal :delay="0.1">
+            <p class="m-0">
+              What started as a weekend seminar for 15 ambitious high-schoolers has grown into a pan-African ecosystem. We realized early on that simply teaching students <em>about</em> science wasn't enough; they needed to <em>do</em> science. They needed pipettes, sequencers, clean data sets, and mentors who treated them as future peers, not just students.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal :delay="0.2">
+            <p class="m-0">
+              Today, STAIJA runs two flagship programs — StepUp Scholars in Nigeria and Dynamerge across Africa — and hosts the STAIJA Talks series for the wider community. Around 100 students have come through our programs over the last three years, and roughly 200 more have joined us at Talks. Our alumni are publishing papers, founding startups, and reshaping the narrative of African innovation.
+            </p>
+          </ScrollReveal>
         </div>
       </Container>
     </Section>

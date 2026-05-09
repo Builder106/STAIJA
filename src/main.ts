@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 // `lg:grid-cols-*` and break footer / hero / other responsive grids.
 import './styles/legacy.css'
 import './style.css'
+import './styles/page-transition.css'
 import App from './App.vue'
 import router from './router'
 import { auth } from './config/firebase.ts'

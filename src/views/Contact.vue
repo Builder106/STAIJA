@@ -9,6 +9,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import ScrollReveal from '../components/motion/ScrollReveal.vue'
 import { trackInquirySubmit } from '../services/analytics'
 
 const submitted = ref(false)
@@ -34,7 +35,7 @@ function handleSubmit(e: Event) {
         </div>
 
         <div class="grid lg:grid-cols-12 gap-16 items-start">
-          <div class="lg:col-span-7">
+          <ScrollReveal class="lg:col-span-7">
             <UiCard class="p-8 md:p-10 bg-surface">
               <Motion
                 v-if="submitted"
@@ -92,9 +93,9 @@ function handleSubmit(e: Event) {
                 </UiButton>
               </form>
             </UiCard>
-          </div>
+          </ScrollReveal>
 
-          <div class="lg:col-span-5 flex flex-col gap-12">
+          <ScrollReveal :delay="0.12" class="lg:col-span-5 flex flex-col gap-12">
             <div>
               <Heading :level="3" class="mb-6">Contact Information</Heading>
               <div class="flex flex-col gap-6">
@@ -141,7 +142,7 @@ function handleSubmit(e: Event) {
                 </a>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </Container>
     </Section>

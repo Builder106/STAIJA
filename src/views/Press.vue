@@ -8,6 +8,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import ScrollReveal from '../components/motion/ScrollReveal.vue'
 
 interface Coverage {
   outlet: string
@@ -70,7 +71,7 @@ const COLOR_TOKENS = [
     <Section class="bg-surface border-y hairline-ink">
       <Container class="max-w-3xl">
         <div class="grid md:grid-cols-2 gap-8 items-start">
-          <div>
+          <ScrollReveal>
             <Eyebrow class="text-brand-violet mb-4 block">Press contact</Eyebrow>
             <Heading :level="2" class="mb-4">Tomi Adeyemi</Heading>
             <p class="text-ink/70 mb-6">Director of Communications, STAIJA</p>
@@ -88,18 +89,20 @@ const COLOR_TOKENS = [
                 <Icon icon="lucide:camera" width="18" /> Request high-res leadership photos
               </a>
             </div>
-          </div>
-          <UiCard class="p-6 bg-paper">
-            <h3 class="font-display text-lg font-semibold mb-3 m-0">For interviews</h3>
-            <p class="text-sm text-ink/70 mb-4 m-0">
-              Our Executive Director and Program Directors are available for interviews and
-              expert commentary on STEM education, African research capacity, and youth-led
-              science. Most interviews can be scheduled within 48 hours.
-            </p>
-            <UiButton variant="primary" href="mailto:press@staija.org?subject=Interview%20request">
-              Schedule an interview
-            </UiButton>
-          </UiCard>
+          </ScrollReveal>
+          <ScrollReveal :delay="0.12">
+            <UiCard class="p-6 bg-paper">
+              <h3 class="font-display text-lg font-semibold mb-3 m-0">For interviews</h3>
+              <p class="text-sm text-ink/70 mb-4 m-0">
+                Our Executive Director and Program Directors are available for interviews and
+                expert commentary on STEM education, African research capacity, and youth-led
+                science. Most interviews can be scheduled within 48 hours.
+              </p>
+              <UiButton variant="primary" href="mailto:press@staija.org?subject=Interview%20request">
+                Schedule an interview
+              </UiButton>
+            </UiCard>
+          </ScrollReveal>
         </div>
       </Container>
     </Section>
@@ -139,18 +142,20 @@ const COLOR_TOKENS = [
         </div>
 
         <!-- Color tokens -->
-        <div class="border-t hairline-ink pt-12">
-          <h3 class="font-display text-2xl font-semibold mb-8 text-center m-0">Color palette</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-            <div v-for="c in COLOR_TOKENS" :key="c.name" class="flex flex-col items-center text-center gap-3">
-              <div :class="['w-20 h-20 rounded-2xl', c.swatch]" />
-              <div>
-                <div class="font-semibold text-sm text-ink">{{ c.name }}</div>
-                <div class="font-mono text-xs text-ink/60">{{ c.hex }}</div>
+        <ScrollReveal>
+          <div class="border-t hairline-ink pt-12">
+            <h3 class="font-display text-2xl font-semibold mb-8 text-center m-0">Color palette</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+              <div v-for="c in COLOR_TOKENS" :key="c.name" class="flex flex-col items-center text-center gap-3">
+                <div :class="['w-20 h-20 rounded-2xl', c.swatch]" />
+                <div>
+                  <div class="font-semibold text-sm text-ink">{{ c.name }}</div>
+                  <div class="font-mono text-xs text-ink/60">{{ c.hex }}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </Container>
     </Section>
 
