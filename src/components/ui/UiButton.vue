@@ -40,7 +40,7 @@ const variantClass = computed(() => {
     case 'gradient':
       return 'focus-ring-brand bg-gradient-brand text-white h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:shadow-lg hover:shadow-brand-violet/20'
     case 'on-gradient':
-      return 'focus-ring-inverse bg-white text-ink h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:bg-white/90'
+      return 'focus-ring-inverse bg-white text-ink-static h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:bg-white/90'
     case 'on-gradient-ghost':
       return 'focus-ring-inverse bg-transparent text-white border border-white/40 h-11 px-6 rounded-xl hover:bg-white/10 hover:border-white/60'
   }

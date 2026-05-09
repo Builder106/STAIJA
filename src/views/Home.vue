@@ -83,7 +83,7 @@ onMounted(async () => {
          otherwise paper/ink/editorial; the hero is where the brand
          gradient gets to be loud, so the page feels like a cousin of
          the violet→cyan logo instead of a foil to it. -->
-    <Section class="!pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white">
+    <Section class="!pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white dark:text-ink-static">
       <!-- Soft accent glow behind the Lottie. Hidden on small screens
            where the artwork stacks below the copy and the glow would
            wash out the headline. -->
@@ -118,11 +118,11 @@ onMounted(async () => {
                    with the language. -->
               <i18n-t keypath="home.hero.headline" tag="span">
                 <template #accent>
-                  <span class="italic">{{ t('home.hero.headlineAccent') }}</span>
+                  <span class="italic text-brand-sky">{{ t('home.hero.headlineAccent') }}</span>
                 </template>
               </i18n-t>
             </Heading>
-            <Body large class="!text-white/85">
+            <Body large class="!text-white/85 dark:!text-ink-static/85">
               {{ t('home.hero.dek') }}
             </Body>
             <div class="flex flex-wrap gap-4">

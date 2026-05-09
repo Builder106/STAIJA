@@ -114,12 +114,9 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             </button>
           </template>
           <template v-else>
-            <RouterLink
-              to="/login"
-              class="text-sm font-semibold text-ink hover:text-ink/70 transition-colors focus-ring-brand rounded-sm"
-            >
+            <UiButton variant="secondary" :to="'/login'">
               Sign in
-            </RouterLink>
+            </UiButton>
           </template>
           <UiButton v-if="donationsEnabled" variant="primary" :to="'/donate'">Donate</UiButton>
         </div>
