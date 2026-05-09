@@ -11,19 +11,23 @@ import { auth } from './config/firebase.ts'
 import { onAuthStateChanged } from 'firebase/auth'
 import { installAnalyticsRouter } from './services/analytics'
 import { i18n, currentLocale } from './i18n'
+import { inject } from '@vercel/analytics'
+
+// Inject Vercel Analytics
+inject()
 
 // Wait for Firebase Auth to initialize before mounting the app
 let app: ReturnType<typeof createApp> | undefined
 
 onAuthStateChanged(auth, () => {
-  if (!app) {
-    app = createApp(App)
-    app.use(router)
-    app.use(i18n)
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = currentLocale()
-    }
-    installAnalyticsRouter(router)
-    app.mount('#app')
-  }
+   if (!app) {
+      app = createApp(App)
+      app.use(router)
+      app.use(i18n)
+      if (typeof document !== 'undefined') {
+         document.documentElement.lang = currentLocale()
+      }
+      installAnalyticsRouter(router)
+      app.mount('#app')
+   }
 })
