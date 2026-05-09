@@ -3,12 +3,12 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import lottie, { type AnimationItem } from 'lottie-web'
 import heroAnimation from '../assets/hero.json'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     loop?: boolean
     autoplay?: boolean
   }>(),
-  { loop: false, autoplay: true },
+  { loop: true, autoplay: true },
 )
 
 const container = ref<HTMLDivElement | null>(null)
@@ -19,8 +19,8 @@ onMounted(() => {
   instance = lottie.loadAnimation({
     container: container.value,
     renderer: 'svg',
-    loop: false,
-    autoplay: true,
+    loop: props.loop,
+    autoplay: props.autoplay,
     animationData: heroAnimation as unknown as Record<string, unknown>,
   })
 })
