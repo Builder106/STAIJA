@@ -1,138 +1,83 @@
-<template>
-  <div class="program-content">
-    <div class="header">
-      <h1>Program Content</h1>
-      <p class="subtitle">Access your program materials and resources</p>
-    </div>
-
-    <div class="content-grid">
-      <div class="content-card">
-        <h3><Icon icon="lucide:book-open" class="inline-icon" /> Curriculum Materials</h3>
-        <p>Access course materials, lectures, and study guides</p>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: 65%"></div>
-          <span class="progress-text">65% Complete</span>
-        </div>
-      </div>
-
-      <div class="content-card">
-        <h3><Icon icon="lucide:target" class="inline-icon" /> Program Resources</h3>
-        <p>Download templates, tools, and additional resources</p>
-        <button class="btn-primary">Browse Resources</button>
-      </div>
-
-      <div class="content-card">
-        <h3><Icon icon="lucide:book-open" class="inline-icon" /> Reading Materials</h3>
-        <p>Access recommended readings and research papers</p>
-        <button class="btn-secondary">View Library</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import Container from '../../components/ui/Container.vue'
+import Section from '../../components/ui/Section.vue'
+import Heading from '../../components/ui/Heading.vue'
+import Body from '../../components/ui/Body.vue'
+import Eyebrow from '../../components/ui/Eyebrow.vue'
+import UiCard from '../../components/ui/UiCard.vue'
+import UiButton from '../../components/ui/UiButton.vue'
 </script>
 
-<style scoped>
-.program-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
+      <Container>
+        <Eyebrow class="text-brand-violet mb-3 block">Student portal</Eyebrow>
+        <Heading :level="1" class="mb-3">
+          Program <span class="text-brand-violet">content</span>.
+        </Heading>
+        <Body class="text-ink/70 max-w-2xl">
+          Access your program materials and resources.
+        </Body>
+      </Container>
+    </Section>
 
-.header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
+    <Section class="!py-10">
+      <Container class="flex flex-col gap-6">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Curriculum</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">
+                <Icon icon="lucide:book-open" width="18" class="text-brand-violet" />
+                Curriculum materials
+              </Heading>
+              <Body class="text-ink/70 text-sm">
+                Access course materials, lectures, and study guides.
+              </Body>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-baseline justify-between">
+                <span class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Progress</span>
+                <span class="text-sm font-semibold text-ink">65%</span>
+              </div>
+              <div class="h-2 rounded-full bg-ink/[0.05] overflow-hidden">
+                <div class="h-full bg-brand-violet rounded-full" style="width: 65%" />
+              </div>
+            </div>
+            <UiButton variant="primary" :to="{ path: '/learn' }">Continue learning</UiButton>
+          </UiCard>
 
-.header h1 {
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Resources</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">
+                <Icon icon="lucide:target" width="18" class="text-brand-violet" />
+                Program resources
+              </Heading>
+              <Body class="text-ink/70 text-sm">
+                Download templates, tools, and additional resources.
+              </Body>
+            </div>
+            <UiButton variant="primary">Browse resources</UiButton>
+          </UiCard>
 
-.subtitle {
-  color: #6c757d;
-  font-size: 1.1rem;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.content-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-}
-
-.content-card h3 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-}
-
-.content-card p {
-  color: #6c757d;
-  margin-bottom: 1.5rem;
-}
-
-.progress-bar {
-  position: relative;
-  width: 100%;
-  height: 24px;
-  background: #e9ecef;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #007bff, #28a745);
-  border-radius: 12px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.btn-primary, .btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #0056b3;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #545b62;
-}
-</style>
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Library</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">
+                <Icon icon="lucide:book-marked" width="18" class="text-brand-violet" />
+                Reading materials
+              </Heading>
+              <Body class="text-ink/70 text-sm">
+                Access recommended readings and research papers.
+              </Body>
+            </div>
+            <UiButton variant="secondary">View library</UiButton>
+          </UiCard>
+        </div>
+      </Container>
+    </Section>
+  </div>
+</template>

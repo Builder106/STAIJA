@@ -1,609 +1,233 @@
-<template>
-  <div class="student-dashboard">
-    <div class="dashboard-header">
-      <div class="header-content">
-        <h1>Welcome to Your Program!</h1>
-        <p class="subtitle">Access your program materials, track your progress, and connect with your mentor</p>
-      </div>
-      <div class="header-actions">
-        <div class="program-badge">
-          <span class="program-name">{{ userProgram }}</span>
-          <span class="program-status">Active Student</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="dashboard-content">
-      <div class="dashboard-grid">
-        <!-- Program Content Card -->
-        <div class="dashboard-card">
-          <h3>Program Materials</h3>
-          <div class="card-content">
-            <p>Access your program curriculum, resources, and learning materials</p>
-            <div class="stats">
-              <div class="stat">
-                <span class="stat-number">{{ programStats.modules }}</span>
-                <span class="stat-label">Modules</span>
-              </div>
-              <div class="stat">
-                <span class="stat-number">{{ programStats.completed }}</span>
-                <span class="stat-label">Completed</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/learn')" class="btn-primary">
-                Open my course
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Assignments Card -->
-        <div class="dashboard-card">
-          <h3>Assignments & Tasks</h3>
-          <div class="card-content">
-            <p>Complete your assignments and track your progress</p>
-            <div class="assignment-notifications">
-              <div v-if="pendingAssignments > 0" class="notification pending">
-                <span class="notification-icon"><Icon icon="lucide:file-edit" /></span>
-                <span>{{ pendingAssignments }} pending assignments</span>
-              </div>
-              <div v-if="upcomingDeadlines > 0" class="notification urgent">
-                <span class="notification-icon"><Icon icon="lucide:clock" /></span>
-                <span>{{ upcomingDeadlines }} due soon</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/learn')" class="btn-primary">
-                View assignments
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Progress Card -->
-        <div class="dashboard-card">
-          <h3>My Progress</h3>
-          <div class="card-content">
-            <p>Track your learning journey and achievements</p>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-              <span class="progress-text">{{ progressPercentage }}% Complete</span>
-            </div>
-            <div class="progress-stats">
-              <div class="stat">
-                <span class="stat-number">{{ progressStats.achievements }}</span>
-                <span class="stat-label">Achievements</span>
-              </div>
-              <div class="stat">
-                <span class="stat-number">{{ progressStats.hours }}</span>
-                <span class="stat-label">Study Hours</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/learn')" class="btn-secondary">
-                View detailed progress
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mentor Support Card -->
-        <div class="dashboard-card">
-          <h3>Mentor Support</h3>
-          <div class="card-content">
-            <p>Get guidance from your assigned mentor</p>
-            <div class="mentor-info">
-              <div class="mentor-avatar">{{ mentorInitials }}</div>
-              <div class="mentor-details">
-                <div class="mentor-name">{{ mentorName }}</div>
-                <div class="mentor-role">Program Mentor</div>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/student/mentor')" class="btn-primary">
-                Contact Mentor
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Upcoming Events Card -->
-        <div class="dashboard-card">
-          <h3>Upcoming Events</h3>
-          <div class="card-content">
-            <p>Join program events and workshops</p>
-            <div class="upcoming-events">
-              <div v-for="event in upcomingEvents" :key="event.id" class="event-item">
-                <div class="event-date">{{ formatDate(event.date) }}</div>
-                <div class="event-title">{{ event.title }}</div>
-                <div class="event-type">{{ event.type }}</div>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/learn/sessions')" class="btn-secondary">
-                View live sessions
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Peer Network Card -->
-        <div class="dashboard-card">
-          <h3>Peer Network</h3>
-          <div class="card-content">
-            <p>Connect with fellow students in your program</p>
-            <div class="network-stats">
-              <div class="stat">
-                <span class="stat-number">{{ networkStats.connections }}</span>
-                <span class="stat-label">Connections</span>
-              </div>
-              <div class="stat">
-                <span class="stat-number">{{ networkStats.discussions }}</span>
-                <span class="stat-label">Discussions</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button @click="$router.push('/student/network')" class="btn-primary">
-                View Network
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions Bar -->
-    <div class="quick-actions">
-      <h3>Quick Actions</h3>
-      <div class="action-buttons">
-        <button @click="$router.push('/student/program')" class="quick-action-btn">
-          <span class="icon"><Icon icon="lucide:book-open" /></span>
-          <span>Study Materials</span>
-        </button>
-        <button @click="$router.push('/student/assignments')" class="quick-action-btn">
-          <span class="icon"><Icon icon="lucide:file-edit" /></span>
-          <span>Submit Assignment</span>
-        </button>
-        <button @click="$router.push('/student/mentor')" class="quick-action-btn">
-          <span class="icon"><Icon icon="lucide:presentation" /></span>
-          <span>Ask Mentor</span>
-        </button>
-        <button @click="$router.push('/student/progress')" class="quick-action-btn">
-          <span class="icon"><Icon icon="lucide:bar-chart-2" /></span>
-          <span>Check Progress</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
+import Container from '../../components/ui/Container.vue'
+import Section from '../../components/ui/Section.vue'
+import Heading from '../../components/ui/Heading.vue'
+import Body from '../../components/ui/Body.vue'
+import Eyebrow from '../../components/ui/Eyebrow.vue'
+import UiCard from '../../components/ui/UiCard.vue'
+import UiButton from '../../components/ui/UiButton.vue'
 import { AuthService, DatabaseService, type UserProfile } from '../../services/firebase'
 
 const router = useRouter()
 
-// Reactive data
 const userProfile = ref<UserProfile | null>(null)
 
-// Mock data - in a real app, this would come from your backend
+// Mock data — replaced by real LMS metrics in a future pass.
 const userProgram = ref('StepUp Scholars')
-
-const programStats = ref({
-  modules: 12,
-  completed: 5
-})
-
+const programStats = ref({ modules: 12, completed: 5 })
 const pendingAssignments = ref(3)
 const upcomingDeadlines = ref(2)
-
 const progressPercentage = ref(42)
-
-const progressStats = ref({
-  achievements: 8,
-  hours: 67
-})
-
+const progressStats = ref({ achievements: 8, hours: 67 })
 const mentorName = ref('Dr. Sarah Johnson')
-const mentorInitials = computed(() => {
-  return mentorName.value.split(' ').map(n => n[0]).join('')
-})
-
+const mentorInitials = computed(() =>
+  mentorName.value.split(' ').map((n) => n[0]).join(''),
+)
 const upcomingEvents = ref([
-  {
-    id: 1,
-    title: 'Career Development Workshop',
-    date: new Date('2024-12-15'),
-    type: 'Workshop'
-  },
-  {
-    id: 2,
-    title: 'Peer Study Group',
-    date: new Date('2024-12-18'),
-    type: 'Study Session'
-  },
-  {
-    id: 3,
-    title: 'Mentor Q&A Session',
-    date: new Date('2024-12-20'),
-    type: 'Mentoring'
-  }
+  { id: 1, title: 'Career Development Workshop', date: new Date('2024-12-15'), type: 'Workshop' },
+  { id: 2, title: 'Peer Study Group',           date: new Date('2024-12-18'), type: 'Study Session' },
+  { id: 3, title: 'Mentor Q&A Session',         date: new Date('2024-12-20'), type: 'Mentoring' },
 ])
+const networkStats = ref({ connections: 15, discussions: 8 })
 
-const networkStats = ref({
-  connections: 15,
-  discussions: 8
-})
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
-// Methods
-const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
-  })
+async function loadUserProfile() {
+  const currentUser = AuthService.getCurrentUser()
+  if (!currentUser) { router.push('/login'); return }
+  const profile = await DatabaseService.getUserProfile(currentUser.uid)
+  if (profile) userProfile.value = profile
 }
 
-const loadUserProfile = async () => {
-  try {
-    const currentUser = AuthService.getCurrentUser()
-    if (!currentUser) {
-      router.push('/login')
-      return
-    }
+const quickActions = [
+  { icon: 'lucide:book-open',    to: '/student/program',     label: 'Study materials' },
+  { icon: 'lucide:file-edit',    to: '/student/assignments', label: 'Submit assignment' },
+  { icon: 'lucide:presentation', to: '/student/mentor',      label: 'Ask mentor' },
+  { icon: 'lucide:bar-chart-2',  to: '/student/progress',    label: 'Check progress' },
+]
 
-    const profile = await DatabaseService.getUserProfile(currentUser.uid)
-    if (profile) {
-      userProfile.value = profile
-    }
-  } catch (error) {
-    console.error('Failed to load user profile:', error)
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  loadUserProfile()
-})
+onMounted(loadUserProfile)
 </script>
 
-<style scoped>
-.student-dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
+      <Container>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Eyebrow class="text-brand-violet mb-3 block">Student portal</Eyebrow>
+            <Heading :level="1" class="mb-3">
+              Welcome to your <span class="text-brand-violet">program</span>.
+            </Heading>
+            <Body class="text-ink/70 max-w-2xl">
+              Access program materials, track your progress, and connect with your mentor.
+            </Body>
+          </div>
+          <div class="inline-flex flex-col items-end gap-1 px-4 py-3 rounded-xl bg-white border hairline-ink">
+            <span class="text-xs text-ink/50 uppercase tracking-wide">Program</span>
+            <span class="text-sm font-semibold text-ink">{{ userProgram }}</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 rounded-full px-2 py-0.5">
+              Active student
+            </span>
+          </div>
+        </div>
+      </Container>
+    </Section>
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e9ecef;
-}
+    <Section class="!py-10">
+      <Container class="flex flex-col gap-8">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Curriculum</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">Program materials</Heading>
+              <Body class="text-ink/70 text-sm">
+                Access your program curriculum, resources, and learning materials.
+              </Body>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                <div class="text-2xl font-semibold text-brand-violet">{{ programStats.modules }}</div>
+                <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Modules</div>
+              </div>
+              <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                <div class="text-2xl font-semibold text-brand-violet">{{ programStats.completed }}</div>
+                <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Completed</div>
+              </div>
+            </div>
+            <UiButton variant="primary" :to="{ path: '/learn' }">
+              <Icon icon="lucide:book-open" width="14" />
+              Open my course
+            </UiButton>
+          </UiCard>
 
-.header-content h1 {
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Assignments</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">Assignments &amp; tasks</Heading>
+              <Body class="text-ink/70 text-sm">
+                Complete your assignments and track your progress.
+              </Body>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div v-if="pendingAssignments > 0" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 ring-1 ring-amber-200 text-amber-800 text-sm">
+                <Icon icon="lucide:file-edit" width="14" />
+                {{ pendingAssignments }} pending assignments
+              </div>
+              <div v-if="upcomingDeadlines > 0" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-50 ring-1 ring-rose-200 text-rose-800 text-sm">
+                <Icon icon="lucide:clock" width="14" />
+                {{ upcomingDeadlines }} due soon
+              </div>
+            </div>
+            <UiButton variant="primary" :to="{ path: '/learn' }">View assignments</UiButton>
+          </UiCard>
 
-.subtitle {
-  color: #6c757d;
-  font-size: 1.1rem;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Progress</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">My progress</Heading>
+              <Body class="text-ink/70 text-sm">Track your learning journey and achievements.</Body>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-baseline justify-between">
+                <span class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Overall</span>
+                <span class="text-sm font-semibold text-ink">{{ progressPercentage }}%</span>
+              </div>
+              <div class="h-2 rounded-full bg-ink/[0.05] overflow-hidden">
+                <div class="h-full bg-brand-violet rounded-full transition-all" :style="{ width: progressPercentage + '%' }" />
+              </div>
+              <div class="grid grid-cols-2 gap-3 mt-2">
+                <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                  <div class="text-2xl font-semibold text-brand-violet">{{ progressStats.achievements }}</div>
+                  <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Achievements</div>
+                </div>
+                <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                  <div class="text-2xl font-semibold text-brand-violet">{{ progressStats.hours }}</div>
+                  <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Study hours</div>
+                </div>
+              </div>
+            </div>
+            <UiButton variant="secondary" :to="{ path: '/student/progress' }">View detailed progress</UiButton>
+          </UiCard>
 
-.program-badge {
-  text-align: right;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Mentor</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">Mentor support</Heading>
+              <Body class="text-ink/70 text-sm">Get guidance from your assigned mentor.</Body>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-ink/[0.03] border hairline-ink">
+              <div class="w-10 h-10 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center text-xs font-semibold">
+                {{ mentorInitials }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-ink truncate">{{ mentorName }}</div>
+                <div class="text-xs text-ink/60">Program mentor</div>
+              </div>
+            </div>
+            <UiButton variant="primary" :to="{ path: '/student/mentor' }">Contact mentor</UiButton>
+          </UiCard>
 
-.program-name {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #007bff;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Calendar</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">Upcoming events</Heading>
+              <Body class="text-ink/70 text-sm">Join program events and workshops.</Body>
+            </div>
+            <ul class="flex flex-col divide-y divide-ink/5">
+              <li v-for="event in upcomingEvents" :key="event.id" class="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                <div class="text-[11px] font-semibold text-brand-violet uppercase tracking-wide whitespace-nowrap mt-0.5 w-12">
+                  {{ formatDate(event.date) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-ink truncate">{{ event.title }}</div>
+                  <div class="text-xs text-ink/60">{{ event.type }}</div>
+                </div>
+              </li>
+            </ul>
+            <UiButton variant="secondary" :to="{ path: '/learn/sessions' }">View live sessions</UiButton>
+          </UiCard>
 
-.program-status {
-  font-size: 0.9rem;
-  color: #28a745;
-  font-weight: 500;
-}
+          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+            <div>
+              <Eyebrow class="text-ink/50 mb-2 block">Community</Eyebrow>
+              <Heading :level="3" class="text-lg mb-2">Peer network</Heading>
+              <Body class="text-ink/70 text-sm">Connect with fellow students in your program.</Body>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                <div class="text-2xl font-semibold text-brand-violet">{{ networkStats.connections }}</div>
+                <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Connections</div>
+              </div>
+              <div class="text-center bg-ink/[0.03] rounded-lg p-3">
+                <div class="text-2xl font-semibold text-brand-violet">{{ networkStats.discussions }}</div>
+                <div class="text-[11px] text-ink/60 uppercase tracking-wide mt-0.5">Discussions</div>
+              </div>
+            </div>
+            <UiButton variant="primary" :to="{ path: '/student/network' }">View network</UiButton>
+          </UiCard>
+        </div>
 
-.dashboard-content {
-  margin-bottom: 3rem;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.dashboard-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-}
-
-.dashboard-card h3 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.card-content p {
-  color: #6c757d;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat {
-  text-align: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.stat-number {
-  display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #007bff;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.assignment-notifications {
-  margin-bottom: 1.5rem;
-}
-
-.notification {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.notification.pending {
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-}
-
-.notification.urgent {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.progress-bar {
-  position: relative;
-  width: 100%;
-  height: 24px;
-  background: #e9ecef;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #007bff, #28a745);
-  border-radius: 12px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.progress-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.mentor-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.mentor-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.mentor-name {
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.25rem;
-}
-
-.mentor-role {
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.upcoming-events {
-  margin-bottom: 1.5rem;
-}
-
-.event-item {
-  padding: 0.75rem;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-}
-
-.event-date {
-  font-size: 0.8rem;
-  color: #007bff;
-  font-weight: 600;
-}
-
-.event-title {
-  font-weight: 500;
-  color: #2c3e50;
-  margin: 0.25rem 0;
-}
-
-.event-type {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.network-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.card-actions {
-  text-align: center;
-}
-
-.btn-primary, .btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin: 0.25rem;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #0056b3;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #545b62;
-}
-
-.quick-actions {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
-}
-
-.quick-actions h3 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.quick-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1.5rem 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  color: #495057;
-}
-
-.quick-action-btn:hover {
-  border-color: #007bff;
-  background: #f8f9fa;
-  transform: translateY(-2px);
-}
-
-.quick-action-btn .icon {
-  font-size: 2rem;
-}
-
-.quick-action-btn span:last-child {
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .student-dashboard {
-    padding: 1rem;
-  }
-
-  .dashboard-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .stats, .progress-stats, .network-stats {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+        <UiCard class="p-6 md:p-8 bg-white">
+          <Eyebrow class="text-ink/50 mb-2 block">Shortcuts</Eyebrow>
+          <Heading :level="3" class="text-lg mb-4">Quick actions</Heading>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <RouterLink
+              v-for="action in quickActions"
+              :key="action.to"
+              :to="action.to"
+              class="flex flex-col items-center gap-2 p-4 rounded-xl border hairline-ink bg-paper hover:bg-ink/[0.02] hover:-translate-y-[1px] transition-all text-center no-underline"
+            >
+              <span class="text-ink/70"><Icon :icon="action.icon" width="20" /></span>
+              <span class="text-xs font-medium text-ink">{{ action.label }}</span>
+            </RouterLink>
+          </div>
+        </UiCard>
+      </Container>
+    </Section>
+  </div>
+</template>
