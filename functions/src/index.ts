@@ -39,6 +39,11 @@ export { scheduleSession, rsvpSession } from './sessions'
 // CONTENTFUL_MANAGEMENT_TOKEN, and CONTENTFUL_SPACE_ID in Secret Manager.
 export { outlineCourse } from './aiOutline'
 
+// AI lesson media enrichment (Groq-backed). Suggests YouTube/image
+// search queries, a narration script, and key-concept bullets — staff
+// curates from there. Only requires GROQ_API_KEY.
+export { lessonMediaAssist } from './aiLessonMedia'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

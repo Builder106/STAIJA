@@ -20,7 +20,9 @@ import {
   type LessonFields,
 } from '../../../services/lmsContent'
 import { emptyDocument } from '../../../services/richTextSerializer'
-import type { Document } from '@contentful/rich-text-types'
+import { lessonMediaAssist, type LessonMediaResult } from '../../../services/ai'
+import type { Document, TopLevelBlock } from '@contentful/rich-text-types'
+import { BLOCKS } from '@contentful/rich-text-types'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,6 +115,153 @@ async function saveAndPublish() {
   } finally {
     publishing.value = false
   }
+}
+
+// --- AI media assist ---------------------------------------------------
+
+const aiOpen = ref(false)
+const aiLoading = ref(false)
+const aiError = ref<string | null>(null)
+const aiResult = ref<LessonMediaResult | null>(null)
+const aiCopiedKey = ref<string | null>(null)
+
+// Walk the Contentful Document tree and collect text-node values. Good
+// enough as input to the AI — Groq doesn't need our markup, just the
+// prose. Falls back to the title alone if the body is empty.
+function flattenBody(doc: Document | undefined): string {
+  if (!doc) return ''
+  const out: string[] = []
+  const walk = (node: { nodeType?: string; value?: string; content?: unknown[] }) => {
+    if (node.nodeType === 'text' && typeof node.value === 'string') out.push(node.value)
+    if (Array.isArray(node.content)) node.content.forEach((c) => walk(c as Parameters<typeof walk>[0]))
+  }
+  walk(doc as Parameters<typeof walk>[0])
+  return out.join(' ').replace(/\s+/g, ' ').trim()
+}
+
+const canAssist = computed(() => {
+  const plain = flattenBody(form.value.body)
+  return form.value.title.trim().length >= 3 && plain.length >= 30
+})
+
+async function runAssist() {
+  if (!canAssist.value) return
+  aiLoading.value = true
+  aiError.value = null
+  aiResult.value = null
+  try {
+    aiResult.value = await lessonMediaAssist({
+      title: form.value.title,
+      bodyPlain: flattenBody(form.value.body),
+    })
+  } catch (err) {
+    aiError.value = (err as { message?: string }).message ?? 'AI assist failed.'
+  } finally {
+    aiLoading.value = false
+  }
+}
+
+async function copyText(text: string, key: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    aiCopiedKey.value = key
+    setTimeout(() => { if (aiCopiedKey.value === key) aiCopiedKey.value = null }, 1500)
+  } catch {
+    aiCopiedKey.value = null
+  }
+}
+
+function youtubeSearchUrl(q: string) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`
+}
+
+function unsplashSearchUrl(q: string) {
+  return `https://unsplash.com/s/photos/${encodeURIComponent(q)}`
+}
+
+// --- Rich-text append helpers -----------------------------------------
+//
+// The body is a Contentful Document. To get RichTextEditor to pick up the
+// change we have to assign a NEW Document — the editor watches by
+// reference, not by deep equality. So we build a fresh content array.
+
+function textNode(value: string) {
+  return { nodeType: 'text' as const, value, marks: [], data: {} }
+}
+
+function paragraph(value: string): TopLevelBlock {
+  return {
+    nodeType: BLOCKS.PARAGRAPH,
+    data: {},
+    content: [textNode(value)],
+  } as TopLevelBlock
+}
+
+function headingThree(value: string): TopLevelBlock {
+  return {
+    nodeType: BLOCKS.HEADING_3,
+    data: {},
+    content: [textNode(value)],
+  } as TopLevelBlock
+}
+
+function bulletList(items: string[]): TopLevelBlock {
+  return {
+    nodeType: BLOCKS.UL_LIST,
+    data: {},
+    content: items.map((value) => ({
+      nodeType: BLOCKS.LIST_ITEM,
+      data: {},
+      content: [
+        {
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: [textNode(value)],
+        },
+      ],
+    })),
+  } as unknown as TopLevelBlock
+}
+
+function appendBlocks(doc: Document | undefined, blocks: TopLevelBlock[]): Document {
+  const base = doc ?? emptyDocument()
+  // Drop the empty leading paragraph the editor renders by default so we
+  // don't leave an awkward blank line at the top of the body.
+  const existing = (base.content ?? []).filter((b, i) => {
+    if (i !== 0) return true
+    if (b.nodeType !== BLOCKS.PARAGRAPH) return true
+    const text = (b.content ?? [])
+      .map((c) => ('value' in c ? (c as { value: string }).value : ''))
+      .join('')
+    return text.trim().length > 0
+  })
+  return {
+    ...base,
+    nodeType: BLOCKS.DOCUMENT,
+    data: base.data ?? {},
+    content: [...existing, ...blocks],
+  }
+}
+
+function insertNarration() {
+  if (!aiResult.value) return
+  form.value.body = appendBlocks(form.value.body, [paragraph(aiResult.value.narrationScript)])
+  aiCopiedKey.value = 'narration-inserted'
+  setTimeout(() => {
+    if (aiCopiedKey.value === 'narration-inserted') aiCopiedKey.value = null
+  }, 1500)
+}
+
+function insertKeyConcepts() {
+  if (!aiResult.value) return
+  form.value.body = appendBlocks(form.value.body, [
+    headingThree('Key concepts'),
+    bulletList(aiResult.value.keyConcepts),
+  ])
+  aiCopiedKey.value = 'concepts-inserted'
+  setTimeout(() => {
+    if (aiCopiedKey.value === 'concepts-inserted') aiCopiedKey.value = null
+  }, 1500)
 }
 
 onMounted(load)
@@ -216,6 +365,192 @@ onMounted(load)
           <UiCard class="p-6 md:p-8 bg-white">
             <Heading :level="2" class="text-base mb-3">Body</Heading>
             <RichTextEditor v-model="form.body!" />
+          </UiCard>
+
+          <!-- AI media assist — collapsed by default so it doesn't dominate
+               the editor for staff who don't want it. Suggests media to
+               find rather than generating it: lower cost, no licensing or
+               cultural-appropriateness landmines. -->
+          <UiCard class="p-6 md:p-8 bg-white">
+            <button
+              type="button"
+              class="w-full flex items-center gap-2 text-left"
+              @click="aiOpen = !aiOpen"
+            >
+              <Icon icon="lucide:sparkles" width="16" class="text-brand-violet" />
+              <Heading :level="2" class="text-base flex-1 m-0">AI media assist</Heading>
+              <span class="text-[11px] text-ink/50 font-normal">optional</span>
+              <Icon
+                icon="lucide:chevron-down"
+                width="16"
+                class="text-ink/40 transition-transform"
+                :class="aiOpen ? 'rotate-180' : ''"
+              />
+            </button>
+
+            <div v-if="aiOpen" class="mt-5 flex flex-col gap-5">
+              <p class="text-xs text-ink/60 m-0 leading-relaxed">
+                Suggests YouTube searches, image searches, a 90-second narration script
+                you can record, and key-concept bullets — based on the title and body
+                above. Editors curate; nothing is inserted automatically.
+              </p>
+
+              <div class="flex items-center gap-3 flex-wrap">
+                <UiButton
+                  variant="primary"
+                  :disabled="!canAssist || aiLoading"
+                  @click="runAssist"
+                >
+                  <Icon
+                    v-if="aiLoading"
+                    icon="lucide:loader-2"
+                    width="14"
+                    class="animate-spin"
+                  />
+                  <Icon v-else icon="lucide:sparkles" width="14" />
+                  {{ aiLoading ? 'Thinking…' : aiResult ? 'Suggest again' : 'Suggest media' }}
+                </UiButton>
+                <span v-if="!canAssist" class="text-[11px] text-ink/50">
+                  Add a title and at least a paragraph of body before asking.
+                </span>
+              </div>
+
+              <p v-if="aiError" role="alert" class="text-sm text-red-700 m-0">{{ aiError }}</p>
+
+              <div v-if="aiResult" class="flex flex-col gap-6">
+                <!-- Video search queries -->
+                <div class="flex flex-col gap-2">
+                  <Eyebrow class="text-ink/50 block">Video searches</Eyebrow>
+                  <ul class="flex flex-col gap-2">
+                    <li
+                      v-for="(item, i) in aiResult.videoQueries"
+                      :key="'v' + i"
+                      class="border hairline-ink rounded-lg p-3 bg-paper/50 flex flex-col gap-1"
+                    >
+                      <a
+                        :href="youtubeSearchUrl(item.query)"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-sm font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1.5"
+                      >
+                        <Icon icon="lucide:youtube" width="14" />
+                        {{ item.query }}
+                        <Icon icon="lucide:external-link" width="11" class="text-ink/30" />
+                      </a>
+                      <p class="text-xs text-ink/60 m-0">{{ item.rationale }}</p>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Image search queries -->
+                <div class="flex flex-col gap-2">
+                  <Eyebrow class="text-ink/50 block">Image searches</Eyebrow>
+                  <ul class="flex flex-col gap-2">
+                    <li
+                      v-for="(item, i) in aiResult.imageQueries"
+                      :key="'i' + i"
+                      class="border hairline-ink rounded-lg p-3 bg-paper/50 flex flex-col gap-1"
+                    >
+                      <a
+                        :href="unsplashSearchUrl(item.query)"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-sm font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1.5"
+                      >
+                        <Icon icon="lucide:image" width="14" />
+                        {{ item.query }}
+                        <Icon icon="lucide:external-link" width="11" class="text-ink/30" />
+                      </a>
+                      <p class="text-xs text-ink/60 m-0">{{ item.rationale }}</p>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Narration script -->
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <Eyebrow class="text-ink/50 block">Narration script</Eyebrow>
+                    <div class="flex items-center gap-3">
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1"
+                        @click="copyText(aiResult.narrationScript, 'narration')"
+                      >
+                        <Icon
+                          :icon="aiCopiedKey === 'narration' ? 'lucide:check' : 'lucide:clipboard-copy'"
+                          width="12"
+                        />
+                        {{ aiCopiedKey === 'narration' ? 'Copied' : 'Copy' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1"
+                        @click="insertNarration"
+                      >
+                        <Icon
+                          :icon="aiCopiedKey === 'narration-inserted' ? 'lucide:check' : 'lucide:plus-circle'"
+                          width="12"
+                        />
+                        {{ aiCopiedKey === 'narration-inserted' ? 'Added to body' : 'Insert into body' }}
+                      </button>
+                    </div>
+                  </div>
+                  <p
+                    class="text-sm text-ink/80 leading-relaxed border-l-2 border-brand-violet/40 pl-3 italic m-0"
+                  >
+                    {{ aiResult.narrationScript }}
+                  </p>
+                  <p class="text-[11px] text-ink/50 m-0">
+                    Read it aloud, record yourself, paste the file URL into Video URL above.
+                  </p>
+                </div>
+
+                <!-- Key concepts -->
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <Eyebrow class="text-ink/50 block">Key concepts</Eyebrow>
+                    <div class="flex items-center gap-3">
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1"
+                        @click="copyText(aiResult.keyConcepts.map((k) => '• ' + k).join('\n'), 'concepts')"
+                      >
+                        <Icon
+                          :icon="aiCopiedKey === 'concepts' ? 'lucide:check' : 'lucide:clipboard-copy'"
+                          width="12"
+                        />
+                        {{ aiCopiedKey === 'concepts' ? 'Copied' : 'Copy as bullets' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-brand-violet hover:underline underline-offset-2 inline-flex items-center gap-1"
+                        @click="insertKeyConcepts"
+                      >
+                        <Icon
+                          :icon="aiCopiedKey === 'concepts-inserted' ? 'lucide:check' : 'lucide:plus-circle'"
+                          width="12"
+                        />
+                        {{ aiCopiedKey === 'concepts-inserted' ? 'Added to body' : 'Insert as section' }}
+                      </button>
+                    </div>
+                  </div>
+                  <ul class="flex flex-col gap-1.5">
+                    <li
+                      v-for="(c, i) in aiResult.keyConcepts"
+                      :key="'k' + i"
+                      class="text-sm text-ink/80 inline-flex items-start gap-2"
+                    >
+                      <Icon
+                        icon="lucide:check-circle-2"
+                        width="14"
+                        class="text-brand-violet mt-0.5 shrink-0"
+                      />
+                      <span>{{ c }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </UiCard>
 
           <p v-if="error" class="text-sm text-red-700">{{ error }}</p>
