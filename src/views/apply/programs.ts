@@ -31,11 +31,32 @@ export interface FieldDef {
   /** Min / max for tags type — number of tags allowed. */
   minTags?: number
   maxTags?: number
+  /**
+   * One-paragraph excerpt from a past scholar's response. Rendered
+   * below the input as a "See an example response" disclosure.
+   * Anchors candidates to a real voice instead of a blank box.
+   */
+  helpExample?: { author: string; body: string }
+  /**
+   * Render an in-browser audio recorder beside the field — fully
+   * optional from the applicant's perspective. Confident speakers and
+   * shy writers self-select differently and you'll see better signal.
+   * Uploaded as a separate file at submit time; the written field is
+   * still the canonical answer.
+   */
+  audioOptional?: { maxSeconds: number; prompt?: string }
 }
 
 export interface StepDef {
   id: string
+  /** Short label for the step indicator chips at the top of the wizard. */
   label: string
+  /**
+   * Sentence-style headline shown in the step card itself. If absent we
+   * fall back to `label`, but most steps should set this — applicants
+   * read "Tell us who you are." as warmer than "Personal".
+   */
+  headline?: string
   description?: string
   fields: FieldDef[]
 }
@@ -57,7 +78,8 @@ export interface ProgramSchema {
 const personalInfoStep = (extras: FieldDef[] = []): StepDef => ({
   id: 'personal',
   label: 'Personal',
-  description: 'Tell us who you are.',
+  headline: 'Tell us who you are.',
+  description: 'The basics — name, contact, where you are.',
   fields: [
     { name: 'firstName', label: 'First name', type: 'text', required: true },
     { name: 'lastName', label: 'Last name', type: 'text', required: true },
@@ -72,7 +94,8 @@ const personalInfoStep = (extras: FieldDef[] = []): StepDef => ({
 const academicInfoStep: StepDef = {
   id: 'academic',
   label: 'Academic',
-  description: 'Your school and what you study.',
+  headline: "Where you're studying.",
+  description: 'School, level, and the subjects on your radar.',
   fields: [
     { name: 'currentInstitution', label: 'Current school / institution', type: 'text', required: true },
     { name: 'currentLevel', label: 'Year / level', type: 'text', required: true, placeholder: 'SS3, gap year, undergrad year 1, etc.' },
@@ -86,7 +109,8 @@ const academicInfoStep: StepDef = {
 const motivationStep = (researchHelp: string): StepDef => ({
   id: 'motivation',
   label: 'You',
-  description: 'Help us understand what you want to do and why.',
+  headline: "Why you're here.",
+  description: 'The part where you tell us what you want to do, and why.',
   fields: [
     {
       name: 'researchInterests',
@@ -104,6 +128,18 @@ const motivationStep = (researchHelp: string): StepDef => ({
       required: true,
       rows: 6,
       helpText: '300–500 words. What do you want to learn, and what would you do with it?',
+      // A real(istic) past-scholar paragraph beats a blank textarea —
+      // candidates read it and write *to* somebody instead of into the void.
+      helpExample: {
+        author: '— Amina Y., StepUp 2024 cohort',
+        body:
+          "I've been running fermentation experiments in my mum's kitchen since SS2, trying to get yoghurt to set without a thermometer. Half my notebook is failed cultures. I want StepUp because the lab access is the missing piece — I can't measure pH at home, and the questions I care about (why does Lagos street yoghurt sour faster than the ones I make at home?) need real instruments. I'd use the six months to actually answer that, write it up, and bring whatever I learn back to the women selling kunu at our market.",
+      },
+      audioOptional: {
+        maxSeconds: 90,
+        prompt:
+          "Prefer to talk it out? Record a 90-second answer to the same question. The written response above is still required — this just gives us another way to hear you.",
+      },
     },
     {
       name: 'experience',

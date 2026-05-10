@@ -11,6 +11,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
+import AudioRecorder from '../../components/ui/AudioRecorder.vue'
 import { useAuth } from '../../composables/useAuth'
 import { useAutoSave } from '../../composables/useAutoSave'
 import { DatabaseService } from '../../services/database'
@@ -47,6 +48,15 @@ const references = ref<ReferenceEntry[]>([
 const transcriptFile = ref<File | null>(null)
 const idFile = ref<File | null>(null)
 const fileUploadError = ref<string | null>(null)
+
+// Optional audio answers, keyed by field name. The recorder is fully
+// off-by-default — empty here means the applicant didn't record one,
+// which is fine: the written field stays canonical and required.
+const audioByField = ref<Record<string, { blob: Blob; durationSec: number }>>({})
+function setAudio(name: string, value: { blob: Blob; durationSec: number } | null) {
+  if (value) audioByField.value[name] = value
+  else delete audioByField.value[name]
+}
 
 const stepIndex = ref(0)
 const submitting = ref(false)
@@ -160,11 +170,23 @@ function validateCurrentStep(): string | null {
 
 const stepError = ref<string | null>(null)
 
+// Transient flash shown briefly after a successful "Continue" — the one
+// celebratory beat per save we allow ourselves. Cleared by a timeout so
+// it never lingers across step changes.
+const justCompletedLabel = ref<string | null>(null)
+let justCompletedTimer: ReturnType<typeof setTimeout> | null = null
+
 function next() {
   stepError.value = validateCurrentStep()
   if (stepError.value) return
+  const completed = currentStep.value?.label ?? null
   stepIndex.value = Math.min(stepIndex.value + 1, stepsMeta.value.length - 1)
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  if (completed) {
+    justCompletedLabel.value = completed
+    if (justCompletedTimer) clearTimeout(justCompletedTimer)
+    justCompletedTimer = setTimeout(() => { justCompletedLabel.value = null }, 2400)
+  }
 }
 
 function back() {
@@ -255,6 +277,21 @@ async function handleSubmit() {
         StorageService.uploadFile(
           idFile.value,
           `applications/${user.value.uid}/${applicationId}/id-${idFile.value.name}`,
+        ),
+      )
+    }
+    // Optional audio answers — one file per field that has audioOptional set.
+    // Convention-based naming so admin review can find them by prefix, same
+    // as transcript/ID. We pick a small filename ext from the recorded MIME.
+    for (const [fieldName, audio] of Object.entries(audioByField.value)) {
+      const mime = audio.blob.type || 'audio/webm'
+      const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
+      const filename = `audio-${fieldName}-${audio.durationSec}s.${ext}`
+      const file = new File([audio.blob], filename, { type: mime })
+      uploads.push(
+        StorageService.uploadFile(
+          file,
+          `applications/${user.value.uid}/${applicationId}/${filename}`,
         ),
       )
     }
@@ -425,7 +462,9 @@ function setTagsValue(name: string, value: string) {
               <template v-for="schemaStep in [program.steps.find((s) => s.id === currentStep.id)]" :key="schemaStep?.id">
                 <div v-if="schemaStep" class="flex flex-col gap-6">
                   <div>
-                    <Heading :level="2" class="!text-2xl mb-2">{{ schemaStep.label }}</Heading>
+                    <Heading :level="2" class="!text-2xl mb-2">
+                      {{ schemaStep.headline ?? schemaStep.label }}
+                    </Heading>
                     <Body v-if="schemaStep.description" class="text-ink/70">{{ schemaStep.description }}</Body>
                   </div>
                   <div class="grid sm:grid-cols-2 gap-5">
@@ -472,6 +511,23 @@ function setTagsValue(name: string, value: string) {
                         class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                       />
                       <p v-if="field.helpText" class="text-xs text-ink/50 m-0">{{ field.helpText }}</p>
+                      <details v-if="field.helpExample" class="group rounded-lg border hairline-ink bg-paper/50 px-3 py-2">
+                        <summary class="cursor-pointer text-xs font-semibold text-brand-violet inline-flex items-center gap-1.5 select-none">
+                          <Icon icon="lucide:sparkles" width="12" />
+                          See an example response
+                          <Icon icon="lucide:chevron-down" width="12" class="ml-auto transition-transform group-open:rotate-180" />
+                        </summary>
+                        <blockquote class="mt-2 text-xs text-ink/75 leading-relaxed border-l-2 border-brand-violet/40 pl-3 italic">
+                          {{ field.helpExample.body }}
+                        </blockquote>
+                        <p class="mt-1.5 text-[11px] text-ink/50 not-italic">{{ field.helpExample.author }}</p>
+                      </details>
+                      <AudioRecorder
+                        v-if="field.audioOptional"
+                        :max-seconds="field.audioOptional.maxSeconds"
+                        :prompt="field.audioOptional.prompt"
+                        @update:audio="(v) => setAudio(field.name, v)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -640,7 +696,21 @@ function setTagsValue(name: string, value: string) {
                 Back
               </span>
             </UiButton>
-            <span v-if="autoSave?.lastSavedAt" class="text-xs text-ink/50 hidden sm:inline">
+            <Motion
+              v-if="justCompletedLabel"
+              :initial="{ opacity: 0, y: 4 }"
+              :animate="{ opacity: 1, y: 0 }"
+              :exit="{ opacity: 0 }"
+              :transition="{ duration: 0.25 }"
+              class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 rounded-full px-2.5 py-1"
+            >
+              <Icon icon="lucide:check" width="12" />
+              {{ justCompletedLabel }} saved
+            </Motion>
+            <span
+              v-else-if="autoSave?.lastSavedAt"
+              class="text-xs text-ink/50 hidden sm:inline"
+            >
               Draft saved · {{ autoSave.lastSavedAt.toLocaleTimeString() }}
             </span>
             <UiButton
