@@ -11,8 +11,53 @@ Web platform for STAIJA's StepUp Scholars and Dynamerge programs — application
 
 The applicant → student → alumni loop, end-to-end:
 
-![Sequence diagram of the applicant to student to alumni loop](public/readme-diagrams/application-loop-light.svg#gh-light-mode-only)
-![Sequence diagram of the applicant to student to alumni loop](public/readme-diagrams/application-loop-dark.svg#gh-dark-mode-only)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Applicant
+    actor Staff
+    actor Mentor
+    participant STAIJA
+    participant Firestore
+    participant Mailgun
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Sign up & apply
+        Applicant->>STAIJA: Sign up (email or Google)
+        STAIJA->>Firestore: users.create (role=applicant)
+        Applicant->>STAIJA: Submit StepUp Scholars / Dynamerge form
+        STAIJA->>Firestore: applications.create (status=pending)
+        STAIJA->>Mailgun: "We received your application"
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Staff review
+        Staff->>STAIJA: Open admin review queue
+        STAIJA->>Firestore: applications where status=pending
+        Staff->>STAIJA: Approve / reject (with notes)
+        STAIJA->>Firestore: applications.update + roleTransition (applicant → student)
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Cohort & mentor pairing
+        STAIJA->>Firestore: enrollments.create (cohort)
+        STAIJA->>Firestore: mentors.match (assignment)
+        STAIJA->>Mailgun: "You're in" + mentor intro
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Program (LMS)
+        Applicant->>STAIJA: Lessons, assignments, sessions
+        Mentor->>STAIJA: Schedule sessions, leave feedback
+        STAIJA->>Firestore: progress, sessionNotes, feedback
+    end
+
+    rect rgb(232, 235, 240)
+        Note over Applicant,Mailgun: Alumni
+        STAIJA->>Firestore: roleTransition (student → alumni)
+        STAIJA->>Mailgun: Graduation email + alumni resources
+    end
+```
 
 Side flows (donations via Paystack, newsletter via Mailgun, CMS content from Contentful → Firestore via webhook) feed the same Firestore + Functions backbone.
 
