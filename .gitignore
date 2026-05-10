@@ -51,3 +51,8 @@ tools/avatars/clean/
 # that the reporter consumes and discards.
 test-results/
 .features-gen/
+
+# Screenshot harness outputs and saved auth states (never commit storage states).
+tools/screenshot-lms/out/
+tools/screenshot-lms/.auth/
+tools/screenshot-lms/.state/
