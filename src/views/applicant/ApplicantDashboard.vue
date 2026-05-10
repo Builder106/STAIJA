@@ -109,7 +109,7 @@ onMounted(loadData)
       <!-- Greeting -->
       <div class="flex flex-col gap-3 mb-12">
         <Eyebrow class="text-brand-violet">Applicant dashboard</Eyebrow>
-        <Heading :level="1">Hi, {{ firstName }}.</Heading>
+        <Heading :level="1">Hi, <span class="text-brand-violet">{{ firstName }}</span>.</Heading>
         <Body v-if="!loading && !hasApplications" class="text-ink/70 max-w-xl">
           You haven't started an application yet. Pick a program below to begin —
           it takes about 20 minutes and your progress saves automatically.
