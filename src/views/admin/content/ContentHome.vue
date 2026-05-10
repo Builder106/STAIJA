@@ -714,18 +714,12 @@ onMounted(load)
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3 flex-wrap">
             <h2 class="font-display text-lg font-semibold text-ink m-0">Your courses</h2>
-            <div class="flex items-center gap-3">
-              <RouterLink
-                to="/admin/content/courses"
-                class="text-xs text-ink/60 hover:text-brand-violet underline-offset-2 hover:underline"
-              >Browse all</RouterLink>
-              <UiButton variant="primary" :to="'/admin/content/courses/new'">
-                <span class="flex items-center gap-1.5">
-                  <Icon icon="lucide:plus" width="14" />
-                  New course
-                </span>
-              </UiButton>
-            </div>
+            <UiButton variant="primary" :to="'/admin/content/courses/new'">
+              <span class="flex items-center gap-1.5">
+                <Icon icon="lucide:plus" width="14" />
+                New course
+              </span>
+            </UiButton>
           </div>
 
           <!-- Search across the whole tree. Matches expand their ancestors
@@ -1149,14 +1143,6 @@ onMounted(load)
           </div>
         </details>
 
-        <!-- Flat-list fallbacks for bulk search / management. -->
-        <div class="flex flex-wrap gap-3 text-xs text-ink/50">
-          <span>Browse flat lists:</span>
-          <RouterLink to="/admin/content/courses" class="hover:text-brand-violet underline-offset-2 hover:underline">Courses</RouterLink>
-          <RouterLink to="/admin/content/modules" class="hover:text-brand-violet underline-offset-2 hover:underline">Modules</RouterLink>
-          <RouterLink to="/admin/content/lessons" class="hover:text-brand-violet underline-offset-2 hover:underline">Lessons</RouterLink>
-          <RouterLink to="/admin/content/assignments" class="hover:text-brand-violet underline-offset-2 hover:underline">Assignments</RouterLink>
-        </div>
       </Container>
     </Section>
 

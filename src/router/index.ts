@@ -78,13 +78,19 @@ const routes: RouteRecordRaw[] = [
   // Both staff and admin can manage course content via manage_cohorts permission.
   { path: '/admin/content', name: 'admin-content', component: () => import('../views/admin/content/ContentHome.vue'), meta: { title: 'Course content — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/content/outline', name: 'admin-content-outline', component: () => import('../views/admin/content/CourseOutline.vue'), meta: { title: 'AI course outliner — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/courses', name: 'admin-content-courses', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Courses — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  // The four flat-list routes (/admin/content/{courses,modules,lessons,assignments})
+  // were retired in favour of the tree view at /admin/content. We keep
+  // redirects so any old bookmarks or links from prior emails don't 404.
+  // Path-specific :id routes still match (e.g. /admin/content/courses/new
+  // and /admin/content/courses/<id>) — Vue Router matches the longer
+  // path first.
+  { path: '/admin/content/courses', redirect: { name: 'admin-content' } },
   { path: '/admin/content/courses/:id', name: 'admin-content-course-edit', component: () => import('../views/admin/content/CourseEdit.vue'), meta: { title: 'Edit course — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/modules', name: 'admin-content-modules', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Modules — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/modules', redirect: { name: 'admin-content' } },
   { path: '/admin/content/modules/:id', name: 'admin-content-module-edit', component: () => import('../views/admin/content/ModuleEdit.vue'), meta: { title: 'Edit module — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/lessons', name: 'admin-content-lessons', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Lessons — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/lessons', redirect: { name: 'admin-content' } },
   { path: '/admin/content/lessons/:id', name: 'admin-content-lesson-edit', component: () => import('../views/admin/content/LessonEdit.vue'), meta: { title: 'Edit lesson — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/assignments', name: 'admin-content-assignments', component: () => import('../views/admin/content/EntriesList.vue'), meta: { title: 'Assignments — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/assignments', redirect: { name: 'admin-content' } },
   { path: '/admin/content/assignments/:id', name: 'admin-content-assignment-edit', component: () => import('../views/admin/content/AssignmentEdit.vue'), meta: { title: 'Edit assignment — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
 
   // LMS routes — student-facing
