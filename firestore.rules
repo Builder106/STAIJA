@@ -57,7 +57,7 @@ service cloud.firestore {
       // every write.
       allow update: if isOwner(userId) &&
                    request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['displayName', 'photoURL', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'updatedAt']);
+                   .hasOnly(['displayName', 'photoURL', 'avatarSlot', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'updatedAt']);
 
       // Only admins can create users with roles
       allow create: if hasRole('admin') ||
