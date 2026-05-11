@@ -10,6 +10,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiChip from '../../components/ui/UiChip.vue'
+import UiConfirmDialog from '../../components/ui/UiConfirmDialog.vue'
 import { AuthService, DatabaseService } from '../../services/firebase'
 import type { Application } from '../../services/types'
 import { useAuth } from '../../composables/useAuth'
@@ -75,29 +76,46 @@ async function loadLocalDrafts(uid: string) {
     }
   }
 
-  // Merge per program — pick the newer of (local, cloud). The card UI
-  // just needs the timestamp; the wizard's own restore logic handles
-  // picking the right *payload* when the applicant clicks Resume.
+  // Merge per program. The chip's job is to honestly answer "is this
+  // draft on more than this one browser?" — so the source flips to
+  // 'cloud' as soon as a Firestore mirror exists at all, even when the
+  // most recent local edit hasn't been flushed yet (the 30s debounce
+  // means local.savedAt is briefly newer right after every keystroke).
+  // The displayed "Saved X ago" still uses the freshest of the two
+  // timestamps so the time pill doesn't lie about activity.
   const found: LocalDraft[] = []
   for (const { slug, name } of PROGRAM_SLUGS) {
     const l = local.get(slug)
     const c = cloud.get(slug)
     if (!l && !c) continue
-    const pickCloud = !!c && (!l || c.savedAt > l.savedAt)
+    const freshest = Math.max(l?.savedAt ?? 0, c?.savedAt ?? 0)
     found.push({
       slug,
       programName: name,
-      savedAt: new Date(pickCloud ? c!.savedAt : l!.savedAt),
-      source: pickCloud ? 'cloud' : 'local',
+      savedAt: new Date(freshest),
+      source: c ? 'cloud' : 'local',
     })
   }
   localDrafts.value = found
 }
 
-async function discardLocalDraft(d: LocalDraft) {
-  if (!window.confirm(
-    `Discard your ${d.programName} draft? This wipes it everywhere — this browser and your account. Can't be undone.`,
-  )) return
+// Discard-draft confirm modal. We hold the *candidate* draft in a ref
+// instead of doing the delete inline so the modal can collect a
+// keyboard confirm (Enter on the focused button) just as easily as a
+// click. `null` keeps the modal closed.
+const discardCandidate = ref<LocalDraft | null>(null)
+const discardOpen = computed({
+  get: () => discardCandidate.value !== null,
+  set: (v: boolean) => { if (!v) discardCandidate.value = null },
+})
+
+function requestDiscard(d: LocalDraft) {
+  discardCandidate.value = d
+}
+
+async function confirmDiscard() {
+  const d = discardCandidate.value
+  if (!d) return
   const uid = AuthService.getCurrentUser()?.uid
   if (!uid) return
   try {
@@ -248,7 +266,7 @@ onMounted(loadData)
                 <button
                   type="button"
                   class="text-xs font-semibold text-ink/50 hover:text-red-600 transition-colors px-2 py-1 rounded focus-ring-brand"
-                  @click.stop.prevent="discardLocalDraft(d)"
+                  @click.stop.prevent="requestDiscard(d)"
                 >
                   Discard
                 </button>
@@ -450,4 +468,14 @@ onMounted(loadData)
       </template>
     </Container>
   </Section>
+
+  <UiConfirmDialog
+    v-model:open="discardOpen"
+    variant="destructive"
+    :title="`Discard your ${discardCandidate?.programName ?? ''} draft?`"
+    body="This wipes the draft everywhere — this browser and your account. It can't be undone."
+    confirm-label="Discard draft"
+    cancel-label="Keep it"
+    @confirm="confirmDiscard"
+  />
 </template>
