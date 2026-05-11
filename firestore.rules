@@ -156,16 +156,28 @@ service cloud.firestore {
     // `${uid}_${program}`. Submission flow deletes the draft after the
     // real `applications/{auto-id}` doc is created.
     match /applicationDrafts/{draftId} {
-      // Ownership check derived from the deterministic doc ID
-      // (`${uid}_${program}`) rather than from `resource.data` —
-      // because `resource` is null for non-existent docs, and reads
-      // of a missing path would otherwise return permission-denied
-      // instead of an empty snapshot, breaking the wizard's "no draft
-      // exists yet" path. The doc-ID prefix is sufficient: clients
-      // can only write under their own uid (enforced by the create
-      // rule below) so a path match implies ownership.
-      allow read: if request.auth != null &&
-                  draftId.matches('^' + request.auth.uid + '_.+$');
+      // GET (single doc by path). Ownership derived from the
+      // deterministic doc ID (`${uid}_${program}`) rather than from
+      // `resource.data` — because `resource` is null for non-existent
+      // docs, and a rule that touches resource.data on a missing doc
+      // returns permission-denied instead of an empty snapshot,
+      // breaking the wizard's "no draft yet" path. Path match alone
+      // is sufficient: clients can only write under their own uid
+      // (enforced by the create rule below) so a matching path
+      // implies ownership.
+      allow get: if request.auth != null &&
+                 draftId.matches('^' + request.auth.uid + '_.+$');
+
+      // LIST (collection query). Firestore can't validate a query
+      // against a path-based rule — it evaluates the rule on a
+      // hypothetical resource and must statically prove it passes.
+      // The dashboard's listUserDrafts always filters with
+      // where('userId', '==', uid), so checking `resource.data.userId`
+      // is satisfied for every doc the query would return; Firestore
+      // accepts the query on that basis. The where() filter on the
+      // client is load-bearing — a queries-without-where would fail.
+      allow list: if request.auth != null &&
+                  isOwner(resource.data.userId);
 
       // Create / update: owner only. Path must match canonical
       // `${uid}_${program}` shape AND the `userId` field on the doc
