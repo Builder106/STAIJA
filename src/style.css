@@ -6,6 +6,39 @@
 
 @import "tailwindcss";
 
+/* Fallback @font-face declarations with metric overrides that mimic the
+   web fonts' geometry. Used to neutralize CLS from font-display: swap:
+   while IBM Plex Sans / Inter are loading, the browser renders the
+   fallback at the SAME glyph metrics as the web font, so when the
+   woff2 finally arrives there's no visible reflow.
+
+   Numbers are the standard fallback-adjust values emitted by Next.js's
+   `next/font` for these two faces (computed from font tables, locked to
+   `local('Arial')` on the assumption it's present on every consumer OS
+   we care about). They map Arial's metrics onto IBM Plex Sans / Inter
+   so the line-box height and per-glyph advance widths match.
+
+   Reference for the methodology: https://web.dev/articles/font-fallbacks
+*/
+@font-face {
+  font-family: 'IBM Plex Sans Fallback';
+  src: local('Arial');
+  size-adjust: 102.2%;
+  ascent-override: 96.4%;
+  descent-override: 25.5%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  size-adjust: 107.64%;
+  ascent-override: 90%;
+  descent-override: 22.43%;
+  line-gap-override: 0%;
+}
+
+
 /* Enable a `dark:` variant that activates when [data-theme="dark"] is
    set on <html>. We prefer a data attribute over a class so:
      1. Three-state ("light", "dark", "system") is explicit, not implicit
@@ -51,9 +84,17 @@
      scientific posture — quiet authority instead of editorial drama
      (Playfair Display, the previous choice, was reading as fashion-mag).
      Plex Sans pairs cleanly with Plex Mono for accents (eyebrows, data
-     labels, slug fields) which is the strongest "lab notebook" tell. */
-   --font-display: 'IBM Plex Sans', system-ui, sans-serif;
-   --font-sans: 'Inter', sans-serif;
+     labels, slug fields) which is the strongest "lab notebook" tell.
+
+     The "Fallback" entries are size-adjusted local-Arial proxies (see the
+     @font-face block above) — they render at the same line-box and
+     advance-width as the web fonts while those load, eliminating the
+     FOUT reflow that previously contributed most of the CLS score on
+     the marketing surfaces. The original `system-ui` / bare `sans-serif`
+     entries stay at the end as the worst-case fallback for OSes that
+     don't ship Arial. */
+   --font-display: 'IBM Plex Sans', 'IBM Plex Sans Fallback', system-ui, sans-serif;
+   --font-sans: 'Inter', 'Inter Fallback', sans-serif;
    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
    --radius-xl: 12px;

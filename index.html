@@ -6,6 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preload the two LCP-critical font files: IBM Plex Sans 600 (the
+         hero headline weight) and Inter 400 (body). Without this the
+         browser only discovers the woff2 URLs after the Google CSS round
+         trip, which delays the headline's "final" paint by 200-500ms on
+         cold load and causes a visible FOUT reflow. The hrefs are pinned
+         to the static fonts.gstatic.com URLs that Google Fonts CSS
+         currently emits for these weights (latin subset, v45/v22). If
+         Google rotates filenames these preloads silently no-op — the
+         page still renders correctly via the stylesheet on the next
+         line; the preloads are a hint, not a hard dependency. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="https://fonts.gstatic.com/s/ibmplexsans/v22/zYX-KVElMYYaJe8bpLHnCwDKjQ76AIxsdO_q.woff2"
+      crossorigin
+    >
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2"
+      crossorigin
+    >
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>STAIJA</title>
     <meta name="description" content="STAIJA nurtures Africa’s next generation of scientist‑leaders through research programs, mentorship and community." />

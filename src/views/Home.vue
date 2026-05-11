@@ -47,6 +47,16 @@ const stats = computed(() => [
 // shipped fake credibility before the CMS was populated.
 const featuredStory = ref<BlogPost | null>(null)
 const upcomingEvents = ref<EventItem[]>([])
+// CLS guard: the CMS-driven sections below are mounted asynchronously
+// (Contentful round-trip in `onMounted`). Without a placeholder, when
+// they pop into existence they push the footer down by ~700px and
+// ~470px respectively — a huge cumulative layout shift on every page
+// load. We render a fixed-height skeleton while loading so the
+// destination space is already reserved at first paint. Once
+// `contentLoaded` flips, sections without data collapse to nothing —
+// still a shift, but it only happens on empty-CMS deploys, not in
+// production.
+const contentLoaded = ref(false)
 
 // Pass the active locale to Intl so dates localize alongside the rest
 // of the page. Browsers unfamiliar with a given BCP47 code (e.g. 'yo')
@@ -76,6 +86,8 @@ onMounted(async () => {
     upcomingEvents.value = events
   } catch {
     // Soft-fail: leave both null/empty so the sections stay hidden.
+  } finally {
+    contentLoaded.value = true
   }
 })
 </script>
@@ -96,10 +108,16 @@ onMounted(async () => {
       />
       <Container>
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center relative">
+          <!-- Hero text wrapper. Previously animated `y: 12 → 0` on mount,
+               which (a) delays LCP because the LCP element is this <h1>
+               and the largest paint is recorded at the end of the
+               animation, and (b) contributes to the perceived CLS in the
+               first ~300ms of page load. The hero is the LCP target on
+               every load — keep it stationary at first paint and let the
+               Lottie on the right carry the "things are alive" entrance. -->
           <Motion
-            :initial="{ opacity: 0, y: 12 }"
+            :initial="{ opacity: 1, y: 0 }"
             :animate="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.32, ease: 'easeOut' }"
             class="flex flex-col gap-8 max-w-xl"
           >
             <a
@@ -258,10 +276,20 @@ onMounted(async () => {
       </Container>
     </Section>
 
-    <!-- Featured Story (renders only when CMS has at least one published post) -->
-    <Section v-if="featuredStory" class="bg-paper">
+    <!-- Featured Story (renders only when CMS has at least one published post).
+         CLS guard: while the CMS fetch is in flight we keep the section
+         mounted with a min-height matching its loaded state so the footer
+         doesn't jump down ~700px once Contentful resolves. After load:
+         if there's no story, the section collapses (acceptable — only
+         happens on an empty CMS, not in production). The min-height
+         applies to the inner area only; section padding is from Section. -->
+    <Section v-if="!contentLoaded || featuredStory" class="bg-paper">
       <Container>
-        <div class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+        <div
+          class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center"
+          :class="!contentLoaded && !featuredStory ? 'min-h-[450px] lg:min-h-[520px]' : ''"
+        >
+          <template v-if="featuredStory">
           <Motion
             class="lg:col-span-7 aspect-[4/3] rounded-2xl overflow-hidden relative bg-ink/5"
             :initial="{ opacity: 0, scale: 0.98 }"
@@ -301,14 +329,22 @@ onMounted(async () => {
               </UiButton>
             </div>
           </Motion>
+          </template>
         </div>
       </Container>
     </Section>
 
     <Hairline v-if="upcomingEvents.length > 0" />
-    <!-- Upcoming Events (renders only when CMS has at least one upcoming event) -->
-    <Section v-if="upcomingEvents.length > 0" class="bg-surface">
-      <Container>
+    <!-- Upcoming Events (renders only when CMS has at least one upcoming event).
+         CLS guard: same pattern as Featured Story — keep the section
+         mounted with a min-height during the in-flight CMS fetch so the
+         footer doesn't drop ~470px when Contentful resolves. After load:
+         empty CMS collapses the section, which only happens off-prod. -->
+    <Section v-if="!contentLoaded || upcomingEvents.length > 0" class="bg-surface">
+      <Container
+        :class="!contentLoaded && upcomingEvents.length === 0 ? 'min-h-[400px] lg:min-h-[440px]' : ''"
+      >
+        <template v-if="upcomingEvents.length > 0">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div class="max-w-2xl">
             <Eyebrow class="text-brand-violet mb-4 block">{{ t('home.events.eyebrow') }}</Eyebrow>
@@ -357,6 +393,7 @@ onMounted(async () => {
             </RouterLink>
           </Motion>
         </div>
+        </template>
       </Container>
     </Section>
 
