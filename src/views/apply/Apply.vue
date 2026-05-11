@@ -347,6 +347,32 @@ watch(user, (u) => {
   }
 })
 
+// --- Restored-draft banner -------------------------------------------
+//
+// useAutoSave shallow-merges any in-TTL draft into form state on
+// mount, and surfaces `restored`/`lastSavedAt` for UI hints. We show a
+// dismissible notice so a returning applicant immediately understands
+// "this isn't a fresh form, your earlier answers came back".
+
+const restoredBannerDismissed = ref(false)
+const showRestoredBanner = computed(
+  () => !!autoSave.value?.restored && !!autoSave.value?.lastSavedAt && !restoredBannerDismissed.value,
+)
+
+function relativeTime(date: Date): string {
+  const diffMs = Date.now() - date.getTime()
+  const mins = Math.round(diffMs / 60_000)
+  if (mins < 1) return 'less than a minute ago'
+  if (mins === 1) return '1 minute ago'
+  if (mins < 60) return `${mins} minutes ago`
+  const hours = Math.round(mins / 60)
+  if (hours === 1) return '1 hour ago'
+  if (hours < 24) return `${hours} hours ago`
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'yesterday'
+  return `${days} days ago`
+}
+
 // --- Field helpers for tags input -----------------------------------
 
 function tagsValue(name: string): string {
@@ -480,7 +506,32 @@ watch(
     </Section>
 
     <Section class="!py-12">
-      <Container class="max-w-3xl">
+      <Container class="max-w-3xl flex flex-col gap-4">
+        <Motion
+          v-if="showRestoredBanner && autoSave?.lastSavedAt"
+          :initial="{ opacity: 0, y: -4 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.25 }"
+          class="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-50 ring-1 ring-emerald-200 text-emerald-900 text-sm"
+        >
+          <Icon icon="lucide:rotate-ccw" width="16" class="mt-0.5 text-emerald-700 shrink-0" />
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold">Draft restored.</div>
+            <div class="text-emerald-800/80 text-xs mt-0.5">
+              Picked up where you left off — last edited
+              {{ relativeTime(autoSave.lastSavedAt) }}. Uploaded files
+              need to be reattached.
+            </div>
+          </div>
+          <button
+            type="button"
+            class="text-emerald-700/70 hover:text-emerald-900 p-1 -m-1 shrink-0"
+            aria-label="Dismiss"
+            @click="restoredBannerDismissed = true"
+          >
+            <Icon icon="lucide:x" width="14" />
+          </button>
+        </Motion>
         <UiCard class="p-6 md:p-10 bg-surface">
           <Motion
             :key="currentStep.id"
