@@ -113,6 +113,19 @@ function clean<T extends Record<string, unknown>>(obj: T): Partial<T> {
 }
 
 /**
+ * Coerce a value to a non-negative integer or `undefined`. The
+ * Contentful content model declares estimatedHours / estimatedMinutes /
+ * maxFileSizeMb / dueOffsetDays as Integer fields — sending a decimal
+ * (e.g. 3.2 from `Math.round(minutes/60 * 10) / 10`) fails validation
+ * with a 422. Rounding at the server boundary means callers can compute
+ * with floats and persist with confidence the contract holds.
+ */
+function int(v: unknown): number | undefined {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return undefined
+  return Math.round(v)
+}
+
+/**
  * Shape the client-provided fields into Contentful's locale-wrapped,
  * Link-referenced format. Mirrors the prior shapeFields() that ran in
  * the browser. Unknown fields are dropped (defense against future
@@ -128,7 +141,7 @@ function shapeFields(payload: LmsCreateOrUpdatePayload): Record<string, unknown>
         program: L(f.program),
         summary: L(f.summary),
         modules: L(refsArray(f.modules, 'Entry')),
-        estimatedHours: L(f.estimatedHours),
+        estimatedHours: L(int(f.estimatedHours)),
         track: L(f.track),
         published: L(f.published),
         version: L(f.version),
@@ -150,7 +163,7 @@ function shapeFields(payload: LmsCreateOrUpdatePayload): Record<string, unknown>
         body: L(f.body),
         videoUrl: L(f.videoUrl),
         attachments: L(refsArray(f.attachments, 'Asset')),
-        estimatedMinutes: L(f.estimatedMinutes),
+        estimatedMinutes: L(int(f.estimatedMinutes)),
         completionCriteria: L(f.completionCriteria),
       })
     case 'assignmentSpec':
@@ -159,9 +172,9 @@ function shapeFields(payload: LmsCreateOrUpdatePayload): Record<string, unknown>
         title: L(f.title),
         instructions: L(f.instructions),
         submissionType: L(f.submissionType),
-        maxFileSizeMb: L(f.maxFileSizeMb),
+        maxFileSizeMb: L(int(f.maxFileSizeMb)),
         acceptedFileTypes: L(f.acceptedFileTypes),
-        dueOffsetDays: L(f.dueOffsetDays),
+        dueOffsetDays: L(int(f.dueOffsetDays)),
       })
   }
 }
