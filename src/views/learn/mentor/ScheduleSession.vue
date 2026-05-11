@@ -9,6 +9,7 @@ import Body from '../../../components/ui/Body.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
 import UiButton from '../../../components/ui/UiButton.vue'
+import UiSelect from '../../../components/ui/UiSelect.vue'
 import { useAuth } from '../../../composables/useAuth'
 import { CohortService, scheduleSession } from '../../../services/learn'
 import type { Cohort } from '../../../services/types'
@@ -113,15 +114,14 @@ onMounted(load)
           <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
-              <select
+              <UiSelect
                 v-model="form.cohortId"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
-              >
-                <option value="" disabled>Select a cohort…</option>
-                <option v-for="c in cohorts" :key="c.id" :value="c.id">
-                  {{ c.name || c.courseSlug }} ({{ c.program.replace('_', ' ') }})
-                </option>
-              </select>
+                placeholder="Select a cohort…"
+                :options="cohorts.map((c) => ({
+                  value: c.id ?? '',
+                  label: `${c.name || c.courseSlug} (${c.program.replace('_', ' ')})`,
+                }))"
+              />
             </div>
 
             <div class="flex flex-col gap-2">
@@ -181,14 +181,14 @@ onMounted(load)
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
                 Provider
               </label>
-              <select
+              <UiSelect
                 v-model="form.meetingProvider"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
-              >
-                <option value="zoom">Zoom</option>
-                <option value="meet">Google Meet</option>
-                <option value="other">Other</option>
-              </select>
+                :options="[
+                  { value: 'zoom',  label: 'Zoom' },
+                  { value: 'meet',  label: 'Google Meet' },
+                  { value: 'other', label: 'Other' },
+                ]"
+              />
             </div>
 
             <p v-if="error" class="text-sm text-red-700">{{ error }}</p>

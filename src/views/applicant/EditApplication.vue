@@ -43,10 +43,13 @@
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>Program</label>
-          <select v-model="form.program" required>
-            <option value="stepup_scholars">StepUp Scholars</option>
-            <option value="dynamerge">Dynamerge</option>
-          </select>
+          <UiSelect
+            v-model="form.program"
+            :options="[
+              { value: 'stepup_scholars', label: 'StepUp Scholars' },
+              { value: 'dynamerge',       label: 'Dynamerge' },
+            ]"
+          />
         </div>
 
         <div class="form-group">
@@ -109,6 +112,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { DatabaseService, type Application } from '../../services/firebase'
 import { useAutoSave } from '../../composables/useAutoSave'
+import UiSelect from '../../components/ui/UiSelect.vue'
 
 const router = useRouter()
 const route = useRoute()

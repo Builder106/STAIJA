@@ -18,6 +18,7 @@ import { DatabaseService } from '../../services/database'
 import { StorageService } from '../../services/storageService'
 import { trackApplyClick } from '../../services/analytics'
 import { getProgram, type FieldDef, type ProgramSchema } from './programs'
+import UiSelect from '../../components/ui/UiSelect.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -401,6 +402,20 @@ function dynamicOptions(field: FieldDef): string[] {
   return field.optionsBy.map[parentValue] ?? []
 }
 
+// Shape options into the { value, label } objects UiSelect expects.
+// Schema gives us a flat string[]; the value and the display label are
+// the same string for every applicant-facing select today.
+function uiSelectOptions(field: FieldDef): { value: string; label: string }[] {
+  return dynamicOptions(field).map((o) => ({ value: o, label: o }))
+}
+
+function uiSelectPlaceholder(field: FieldDef): string {
+  if (field.optionsBy && dynamicOptions(field).length === 0) {
+    return `Pick a ${field.optionsBy.dependsOn} first`
+  }
+  return 'Choose…'
+}
+
 function dynamicLabel(field: FieldDef): string {
   if (!field.optionsBy?.labelByDependent) return field.label
   const parentValue = fields.value[field.optionsBy.dependsOn] as string | undefined
@@ -597,28 +612,13 @@ watch(
                         class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                         @input="(e) => setTagsValue(field.name, (e.target as HTMLInputElement).value)"
                       />
-                      <select
+                      <UiSelect
                         v-else-if="field.type === 'select'"
-                        v-model="fields[field.name]"
-                        :required="field.required"
+                        v-model="(fields[field.name] as string)"
+                        :options="uiSelectOptions(field)"
+                        :placeholder="uiSelectPlaceholder(field)"
                         :disabled="field.optionsBy && dynamicOptions(field).length === 0"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface disabled:opacity-60"
-                      >
-                        <option value="">
-                          {{
-                            field.optionsBy && dynamicOptions(field).length === 0
-                              ? `Pick a ${field.optionsBy.dependsOn} first`
-                              : 'Choose…'
-                          }}
-                        </option>
-                        <option
-                          v-for="o in dynamicOptions(field)"
-                          :key="o"
-                          :value="o"
-                        >
-                          {{ o }}
-                        </option>
-                      </select>
+                      />
                       <input
                         v-else
                         v-model="fields[field.name]"

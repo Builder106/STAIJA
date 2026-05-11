@@ -5,14 +5,24 @@
         <input v-model="filters.query" placeholder="Search by name, role, or company..." @input="debouncedSearch" />
       </div>
       <div class="filter-group">
-        <select v-model="filters.skill">
-          <option value="">All Skills</option>
-          <option v-for="skill in availableSkills" :key="skill" :value="skill">{{ skill }}</option>
-        </select>
-        <select v-model="filters.location">
-          <option value="">All Locations</option>
-          <option v-for="loc in availableLocations" :key="loc" :value="loc">{{ loc }}</option>
-        </select>
+        <UiSelect
+          v-model="filters.skill"
+          :match-width="false"
+          placeholder="All Skills"
+          :options="[
+            { value: '', label: 'All Skills' },
+            ...availableSkills.map((s) => ({ value: s, label: s })),
+          ]"
+        />
+        <UiSelect
+          v-model="filters.location"
+          :match-width="false"
+          placeholder="All Locations"
+          :options="[
+            { value: '', label: 'All Locations' },
+            ...availableLocations.map((l) => ({ value: l, label: l })),
+          ]"
+        />
       </div>
     </div>
 
@@ -54,6 +64,7 @@ import { db } from '../../config/firebase'
 import { collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { AuthService } from '../../services/firebase'
 import ConnectionButton from '../../components/alumni/ConnectionButton.vue'
+import UiSelect from '../../components/ui/UiSelect.vue'
 import AnimatedAvatar from '../../components/avatars/AnimatedAvatar.vue'
 import { resolveAvatarSrc } from '../../services/avatar'
 import { Icon } from '@iconify/vue'

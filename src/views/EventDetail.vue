@@ -9,6 +9,7 @@ import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import UiSelect from '../components/ui/UiSelect.vue'
 import UiChip from '../components/ui/UiChip.vue'
 import { getEvent, type EventItem } from '../services/content'
 import { trackEventRsvp } from '../services/analytics'
@@ -59,6 +60,8 @@ watch(() => route.params.slug, load)
 onMounted(load)
 
 const rsvpState = ref<'idle' | 'loading' | 'success'>('idle')
+// Local model for the prospective-student UiSelect on the RSVP form.
+const rsvpProspect = ref('')
 
 function handleRSVP(e: Event) {
   e.preventDefault()
@@ -173,11 +176,14 @@ function handleRSVP(e: Event) {
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold text-ink/80">Are you a prospective student?</label>
-                    <select required class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
-                      <option value="">Select an option</option>
-                      <option value="yes">Yes, I want to apply</option>
-                      <option value="no">No, I'm a parent/educator/mentor</option>
-                    </select>
+                    <UiSelect
+                      v-model="rsvpProspect"
+                      placeholder="Select an option"
+                      :options="[
+                        { value: 'yes', label: 'Yes, I want to apply' },
+                        { value: 'no',  label: 'No, I’m a parent/educator/mentor' },
+                      ]"
+                    />
                   </div>
 
                   <UiButton

@@ -28,12 +28,15 @@
         <h3>Review Decision</h3>
         <div class="form-group">
           <label>Status</label>
-          <select v-model="reviewForm.status">
-            <option value="submitted">Submitted</option>
-            <option value="under_review">Under Review</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          <UiSelect
+            v-model="reviewForm.status"
+            :options="[
+              { value: 'submitted',    label: 'Submitted' },
+              { value: 'under_review', label: 'Under Review' },
+              { value: 'accepted',     label: 'Accepted' },
+              { value: 'rejected',     label: 'Rejected' },
+            ]"
+          />
         </div>
 
         <div class="form-group">
@@ -88,6 +91,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import UiSelect from '../../components/ui/UiSelect.vue'
 
 const router = useRouter()
 const route = useRoute()

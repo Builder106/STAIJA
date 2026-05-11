@@ -8,6 +8,7 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
+import UiSelect from '../../components/ui/UiSelect.vue'
 import IconPicker from '../../components/admin/IconPicker.vue'
 import ImageInput from '../../components/admin/ImageInput.vue'
 import ProgramPreview from '../../components/admin/ProgramPreview.vue'
@@ -890,16 +891,16 @@ const DYNAMERGE_SEED: SeedTemplate = {
             <!-- Status -->
             <div class="flex flex-col gap-3">
               <Eyebrow class="text-brand-violet">Status</Eyebrow>
-              <label class="flex flex-col gap-1.5 max-w-xs">
-                <select
+              <div class="max-w-xs">
+                <UiSelect
                   v-model="drafts[p.id].status"
-                  class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans"
-                >
-                  <option value="active">Active — accepting applications</option>
-                  <option value="draft">Draft — staff only</option>
-                  <option value="inactive">Inactive — applications hidden</option>
-                </select>
-              </label>
+                  :options="[
+                    { value: 'active', label: 'Active — accepting applications' },
+                    { value: 'draft', label: 'Draft — staff only' },
+                    { value: 'inactive', label: 'Inactive — applications hidden' },
+                  ]"
+                />
+              </div>
             </div>
 
             <!-- Footer -->

@@ -9,6 +9,7 @@ import Body from '../../../components/ui/Body.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiButton from '../../../components/ui/UiButton.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
+import UiSelect from '../../../components/ui/UiSelect.vue'
 import { outlineCourse, type OutlineCoursePayload, type OutlineCourseResult } from '../../../services/ai'
 
 // Form state. Defaults are tuned for a "typical" first run — staff can
@@ -107,14 +108,14 @@ function openCourseEditor() {
             <div class="grid sm:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2 min-w-0">
                 <label for="program" class="text-sm font-semibold text-ink/80">Program</label>
-                <select
+                <UiSelect
                   id="program"
                   v-model="program"
-                  class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-paper"
-                >
-                  <option value="stepup_scholars">StepUp Scholars</option>
-                  <option value="dynamerge">Dynamerge</option>
-                </select>
+                  :options="[
+                    { value: 'stepup_scholars', label: 'StepUp Scholars' },
+                    { value: 'dynamerge',       label: 'Dynamerge' },
+                  ]"
+                />
               </div>
 
               <div class="flex flex-col gap-2 min-w-0">

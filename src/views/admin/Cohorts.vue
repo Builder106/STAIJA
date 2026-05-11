@@ -8,6 +8,7 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
+import UiSelect from '../../components/ui/UiSelect.vue'
 import { useAuth } from '../../composables/useAuth'
 import { CohortService, toMillis } from '../../services/learn'
 import { Timestamp } from 'firebase/firestore'
@@ -238,24 +239,24 @@ onMounted(load)
           <div class="grid md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Program</label>
-              <select
+              <UiSelect
                 v-model="form.program"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
-              >
-                <option value="stepup_scholars">StepUp Scholars</option>
-                <option value="dynamerge">Dynamerge</option>
-              </select>
+                :options="[
+                  { value: 'stepup_scholars', label: 'StepUp Scholars' },
+                  { value: 'dynamerge', label: 'Dynamerge' },
+                ]"
+              />
             </div>
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Status</label>
-              <select
+              <UiSelect
                 v-model="form.status"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
-              >
-                <option value="planned">Planned</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-              </select>
+                :options="[
+                  { value: 'planned', label: 'Planned' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'completed', label: 'Completed' },
+                ]"
+              />
             </div>
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Course slug</label>

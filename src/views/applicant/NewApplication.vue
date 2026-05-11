@@ -30,17 +30,16 @@
           <h3>Program Selection</h3>
           <div class="form-group">
             <label for="program">Select Program *</label>
-            <select
+            <UiSelect
               id="program"
               v-model="form.program"
-              required
               :disabled="loading"
-              class="form-control"
-            >
-              <option value="">Choose a program</option>
-              <option value="stepup_scholars">StepUp Scholars Program</option>
-              <option value="dynamerge">Dynamerge Research Program</option>
-            </select>
+              placeholder="Choose a program"
+              :options="[
+                { value: 'stepup_scholars', label: 'StepUp Scholars Program' },
+                { value: 'dynamerge',       label: 'Dynamerge Research Program' },
+              ]"
+            />
           </div>
         </div>
 
@@ -134,19 +133,19 @@
             </div>
             <div class="form-group">
               <label for="currentLevel">Current Level</label>
-              <select
+              <UiSelect
                 id="currentLevel"
                 v-model="form.personalInfo.currentLevel"
                 :disabled="loading"
-                class="form-control"
-              >
-                <option value="">Select level</option>
-                <option value="undergraduate">Undergraduate</option>
-                <option value="masters">Master's</option>
-                <option value="phd">PhD</option>
-                <option value="postdoc">Postdoctoral</option>
-                <option value="professional">Professional</option>
-              </select>
+                placeholder="Select level"
+                :options="[
+                  { value: 'undergraduate', label: 'Undergraduate' },
+                  { value: 'masters',       label: 'Master’s' },
+                  { value: 'phd',           label: 'PhD' },
+                  { value: 'postdoc',       label: 'Postdoctoral' },
+                  { value: 'professional',  label: 'Professional' },
+                ]"
+              />
             </div>
           </div>
         </div>
@@ -405,6 +404,7 @@ import { Icon } from '@iconify/vue'
 import { DatabaseService, AuthService, StorageService } from '../../services/firebase'
 import { useAutoSave } from '../../composables/useAutoSave'
 import FileUpload from '../../components/ui/FileUpload.vue'
+import UiSelect from '../../components/ui/UiSelect.vue'
 
 const router = useRouter()
 

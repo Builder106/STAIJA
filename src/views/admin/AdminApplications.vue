@@ -22,25 +22,39 @@
           />
         </div>
         <div class="filter-controls">
-          <select v-model="statusFilter" class="filter-select">
-            <option value="">All Statuses</option>
-            <option value="submitted">Submitted</option>
-            <option value="under_review">Under Review</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <select v-model="programFilter" class="filter-select">
-            <option value="">All Programs</option>
-            <option value="stepup_scholars">StepUp Scholars</option>
-            <option value="dynamerge">Dynamerge</option>
-          </select>
-          <select v-model="sortBy" class="filter-select">
-            <option value="submittedAt">Date Submitted</option>
-            <option value="createdAt">Date Created</option>
-            <option value="program">Program</option>
-            <option value="status">Status</option>
-            <option value="personalInfo.firstName">Name</option>
-          </select>
+          <UiSelect
+            v-model="statusFilter"
+            :match-width="false"
+            placeholder="All Statuses"
+            :options="[
+              { value: '',             label: 'All Statuses' },
+              { value: 'submitted',    label: 'Submitted' },
+              { value: 'under_review', label: 'Under Review' },
+              { value: 'accepted',     label: 'Accepted' },
+              { value: 'rejected',     label: 'Rejected' },
+            ]"
+          />
+          <UiSelect
+            v-model="programFilter"
+            :match-width="false"
+            placeholder="All Programs"
+            :options="[
+              { value: '',                label: 'All Programs' },
+              { value: 'stepup_scholars', label: 'StepUp Scholars' },
+              { value: 'dynamerge',       label: 'Dynamerge' },
+            ]"
+          />
+          <UiSelect
+            v-model="sortBy"
+            :match-width="false"
+            :options="[
+              { value: 'submittedAt',            label: 'Date Submitted' },
+              { value: 'createdAt',              label: 'Date Created' },
+              { value: 'program',                label: 'Program' },
+              { value: 'status',                 label: 'Status' },
+              { value: 'personalInfo.firstName', label: 'Name' },
+            ]"
+          />
         </div>
       </div>
     </div>
@@ -177,6 +191,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import UiSelect from '../../components/ui/UiSelect.vue'
 
 const router = useRouter()
 

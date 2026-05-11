@@ -9,10 +9,14 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
+import UiSelect from '../components/ui/UiSelect.vue'
 import ScrollReveal from '../components/motion/ScrollReveal.vue'
 import { trackInquirySubmit } from '../services/analytics'
 
 const submitted = ref(false)
+// Local model for the subject UiSelect — the form is wired through
+// analytics-only today (no backend POST), so a local ref is enough.
+const subject = ref('')
 
 function handleSubmit(e: Event) {
   e.preventDefault()
@@ -71,13 +75,16 @@ function handleSubmit(e: Event) {
 
                 <div class="flex flex-col gap-2 min-w-0">
                   <label class="text-sm font-semibold text-ink/80">Subject</label>
-                  <select required class="w-full min-w-0 border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface">
-                    <option value="">Select a topic</option>
-                    <option value="programs">Program Inquiry (StepUp / Dynamerge)</option>
-                    <option value="partnership">Partnership or Sponsorship</option>
-                    <option value="media">Press or Media</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <UiSelect
+                    v-model="subject"
+                    placeholder="Select a topic"
+                    :options="[
+                      { value: 'programs',    label: 'Program Inquiry (StepUp / Dynamerge)' },
+                      { value: 'partnership', label: 'Partnership or Sponsorship' },
+                      { value: 'media',       label: 'Press or Media' },
+                      { value: 'other',       label: 'Other' },
+                    ]"
+                  />
                 </div>
 
                 <div class="flex flex-col gap-2 min-w-0">

@@ -8,6 +8,7 @@ import Body from '../../components/ui/Body.vue'
 import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
+import UiSelect from '../../components/ui/UiSelect.vue'
 import { CohortService, enrollStudent } from '../../services/learn'
 import { DatabaseService } from '../../services/database'
 import type { Cohort, UserProfile } from '../../services/types'
@@ -99,28 +100,26 @@ onMounted(load)
           <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
-              <select
+              <UiSelect
                 v-model="selectedCohortId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
-              >
-                <option value="" disabled>Select a cohort…</option>
-                <option v-for="c in cohorts" :key="c.id" :value="c.id">
-                  {{ c.name || c.courseSlug }} ({{ c.program.replace('_', ' ') }}, {{ c.status }})
-                </option>
-              </select>
+                placeholder="Select a cohort…"
+                :options="cohorts.map((c) => ({
+                  value: c.id ?? '',
+                  label: `${c.name || c.courseSlug} (${c.program.replace('_', ' ')}, ${c.status})`,
+                }))"
+              />
             </div>
 
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Student</label>
-              <select
+              <UiSelect
                 v-model="selectedStudentId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
-              >
-                <option value="" disabled>Select a student…</option>
-                <option v-for="u in candidates" :key="u.uid" :value="u.uid">
-                  {{ u.displayName || u.email }} — {{ u.role }}
-                </option>
-              </select>
+                placeholder="Select a student…"
+                :options="candidates.map((u) => ({
+                  value: u.uid,
+                  label: `${u.displayName || u.email} — ${u.role}`,
+                }))"
+              />
               <p class="text-xs text-ink/50">
                 Showing applicants and existing students.
               </p>
@@ -130,19 +129,17 @@ onMounted(load)
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
                 Mentor <span class="text-ink/40 normal-case">(optional — auto-picks from pool if blank)</span>
               </label>
-              <select
+              <UiSelect
                 v-model="selectedMentorId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono"
-              >
-                <option value="">Auto (least-loaded)</option>
-                <option
-                  v-for="mid in selectedCohort.mentorPool ?? []"
-                  :key="mid"
-                  :value="mid"
-                >
-                  {{ mid }}
-                </option>
-              </select>
+                placeholder="Auto (least-loaded)"
+                :options="[
+                  { value: '', label: 'Auto (least-loaded)' },
+                  ...(selectedCohort.mentorPool ?? []).map((mid) => ({
+                    value: mid,
+                    label: mid,
+                  })),
+                ]"
+              />
             </div>
 
             <p v-if="error" class="text-sm text-red-700">{{ error }}</p>
