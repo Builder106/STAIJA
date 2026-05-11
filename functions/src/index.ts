@@ -44,6 +44,12 @@ export { outlineCourse } from './aiOutline'
 // curates from there. Only requires GROQ_API_KEY.
 export { lessonMediaAssist } from './aiLessonMedia'
 
+// Server-side proxy for every Contentful Management API call the admin
+// LMS surface makes. Replaces the previous client-side path that
+// exposed the management token in the browser bundle. Requires
+// CONTENTFUL_MANAGEMENT_TOKEN and CONTENTFUL_SPACE_ID in Secret Manager.
+export { lmsContentAdmin } from './lmsContentAdmin'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

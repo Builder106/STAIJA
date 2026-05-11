@@ -19,7 +19,6 @@ export interface AppConfig {
     environmentId: string
     deliveryToken: string
     previewToken?: string
-    managementToken?: string
   }
   paystack?: {
     publicKey: string
@@ -106,7 +105,6 @@ export function getAppConfig(): AppConfig {
                 environmentId: import.meta.env.VITE_CONTENTFUL_ENV_ID || 'master',
                 deliveryToken: import.meta.env.VITE_CONTENTFUL_DELIVERY_TOKEN,
                 previewToken: import.meta.env.VITE_CONTENTFUL_PREVIEW_TOKEN,
-                managementToken: import.meta.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN
               }
             : undefined,
     paystack: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY

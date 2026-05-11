@@ -13,7 +13,9 @@ interface ImportMetaEnv {
   readonly VITE_CONTENTFUL_ENV_ID?: string
   readonly VITE_CONTENTFUL_DELIVERY_TOKEN?: string
   readonly VITE_CONTENTFUL_PREVIEW_TOKEN?: string
-  readonly VITE_CONTENTFUL_MANAGEMENT_TOKEN?: string
+  // CONTENTFUL_MANAGEMENT_TOKEN intentionally absent — it's a server-only
+  // secret now, read by the lmsContentAdmin Cloud Function from Secret
+  // Manager. Anything in the browser bundle is exposed to every visitor.
 }
 
 interface ImportMeta {
