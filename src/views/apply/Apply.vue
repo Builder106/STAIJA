@@ -153,14 +153,20 @@ async function initAutoSave() {
   // would register its hook, the parent has already mounted — Vue
   // silently drops the late registration. Calling restore() explicitly
   // sidesteps that timing trap entirely.
-  autoSave.value = useAutoSave(scopedKey, persistedRef, { skipRestore: true })
+  //
+  // Hold the handle in a local const so TS narrows past the
+  // `Ref<... | null>` declared type — `autoSave.value` reads as
+  // possibly-null even one line after the assignment in vue-tsc's
+  // strict build mode.
+  const handle = useAutoSave(scopedKey, persistedRef, { skipRestore: true })
+  autoSave.value = handle
 
   // Pull the localStorage payload (which is now the cloud payload, if
   // the cloud branch above ran) into persistedRef.value, then copy each
   // slice into its matching form ref. We don't go through a watcher
   // because restore() uses Object.assign — a deep mutation — and the
   // watch on persistedRef (no `deep: true`) wouldn't fire for that.
-  if (autoSave.value.restore()) {
+  if (handle.restore()) {
     const v = persistedRef.value
     if (v.eligibility) eligibility.value = v.eligibility
     if (v.fields) fields.value = v.fields
