@@ -11,7 +11,8 @@
  */
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../config/firebase.ts'
+import { ref as storageRef, uploadBytes } from 'firebase/storage'
+import { functions, storage, auth } from '../config/firebase.ts'
 import { getAppConfig } from '../utils/env.ts'
 import type { Document } from '@contentful/rich-text-types'
 
@@ -355,14 +356,12 @@ function extractRefId(value: unknown): string | undefined {
 
 // ---------- Asset upload ----------
 //
-// The asset-upload flow (Contentful CMA: createAssetWithId →
-// processForLocale → publish) doesn't fit cleanly through a JSON
-// callable — it streams binary. There are no current callers so the
-// export is retained as a clear throw rather than fake-implemented.
-// When the flow is needed, either:
-//   - Add an HTTP function with multipart parsing, or
-//   - Upload to Firebase Storage and have a callable proxy the binary
-//     into Contentful server-side.
+// Two-step: stage the binary in Firebase Storage at cms/<uid>/..., then
+// call the lmsAssetUpload Cloud Function which downloads it, creates +
+// publishes a Contentful Asset, and cleans up the staging file. Going
+// through Storage means the client never holds the Contentful
+// Management token, and Firebase auth + storage.rules enforce who can
+// stage what.
 
 export interface UploadAssetResult {
   id: string
@@ -371,8 +370,43 @@ export interface UploadAssetResult {
   contentType: string
 }
 
-export async function uploadAsset(_file: File, _title?: string): Promise<UploadAssetResult> {
-  throw new Error(
-    'uploadAsset has not been wired through the management proxy yet — see src/services/lmsContent.ts.',
-  )
+interface AssetUploadInput {
+  storagePath: string
+  fileName: string
+  contentType: string
+  title?: string
+  env?: string
+}
+
+function safeFileName(name: string): string {
+  // Match the convention used by application submissions — keep only
+  // characters that are safe in URL path segments.
+  return name.replace(/[^A-Za-z0-9_.-]/g, '_')
+}
+
+export async function uploadAsset(file: File, title?: string): Promise<UploadAssetResult> {
+  const user = auth.currentUser
+  if (!user) {
+    throw new Error('Must be signed in to upload assets.')
+  }
+  const cfg = getAppConfig()
+  const stagingPath = `cms/${user.uid}/${Date.now()}-${safeFileName(file.name)}`
+
+  // Stage in Storage. Firebase Auth covers the upload; storage.rules
+  // gates the path to staff/admin role + a size cap.
+  const ref = storageRef(storage, stagingPath)
+  await uploadBytes(ref, file, {
+    contentType: file.type || 'application/octet-stream',
+  })
+
+  // Ask the function to copy it into Contentful.
+  const call = httpsCallable<AssetUploadInput, UploadAssetResult>(functions, 'lmsAssetUpload')
+  const result = await call({
+    storagePath: stagingPath,
+    fileName: file.name,
+    contentType: file.type || 'application/octet-stream',
+    title,
+    env: cfg.contentful?.environmentId,
+  })
+  return result.data
 }

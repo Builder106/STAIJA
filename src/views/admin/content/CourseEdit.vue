@@ -24,8 +24,10 @@ import {
   buildDuplicateCourseFields,
   type CourseFields,
   type ComputedHours,
+  uploadAsset,
 } from '../../../services/lmsContent'
 import { useFormDirty } from '../../../composables/useFormDirty'
+import FileUpload from '../../../components/ui/FileUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,6 +60,35 @@ const form = ref<CourseFields>({
   coverImage: undefined,
 })
 const { isDirty, markClean } = useFormDirty(form)
+
+// Cover-image preview URL — populated after a successful upload. On
+// reload we only know the asset ID (from form.coverImage), not the URL
+// — fetching it would need an asset-aware callable. For now the UI
+// shows "image set" if there's an ID but no URL yet, and the editor
+// can re-upload to replace.
+const coverImageUrl = ref<string | null>(null)
+const coverUploading = ref(false)
+const coverError = ref<string | null>(null)
+
+async function onCoverImagePick(file: File | null) {
+  if (!file) return
+  coverUploading.value = true
+  coverError.value = null
+  try {
+    const asset = await uploadAsset(file, form.value.title || file.name)
+    form.value.coverImage = asset.id
+    coverImageUrl.value = asset.url
+  } catch (err) {
+    coverError.value = (err as { message?: string }).message ?? 'Upload failed.'
+  } finally {
+    coverUploading.value = false
+  }
+}
+
+function removeCoverImage() {
+  form.value.coverImage = undefined
+  coverImageUrl.value = null
+}
 
 async function load() {
   // Duplicate flow: /admin/content/courses/new?from=<sourceId>
@@ -403,6 +434,62 @@ onMounted(async () => {
                 </label>
               </div>
             </div>
+          </UiCard>
+
+          <UiCard class="p-6 md:p-8 bg-white">
+            <Heading :level="2" class="text-base mb-1">Cover image</Heading>
+            <p class="text-xs text-ink/60 m-0 mb-4">
+              Shown on course cards in the student portal. PNG or JPG, up to 10&nbsp;MB.
+            </p>
+            <div v-if="coverImageUrl" class="flex flex-col gap-3">
+              <img
+                :src="coverImageUrl"
+                alt="Cover preview"
+                class="w-full max-w-md rounded-xl border hairline-ink object-cover aspect-[16/9]"
+              />
+              <button
+                type="button"
+                class="text-xs font-semibold text-rose-700 hover:underline underline-offset-2 self-start inline-flex items-center gap-1"
+                @click="removeCoverImage"
+              >
+                <Icon icon="lucide:trash-2" width="12" />
+                Remove
+              </button>
+            </div>
+            <div v-else-if="form.coverImage" class="flex items-center gap-3 text-xs text-ink/70">
+              <Icon icon="lucide:image" width="14" />
+              <span>Cover image attached (asset <code class="font-mono">{{ form.coverImage }}</code>). Upload below to replace.</span>
+              <button
+                type="button"
+                class="text-rose-700 hover:underline underline-offset-2 inline-flex items-center gap-1 ml-2"
+                @click="removeCoverImage"
+              >
+                <Icon icon="lucide:trash-2" width="12" />
+                Remove
+              </button>
+            </div>
+            <FileUpload
+              v-if="!coverImageUrl"
+              accept="image/*"
+              :max-size-bytes="10_000_000"
+              label="Choose a cover image"
+              @update:file="onCoverImagePick"
+              @error="(m) => (coverError = m)"
+            />
+            <p
+              v-if="coverUploading"
+              class="text-[11px] text-ink/60 mt-2 inline-flex items-center gap-1"
+            >
+              <Icon icon="lucide:loader-2" width="11" class="animate-spin" />
+              Uploading…
+            </p>
+            <p
+              v-if="coverError"
+              role="alert"
+              class="text-xs text-rose-700 mt-2 m-0"
+            >
+              {{ coverError }}
+            </p>
           </UiCard>
 
           <UiCard class="p-6 md:p-8 bg-white">

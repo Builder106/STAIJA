@@ -50,6 +50,11 @@ export { lessonMediaAssist } from './aiLessonMedia'
 // CONTENTFUL_MANAGEMENT_TOKEN and CONTENTFUL_SPACE_ID in Secret Manager.
 export { lmsContentAdmin } from './lmsContentAdmin'
 
+// Asset upload bridge: client stages bytes in Firebase Storage at
+// cms/<uid>/..., then calls this function to copy them into Contentful
+// as a published Asset. Uses the same secrets as lmsContentAdmin.
+export { lmsAssetUpload } from './lmsAssetUpload'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.
