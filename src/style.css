@@ -97,7 +97,11 @@
    need explicit dark variants so they don't punch through the new
    surfaces. */
 [data-theme="dark"] .hairline-ink {
-   border-color: rgba(240, 244, 248, 0.1);
+   /* 0.10 alpha read as "barely there" on dense list surfaces (the
+     /admin/content tree, with adjacent rows separated only by this
+     border). Bumped to 0.18 — still subtle on standalone cards, but
+     gives row dividers enough presence to read as structure. */
+   border-color: rgba(240, 244, 248, 0.18);
 }
 
 [data-theme="dark"] .wash-ink-6 {

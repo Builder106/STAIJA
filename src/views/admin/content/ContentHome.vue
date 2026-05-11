@@ -817,7 +817,7 @@ onMounted(load)
               v-model="searchQuery"
               type="search"
               placeholder="Search by title or slug across the whole tree…"
-              class="w-full pl-9 pr-9 py-2 rounded-lg border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+              class="w-full pl-9 pr-9 py-2 rounded-lg border hairline-ink bg-surface text-sm text-ink placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-violet"
             />
             <button
               v-if="searchActive"
@@ -834,14 +834,14 @@ onMounted(load)
 
           <div
             v-if="loading"
-            class="rounded-2xl border hairline-ink bg-white p-10 text-center"
+            class="rounded-2xl border hairline-ink bg-surface p-10 text-center"
           >
             <Icon icon="lucide:loader-2" width="22" class="animate-spin text-brand-violet mx-auto" />
           </div>
 
           <div
             v-else-if="courses.length === 0"
-            class="rounded-2xl border hairline-ink bg-white p-8 text-center"
+            class="rounded-2xl border hairline-ink bg-surface p-8 text-center"
           >
             <Body class="text-ink/60 text-sm">
               No courses yet. Start with "New course" above, or generate a full draft with the AI
@@ -851,7 +851,7 @@ onMounted(load)
 
           <div
             v-else-if="searchActive && visibleCourses.length === 0"
-            class="rounded-2xl border hairline-ink bg-white p-6 text-center"
+            class="rounded-2xl border hairline-ink bg-surface p-6 text-center"
           >
             <Body class="text-ink/60 text-sm">
               No matches for "{{ searchQuery }}". Try a different query, or clear the search to
@@ -863,7 +863,7 @@ onMounted(load)
             <li
               v-for="course in visibleCourses"
               :key="course.id"
-              class="rounded-xl border hairline-ink bg-white overflow-hidden"
+              class="rounded-xl border hairline-ink bg-surface overflow-hidden"
             >
               <!-- Course row -->
               <div class="flex items-center gap-2 px-3 py-2.5 hover:bg-ink/[0.015]">
@@ -977,7 +977,7 @@ onMounted(load)
                       v-if="!searchActive"
                       icon="lucide:grip-vertical"
                       width="12"
-                      class="text-ink/25 group-hover:text-ink/50 cursor-grab shrink-0 select-none"
+                      class="text-ink/40 group-hover:text-ink/70 cursor-grab shrink-0 select-none"
                       :title="'Drag to reorder'"
                     />
                     <span v-else class="w-3 shrink-0" />
@@ -1103,7 +1103,7 @@ onMounted(load)
                         v-if="!searchActive"
                         icon="lucide:grip-vertical"
                         width="11"
-                        class="text-ink/20 group-hover:text-ink/50 cursor-grab shrink-0 select-none"
+                        class="text-ink/40 group-hover:text-ink/70 cursor-grab shrink-0 select-none"
                       />
                       <span v-else class="w-2.5 shrink-0" />
                       <Icon icon="lucide:file-text" width="12" class="text-ink/50 shrink-0" />
@@ -1121,7 +1121,7 @@ onMounted(load)
                       </span>
                       <button
                         type="button"
-                        class="text-ink/30 hover:text-brand-violet p-1 rounded-md hover:bg-ink/5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="text-ink/50 hover:text-brand-violet p-1 rounded-md hover:bg-ink/5 opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label="Quick edit"
                         @click="openDrawer(lesson)"
                       >
@@ -1153,7 +1153,7 @@ onMounted(load)
                         v-if="!searchActive"
                         icon="lucide:grip-vertical"
                         width="11"
-                        class="text-ink/20 group-hover:text-ink/50 cursor-grab shrink-0 select-none"
+                        class="text-ink/40 group-hover:text-ink/70 cursor-grab shrink-0 select-none"
                       />
                       <span v-else class="w-2.5 shrink-0" />
                       <Icon icon="lucide:clipboard-edit" width="12" class="text-ink/50 shrink-0" />
@@ -1171,7 +1171,7 @@ onMounted(load)
                       </span>
                       <button
                         type="button"
-                        class="text-ink/30 hover:text-brand-violet p-1 rounded-md hover:bg-ink/5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="text-ink/50 hover:text-brand-violet p-1 rounded-md hover:bg-ink/5 opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label="Quick edit"
                         @click="openDrawer(assign)"
                       >
@@ -1214,7 +1214,7 @@ onMounted(load)
         <!-- Orphans — content that exists but isn't wired up. -->
         <details
           v-if="hasAnyOrphans"
-          class="rounded-2xl border hairline-ink bg-white px-5 py-4"
+          class="rounded-2xl border hairline-ink bg-surface px-5 py-4"
         >
           <summary
             class="cursor-pointer text-sm font-semibold text-ink/70 inline-flex items-center gap-2 select-none"
@@ -1295,7 +1295,7 @@ onMounted(load)
             appear
           >
             <aside
-              class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl overflow-y-auto flex flex-col"
+              class="absolute right-0 top-0 h-full w-full max-w-md bg-surface shadow-2xl overflow-y-auto flex flex-col"
             >
               <header class="flex items-center gap-3 px-6 py-4 border-b hairline-ink">
                 <div
@@ -1344,7 +1344,7 @@ onMounted(load)
                   <input
                     v-model="drawerForm.slug"
                     type="text"
-                    class="px-3 py-2 rounded-md border hairline-ink bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                    class="px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-violet"
                     @blur="drawerForm.slug = normalizeSlug(drawerForm.slug)"
                   />
                 </div>
@@ -1353,7 +1353,7 @@ onMounted(load)
                   <input
                     v-model="drawerForm.title"
                     type="text"
-                    class="px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                    class="px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                   />
                 </div>
 
