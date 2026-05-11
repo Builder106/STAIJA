@@ -81,14 +81,31 @@
       </form>
     </div>
 
-    <div v-else class="error">
-      <p>This application cannot be edited.</p>
+    <!-- Locked state: anyone who lands here for a non-draft application
+         (direct URL, stale bookmark) sees a friendly explainer instead
+         of an empty page. Wording follows the actual status so the
+         applicant understands why they can't edit. -->
+    <div v-else-if="application" class="locked-card" role="status">
+      <h2>{{ lockedHeadline }}</h2>
+      <p>{{ lockedExplanation }}</p>
+      <div class="locked-actions">
+        <button type="button" class="primary" @click="router.push('/applicant/applications')">
+          Back to your applications
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          @click="router.push(`/applicant/applications/${application.id}`)"
+        >
+          View status &amp; feedback
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { DatabaseService, type Application } from '../../services/firebase'
 import { useAutoSave } from '../../composables/useAutoSave'
@@ -99,6 +116,35 @@ const route = useRoute()
 const application = ref<Application | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+// Status-aware copy for the locked-state card. Renders only when an
+// application is loaded but no longer editable (not a draft).
+const lockedHeadline = computed(() => {
+  switch (application.value?.status) {
+    case 'submitted': return 'Your application is submitted.'
+    case 'under_review': return 'Your application is under review.'
+    case 'accepted': return 'You were accepted to the program.'
+    case 'rejected': return 'Decision posted.'
+    default: return 'This application can’t be edited.'
+  }
+})
+const lockedExplanation = computed(() => {
+  const dateLine = application.value?.submittedAt
+    ? ` Submitted ${new Date(application.value.submittedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`
+    : ''
+  switch (application.value?.status) {
+    case 'submitted':
+      return `It's in our queue and locked from edits while staff review it.${dateLine} You'll get an email when there's an update.`
+    case 'under_review':
+      return `Staff are reading through it now. The submitted version is what they'll grade — it can't be changed mid-review.${dateLine}`
+    case 'accepted':
+      return `Congratulations — watch your email for onboarding next steps.${dateLine}`
+    case 'rejected':
+      return `The decision and any feedback from the reviewer is available on the status page.${dateLine}`
+    default:
+      return 'Editing is only available while an application is still in draft.'
+  }
+})
 
 const form = ref({
   program: '' as 'stepup_scholars' | 'dynamerge' | '',
@@ -235,6 +281,49 @@ onMounted(() => {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.locked-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #8b55ff;
+}
+.locked-card h2 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+.locked-card p {
+  margin: 0 0 1.5rem;
+  color: #6c757d;
+  line-height: 1.55;
+}
+.locked-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.locked-actions .primary {
+  background: #8b55ff;
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.locked-actions .primary:hover { background: #7a44e6; }
+.locked-actions .secondary {
+  background: transparent;
+  color: #2c3e50;
+  border: 1px solid rgba(14, 18, 23, 0.12);
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.locked-actions .secondary:hover { background: rgba(14, 18, 23, 0.04); }
 
 .restore-banner {
   display: flex;
