@@ -17,6 +17,12 @@ import { useAutoSave } from '../../composables/useAutoSave'
 import { DatabaseService } from '../../services/database'
 import { StorageService } from '../../services/storageService'
 import { trackApplyClick } from '../../services/analytics'
+import {
+  getDraft as getCloudDraft,
+  saveDraft as saveCloudDraft,
+  deleteDraft as deleteCloudDraft,
+  type DraftProgramSlug,
+} from '../../services/applicationDrafts'
 import { getProgram, type FieldDef, type ProgramSchema } from './programs'
 import UiSelect from '../../components/ui/UiSelect.vue'
 
@@ -88,27 +94,61 @@ const persistedRef = ref(formStateForSave.value) as Ref<typeof formStateForSave.
 watch(formStateForSave, (v) => { persistedRef.value = v }, { deep: true })
 
 const autoSave = ref<ReturnType<typeof useAutoSave> | null>(null)
-function initAutoSave() {
+// Whether the form was restored from the cloud draft (vs localStorage).
+// Drives the wording on the "Draft restored" banner so a returning
+// applicant on a fresh device sees "synced from your account" instead
+// of the device-scoped copy.
+const restoredFromCloud = ref(false)
+
+async function initAutoSave() {
   if (!program.value || autoSave.value || !user.value) return
+  const slug = program.value.slug
+  const uid = user.value.uid
   // Scope the localStorage key by uid so signing out / signing in as a
   // different user (shared device, school lab) doesn't expose the prior
-  // applicant's in-progress draft to the new viewer. Same user, same
-  // browser → still recovers cleanly across sign-in cycles.
-  const scopedKey = `apply.${program.value.slug}.${user.value.uid}`
-  // One-time migration: lift any pre-scoping legacy draft (written
-  // before this fix) into the new uid-scoped slot for the *current*
-  // user only — safe because if they're sitting on this page right now
-  // and a stale draft is present, it almost certainly belongs to them.
+  // applicant's in-progress draft to the new viewer.
+  const scopedKey = `apply.${slug}.${uid}`
+  // One-time migration: lift any pre-scoping legacy draft into the new
+  // uid-scoped slot for the current user before useAutoSave reads.
   try {
-    const legacy = window.localStorage.getItem(`staija.draft.apply.${program.value.slug}`)
+    const legacy = window.localStorage.getItem(`staija.draft.apply.${slug}`)
     const scoped = window.localStorage.getItem(`staija.draft.${scopedKey}`)
     if (legacy && !scoped) {
       window.localStorage.setItem(`staija.draft.${scopedKey}`, legacy)
     }
-    window.localStorage.removeItem(`staija.draft.apply.${program.value.slug}`)
+    window.localStorage.removeItem(`staija.draft.apply.${slug}`)
   } catch { /* private mode / quota — fine */ }
+
+  // Read both the localStorage draft (savedAt timestamp) and the cloud
+  // draft (savedAt on the doc) before useAutoSave's restore() runs, so
+  // we can pick the newer of the two. If cloud is newer, we overwrite
+  // the localStorage entry first; useAutoSave then restores it as usual.
+  let localSavedAt = 0
+  try {
+    const raw = window.localStorage.getItem(`staija.draft.${scopedKey}`)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { savedAt?: number }
+      if (typeof parsed.savedAt === 'number') localSavedAt = parsed.savedAt
+    }
+  } catch { /* malformed local; treat as absent */ }
+
+  const cloud = await getCloudDraft(uid, slug as DraftProgramSlug)
+  if (cloud && cloud.savedAt > localSavedAt) {
+    // Cloud wins — write its payload into the localStorage slot in the
+    // exact envelope useAutoSave expects, so the existing restore path
+    // runs unchanged. Marker flips the banner copy.
+    try {
+      window.localStorage.setItem(
+        `staija.draft.${scopedKey}`,
+        JSON.stringify({ v: 1, savedAt: cloud.savedAt, data: cloud.payload }),
+      )
+      restoredFromCloud.value = true
+    } catch { /* if local write fails, fall through to direct hydration */ }
+  }
+
   autoSave.value = useAutoSave(scopedKey, persistedRef)
-  // After restore, hydrate the form state from the ref.
+
+  // Hydrate the form state from the ref after restore.
   watch(persistedRef, (v) => {
     if (autoSave.value?.restored) {
       eligibility.value = v.eligibility ?? {}
@@ -118,6 +158,22 @@ function initAutoSave() {
       showcaseNote.value = v.showcaseNote ?? ''
     }
   }, { immediate: true })
+
+  // Cloud mirror. Same debounce as the localStorage write — but we hang
+  // off a separate watcher so a Firestore hiccup never blocks the local
+  // path. Fire-and-forget; saveCloudDraft swallows its own errors.
+  let cloudTimer: ReturnType<typeof setTimeout> | null = null
+  watch(
+    formStateForSave,
+    (v) => {
+      if (cloudTimer) clearTimeout(cloudTimer)
+      cloudTimer = setTimeout(() => {
+        if (!user.value) return
+        void saveCloudDraft(uid, slug as DraftProgramSlug, v)
+      }, 30_000)
+    },
+    { deep: true },
+  )
 }
 
 // --- Steps -----------------------------------------------------------
@@ -362,6 +418,12 @@ async function handleSubmit() {
     }
 
     autoSave.value?.clear()
+    // Best-effort: wipe the cloud mirror too so a fresh device doesn't
+    // pull a stale draft after submission. Failure here doesn't matter
+    // — the real applications/{id} doc is what staff review.
+    if (program.value && user.value) {
+      void deleteCloudDraft(user.value.uid, program.value.slug as DraftProgramSlug)
+    }
     submittedId.value = applicationId
   } catch (err) {
     submitError.value = err instanceof Error ? err.message : 'Submission failed. Try again.'
@@ -378,7 +440,10 @@ onMounted(() => {
     router.replace({ path: '/signup', query: { redirect: route.fullPath } })
     return
   }
-  initAutoSave()
+  // Fire-and-forget; the async work is the cloud-vs-local merge, but
+  // useAutoSave's localStorage restore still runs synchronously inside
+  // it, so the form rehydrates on the same paint either way.
+  void initAutoSave()
   trackApplyClick({
     program: program.value.programKey === 'stepup_scholars' ? 'stepup' : 'dynamerge',
     source: 'apply_route',
@@ -596,13 +661,22 @@ watch(
           :transition="{ duration: 0.25 }"
           class="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-50 ring-1 ring-emerald-200 text-emerald-900 text-sm"
         >
-          <Icon icon="lucide:rotate-ccw" width="16" class="mt-0.5 text-emerald-700 shrink-0" />
+          <Icon :icon="restoredFromCloud ? 'lucide:cloud-download' : 'lucide:rotate-ccw'" width="16" class="mt-0.5 text-emerald-700 shrink-0" />
           <div class="flex-1 min-w-0">
-            <div class="font-semibold">Draft restored.</div>
+            <div class="font-semibold">
+              {{ restoredFromCloud ? 'Draft synced from your account.' : 'Draft restored.' }}
+            </div>
             <div class="text-emerald-800/80 text-xs mt-0.5">
-              Picked up where you left off — last edited
-              {{ relativeTime(autoSave.lastSavedAt) }}. Uploaded files
-              need to be reattached.
+              <template v-if="restoredFromCloud">
+                Picked up where you left off — last edited
+                {{ relativeTime(autoSave.lastSavedAt) }} on another device.
+                Uploaded files need to be reattached.
+              </template>
+              <template v-else>
+                Picked up where you left off — last edited
+                {{ relativeTime(autoSave.lastSavedAt) }}. Uploaded files
+                need to be reattached.
+              </template>
             </div>
           </div>
           <button

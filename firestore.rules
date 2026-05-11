@@ -150,6 +150,34 @@ service cloud.firestore {
                        hasAnyRole(['staff', 'admin']);
     }
 
+    // Per-(user, program) application drafts. Mirrors what the apply
+    // wizard auto-saves to localStorage so the in-progress form follows
+    // the *account*, not just the browser. Doc ID is deterministic:
+    // `${uid}_${program}`. Submission flow deletes the draft after the
+    // real `applications/{auto-id}` doc is created.
+    match /applicationDrafts/{draftId} {
+      // Read: applicant only. No staff visibility on drafts — these are
+      // pre-submission scratchpads, not records under review.
+      allow read: if request.auth != null && isOwner(resource.data.userId);
+
+      // Create / update: owner only. `userId` on the doc must match the
+      // caller; `program` must be one of the known slugs. We don't lock
+      // the payload shape — the client owns the wizard schema and may
+      // add fields over time.
+      allow create: if request.auth != null &&
+                    isOwner(request.resource.data.userId) &&
+                    request.resource.data.program in ['stepup-scholars', 'dynamerge'];
+      allow update: if request.auth != null &&
+                    isOwner(resource.data.userId) &&
+                    isOwner(request.resource.data.userId);
+
+      // Delete: applicant clears their own (e.g. after submit, or via
+      // the dashboard's "Discard" button). Staff/admin can also clean
+      // up — symmetric with applications above.
+      allow delete: if (request.auth != null && isOwner(resource.data.userId)) ||
+                       hasAnyRole(['staff', 'admin']);
+    }
+
     // Programs collection rules
     match /programs/{programId} {
       // Everyone can read programs

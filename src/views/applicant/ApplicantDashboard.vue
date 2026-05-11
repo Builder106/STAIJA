@@ -13,6 +13,7 @@ import UiChip from '../../components/ui/UiChip.vue'
 import { AuthService, DatabaseService } from '../../services/firebase'
 import type { Application } from '../../services/types'
 import { useAuth } from '../../composables/useAuth'
+import { listUserDrafts, deleteDraft as deleteCloudDraft } from '../../services/applicationDrafts'
 
 const router = useRouter()
 const { displayName } = useAuth()
@@ -21,14 +22,15 @@ const applications = ref<Application[]>([])
 const loading = ref(true)
 const error = ref('')
 
-// In-progress drafts living in localStorage (the Apply.vue wizard auto-
-// saves there until submit creates a Firestore doc). The dashboard
-// peeks the two known keys so an applicant who closed the tab mid-form
-// sees a "Resume your draft" card instead of a misleading empty state.
+// In-progress drafts. The wizard auto-saves to both localStorage
+// (instant, offline-safe) and Firestore (account-bound, cross-device);
+// here we read both and pick the newer entry per program so a draft
+// you started on your phone shows up on your laptop and vice versa.
 interface LocalDraft {
   slug: 'stepup-scholars' | 'dynamerge'
   programName: string
   savedAt: Date
+  source: 'local' | 'cloud'
 }
 const localDrafts = ref<LocalDraft[]>([])
 
@@ -41,10 +43,11 @@ const PROGRAM_SLUGS: Array<{ slug: LocalDraft['slug']; name: string }> = [
 // absent so we don't surface stale work the wizard would also discard.
 const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
-function loadLocalDrafts(uid: string) {
+async function loadLocalDrafts(uid: string) {
   if (typeof window === 'undefined') return
-  const found: LocalDraft[] = []
-  for (const { slug, name } of PROGRAM_SLUGS) {
+  // Local pass — read whatever this browser has cached.
+  const local = new Map<LocalDraft['slug'], { savedAt: number }>()
+  for (const { slug } of PROGRAM_SLUGS) {
     const key = `staija.draft.apply.${slug}.${uid}`
     try {
       const raw = window.localStorage.getItem(key)
@@ -55,22 +58,54 @@ function loadLocalDrafts(uid: string) {
         window.localStorage.removeItem(key)
         continue
       }
-      found.push({ slug, programName: name, savedAt: new Date(parsed.savedAt) })
+      local.set(slug, { savedAt: parsed.savedAt })
     } catch {
-      // Malformed entry — drop it.
       try { window.localStorage.removeItem(key) } catch { /* ignore */ }
     }
+  }
+
+  // Cloud pass — pull every draft the account holds. The cloud listing
+  // can fail (offline / Firestore hiccup); fall through to local-only
+  // in that case.
+  const cloudDocs = await listUserDrafts(uid)
+  const cloud = new Map<LocalDraft['slug'], { savedAt: number }>()
+  for (const doc of cloudDocs) {
+    if (doc.program === 'stepup-scholars' || doc.program === 'dynamerge') {
+      cloud.set(doc.program, { savedAt: doc.savedAt })
+    }
+  }
+
+  // Merge per program — pick the newer of (local, cloud). The card UI
+  // just needs the timestamp; the wizard's own restore logic handles
+  // picking the right *payload* when the applicant clicks Resume.
+  const found: LocalDraft[] = []
+  for (const { slug, name } of PROGRAM_SLUGS) {
+    const l = local.get(slug)
+    const c = cloud.get(slug)
+    if (!l && !c) continue
+    const pickCloud = !!c && (!l || c.savedAt > l.savedAt)
+    found.push({
+      slug,
+      programName: name,
+      savedAt: new Date(pickCloud ? c!.savedAt : l!.savedAt),
+      source: pickCloud ? 'cloud' : 'local',
+    })
   }
   localDrafts.value = found
 }
 
-function discardLocalDraft(d: LocalDraft) {
-  if (!window.confirm(`Discard your ${d.programName} draft? This can't be undone.`)) return
+async function discardLocalDraft(d: LocalDraft) {
+  if (!window.confirm(
+    `Discard your ${d.programName} draft? This wipes it everywhere — this browser and your account. Can't be undone.`,
+  )) return
   const uid = AuthService.getCurrentUser()?.uid
   if (!uid) return
   try {
     window.localStorage.removeItem(`staija.draft.apply.${d.slug}.${uid}`)
   } catch { /* ignore */ }
+  // Cloud delete is best-effort; the localStorage wipe is the primary
+  // affordance the user can observe immediately.
+  await deleteCloudDraft(uid, d.slug)
   localDrafts.value = localDrafts.value.filter((x) => x.slug !== d.slug)
 }
 
@@ -98,8 +133,13 @@ async function loadData() {
       router.push('/login')
       return
     }
-    loadLocalDrafts(currentUser.uid)
-    applications.value = await DatabaseService.getUserApplications(currentUser.uid)
+    // Drafts and Firestore applications can load in parallel — neither
+    // depends on the other.
+    const [, apps] = await Promise.all([
+      loadLocalDrafts(currentUser.uid),
+      DatabaseService.getUserApplications(currentUser.uid),
+    ])
+    applications.value = apps
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load your applications.'
   } finally {
@@ -195,8 +235,9 @@ onMounted(loadData)
                   <h3 class="font-display text-xl font-semibold m-0 truncate">
                     {{ d.programName }}
                   </h3>
-                  <span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-violet/10 text-brand-violet">
-                    Draft · on this device
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-violet/10 text-brand-violet">
+                    <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:laptop'" width="12" />
+                    {{ d.source === 'cloud' ? 'Draft · synced to your account' : 'Draft · this browser only' }}
                   </span>
                 </div>
                 <p class="text-sm text-ink/60 m-0">
