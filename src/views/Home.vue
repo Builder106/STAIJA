@@ -86,7 +86,7 @@ onMounted(async () => {
          otherwise paper/ink/editorial; the hero is where the brand
          gradient gets to be loud, so the page feels like a cousin of
          the violet→cyan logo instead of a foil to it. -->
-    <Section class="!pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white dark:text-ink-static">
+    <Section class="min-h-dvh flex items-center !pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white dark:text-ink-static">
       <!-- Soft accent glow behind the Lottie. Hidden on small screens
            where the artwork stacks below the copy and the glow would
            wash out the headline. -->
