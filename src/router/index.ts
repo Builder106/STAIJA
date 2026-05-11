@@ -193,10 +193,26 @@ router.afterEach((to) => {
 // the current chunk hashes baked in.
 router.onError((error, to) => {
   const msg = error instanceof Error ? error.message : String(error)
+  // Per-browser error messages for failed dynamic imports vary widely.
+  // Cover the major patterns we've seen in the wild:
+  //   - "Failed to fetch dynamically imported module" (Chrome/Edge)
+  //   - "Importing a module script failed"           (Safari)
+  //   - "error loading dynamically imported module"  (Firefox)
+  //   - "TypeError: Load failed"                     (Safari, generic
+  //                                                   fetch-failure shape
+  //                                                   that also covers
+  //                                                   content-blocker
+  //                                                   interference)
+  //   - "ChunkLoadError"                             (legacy webpack-style
+  //                                                   shape, occasionally
+  //                                                   surfaced by Vite)
   const isChunkLoadFailure =
     /Failed to fetch dynamically imported module/i.test(msg) ||
     /Importing a module script failed/i.test(msg) ||
-    /error loading dynamically imported module/i.test(msg)
+    /error loading dynamically imported module/i.test(msg) ||
+    /^TypeError:\s*Load failed/i.test(msg) ||
+    /Load failed$/i.test(msg) ||
+    /ChunkLoadError/i.test(msg)
   if (isChunkLoadFailure && typeof window !== 'undefined') {
     // Tag the reload so a chunk that 404s on the *fresh* HTML too
     // (genuine 404 — route component was deleted) doesn't trap us in
