@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
 import { getAnalytics } from 'firebase/analytics'
@@ -73,7 +73,26 @@ export async function getAppCheckToken(): Promise<string | null> {
 
 // Initialize Firebase services
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+// initializeFirestore (not getFirestore) so we can pass transport options.
+// experimentalAutoDetectLongPolling probes the default WebChannel streaming
+// transport at startup, and on failure transparently falls back to plain
+// HTTP long polling.
+//
+// Why: Firestore's default transport is a streaming "Listen/channel" URL
+// with a very specific query-string signature (VER=8, TYPE=xmlhttp, etc).
+// Safari content blockers, school WiFi captive portals, corporate proxies,
+// and some mobile carriers in our recruiting regions all flag that as
+// suspicious traffic and 4xx it — manifesting as the cryptic
+//   "Fetch API cannot load ... due to access control checks"
+// console error and silent data hangs. The long-polling fallback looks
+// like ordinary HTTPS requests and gets through everywhere.
+//
+// "Auto-detect" (vs. forceLongPolling) preserves WebChannel for users
+// whose networks allow it — those get the lower-latency transport — and
+// only degrades for the ones that need it.
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+})
 // Default bucket — used for application uploads (transcripts, IDs,
 // reference letters). Lives in the project's data region (africa-south1)
 // since those are private files served only to the applicant + staff.
