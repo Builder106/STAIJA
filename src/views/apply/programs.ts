@@ -217,11 +217,22 @@ export const PROGRAMS: Record<string, ProgramSchema> = {
         // Timezone and connectivity self-report are still
         // Dynamerge-specific.
         {
+          // Africa-only timezone shortlist. Dynamerge is for residents of
+          // African countries, and the four bands below cover the whole
+          // continent — narrowing the choice avoids "WAT vs WAST vs UTC+1"
+          // free-text drift and gives ops a stable bucket to schedule
+          // against. Diaspora / odd cases are rare enough to deal with
+          // by hand if they show up.
           name: 'timezone',
           label: 'Timezone',
-          type: 'text',
+          type: 'select',
           required: true,
-          placeholder: 'WAT (UTC+1), EAT (UTC+3), …',
+          options: [
+            'GMT (UTC+0) — West Africa',
+            'WAT (UTC+1) — West / Central Africa',
+            'CAT (UTC+2) — Central / Southern Africa',
+            'EAT (UTC+3) — East Africa',
+          ],
           helpText: 'So we can schedule live sessions you can actually attend.',
         },
         {

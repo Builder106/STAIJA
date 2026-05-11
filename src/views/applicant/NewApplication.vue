@@ -462,8 +462,25 @@ const uploadingFiles = ref(false)
 
 // Auto-save: persist the draft to localStorage every 30s and on tab close.
 // Restored automatically on mount; cleared on successful submit.
+//
+// Key is scoped by uid so a shared device (school lab, family laptop)
+// doesn't leak one applicant's in-progress draft to whoever signs in
+// next. The route guard already requires auth, so currentUser is
+// reliably non-null here; 'anon' is a defensive fallback only.
+const _ns = AuthService.getCurrentUser()?.uid ?? 'anon'
+// One-time migration: pull a pre-scoping legacy draft into the scoped
+// slot for *this* user — they're on this page right now, so a stale
+// draft almost certainly belongs to them.
+try {
+  const legacy = window.localStorage.getItem('staija.draft.apply.new')
+  const scoped = window.localStorage.getItem(`staija.draft.apply.new.${_ns}`)
+  if (legacy && !scoped) {
+    window.localStorage.setItem(`staija.draft.apply.new.${_ns}`, legacy)
+  }
+  window.localStorage.removeItem('staija.draft.apply.new')
+} catch { /* private mode / quota — fine */ }
 const { restored: draftRestored, status: autoSaveStatus, lastSavedAt: autoSavedAt, clear: clearDraft } =
-  useAutoSave('apply.new', form)
+  useAutoSave(`apply.new.${_ns}`, form)
 
 // Computed properties for text inputs
 const relevantCoursesText = computed({

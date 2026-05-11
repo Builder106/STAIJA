@@ -21,6 +21,59 @@ const applications = ref<Application[]>([])
 const loading = ref(true)
 const error = ref('')
 
+// In-progress drafts living in localStorage (the Apply.vue wizard auto-
+// saves there until submit creates a Firestore doc). The dashboard
+// peeks the two known keys so an applicant who closed the tab mid-form
+// sees a "Resume your draft" card instead of a misleading empty state.
+interface LocalDraft {
+  slug: 'stepup-scholars' | 'dynamerge'
+  programName: string
+  savedAt: Date
+}
+const localDrafts = ref<LocalDraft[]>([])
+
+const PROGRAM_SLUGS: Array<{ slug: LocalDraft['slug']; name: string }> = [
+  { slug: 'stepup-scholars', name: 'StepUp Scholars' },
+  { slug: 'dynamerge', name: 'Dynamerge' },
+]
+
+// TTL matches useAutoSave (14 days). A draft past TTL is treated as
+// absent so we don't surface stale work the wizard would also discard.
+const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
+
+function loadLocalDrafts(uid: string) {
+  if (typeof window === 'undefined') return
+  const found: LocalDraft[] = []
+  for (const { slug, name } of PROGRAM_SLUGS) {
+    const key = `staija.draft.apply.${slug}.${uid}`
+    try {
+      const raw = window.localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw) as { v?: number; savedAt?: number }
+      if (parsed.v !== 1 || typeof parsed.savedAt !== 'number') continue
+      if (Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+        window.localStorage.removeItem(key)
+        continue
+      }
+      found.push({ slug, programName: name, savedAt: new Date(parsed.savedAt) })
+    } catch {
+      // Malformed entry — drop it.
+      try { window.localStorage.removeItem(key) } catch { /* ignore */ }
+    }
+  }
+  localDrafts.value = found
+}
+
+function discardLocalDraft(d: LocalDraft) {
+  if (!window.confirm(`Discard your ${d.programName} draft? This can't be undone.`)) return
+  const uid = AuthService.getCurrentUser()?.uid
+  if (!uid) return
+  try {
+    window.localStorage.removeItem(`staija.draft.apply.${d.slug}.${uid}`)
+  } catch { /* ignore */ }
+  localDrafts.value = localDrafts.value.filter((x) => x.slug !== d.slug)
+}
+
 const firstName = computed(() => {
   const name = displayName.value ?? ''
   return name.split(/[\s@]/)[0] || 'there'
@@ -45,6 +98,7 @@ async function loadData() {
       router.push('/login')
       return
     }
+    loadLocalDrafts(currentUser.uid)
     applications.value = await DatabaseService.getUserApplications(currentUser.uid)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load your applications.'
@@ -110,13 +164,63 @@ onMounted(loadData)
       <div class="flex flex-col gap-3 mb-12">
         <Eyebrow class="text-brand-violet">Applicant dashboard</Eyebrow>
         <Heading :level="1">Hi, <span class="text-brand-violet">{{ firstName }}</span>.</Heading>
-        <Body v-if="!loading && !hasApplications" class="text-ink/70 max-w-xl">
+        <Body v-if="!loading && !hasApplications && localDrafts.length === 0" class="text-ink/70 max-w-xl">
           You haven't started an application yet. Pick a program below to begin —
           it takes about 20 minutes and your progress saves automatically.
+        </Body>
+        <Body v-else-if="!loading && !hasApplications" class="text-ink/70 max-w-xl">
+          You have an unfinished draft below. Pick it up where you left off, or
+          start a fresh application for the other program.
         </Body>
         <Body v-else-if="!loading" class="text-ink/70 max-w-xl">
           Pick up where you left off, or start a new application for the other program.
         </Body>
+      </div>
+
+      <!-- In-progress localStorage drafts. Surfaced here because they
+           aren't Firestore docs yet — without this card the dashboard
+           reads as "empty" while the applicant's draft sits invisibly
+           in browser storage. -->
+      <div v-if="!loading && !error && localDrafts.length > 0" class="mb-10">
+        <Eyebrow class="text-brand-violet mb-4 block">Drafts in progress</Eyebrow>
+        <div class="flex flex-col gap-4">
+          <div
+            v-for="d in localDrafts"
+            :key="d.slug"
+            class="block group focus-ring-brand rounded-2xl"
+          >
+            <UiCard class="p-6 flex items-center gap-6 border-2 !border-brand-violet/20">
+              <div class="flex-1 flex flex-col gap-1.5 min-w-0">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <h3 class="font-display text-xl font-semibold m-0 truncate">
+                    {{ d.programName }}
+                  </h3>
+                  <span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-violet/10 text-brand-violet">
+                    Draft · on this device
+                  </span>
+                </div>
+                <p class="text-sm text-ink/60 m-0">
+                  Saved {{ timeAgo(d.savedAt) }} · not submitted yet
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-ink/50 hover:text-red-600 transition-colors px-2 py-1 rounded focus-ring-brand"
+                  @click.stop.prevent="discardLocalDraft(d)"
+                >
+                  Discard
+                </button>
+                <UiButton variant="primary" :to="`/apply/${d.slug}`">
+                  <span class="flex items-center gap-2">
+                    Resume
+                    <Icon icon="lucide:arrow-right" width="16" />
+                  </span>
+                </UiButton>
+              </div>
+            </UiCard>
+          </div>
+        </div>
       </div>
 
       <!-- Loading -->

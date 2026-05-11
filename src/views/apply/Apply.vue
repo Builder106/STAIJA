@@ -89,8 +89,25 @@ watch(formStateForSave, (v) => { persistedRef.value = v }, { deep: true })
 
 const autoSave = ref<ReturnType<typeof useAutoSave> | null>(null)
 function initAutoSave() {
-  if (!program.value || autoSave.value) return
-  autoSave.value = useAutoSave(`apply.${program.value.slug}`, persistedRef)
+  if (!program.value || autoSave.value || !user.value) return
+  // Scope the localStorage key by uid so signing out / signing in as a
+  // different user (shared device, school lab) doesn't expose the prior
+  // applicant's in-progress draft to the new viewer. Same user, same
+  // browser → still recovers cleanly across sign-in cycles.
+  const scopedKey = `apply.${program.value.slug}.${user.value.uid}`
+  // One-time migration: lift any pre-scoping legacy draft (written
+  // before this fix) into the new uid-scoped slot for the *current*
+  // user only — safe because if they're sitting on this page right now
+  // and a stale draft is present, it almost certainly belongs to them.
+  try {
+    const legacy = window.localStorage.getItem(`staija.draft.apply.${program.value.slug}`)
+    const scoped = window.localStorage.getItem(`staija.draft.${scopedKey}`)
+    if (legacy && !scoped) {
+      window.localStorage.setItem(`staija.draft.${scopedKey}`, legacy)
+    }
+    window.localStorage.removeItem(`staija.draft.apply.${program.value.slug}`)
+  } catch { /* private mode / quota — fine */ }
+  autoSave.value = useAutoSave(scopedKey, persistedRef)
   // After restore, hydrate the form state from the ref.
   watch(persistedRef, (v) => {
     if (autoSave.value?.restored) {

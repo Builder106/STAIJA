@@ -237,13 +237,17 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
       >
         {{ selectedLabel || placeholder }}
       </span>
-      <Icon
-        icon="lucide:chevrons-up-down"
-        width="15"
-        class="ui-select__chevron"
-        :class="{ 'ui-select__chevron--open': open }"
+      <span
+        class="ui-select__chevron-wrap"
+        :class="{ 'ui-select__chevron-wrap--open': open }"
         aria-hidden="true"
-      />
+      >
+        <Icon
+          icon="lucide:chevrons-up-down"
+          width="16"
+          class="ui-select__chevron"
+        />
+      </span>
     </button>
 
     <Teleport to="body">
@@ -302,25 +306,33 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 }
 .ui-select__trigger {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0;
   width: 100%;
   text-align: left;
   cursor: pointer;
   font-family: inherit;
   font-size: 0.875rem;
   color: inherit;
-  /* Stronger border than sibling inputs — the dropdown's chevron alone
-     wasn't reading as interactive, so we lean on a fuller box outline
-     to signal "this is a control" before the user even moves their
-     mouse. */
-  border-color: rgba(14, 18, 23, 0.18) !important;
+  /* A dropdown trigger should *not* look like a text input — the
+     chevron alone wasn't enough. We use a slightly stronger border
+     plus a faint background tint so the trigger reads as a control
+     ("click me, pick from a list") instead of a field ("type here").
+     The right-side chevron well below adds a second affordance. */
+  border-color: rgba(14, 18, 23, 0.2) !important;
+  background-color: rgba(14, 18, 23, 0.025);
+  /* Match sibling text inputs' left padding (px-4 py-3) so dropdowns
+     and inputs align vertically in mixed grids. Right padding is zero
+     because the chevron well sits flush against the right edge. */
+  padding: 0 0 0 1rem !important;
+  min-height: 2.875rem;
+  overflow: hidden;
   transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) {
-  border-color: rgba(14, 18, 23, 0.32) !important;
-  background-color: rgba(14, 18, 23, 0.015);
+  border-color: rgba(14, 18, 23, 0.36) !important;
+  background-color: rgba(14, 18, 23, 0.05);
 }
 .ui-select__trigger:disabled {
   opacity: 0.5;
@@ -338,19 +350,41 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1 1 auto;
+  align-self: center;
 }
 .ui-select__placeholder {
   color: rgba(14, 18, 23, 0.45);
 }
-.ui-select__chevron {
+/* Right-side "well" that hosts the chevron. The vertical hairline +
+   tinted background reads as a button-on-the-right — the visual cue
+   that this control opens a list, even before the user hovers. */
+.ui-select__chevron-wrap {
   flex-shrink: 0;
-  color: rgba(14, 18, 23, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  align-self: stretch;
+  border-left: 1px solid rgba(14, 18, 23, 0.12);
+  background-color: rgba(14, 18, 23, 0.035);
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+.ui-select__trigger:hover:not(:disabled) .ui-select__chevron-wrap {
+  background-color: rgba(139, 85, 255, 0.08);
+  border-left-color: rgba(14, 18, 23, 0.24);
+}
+.ui-select__chevron-wrap--open {
+  background-color: rgba(139, 85, 255, 0.12) !important;
+  border-left-color: rgba(139, 85, 255, 0.4) !important;
+}
+.ui-select__chevron {
+  color: rgba(14, 18, 23, 0.7);
   transition: color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) .ui-select__chevron {
-  color: rgba(14, 18, 23, 0.85);
+  color: rgba(14, 18, 23, 0.92);
 }
-.ui-select__chevron--open {
+.ui-select__chevron-wrap--open .ui-select__chevron {
   color: #8b55ff;
 }
 </style>
