@@ -87,17 +87,67 @@ service cloud.firestore {
     }
 
     // Applications collection rules
+    //
+    // Two writers, each with a different scope:
+    //   - Applicant (the owner) can author + edit their application
+    //     while it's still in `draft` status, and submit it (draft →
+    //     submitted). Once submitted, the record is locked from the
+    //     applicant side so staff review what was actually submitted.
+    //   - Staff/admin can change the four review-related fields
+    //     (status, reviewedAt, reviewedBy, feedback) at any time, but
+    //     can't touch the applicant's personalInfo / academicInfo /
+    //     motivation / references / etc.
     match /applications/{applicationId} {
-      // Applicants can read/write their own applications
-      allow read, write: if isOwner(resource.data.userId);
+      // Read: applicant sees their own; staff/admin see all.
+      allow read: if (request.auth != null && isOwner(resource.data.userId)) ||
+                     hasAnyRole(['staff', 'admin']);
 
-      // Staff and admins can read all applications
-      allow read: if hasAnyRole(['staff', 'admin']);
+      // Create: applicant creates their own application. The userId on
+      // the new doc must match their uid, and they can only set
+      // status to a self-managed value (draft or submitted) — they
+      // can't conjure an already-accepted application.
+      allow create: if request.auth != null &&
+                    isOwner(request.resource.data.userId) &&
+                    request.resource.data.status in ['draft', 'submitted'];
 
-      // Staff and admins can update applications for review
-      allow update: if hasAnyRole(['staff', 'admin']) &&
-                   request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'feedback']);
+      // Update: three valid paths, OR'd together.
+      allow update: if (
+          // 1. Applicant editing their still-draft application.
+          //    - Current status must be 'draft' (post-submission lock)
+          //    - May not write the staff-only review fields
+          //    - New status may only be 'draft' or 'submitted'
+          //      (i.e. they can save another draft or hit submit;
+          //      they cannot self-accept)
+          request.auth != null &&
+          isOwner(resource.data.userId) &&
+          resource.data.status == 'draft' &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['reviewedAt', 'reviewedBy', 'feedback']) &&
+          request.resource.data.status in ['draft', 'submitted']
+        ) || (
+          // 2. Applicant attaching documents to a freshly-submitted
+          //    application. The file URLs land on the doc *after*
+          //    Storage uploads complete (NewApplication.vue creates
+          //    with status='submitted', then patches `documents`).
+          //    Locked to that one field, and only allowed while the
+          //    application hasn't moved into formal review yet —
+          //    no editing attachments after staff start reviewing.
+          request.auth != null &&
+          isOwner(resource.data.userId) &&
+          resource.data.status in ['draft', 'submitted'] &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['documents'])
+        ) || (
+          // 3. Staff/admin reviewing — narrow allow-list of fields.
+          hasAnyRole(['staff', 'admin']) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'feedback'])
+        );
+
+      // Delete: applicant can withdraw their own at any stage; staff
+      // and admin can also remove records (for cleanup / GDPR).
+      allow delete: if (request.auth != null && isOwner(resource.data.userId)) ||
+                       hasAnyRole(['staff', 'admin']);
     }
 
     // Programs collection rules
