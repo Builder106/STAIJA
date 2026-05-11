@@ -18,6 +18,7 @@ import {
   normalizeSlug,
   type ModuleFields,
 } from '../../../services/lmsContent'
+import { useFormDirty } from '../../../composables/useFormDirty'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,6 +39,7 @@ const form = ref<ModuleFields>({
   assignments: [],
   unlockRule: 'sequential',
 })
+const { isDirty, markClean } = useFormDirty(form)
 
 function extractRefIds(value: unknown): string[] {
   if (!Array.isArray(value)) return []
@@ -61,6 +63,7 @@ async function load() {
       assignments: extractRefIds(f.assignments),
       unlockRule: ((f.unlockRule as 'sequential' | 'open') ?? 'sequential'),
     }
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Failed to load module.'
   } finally {
@@ -84,6 +87,7 @@ async function save() {
       id.value = created.id
       router.replace({ path: `/admin/content/modules/${created.id}` })
     }
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Save failed.'
   } finally {
@@ -107,6 +111,7 @@ async function saveAndPublish() {
     }
     await publishEntry(entryId!)
     isPublished.value = true
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Publish failed.'
   } finally {
@@ -200,9 +205,20 @@ onMounted(load)
               <Icon v-if="saving" icon="lucide:loader-2" width="14" class="animate-spin" />
               {{ saving ? 'Saving…' : 'Save draft' }}
             </UiButton>
-            <UiButton variant="primary" :disabled="!canSave || publishing" @click="saveAndPublish">
+            <UiButton
+              variant="primary"
+              :disabled="!canSave || publishing || (isPublished && !isDirty)"
+              @click="saveAndPublish"
+            >
               <Icon v-if="publishing" icon="lucide:loader-2" width="14" class="animate-spin" />
-              {{ publishing ? 'Publishing…' : 'Save & publish' }}
+              <Icon
+                v-else-if="isPublished && !isDirty"
+                icon="lucide:check"
+                width="14"
+              />
+              <template v-if="publishing">Publishing…</template>
+              <template v-else-if="isPublished && !isDirty">Published</template>
+              <template v-else>Save &amp; publish</template>
             </UiButton>
           </div>
         </template>

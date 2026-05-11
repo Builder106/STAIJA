@@ -25,6 +25,7 @@ import {
   type CourseFields,
   type ComputedHours,
 } from '../../../services/lmsContent'
+import { useFormDirty } from '../../../composables/useFormDirty'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,6 +57,7 @@ const form = ref<CourseFields>({
   version: isNew.value ? currentTermVersion() : '',
   coverImage: undefined,
 })
+const { isDirty, markClean } = useFormDirty(form)
 
 async function load() {
   // Duplicate flow: /admin/content/courses/new?from=<sourceId>
@@ -94,6 +96,7 @@ async function load() {
     // Existing courses always carry a slug — never auto-rewrite it
     // when the editor changes the title (would break links/imports).
     slugTouched.value = true
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Failed to load course.'
   } finally {
@@ -200,6 +203,7 @@ async function save() {
       id.value = created.id
       router.replace({ path: `/admin/content/courses/${created.id}` })
     }
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Save failed.'
   } finally {
@@ -224,6 +228,7 @@ async function saveAndPublish() {
     }
     await publishEntry(entryId!)
     isPublished.value = true
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Publish failed.'
   } finally {
@@ -416,9 +421,20 @@ onMounted(async () => {
               <Icon v-if="saving" icon="lucide:loader-2" width="14" class="animate-spin" />
               {{ saving ? 'Saving…' : 'Save draft' }}
             </UiButton>
-            <UiButton variant="primary" :disabled="!canSave || publishing" @click="saveAndPublish">
+            <UiButton
+              variant="primary"
+              :disabled="!canSave || publishing || (isPublished && !isDirty)"
+              @click="saveAndPublish"
+            >
               <Icon v-if="publishing" icon="lucide:loader-2" width="14" class="animate-spin" />
-              {{ publishing ? 'Publishing…' : 'Save & publish' }}
+              <Icon
+                v-else-if="isPublished && !isDirty"
+                icon="lucide:check"
+                width="14"
+              />
+              <template v-if="publishing">Publishing…</template>
+              <template v-else-if="isPublished && !isDirty">Published</template>
+              <template v-else>Save &amp; publish</template>
             </UiButton>
           </div>
         </template>

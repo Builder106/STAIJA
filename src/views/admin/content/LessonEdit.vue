@@ -21,6 +21,7 @@ import {
 } from '../../../services/lmsContent'
 import { emptyDocument } from '../../../services/richTextSerializer'
 import { lessonMediaAssist, type LessonMediaResult } from '../../../services/ai'
+import { useFormDirty } from '../../../composables/useFormDirty'
 import type { Document, TopLevelBlock } from '@contentful/rich-text-types'
 import { BLOCKS } from '@contentful/rich-text-types'
 
@@ -43,6 +44,7 @@ const form = ref<LessonFields>({
   estimatedMinutes: undefined,
   completionCriteria: 'viewed',
 })
+const { isDirty, markClean } = useFormDirty(form)
 
 async function load() {
   if (!id.value) return
@@ -59,6 +61,7 @@ async function load() {
       estimatedMinutes: f.estimatedMinutes as number | undefined,
       completionCriteria: ((f.completionCriteria as 'viewed' | 'assignment_submitted' | 'quiz_passed') ?? 'viewed'),
     }
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Failed to load lesson.'
   } finally {
@@ -87,6 +90,7 @@ async function save() {
       id.value = created.id
       router.replace({ path: `/admin/content/lessons/${created.id}` })
     }
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Save failed.'
   } finally {
@@ -110,6 +114,7 @@ async function saveAndPublish() {
     }
     await publishEntry(entryId!)
     isPublished.value = true
+    markClean()
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Publish failed.'
   } finally {
@@ -560,9 +565,20 @@ onMounted(load)
               <Icon v-if="saving" icon="lucide:loader-2" width="14" class="animate-spin" />
               {{ saving ? 'Saving…' : 'Save draft' }}
             </UiButton>
-            <UiButton variant="primary" :disabled="!canSave || publishing" @click="saveAndPublish">
+            <UiButton
+              variant="primary"
+              :disabled="!canSave || publishing || (isPublished && !isDirty)"
+              @click="saveAndPublish"
+            >
               <Icon v-if="publishing" icon="lucide:loader-2" width="14" class="animate-spin" />
-              {{ publishing ? 'Publishing…' : 'Save & publish' }}
+              <Icon
+                v-else-if="isPublished && !isDirty"
+                icon="lucide:check"
+                width="14"
+              />
+              <template v-if="publishing">Publishing…</template>
+              <template v-else-if="isPublished && !isDirty">Published</template>
+              <template v-else>Save &amp; publish</template>
             </UiButton>
           </div>
         </template>
