@@ -1,0 +1,129 @@
+/**
+ * West African admin-division data for the applicant nationality +
+ * region selectors. STAIJA's target audience is ECOWAS-region
+ * students, so the nationality select is capped to these 15 countries.
+ *
+ * Region lists are the canonical first-level admin divisions (states,
+ * regions, departments, counties, provinces, municipalities — whatever
+ * the country uses). Sourced from official census / interior-ministry
+ * publications; verified against Wikipedia ISO-3166-2 lists.
+ *
+ * If a country isn't in REGIONS_BY_COUNTRY (or its list is empty), the
+ * applicant form falls back to allowing the region field to stay blank
+ * — better than blocking a sign-up over missing fixture data.
+ */
+
+export const WEST_AFRICAN_COUNTRIES = [
+  'Benin',
+  'Burkina Faso',
+  'Cabo Verde',
+  "Côte d'Ivoire",
+  'Gambia',
+  'Ghana',
+  'Guinea',
+  'Guinea-Bissau',
+  'Liberia',
+  'Mali',
+  'Niger',
+  'Nigeria',
+  'Senegal',
+  'Sierra Leone',
+  'Togo',
+] as const
+
+export type WestAfricanCountry = (typeof WEST_AFRICAN_COUNTRIES)[number]
+
+/**
+ * What the region-level field is called in each country, so the form
+ * label can adapt — "State" reads as wrong for a Beninese applicant.
+ * Fallback is "Region".
+ */
+export const REGION_LABEL_BY_COUNTRY: Record<string, string> = {
+  Benin: 'Department',
+  'Burkina Faso': 'Region',
+  'Cabo Verde': 'Municipality',
+  "Côte d'Ivoire": 'District',
+  Gambia: 'Region',
+  Ghana: 'Region',
+  Guinea: 'Region',
+  'Guinea-Bissau': 'Region',
+  Liberia: 'County',
+  Mali: 'Region',
+  Niger: 'Region',
+  Nigeria: 'State',
+  Senegal: 'Region',
+  'Sierra Leone': 'Province',
+  Togo: 'Region',
+}
+
+export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
+  Benin: [
+    'Alibori', 'Atacora', 'Atlantique', 'Borgou', 'Collines', 'Couffo',
+    'Donga', 'Littoral', 'Mono', 'Ouémé', 'Plateau', 'Zou',
+  ],
+  'Burkina Faso': [
+    'Boucle du Mouhoun', 'Cascades', 'Centre', 'Centre-Est', 'Centre-Nord',
+    'Centre-Ouest', 'Centre-Sud', 'Est', 'Hauts-Bassins', 'Nord',
+    'Plateau-Central', 'Sahel', 'Sud-Ouest',
+  ],
+  'Cabo Verde': [
+    'Boa Vista', 'Brava', 'Maio', 'Mosteiros', 'Paúl', 'Porto Novo',
+    'Praia', 'Ribeira Brava', 'Ribeira Grande', 'Ribeira Grande de Santiago',
+    'Sal', 'Santa Catarina', 'Santa Catarina do Fogo', 'Santa Cruz',
+    'São Domingos', 'São Filipe', 'São Lourenço dos Órgãos', 'São Miguel',
+    'São Salvador do Mundo', 'São Vicente', 'Tarrafal',
+    'Tarrafal de São Nicolau',
+  ],
+  "Côte d'Ivoire": [
+    'Abidjan', 'Bas-Sassandra', 'Comoé', 'Denguélé', 'Gôh-Djiboua',
+    'Lacs', 'Lagunes', 'Montagnes', 'Sassandra-Marahoué', 'Savanes',
+    'Vallée du Bandama', 'Woroba', 'Yamoussoukro', 'Zanzan',
+  ],
+  Gambia: [
+    'Banjul', 'Central River', 'Lower River', 'North Bank', 'Upper River',
+    'West Coast',
+  ],
+  Ghana: [
+    'Ahafo', 'Ashanti', 'Bono', 'Bono East', 'Central', 'Eastern',
+    'Greater Accra', 'North East', 'Northern', 'Oti', 'Savannah',
+    'Upper East', 'Upper West', 'Volta', 'Western', 'Western North',
+  ],
+  Guinea: [
+    'Boké', 'Conakry', 'Faranah', 'Kankan', 'Kindia', 'Labé', 'Mamou',
+    'Nzérékoré',
+  ],
+  'Guinea-Bissau': [
+    'Bafatá', 'Biombo', 'Bissau', 'Bolama', 'Cacheu', 'Gabú',
+    'Oio', 'Quinara', 'Tombali',
+  ],
+  Liberia: [
+    'Bomi', 'Bong', 'Gbarpolu', 'Grand Bassa', 'Grand Cape Mount',
+    'Grand Gedeh', 'Grand Kru', 'Lofa', 'Margibi', 'Maryland',
+    'Montserrado', 'Nimba', 'River Cess', 'River Gee', 'Sinoe',
+  ],
+  Mali: [
+    'Bamako', 'Gao', 'Kayes', 'Kidal', 'Koulikoro', 'Mopti', 'Ségou',
+    'Sikasso', 'Taoudénit', 'Tombouctou',
+  ],
+  Niger: [
+    'Agadez', 'Diffa', 'Dosso', 'Maradi', 'Niamey', 'Tahoua', 'Tillabéri',
+    'Zinder',
+  ],
+  Nigeria: [
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
+    'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti',
+    'Enugu', 'FCT (Abuja)', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano',
+    'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger',
+    'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto',
+    'Taraba', 'Yobe', 'Zamfara',
+  ],
+  Senegal: [
+    'Dakar', 'Diourbel', 'Fatick', 'Kaffrine', 'Kaolack', 'Kédougou',
+    'Kolda', 'Louga', 'Matam', 'Saint-Louis', 'Sédhiou', 'Tambacounda',
+    'Thiès', 'Ziguinchor',
+  ],
+  'Sierra Leone': [
+    'Eastern', 'Northern', 'North West', 'Southern', 'Western Area',
+  ],
+  Togo: ['Centrale', 'Kara', 'Maritime', 'Plateaux', 'Savanes'],
+}

@@ -113,14 +113,19 @@ const currentStep = computed(() => stepsMeta.value[stepIndex.value])
 
 function validateField(field: FieldDef): string | null {
   const v = fields.value[field.name]
+  // Use the dynamic label so "State is required" reads correctly for a
+  // Nigerian and "Department is required" for a Beninese applicant.
+  const label = field.optionsBy?.labelByDependent
+    ? (field.optionsBy.labelByDependent[fields.value[field.optionsBy.dependsOn] as string] ?? field.label)
+    : field.label
   if (field.required) {
-    if (v === undefined || v === null) return `${field.label} is required.`
-    if (typeof v === 'string' && v.trim() === '') return `${field.label} is required.`
-    if (Array.isArray(v) && v.length === 0) return `${field.label} is required.`
+    if (v === undefined || v === null) return `${label} is required.`
+    if (typeof v === 'string' && v.trim() === '') return `${label} is required.`
+    if (Array.isArray(v) && v.length === 0) return `${label} is required.`
   }
   if (field.type === 'tags' && Array.isArray(v)) {
-    if (field.minTags && v.length < field.minTags) return `Add at least ${field.minTags} ${field.label.toLowerCase()}.`
-    if (field.maxTags && v.length > field.maxTags) return `${field.label} is capped at ${field.maxTags}.`
+    if (field.minTags && v.length < field.minTags) return `Add at least ${field.minTags} ${label.toLowerCase()}.`
+    if (field.maxTags && v.length > field.maxTags) return `${label} is capped at ${field.maxTags}.`
   }
   return null
 }
@@ -227,7 +232,12 @@ async function handleSubmit() {
   submitError.value = null
   try {
     const f = fields.value as Record<string, unknown>
-    const personalInfo = {
+    // Firestore rejects `undefined` field values on createApplication,
+    // and program-specific extras (state / country / timezone /
+    // internetSelfReport) only exist in one program's schema each — so
+    // we build the object conditionally and never write a key whose
+    // value would be `undefined`.
+    const personalInfo: Record<string, unknown> = {
       firstName: (f.firstName as string) ?? '',
       lastName: (f.lastName as string) ?? '',
       email: (f.email as string) ?? user.value.email ?? '',
@@ -236,11 +246,10 @@ async function handleSubmit() {
       nationality: (f.nationality as string) ?? '',
       currentInstitution: (f.currentInstitution as string) ?? '',
       currentLevel: (f.currentLevel as string) ?? '',
-      // program-specific personal extras
-      state: f.state,
-      country: f.country,
-      timezone: f.timezone,
-      internetSelfReport: f.internetSelfReport,
+    }
+    for (const key of ['region', 'state', 'country', 'timezone', 'internetSelfReport'] as const) {
+      const v = f[key]
+      if (v !== undefined && v !== null && v !== '') personalInfo[key] = v
     }
     const academicInfo = {
       gpa: (f.gpa as string) ?? '',
@@ -350,6 +359,50 @@ function setTagsValue(name: string, value: string) {
     .map((s) => s.trim())
     .filter(Boolean)
 }
+
+// --- Dependent-select helpers ---------------------------------------
+//
+// Fields with `optionsBy` resolve their options + label dynamically
+// from another field's current value. Used today by the region
+// selector: a Nigerian sees "State" with 37 options, a Ghanaian sees
+// "Region" with 16, and so on. Clearing the parent (or switching to a
+// country with no fixture data) leaves the child empty.
+
+function dynamicOptions(field: FieldDef): string[] {
+  if (!field.optionsBy) return field.options ?? []
+  const parentValue = fields.value[field.optionsBy.dependsOn] as string | undefined
+  if (!parentValue) return []
+  return field.optionsBy.map[parentValue] ?? []
+}
+
+function dynamicLabel(field: FieldDef): string {
+  if (!field.optionsBy?.labelByDependent) return field.label
+  const parentValue = fields.value[field.optionsBy.dependsOn] as string | undefined
+  if (!parentValue) return field.label
+  return field.optionsBy.labelByDependent[parentValue] ?? field.label
+}
+
+// Reset any dependent field whose parent changes — so picking
+// "Nigeria" then switching to "Ghana" doesn't leave "Lagos" stranded
+// as a meaningless region value.
+watch(
+  fields,
+  (next, prev) => {
+    if (!program.value) return
+    for (const step of program.value.steps) {
+      for (const f of step.fields) {
+        if (!f.optionsBy) continue
+        const parent = f.optionsBy.dependsOn
+        const before = (prev as Record<string, unknown> | undefined)?.[parent]
+        const after = (next as Record<string, unknown>)[parent]
+        if (before !== undefined && before !== after) {
+          fields.value[f.name] = ''
+        }
+      }
+    }
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -475,7 +528,7 @@ function setTagsValue(name: string, value: string) {
                       :class="field.type === 'textarea' || field.type === 'tags' ? 'sm:col-span-2' : ''"
                     >
                       <label class="text-sm font-semibold text-ink/80">
-                        {{ field.label }}
+                        {{ dynamicLabel(field) }}
                         <span v-if="field.required" class="text-brand-violet">*</span>
                       </label>
                       <textarea
@@ -497,10 +550,23 @@ function setTagsValue(name: string, value: string) {
                         v-else-if="field.type === 'select'"
                         v-model="fields[field.name]"
                         :required="field.required"
-                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
+                        :disabled="field.optionsBy && dynamicOptions(field).length === 0"
+                        class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface disabled:opacity-60"
                       >
-                        <option value="">Choose…</option>
-                        <option v-for="o in field.options" :key="o" :value="o">{{ o }}</option>
+                        <option value="">
+                          {{
+                            field.optionsBy && dynamicOptions(field).length === 0
+                              ? `Pick a ${field.optionsBy.dependsOn} first`
+                              : 'Choose…'
+                          }}
+                        </option>
+                        <option
+                          v-for="o in dynamicOptions(field)"
+                          :key="o"
+                          :value="o"
+                        >
+                          {{ o }}
+                        </option>
                       </select>
                       <input
                         v-else

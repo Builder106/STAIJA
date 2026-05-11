@@ -16,6 +16,8 @@
  * enforced both client-side (UI) and server-side (Cloud Function).
  */
 
+import { WEST_AFRICAN_COUNTRIES, REGIONS_BY_COUNTRY, REGION_LABEL_BY_COUNTRY } from './regions'
+
 export type FieldType = 'text' | 'email' | 'tel' | 'date' | 'url' | 'textarea' | 'select' | 'checkbox' | 'tags' | 'number'
 
 export interface FieldDef {
@@ -45,6 +47,15 @@ export interface FieldDef {
    * still the canonical answer.
    */
   audioOptional?: { maxSeconds: number; prompt?: string }
+  /**
+   * Dynamic select: options come from `map[fields[dependsOn]]` at
+   * render time instead of a static `options` list. Used today by the
+   * region field which keys off the chosen nationality (Nigeria →
+   * states, Ghana → regions, etc.). The field's `label` is also
+   * dynamic — see `labelByDependent` — so the label reads correctly
+   * for whichever country is selected.
+   */
+  optionsBy?: { dependsOn: string; map: Record<string, string[]>; labelByDependent?: Record<string, string> }
 }
 
 export interface StepDef {
@@ -86,7 +97,28 @@ const personalInfoStep = (extras: FieldDef[] = []): StepDef => ({
     { name: 'email', label: 'Email', type: 'email', required: true, helpText: 'We use this for application updates.' },
     { name: 'phone', label: 'Phone', type: 'tel', required: true, placeholder: '+234…' },
     { name: 'dateOfBirth', label: 'Date of birth', type: 'date', required: true },
-    { name: 'nationality', label: 'Nationality', type: 'text', required: true },
+    {
+      name: 'nationality',
+      label: 'Nationality',
+      type: 'select',
+      required: true,
+      options: [...WEST_AFRICAN_COUNTRIES],
+      helpText: 'STAIJA recruits across ECOWAS — 15 West African countries.',
+    },
+    {
+      // Region/state-level admin division. Options + label both adapt
+      // to the chosen nationality, so a Nigerian sees "State", a
+      // Ghanaian sees "Region", a Liberian sees "County", etc.
+      name: 'region',
+      label: 'State / region',
+      type: 'select',
+      required: true,
+      optionsBy: {
+        dependsOn: 'nationality',
+        map: REGIONS_BY_COUNTRY,
+        labelByDependent: REGION_LABEL_BY_COUNTRY,
+      },
+    },
     ...extras,
   ],
 })
@@ -166,21 +198,10 @@ export const PROGRAMS: Record<string, ProgramSchema> = {
       { id: 'commit', label: 'I can commit ~10 hours per week for 6 months.', required: true },
     ],
     steps: [
-      personalInfoStep([
-        {
-          name: 'state',
-          label: 'State (Nigeria)',
-          type: 'select',
-          required: true,
-          options: [
-            'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue',
-            'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu',
-            'FCT (Abuja)', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina',
-            'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo',
-            'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
-          ],
-        },
-      ]),
+      // Nationality + region now live in the shared base step (driven
+      // by the ECOWAS country list), so StepUp doesn't need its own
+      // Nigeria-specific state extra anymore.
+      personalInfoStep(),
       academicInfoStep,
       motivationStep('What scientific questions excite you? E.g. "soil microbiomes", "low-cost diagnostics".'),
     ],
@@ -201,13 +222,10 @@ export const PROGRAMS: Record<string, ProgramSchema> = {
     ],
     steps: [
       personalInfoStep([
-        {
-          name: 'country',
-          label: 'Country of residence',
-          type: 'text',
-          required: true,
-          placeholder: 'Nigeria, Kenya, Ghana, …',
-        },
+        // Nationality + region now come from the shared base step, so
+        // the old "country of residence" text field is redundant.
+        // Timezone and connectivity self-report are still
+        // Dynamerge-specific.
         {
           name: 'timezone',
           label: 'Timezone',
