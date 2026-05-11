@@ -175,6 +175,18 @@ async function initAutoSave() {
     if (typeof v.showcaseNote === 'string') showcaseNote.value = v.showcaseNote
   }
 
+  // Bootstrap-push the local draft to the cloud at mount time when
+  // the cloud copy is missing or older. Without this, a draft that
+  // predates the cloud-sync code (or one written while the Firestore
+  // rule was undeployed) would stay "this browser only" until the
+  // applicant actively edited inside the wizard — the 30s mirror
+  // watcher below only fires on form *changes*. Fire-and-forget;
+  // saveCloudDraft swallows its own errors so a Firestore hiccup
+  // here can't break the form.
+  if (localSavedAt > 0 && (!cloud || cloud.savedAt < localSavedAt)) {
+    void saveCloudDraft(uid, slug as DraftProgramSlug, persistedRef.value)
+  }
+
   // Cloud mirror. Same debounce as the localStorage write — but we hang
   // off a separate watcher so a Firestore hiccup never blocks the local
   // path. Fire-and-forget; saveCloudDraft swallows its own errors.
