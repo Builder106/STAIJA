@@ -93,6 +93,22 @@
           </div>
         </div>
 
+        <div
+          v-if="application.showcase && (application.showcase.url || application.showcase.fileName || application.showcase.note)"
+          class="detail-section"
+        >
+          <h4>Showcase <small style="font-weight: normal; color: #888;">· optional, applicant-submitted</small></h4>
+          <p v-if="application.showcase.url">
+            <strong>Link:</strong>
+            <a :href="application.showcase.url" target="_blank" rel="noopener noreferrer">{{ application.showcase.url }}</a>
+          </p>
+          <p v-if="application.showcase.fileName">
+            <strong>File:</strong> {{ application.showcase.fileName }}
+            <small style="color: #888;">(in Storage at applications/{uid}/{appId}/showcase-…)</small>
+          </p>
+          <p v-if="application.showcase.note"><strong>Note:</strong> {{ application.showcase.note }}</p>
+        </div>
+
         <div v-if="application.feedback" class="detail-section">
           <h4>Review Feedback</h4>
           <p>{{ application.feedback }}</p>

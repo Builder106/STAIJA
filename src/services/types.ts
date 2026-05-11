@@ -171,6 +171,17 @@ export interface Application {
     recommendationLetter?: string
   }
   /**
+   * Optional "show me something you've made" slot. URL is preferred —
+   * zero upload cost, accessible from low-bandwidth contexts. File is
+   * an alternative for applicants without somewhere to host work; the
+   * actual bytes live in Storage under `applications/{uid}/{appId}/`.
+   */
+  showcase?: {
+    url?: string
+    fileName?: string
+    note?: string
+  }
+  /**
    * Set by `onApplicationStatusChange` when Mailgun rejects the
    * applicant-facing email. Cleared automatically on a successful
    * retry. Surfaces a "Retry email" banner on the admin application

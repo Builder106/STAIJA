@@ -50,6 +50,14 @@ const transcriptFile = ref<File | null>(null)
 const idFile = ref<File | null>(null)
 const fileUploadError = ref<string | null>(null)
 
+// Optional "show your work" slot — URL is the preferred path (zero
+// upload, accessible to reviewers anywhere), file is the fallback for
+// applicants without somewhere to host work. Either, both, or neither
+// is fine; reviewers see whatever's there.
+const showcaseUrl = ref('')
+const showcaseNote = ref('')
+const showcaseFile = ref<File | null>(null)
+
 // Optional audio answers, keyed by field name. The recorder is fully
 // off-by-default — empty here means the applicant didn't record one,
 // which is fine: the written field stays canonical and required.
@@ -70,6 +78,8 @@ const formStateForSave = computed(() => ({
   eligibility: eligibility.value,
   fields: fields.value,
   references: references.value,
+  showcaseUrl: showcaseUrl.value,
+  showcaseNote: showcaseNote.value,
   // Files are NOT persisted — File objects don't serialize and
   // re-uploads would be cheap to redo.
 }))
@@ -87,6 +97,8 @@ function initAutoSave() {
       eligibility.value = v.eligibility ?? {}
       fields.value = v.fields ?? {}
       references.value = v.references ?? references.value
+      showcaseUrl.value = v.showcaseUrl ?? ''
+      showcaseNote.value = v.showcaseNote ?? ''
     }
   }, { immediate: true })
 }
@@ -127,6 +139,12 @@ function validateField(field: FieldDef): string | null {
   if (field.type === 'tags' && Array.isArray(v)) {
     if (field.minTags && v.length < field.minTags) return `Add at least ${field.minTags} ${label.toLowerCase()}.`
     if (field.maxTags && v.length > field.maxTags) return `${label} is capped at ${field.maxTags}.`
+  }
+  if (field.type === 'textarea' && field.minWords) {
+    const wc = wordCount(v)
+    if (wc < field.minWords) {
+      return `${label}: write at least ${field.minWords} words. You're at ${wc}.`
+    }
   }
   return null
 }
@@ -259,6 +277,14 @@ async function handleSubmit() {
       relevantCourses: (f.relevantCourses as string[]) ?? [],
     }
 
+    // Optional showcase — only attach if the applicant filled any of
+    // the slots. Skip the property entirely otherwise so we don't write
+    // an empty `{}` to Firestore.
+    const showcase: Record<string, string> = {}
+    if (showcaseUrl.value.trim()) showcase.url = showcaseUrl.value.trim()
+    if (showcaseNote.value.trim()) showcase.note = showcaseNote.value.trim()
+    if (showcaseFile.value) showcase.fileName = showcaseFile.value.name
+
     const applicationId = await DatabaseService.createApplication({
       userId: user.value.uid,
       program: program.value.programKey,
@@ -269,6 +295,7 @@ async function handleSubmit() {
       motivation: (f.motivation as string) ?? '',
       experience: (f.experience as string) ?? '',
       references: references.value,
+      ...(Object.keys(showcase).length > 0 ? { showcase } : {}),
       submittedAt: new Date(),
     } as Parameters<typeof DatabaseService.createApplication>[0])
 
@@ -287,6 +314,14 @@ async function handleSubmit() {
         StorageService.uploadFile(
           idFile.value,
           `applications/${user.value.uid}/${applicationId}/id-${idFile.value.name}`,
+        ),
+      )
+    }
+    if (showcaseFile.value) {
+      uploads.push(
+        StorageService.uploadFile(
+          showcaseFile.value,
+          `applications/${user.value.uid}/${applicationId}/showcase-${showcaseFile.value.name}`,
         ),
       )
     }
@@ -376,15 +411,30 @@ function relativeTime(date: Date): string {
 
 // --- Field helpers for tags input -----------------------------------
 
+// Raw text per tags field, kept separately from `fields[name]` (which
+// stays a clean string[]). Without this, typing a comma rebuilds the
+// array, joins it back with ", ", and instantly erases whatever the
+// user just typed after the comma — including the comma itself.
+const tagsRaw = ref<Record<string, string>>({})
+
 function tagsValue(name: string): string {
+  if (tagsRaw.value[name] !== undefined) return tagsRaw.value[name]
   const v = fields.value[name]
   return Array.isArray(v) ? v.join(', ') : ''
 }
 function setTagsValue(name: string, value: string) {
+  tagsRaw.value[name] = value
   fields.value[name] = value
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
+}
+
+function wordCount(s: unknown): number {
+  if (typeof s !== 'string') return 0
+  const trimmed = s.trim()
+  if (!trimmed) return 0
+  return trimmed.split(/\s+/).length
 }
 
 // --- Dependent-select helpers ---------------------------------------
@@ -627,18 +677,16 @@ watch(
                         :required="field.required"
                         class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                       />
-                      <p v-if="field.helpText" class="text-xs text-ink/50 m-0">{{ field.helpText }}</p>
-                      <details v-if="field.helpExample" class="group rounded-lg border hairline-ink bg-paper/50 px-3 py-2">
-                        <summary class="cursor-pointer text-xs font-semibold text-brand-violet inline-flex items-center gap-1.5 select-none">
-                          <Icon icon="lucide:sparkles" width="12" />
-                          See an example response
-                          <Icon icon="lucide:chevron-down" width="12" class="ml-auto transition-transform group-open:rotate-180" />
-                        </summary>
-                        <blockquote class="mt-2 text-xs text-ink/75 leading-relaxed border-l-2 border-brand-violet/40 pl-3 italic">
-                          {{ field.helpExample.body }}
-                        </blockquote>
-                        <p class="mt-1.5 text-[11px] text-ink/50 not-italic">{{ field.helpExample.author }}</p>
-                      </details>
+                      <div v-if="field.helpText || field.minWords" class="flex items-center justify-between gap-3">
+                        <p v-if="field.helpText" class="text-xs text-ink/50 m-0">{{ field.helpText }}</p>
+                        <p
+                          v-if="field.type === 'textarea' && field.minWords"
+                          class="text-xs font-semibold m-0 shrink-0 tabular-nums"
+                          :class="wordCount(fields[field.name]) >= field.minWords ? 'text-emerald-600' : 'text-ink/50'"
+                        >
+                          {{ wordCount(fields[field.name]) }} / {{ field.minWords }} words
+                        </p>
+                      </div>
                       <AudioRecorder
                         v-if="field.audioOptional"
                         :max-seconds="field.audioOptional.maxSeconds"
@@ -754,6 +802,62 @@ watch(
                 @update:file="(f) => idFile = f"
                 @error="(m) => fileUploadError = m"
               />
+
+              <!-- Optional "show your work" — separated from the gated
+                   documents block above by a hairline. URL is the
+                   preferred path (no upload, no bandwidth tax on either
+                   end). File is the fallback. Reviewers see whatever
+                   the applicant attaches; nothing here is required. -->
+              <div class="border-t hairline-ink pt-6 mt-2 flex flex-col gap-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-brand-violet/10 text-brand-violet flex items-center justify-center shrink-0">
+                    <Icon icon="lucide:sparkles" width="18" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <Heading :level="3" class="!text-lg mb-1">Show us something you've made <span class="text-ink/50 font-normal">· optional</span></Heading>
+                    <Body class="text-ink/70 text-sm m-0">
+                      A repo, a sketch, a track, a 60-second video of a
+                      thing you built — anything that lets us see your
+                      work the way essays can't. Skip this freely; it
+                      won't hurt your application.
+                    </Body>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Link to your work</label>
+                  <input
+                    v-model="showcaseUrl"
+                    type="url"
+                    placeholder="https://github.com/…  ·  https://youtu.be/…  ·  https://behance.net/…"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
+                  />
+                  <p class="text-xs text-ink/50 m-0">GitHub, YouTube (unlisted is fine), Behance, a blog post, an Instagram reel — whatever's easiest.</p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">Or upload a file <span class="text-ink/50 font-normal">· up to 25 MB</span></label>
+                  <FileUpload
+                    label="Image, short video, audio, or PDF"
+                    accept="image/*,video/*,audio/*,application/pdf"
+                    :max-size-bytes="25_000_000"
+                    skip-compress
+                    @update:file="(f) => showcaseFile = f"
+                    @error="(m) => fileUploadError = m"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-semibold text-ink/80">One-line context <span class="text-ink/50 font-normal">· optional</span></label>
+                  <input
+                    v-model="showcaseNote"
+                    type="text"
+                    placeholder="What is this and why are you showing it to us?"
+                    class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
+                  />
+                </div>
+              </div>
+
               <p v-if="fileUploadError" role="alert" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 m-0">
                 {{ fileUploadError }}
               </p>
@@ -793,6 +897,16 @@ watch(
                 <div class="font-semibold text-ink mb-2">Files</div>
                 <div class="text-ink/70">Transcript: {{ transcriptFile?.name ?? 'not attached' }}</div>
                 <div class="text-ink/70">ID: {{ idFile?.name ?? 'not attached' }}</div>
+              </div>
+
+              <div
+                v-if="showcaseUrl || showcaseFile || showcaseNote"
+                class="border hairline-ink rounded-xl p-5 bg-paper/50 text-sm flex flex-col gap-1"
+              >
+                <div class="font-semibold text-ink mb-2">Showcase</div>
+                <div v-if="showcaseUrl" class="text-ink/70 break-all">Link: {{ showcaseUrl }}</div>
+                <div v-if="showcaseFile" class="text-ink/70">File: {{ showcaseFile.name }}</div>
+                <div v-if="showcaseNote" class="text-ink/70">Note: {{ showcaseNote }}</div>
               </div>
 
               <p v-if="submitError" role="alert" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 m-0">

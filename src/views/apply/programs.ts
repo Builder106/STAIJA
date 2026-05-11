@@ -33,12 +33,8 @@ export interface FieldDef {
   /** Min / max for tags type — number of tags allowed. */
   minTags?: number
   maxTags?: number
-  /**
-   * One-paragraph excerpt from a past scholar's response. Rendered
-   * below the input as a "See an example response" disclosure.
-   * Anchors candidates to a real voice instead of a blank box.
-   */
-  helpExample?: { author: string; body: string }
+  /** Minimum word count for textarea fields. Enforced on Continue. */
+  minWords?: number
   /**
    * Render an in-browser audio recorder beside the field — fully
    * optional from the applicant's perspective. Confident speakers and
@@ -159,14 +155,8 @@ const motivationStep = (researchHelp: string): StepDef => ({
       type: 'textarea',
       required: true,
       rows: 6,
+      minWords: 300,
       helpText: '300–500 words. What do you want to learn, and what would you do with it?',
-      // A real(istic) past-scholar paragraph beats a blank textarea —
-      // candidates read it and write *to* somebody instead of into the void.
-      helpExample: {
-        author: '— Amina Y., StepUp 2024 cohort',
-        body:
-          "I've been running fermentation experiments in my mum's kitchen since SS2, trying to get yoghurt to set without a thermometer. Half my notebook is failed cultures. I want StepUp because the lab access is the missing piece — I can't measure pH at home, and the questions I care about (why does Lagos street yoghurt sour faster than the ones I make at home?) need real instruments. I'd use the six months to actually answer that, write it up, and bring whatever I learn back to the women selling kunu at our market.",
-      },
       audioOptional: {
         maxSeconds: 90,
         prompt:

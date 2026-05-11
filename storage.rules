@@ -1,15 +1,17 @@
 rules_version = "2";
 service firebase.storage {
   match /b/{bucket}/o {
-    // Application uploads (transcript / ID): only the applicant can write
-    // to their own folder; only admins / staff can read.
+    // Application uploads (transcript / ID / optional showcase): only the
+    // applicant can write to their own folder; only admins / staff can
+    // read. 25MB cap is generous enough for a ~90s phone video clip in
+    // the optional showcase slot; transcripts and IDs still fit easily.
     match /applications/{uid}/{rest=**} {
       allow read: if request.auth != null && (
         request.auth.uid == uid ||
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff']
       );
       allow write: if request.auth != null && request.auth.uid == uid &&
-        request.resource.size < 5 * 1024 * 1024;
+        request.resource.size < 25 * 1024 * 1024;
     }
 
     // Reference letters: written exclusively by the `submitReferenceLetter`
