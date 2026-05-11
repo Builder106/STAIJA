@@ -181,6 +181,37 @@ router.afterEach((to) => {
   }
 })
 
+// Catch failed lazy-import chunks on stale-cache visits. When a new
+// deploy ships, every route component's chunk hash changes. A user
+// with a cached index.html from an earlier deploy holds references to
+// old chunk filenames; the moment they navigate to a route Vue Router
+// tries to lazy-load, the fetch 404s and the navigation silently
+// fails — symptom is an empty page with no console error. Hard refresh
+// "fixes" it because it drops the cached HTML. We do that hard refresh
+// for the user instead of leaving them stranded. Uses location.assign
+// (not just router.replace) so the browser re-fetches index.html with
+// the current chunk hashes baked in.
+router.onError((error, to) => {
+  const msg = error instanceof Error ? error.message : String(error)
+  const isChunkLoadFailure =
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg)
+  if (isChunkLoadFailure && typeof window !== 'undefined') {
+    // Tag the reload so a chunk that 404s on the *fresh* HTML too
+    // (genuine 404 — route component was deleted) doesn't trap us in
+    // an infinite reload loop.
+    const reloaded = sessionStorage.getItem('staija.chunkReloaded')
+    if (reloaded !== to.fullPath) {
+      sessionStorage.setItem('staija.chunkReloaded', to.fullPath)
+      window.location.assign(to.fullPath)
+    } else {
+      sessionStorage.removeItem('staija.chunkReloaded')
+      console.error('[router] chunk load failed twice for', to.fullPath, '— surfacing error')
+    }
+  }
+})
+
 // Global auth and permission guard
 router.beforeEach(async (to, _from, next) => {
   const requiresAuth = Boolean(to.meta?.requiresAuth)
