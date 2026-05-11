@@ -156,25 +156,36 @@ service cloud.firestore {
     // `${uid}_${program}`. Submission flow deletes the draft after the
     // real `applications/{auto-id}` doc is created.
     match /applicationDrafts/{draftId} {
-      // Read: applicant only. No staff visibility on drafts — these are
-      // pre-submission scratchpads, not records under review.
-      allow read: if request.auth != null && isOwner(resource.data.userId);
+      // Ownership check derived from the deterministic doc ID
+      // (`${uid}_${program}`) rather than from `resource.data` —
+      // because `resource` is null for non-existent docs, and reads
+      // of a missing path would otherwise return permission-denied
+      // instead of an empty snapshot, breaking the wizard's "no draft
+      // exists yet" path. The doc-ID prefix is sufficient: clients
+      // can only write under their own uid (enforced by the create
+      // rule below) so a path match implies ownership.
+      allow read: if request.auth != null &&
+                  draftId.matches('^' + request.auth.uid + '_.+$');
 
-      // Create / update: owner only. `userId` on the doc must match the
-      // caller; `program` must be one of the known slugs. We don't lock
-      // the payload shape — the client owns the wizard schema and may
-      // add fields over time.
+      // Create / update: owner only. Path must match canonical
+      // `${uid}_${program}` shape AND the `userId` field on the doc
+      // must equal the caller — belt-and-suspenders so a client
+      // can't write to a malformed path with someone else's userId
+      // (or vice versa). `program` must be one of the known slugs.
       allow create: if request.auth != null &&
+                    draftId.matches('^' + request.auth.uid + '_.+$') &&
                     isOwner(request.resource.data.userId) &&
                     request.resource.data.program in ['stepup-scholars', 'dynamerge'];
       allow update: if request.auth != null &&
+                    draftId.matches('^' + request.auth.uid + '_.+$') &&
                     isOwner(resource.data.userId) &&
                     isOwner(request.resource.data.userId);
 
       // Delete: applicant clears their own (e.g. after submit, or via
       // the dashboard's "Discard" button). Staff/admin can also clean
       // up — symmetric with applications above.
-      allow delete: if (request.auth != null && isOwner(resource.data.userId)) ||
+      allow delete: if (request.auth != null &&
+                       draftId.matches('^' + request.auth.uid + '_.+$')) ||
                        hasAnyRole(['staff', 'admin']);
     }
 
