@@ -26,7 +26,7 @@ import UiButton from '../../components/ui/UiButton.vue'
     <Section class="!py-10">
       <Container class="flex flex-col gap-6">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Curriculum</Eyebrow>
               <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">
@@ -49,7 +49,7 @@ import UiButton from '../../components/ui/UiButton.vue'
             <UiButton variant="primary" :to="{ path: '/learn' }">Continue learning</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Resources</Eyebrow>
               <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">
@@ -63,7 +63,7 @@ import UiButton from '../../components/ui/UiButton.vue'
             <UiButton variant="primary">Browse resources</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Library</Eyebrow>
               <Heading :level="3" class="text-lg mb-2 inline-flex items-center gap-2">

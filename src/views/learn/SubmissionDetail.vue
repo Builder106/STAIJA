@@ -66,16 +66,16 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else-if="submission">
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <div class="flex items-start justify-between gap-4 mb-4">
               <div>
                 <Eyebrow class="text-ink/50 mb-1 block">Status</Eyebrow>
@@ -114,7 +114,7 @@ onMounted(load)
           </UiCard>
 
           <!-- Student's submission content -->
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Eyebrow class="text-ink/50 mb-3 block">Your submission</Eyebrow>
             <p
               v-if="submission.textContent"

@@ -69,21 +69,21 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="flex flex-col gap-8">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <Body class="text-ink/70 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else>
           <div>
             <Eyebrow class="text-ink/50 mb-3 block">Upcoming</Eyebrow>
-            <UiCard v-if="upcoming.length === 0" class="p-6 bg-white">
+            <UiCard v-if="upcoming.length === 0" class="p-6 bg-surface">
               <Body class="text-ink/60 text-sm">No upcoming sessions.</Body>
             </UiCard>
-            <UiCard v-else class="p-0 bg-white overflow-hidden">
+            <UiCard v-else class="p-0 bg-surface overflow-hidden">
               <ul class="divide-y divide-ink/5">
                 <li v-for="s in upcoming" :key="s.id">
                   <RouterLink
@@ -104,7 +104,7 @@ onMounted(load)
 
           <div v-if="past.length > 0">
             <Eyebrow class="text-ink/50 mb-3 block">Past</Eyebrow>
-            <UiCard class="p-0 bg-white overflow-hidden">
+            <UiCard class="p-0 bg-surface overflow-hidden">
               <ul class="divide-y divide-ink/5">
                 <li v-for="s in past" :key="s.id">
                   <RouterLink

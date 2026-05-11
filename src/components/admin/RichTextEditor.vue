@@ -115,7 +115,7 @@ function setLink() {
 </script>
 
 <template>
-  <div class="rich-text-editor border hairline-ink rounded-lg bg-white overflow-hidden">
+  <div class="rich-text-editor border hairline-ink rounded-lg bg-surface overflow-hidden">
     <!-- Toolbar -->
     <div class="flex flex-wrap gap-1 px-3 py-2 border-b hairline-ink bg-ink/[0.02]">
       <button

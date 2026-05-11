@@ -301,12 +301,12 @@ onMounted(async () => {
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
         <template v-else>
-          <UiCard class="p-6 md:p-8 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-8 bg-surface flex flex-col gap-5">
             <!-- Title comes first so the auto-derived slug below has
                  something to work from. -->
             <div class="flex flex-col gap-2">
@@ -436,7 +436,7 @@ onMounted(async () => {
             </div>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Heading :level="2" class="text-base mb-1">Cover image</Heading>
             <p class="text-xs text-ink/60 m-0 mb-4">
               Shown on course cards in the student portal. PNG or JPG, up to 10&nbsp;MB.
@@ -492,7 +492,7 @@ onMounted(async () => {
             </p>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Heading :level="2" class="text-base mb-4">Modules</Heading>
             <EntryReferencePicker
               v-model="form.modules!"

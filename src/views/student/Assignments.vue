@@ -59,7 +59,7 @@ const statusLabel: Record<DemoAssignment['status'], string> = {
         <UiCard
           v-for="a in assignments"
           :key="a.title"
-          class="p-6 md:p-7 bg-white"
+          class="p-6 md:p-7 bg-surface"
         >
           <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
             <Heading :level="3" class="text-lg">{{ a.title }}</Heading>

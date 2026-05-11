@@ -135,7 +135,7 @@ function isDone(step: Step) {
 <template>
   <div
     v-if="visible"
-    class="rounded-2xl border hairline-ink bg-white p-6 md:p-7 flex flex-col gap-5 shadow-sm"
+    class="rounded-2xl border hairline-ink bg-surface p-6 md:p-7 flex flex-col gap-5 shadow-sm"
   >
     <div class="flex items-start justify-between gap-4">
       <div class="flex flex-col gap-1.5">

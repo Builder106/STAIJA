@@ -97,22 +97,22 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else-if="session">
-          <UiCard v-if="session.description" class="p-6 md:p-8 bg-white">
+          <UiCard v-if="session.description" class="p-6 md:p-8 bg-surface">
             <p class="text-sm text-ink/85 whitespace-pre-line leading-relaxed">
               {{ session.description }}
             </p>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <div class="flex items-start justify-between gap-4 mb-5">
               <div>
                 <Eyebrow class="text-ink/50 mb-2 block">Will you attend?</Eyebrow>
@@ -130,7 +130,7 @@ onMounted(load)
                   :class="
                     myRsvp?.rsvped === option
                       ? 'bg-brand-violet text-white border-brand-violet'
-                      : 'bg-white text-ink/70 hover:bg-ink/5'
+                      : 'bg-surface text-ink/70 hover:bg-ink/5'
                   "
                   @click="setRsvp(option)"
                 >

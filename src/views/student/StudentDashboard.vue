@@ -67,7 +67,7 @@ onMounted(loadUserProfile)
               Access program materials, track your progress, and connect with your mentor.
             </Body>
           </div>
-          <div class="inline-flex flex-col items-end gap-1 px-4 py-3 rounded-xl bg-white border hairline-ink">
+          <div class="inline-flex flex-col items-end gap-1 px-4 py-3 rounded-xl bg-surface border hairline-ink">
             <span class="text-xs text-ink/50 uppercase tracking-wide">Program</span>
             <span class="text-sm font-semibold text-ink">{{ userProgram }}</span>
             <span class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 rounded-full px-2 py-0.5">
@@ -81,7 +81,7 @@ onMounted(loadUserProfile)
     <Section class="!py-10">
       <Container class="flex flex-col gap-8">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Curriculum</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">Program materials</Heading>
@@ -105,7 +105,7 @@ onMounted(loadUserProfile)
             </UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Assignments</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">Assignments &amp; tasks</Heading>
@@ -126,7 +126,7 @@ onMounted(loadUserProfile)
             <UiButton variant="primary" :to="{ path: '/learn' }">View assignments</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Progress</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">My progress</Heading>
@@ -154,7 +154,7 @@ onMounted(loadUserProfile)
             <UiButton variant="secondary" :to="{ path: '/student/progress' }">View detailed progress</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Mentor</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">Mentor support</Heading>
@@ -172,7 +172,7 @@ onMounted(loadUserProfile)
             <UiButton variant="primary" :to="{ path: '/student/mentor' }">Contact mentor</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Calendar</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">Upcoming events</Heading>
@@ -192,7 +192,7 @@ onMounted(loadUserProfile)
             <UiButton variant="secondary" :to="{ path: '/learn/sessions' }">View live sessions</UiButton>
           </UiCard>
 
-          <UiCard class="p-6 md:p-7 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-7 bg-surface flex flex-col gap-5">
             <div>
               <Eyebrow class="text-ink/50 mb-2 block">Community</Eyebrow>
               <Heading :level="3" class="text-lg mb-2">Peer network</Heading>
@@ -212,7 +212,7 @@ onMounted(loadUserProfile)
           </UiCard>
         </div>
 
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <Eyebrow class="text-ink/50 mb-2 block">Shortcuts</Eyebrow>
           <Heading :level="3" class="text-lg mb-4">Quick actions</Heading>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">

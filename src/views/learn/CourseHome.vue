@@ -139,12 +139,12 @@ onUnmounted(() => {
 
     <Section class="!py-10">
       <Container class="flex flex-col gap-8">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto mb-3" />
           <Body class="text-ink/60 text-sm">Loading course…</Body>
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <div class="flex items-start gap-3">
             <Icon icon="lucide:info" width="20" class="text-ink/40 mt-0.5" />
             <Body class="text-ink/70 text-sm">{{ error }}</Body>
@@ -153,7 +153,7 @@ onUnmounted(() => {
 
         <template v-else-if="course">
           <!-- Progress -->
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <div class="flex items-baseline justify-between mb-3">
               <Heading :level="2" class="text-lg">Progress</Heading>
               <span class="text-sm font-semibold text-ink">{{ Math.round(fraction * 100) }}%</span>
@@ -170,7 +170,7 @@ onUnmounted(() => {
           </UiCard>
 
           <!-- Upcoming session -->
-          <UiCard v-if="upcoming.length > 0" class="p-6 md:p-8 bg-white">
+          <UiCard v-if="upcoming.length > 0" class="p-6 md:p-8 bg-surface">
             <Eyebrow class="text-brand-violet mb-2 block">Upcoming session</Eyebrow>
             <RouterLink
               :to="{ name: 'learn-session', params: { id: upcoming[0].id } }"
@@ -198,7 +198,7 @@ onUnmounted(() => {
               <Body v-if="m.module.summary" class="text-ink/70 text-sm mb-4">
                 {{ m.module.summary }}
               </Body>
-              <UiCard class="p-0 bg-white overflow-hidden">
+              <UiCard class="p-0 bg-surface overflow-hidden">
                 <ul class="divide-y divide-ink/5">
                   <li v-for="lesson in m.lessons" :key="lesson.slug">
                     <RouterLink

@@ -45,7 +45,7 @@ const activity = [
 
     <Section class="!py-10">
       <Container class="flex flex-col gap-6">
-        <UiCard class="p-6 md:p-8 bg-white flex flex-col gap-6">
+        <UiCard class="p-6 md:p-8 bg-surface flex flex-col gap-6">
           <div class="flex items-center gap-4">
             <div class="w-16 h-16 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center text-lg font-semibold">
               {{ mentor.initials }}
@@ -72,7 +72,7 @@ const activity = [
           </div>
         </UiCard>
 
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <Eyebrow class="text-ink/50 mb-2 block">Activity</Eyebrow>
           <Heading :level="3" class="text-lg mb-4">Recent activity</Heading>
           <ul class="flex flex-col divide-y divide-ink/5">

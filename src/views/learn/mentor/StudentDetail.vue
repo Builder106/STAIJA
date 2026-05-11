@@ -117,16 +117,16 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-4xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else-if="student && enrollment">
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Eyebrow class="text-ink/50 mb-2 block">Progress</Eyebrow>
             <p class="text-ink text-sm">
               {{ completedCount }} lesson{{ completedCount === 1 ? '' : 's' }} completed
@@ -135,10 +135,10 @@ onMounted(load)
 
           <div>
             <Eyebrow class="text-ink/50 mb-3 block">Submissions</Eyebrow>
-            <UiCard v-if="submissions.length === 0" class="p-6 bg-white">
+            <UiCard v-if="submissions.length === 0" class="p-6 bg-surface">
               <Body class="text-ink/60 text-sm">No submissions yet.</Body>
             </UiCard>
-            <UiCard v-else class="p-0 bg-white overflow-hidden">
+            <UiCard v-else class="p-0 bg-surface overflow-hidden">
               <ul class="divide-y divide-ink/5">
                 <li v-for="sub in submissions" :key="sub.id">
                   <RouterLink
@@ -173,10 +173,10 @@ onMounted(load)
             >
               + Leave new feedback
             </RouterLink>
-            <UiCard v-if="feedback.length === 0" class="p-6 bg-white">
+            <UiCard v-if="feedback.length === 0" class="p-6 bg-surface">
               <Body class="text-ink/60 text-sm">No feedback yet.</Body>
             </UiCard>
-            <UiCard v-else class="p-0 bg-white overflow-hidden">
+            <UiCard v-else class="p-0 bg-surface overflow-hidden">
               <ul class="divide-y divide-ink/5">
                 <li v-for="fb in feedback" :key="fb.id" class="px-5 py-4">
                   <p class="text-sm text-ink whitespace-pre-line">{{ fb.content }}</p>

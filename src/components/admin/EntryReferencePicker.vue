@@ -99,7 +99,7 @@ onMounted(load)
       <li
         v-for="(item, idx) in selected"
         :key="item.id"
-        class="flex items-center gap-2 px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+        class="flex items-center gap-2 px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
       >
         <span class="text-ink/40 text-xs font-mono w-5">{{ idx + 1 }}.</span>
         <span class="flex-1 text-ink truncate">{{ summarize(item) }}</span>
@@ -140,7 +140,7 @@ onMounted(load)
         v-model="search"
         type="text"
         :placeholder="`Search ${contentType}s by title or slug…`"
-        class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+        class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
       />
       <div v-if="loading" class="text-xs text-ink/50">Loading…</div>
       <div

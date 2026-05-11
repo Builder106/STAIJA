@@ -130,7 +130,7 @@ onMounted(load)
 
     <Section class="!py-12">
       <Container class="max-w-2xl">
-        <UiCard class="p-6 md:p-10 bg-white">
+        <UiCard class="p-6 md:p-10 bg-surface">
           <div v-if="loading" class="flex flex-col gap-4">
             <div class="h-6 w-48 bg-ink/5 rounded animate-pulse" />
             <div class="h-4 w-full bg-ink/5 rounded animate-pulse" />

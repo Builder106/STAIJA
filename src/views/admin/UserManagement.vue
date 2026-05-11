@@ -268,7 +268,7 @@ onMounted(loadUsers)
         </Transition>
 
         <!-- Filters -->
-        <UiCard class="p-5 md:p-6 bg-white">
+        <UiCard class="p-5 md:p-6 bg-surface">
           <div class="relative mb-4">
             <Icon
               icon="lucide:search"
@@ -279,7 +279,7 @@ onMounted(loadUsers)
               v-model="searchQuery"
               type="text"
               placeholder="Search by name, email, or role…"
-              class="w-full pl-10 pr-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+              class="w-full pl-10 pr-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
             />
           </div>
           <div class="flex flex-wrap gap-2">
@@ -325,12 +325,12 @@ onMounted(loadUsers)
         </UiCard>
 
         <!-- Loading / error -->
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto mb-3" />
           <Body class="text-ink/60 text-sm">Loading users…</Body>
         </UiCard>
 
-        <UiCard v-else-if="loadError" class="p-6 bg-white">
+        <UiCard v-else-if="loadError" class="p-6 bg-surface">
           <div class="flex items-start gap-3">
             <Icon icon="lucide:triangle-alert" width="20" class="text-red-600 mt-0.5" />
             <div class="flex-1">
@@ -341,12 +341,12 @@ onMounted(loadUsers)
           </div>
         </UiCard>
 
-        <UiCard v-else-if="filteredUsers.length === 0" class="p-10 bg-white text-center">
+        <UiCard v-else-if="filteredUsers.length === 0" class="p-10 bg-surface text-center">
           <Body class="text-ink/60">No users match these filters.</Body>
         </UiCard>
 
         <!-- Table -->
-        <UiCard v-else class="bg-white overflow-hidden p-0">
+        <UiCard v-else class="bg-surface overflow-hidden p-0">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-ink/[0.03] text-ink/60">
@@ -486,7 +486,7 @@ onMounted(loadUsers)
           @click="closeRoleModal"
         >
           <div
-            class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            class="bg-surface rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
             @click.stop
           >
             <div class="flex items-center justify-between px-6 py-4 border-b hairline-ink">
@@ -542,7 +542,7 @@ onMounted(loadUsers)
                   v-model="changeReason"
                   rows="3"
                   placeholder="Why is this role change being made? This is recorded in the audit log."
-                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
+                  class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
                 ></textarea>
               </div>
             </div>
@@ -579,7 +579,7 @@ onMounted(loadUsers)
           @click="closeUserDetails"
         >
           <div
-            class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            class="bg-surface rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             @click.stop
           >
             <div class="flex items-center justify-between px-6 py-4 border-b hairline-ink">

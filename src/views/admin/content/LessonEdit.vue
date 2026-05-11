@@ -298,12 +298,12 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
         <template v-else>
-          <UiCard class="p-6 md:p-8 bg-white flex flex-col gap-5">
+          <UiCard class="p-6 md:p-8 bg-surface flex flex-col gap-5">
             <div class="grid md:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Slug</label>
@@ -367,7 +367,7 @@ onMounted(load)
             </div>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Heading :level="2" class="text-base mb-3">Body</Heading>
             <RichTextEditor v-model="form.body!" />
           </UiCard>
@@ -376,7 +376,7 @@ onMounted(load)
                the editor for staff who don't want it. Suggests media to
                find rather than generating it: lower cost, no licensing or
                cultural-appropriateness landmines. -->
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <button
               type="button"
               class="w-full flex items-center gap-2 text-left"

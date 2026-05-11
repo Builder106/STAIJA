@@ -206,6 +206,18 @@
       background-color: rgba(139, 85, 255, 0.2);
    }
 
+   /* Inputs and textareas inside the brand surface track the current
+     ink token for both their text and placeholder. Without this,
+     placeholders fall back to the browser default (a hardcoded gray
+     tuned for white backgrounds) and read as near-invisible against
+     dark mode's `bg-surface`. The 45% value matches the visual
+     weight `text-ink/45` would give — placeholder always reads as a
+     hint, never as data. */
+   .brand-surface input::placeholder,
+   .brand-surface textarea::placeholder {
+      color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+   }
+
    /* Apply the display face as the heading default. `color: inherit`
      defeats the legacy.css global `h1...h6 { color: var(--neutral-900) }`
      rule that hardcodes a dark color regardless of theme — without this

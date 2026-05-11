@@ -98,24 +98,24 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-2xl">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="cohorts.length === 0" class="p-6 bg-white">
+        <UiCard v-else-if="cohorts.length === 0" class="p-6 bg-surface">
           <Body class="text-ink/70 text-sm">
             You're not currently a mentor on any active or planned cohort. Ask staff to add you to a
             cohort's mentor pool first.
           </Body>
         </UiCard>
 
-        <UiCard v-else class="p-6 md:p-10 bg-white">
+        <UiCard v-else class="p-6 md:p-10 bg-surface">
           <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
               <select
                 v-model="form.cohortId"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
               >
                 <option value="" disabled>Select a cohort…</option>
                 <option v-for="c in cohorts" :key="c.id" :value="c.id">
@@ -130,7 +130,7 @@ onMounted(load)
                 v-model="form.title"
                 type="text"
                 placeholder="e.g. Week 3 lab walkthrough"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
               />
             </div>
 
@@ -142,7 +142,7 @@ onMounted(load)
                 v-model="form.description"
                 rows="3"
                 placeholder="What will you cover?"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
               />
             </div>
 
@@ -152,7 +152,7 @@ onMounted(load)
                 <input
                   v-model="form.startsAt"
                   type="datetime-local"
-                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
               </div>
               <div class="flex flex-col gap-2">
@@ -160,7 +160,7 @@ onMounted(load)
                 <input
                   v-model="form.endsAt"
                   type="datetime-local"
-                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
               </div>
             </div>
@@ -173,7 +173,7 @@ onMounted(load)
                 v-model="form.meetingUrl"
                 type="url"
                 placeholder="https://zoom.us/j/…  or  https://meet.google.com/…"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
               />
             </div>
 
@@ -183,7 +183,7 @@ onMounted(load)
               </label>
               <select
                 v-model="form.meetingProvider"
-                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
               >
                 <option value="zoom">Zoom</option>
                 <option value="meet">Google Meet</option>

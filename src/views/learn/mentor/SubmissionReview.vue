@@ -97,16 +97,16 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error && !submission" class="p-6 bg-white">
+        <UiCard v-else-if="error && !submission" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else-if="submission">
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Eyebrow class="text-ink/50 mb-3 block">Student's submission</Eyebrow>
             <p
               v-if="submission.textContent"
@@ -136,7 +136,7 @@ onMounted(load)
             </a>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white">
+          <UiCard class="p-6 md:p-8 bg-surface">
             <Heading :level="2" class="text-lg mb-4">Your review</Heading>
             <div class="flex flex-col gap-5">
               <div class="flex flex-col gap-2">
@@ -148,7 +148,7 @@ onMounted(load)
                   type="number"
                   min="0"
                   max="100"
-                  class="w-32 px-4 py-2 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-32 px-4 py-2 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
               </div>
               <div class="flex flex-col gap-2">
@@ -159,7 +159,7 @@ onMounted(load)
                   v-model="comment"
                   rows="6"
                   placeholder="What did the student do well? What's the next step?"
-                  class="w-full px-4 py-3 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
+                  class="w-full px-4 py-3 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
                 />
               </div>
               <p v-if="error" class="text-sm text-red-700">{{ error }}</p>

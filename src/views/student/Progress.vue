@@ -58,20 +58,20 @@ const achievements = [
     <Section class="!py-10">
       <Container class="flex flex-col gap-6">
         <div class="grid lg:grid-cols-3 gap-6">
-          <UiCard class="p-6 md:p-8 bg-white text-center flex flex-col items-center justify-center gap-4">
+          <UiCard class="p-6 md:p-8 bg-surface text-center flex flex-col items-center justify-center gap-4">
             <Eyebrow class="text-ink/50 block">Overall progress</Eyebrow>
             <div
               class="w-32 h-32 rounded-full flex items-center justify-center relative"
               :style="`background: conic-gradient(var(--color-brand-violet, #A98AFF) ${overall}%, rgba(14,18,23,0.06) ${overall}%)`"
             >
-              <div class="w-24 h-24 rounded-full bg-white flex items-center justify-center">
+              <div class="w-24 h-24 rounded-full bg-surface flex items-center justify-center">
                 <span class="text-2xl font-semibold text-ink">{{ overall }}%</span>
               </div>
             </div>
             <Body class="text-ink/60 text-xs">2 of 3 program phases completed</Body>
           </UiCard>
 
-          <UiCard class="p-6 md:p-8 bg-white lg:col-span-2">
+          <UiCard class="p-6 md:p-8 bg-surface lg:col-span-2">
             <Eyebrow class="text-ink/50 mb-3 block">By the numbers</Eyebrow>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div
@@ -88,7 +88,7 @@ const achievements = [
           </UiCard>
         </div>
 
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <Eyebrow class="text-ink/50 mb-2 block">Roadmap</Eyebrow>
           <Heading :level="3" class="text-lg mb-4">Program phases</Heading>
           <ul class="flex flex-col gap-3">
@@ -114,7 +114,7 @@ const achievements = [
           </ul>
         </UiCard>
 
-        <UiCard class="p-6 md:p-8 bg-white">
+        <UiCard class="p-6 md:p-8 bg-surface">
           <Eyebrow class="text-ink/50 mb-2 block">Achievements</Eyebrow>
           <Heading :level="3" class="text-lg mb-4">Recent achievements</Heading>
           <div class="grid md:grid-cols-3 gap-3">

@@ -679,7 +679,7 @@ async function handleDelete() {
                 @click.prevent="toggleNotif(entry.key)"
               >
                 <span
-                  class="inline-block h-5 w-5 rounded-full bg-white shadow translate-y-0.5 transition-transform"
+                  class="inline-block h-5 w-5 rounded-full bg-surface shadow translate-y-0.5 transition-transform"
                   :class="isEnabled(notifPrefs, entry.key) ? 'translate-x-5' : 'translate-x-0.5'"
                 />
               </button>
@@ -836,7 +836,7 @@ async function handleDelete() {
                 @click.prevent="toggleDirectory"
               >
                 <span
-                  class="inline-block h-5 w-5 rounded-full bg-white shadow translate-y-0.5 transition-transform"
+                  class="inline-block h-5 w-5 rounded-full bg-surface shadow translate-y-0.5 transition-transform"
                   :class="!directoryHidden ? 'translate-x-5' : 'translate-x-0.5'"
                 />
               </button>

@@ -48,12 +48,12 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
         <template v-else-if="module">
-          <UiCard class="p-0 bg-white overflow-hidden">
+          <UiCard class="p-0 bg-surface overflow-hidden">
             <Eyebrow class="text-ink/50 px-5 pt-5 pb-2 block">Lessons</Eyebrow>
             <ul class="divide-y divide-ink/5">
               <li v-for="lesson in lessons" :key="lesson.slug">
@@ -77,7 +77,7 @@ onMounted(load)
             </ul>
           </UiCard>
 
-          <UiCard v-if="assignments.length > 0" class="p-0 bg-white overflow-hidden">
+          <UiCard v-if="assignments.length > 0" class="p-0 bg-surface overflow-hidden">
             <Eyebrow class="text-ink/50 px-5 pt-5 pb-2 block">Assignments</Eyebrow>
             <ul class="divide-y divide-ink/5">
               <li v-for="a in assignments" :key="a.slug">

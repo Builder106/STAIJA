@@ -158,19 +158,19 @@ onMounted(load)
           </UiButton>
         </div>
 
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error" class="p-6 bg-white">
+        <UiCard v-else-if="error" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
-        <UiCard v-else-if="cohorts.length === 0" class="p-10 bg-white text-center">
+        <UiCard v-else-if="cohorts.length === 0" class="p-10 bg-surface text-center">
           <Body class="text-ink/60 text-sm">No cohorts yet.</Body>
         </UiCard>
 
-        <UiCard v-else class="p-0 bg-white overflow-hidden">
+        <UiCard v-else class="p-0 bg-surface overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-ink/[0.03] text-ink/60">
@@ -231,7 +231,7 @@ onMounted(load)
         </UiCard>
 
         <!-- Form -->
-        <UiCard v-if="showForm" class="p-6 md:p-8 bg-white">
+        <UiCard v-if="showForm" class="p-6 md:p-8 bg-surface">
           <Heading :level="2" class="text-lg mb-4">
             {{ editingId ? 'Edit cohort' : 'New cohort' }}
           </Heading>
@@ -240,7 +240,7 @@ onMounted(load)
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Program</label>
               <select
                 v-model="form.program"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               >
                 <option value="stepup_scholars">StepUp Scholars</option>
                 <option value="dynamerge">Dynamerge</option>
@@ -250,7 +250,7 @@ onMounted(load)
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Status</label>
               <select
                 v-model="form.status"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               >
                 <option value="planned">Planned</option>
                 <option value="active">Active</option>
@@ -263,7 +263,7 @@ onMounted(load)
                 v-model="form.courseSlug"
                 type="text"
                 placeholder="e.g. stepup-foundations"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm font-mono"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono"
               />
             </div>
             <div class="flex flex-col gap-2">
@@ -272,7 +272,7 @@ onMounted(load)
                 v-model="form.courseVersion"
                 type="text"
                 placeholder="e.g. 2026-spring"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm font-mono"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono"
               />
             </div>
             <div class="flex flex-col gap-2 md:col-span-2">
@@ -283,7 +283,7 @@ onMounted(load)
                 v-model="form.name"
                 type="text"
                 placeholder="e.g. Spring 2026"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               />
             </div>
             <div class="flex flex-col gap-2">
@@ -291,7 +291,7 @@ onMounted(load)
               <input
                 v-model="form.startDate"
                 type="date"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               />
             </div>
             <div class="flex flex-col gap-2">
@@ -299,7 +299,7 @@ onMounted(load)
               <input
                 v-model="form.endDate"
                 type="date"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               />
             </div>
             <div class="flex flex-col gap-2 md:col-span-2">
@@ -310,7 +310,7 @@ onMounted(load)
                 v-model="form.mentorPool"
                 rows="2"
                 placeholder="abc123, def456, …"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm font-mono resize-none"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono resize-none"
               />
             </div>
           </div>

@@ -91,17 +91,17 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-2xl">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else class="p-6 md:p-10 bg-white">
+        <UiCard v-else class="p-6 md:p-10 bg-surface">
           <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
               <select
                 v-model="selectedCohortId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               >
                 <option value="" disabled>Select a cohort…</option>
                 <option v-for="c in cohorts" :key="c.id" :value="c.id">
@@ -114,7 +114,7 @@ onMounted(load)
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Student</label>
               <select
                 v-model="selectedStudentId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm"
               >
                 <option value="" disabled>Select a student…</option>
                 <option v-for="u in candidates" :key="u.uid" :value="u.uid">
@@ -132,7 +132,7 @@ onMounted(load)
               </label>
               <select
                 v-model="selectedMentorId"
-                class="w-full px-3 py-2 rounded-md border hairline-ink bg-white text-sm font-mono"
+                class="w-full px-3 py-2 rounded-md border hairline-ink bg-surface text-sm font-mono"
               >
                 <option value="">Auto (least-loaded)</option>
                 <option

@@ -171,23 +171,23 @@ onMounted(load)
 
     <Section class="!py-10">
       <Container class="max-w-3xl flex flex-col gap-6">
-        <UiCard v-if="loading" class="p-10 bg-white text-center">
+        <UiCard v-if="loading" class="p-10 bg-surface text-center">
           <Icon icon="lucide:loader-2" width="24" class="animate-spin text-brand-violet mx-auto" />
         </UiCard>
 
-        <UiCard v-else-if="error && !spec" class="p-6 bg-white">
+        <UiCard v-else-if="error && !spec" class="p-6 bg-surface">
           <Body class="text-red-700 text-sm">{{ error }}</Body>
         </UiCard>
 
         <template v-else-if="spec">
           <!-- Instructions -->
-          <UiCard class="p-6 md:p-10 bg-white">
+          <UiCard class="p-6 md:p-10 bg-surface">
             <Eyebrow class="text-ink/50 mb-3 block">Instructions</Eyebrow>
             <RichText :body="spec.instructions" />
           </UiCard>
 
           <!-- Previous submissions -->
-          <UiCard v-if="previousSubmissions.length > 0" class="p-5 bg-white">
+          <UiCard v-if="previousSubmissions.length > 0" class="p-5 bg-surface">
             <Eyebrow class="text-ink/50 mb-2 block">Your previous submissions</Eyebrow>
             <ul class="divide-y divide-ink/5">
               <li v-for="s in previousSubmissions" :key="s.id">
@@ -218,7 +218,7 @@ onMounted(load)
           </UiCard>
 
           <!-- Submit form -->
-          <UiCard class="p-6 md:p-10 bg-white">
+          <UiCard class="p-6 md:p-10 bg-surface">
             <Heading :level="2" class="text-lg mb-4">Submit</Heading>
             <div class="flex flex-col gap-5">
               <div v-if="allowsText" class="flex flex-col gap-2">
@@ -229,7 +229,7 @@ onMounted(load)
                   v-model="text"
                   rows="6"
                   placeholder="Type your response here…"
-                  class="w-full px-4 py-3 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
+                  class="w-full px-4 py-3 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet resize-none"
                 />
               </div>
 
@@ -260,7 +260,7 @@ onMounted(load)
                   v-model="linkUrl"
                   type="url"
                   placeholder="https://…"
-                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
+                  class="w-full px-4 py-2.5 rounded-md border hairline-ink bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-violet"
                 />
               </div>
 
