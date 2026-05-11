@@ -61,9 +61,14 @@ function entryMatches(entry: EntrySummary): boolean {
 const pendingParent = ref<string | null>(null)
 
 // id currently being publish-all'd (course or module). Distinct from
-// pendingParent so the two spinners can run independently.
+// pendingParent so the two spinners can run independently. Unpublish
+// has its own pair so a user can theoretically queue an unpublish on
+// one branch while a publish runs on another — UX-wise we just don't
+// show both buttons in the same in-flight state.
 const publishingId = ref<string | null>(null)
 const publishProgress = ref<{ done: number; total: number } | null>(null)
+const unpublishingId = ref<string | null>(null)
+const unpublishProgress = ref<{ done: number; total: number } | null>(null)
 
 // Drag-and-drop reorder state. Reordering is scoped to a single parent
 // + reference field (modules within a course, lessons within a module,
@@ -646,6 +651,84 @@ function subtreeDraftCount(start: EntrySummary): number {
   return entriesNeedingPublish(start).length
 }
 
+// ---- Unpublish whole subtree ----------------------------------------
+//
+// Mirror of the publish flow but for tearing content down. Unlike
+// publish, we walk root-first: unpublishing the parent before its
+// children means no viewer ever sees a "Published parent → Unpublished
+// child" intermediate state.
+
+function entriesNeedingUnpublish(start: EntrySummary): EntrySummary[] {
+  const queue: EntrySummary[] = [start]
+  const out: EntrySummary[] = []
+  const seen = new Set<string>()
+  while (queue.length > 0) {
+    const node = queue.shift()!
+    if (seen.has(node.id)) continue
+    seen.add(node.id)
+    if (node.isPublished) out.push(node)
+    if (node.contentType === 'course') {
+      for (const mid of extractRefIds(readField(node, 'modules'))) {
+        const m = modulesById.value.get(mid)
+        if (m) queue.push(m)
+      }
+    } else if (node.contentType === 'module') {
+      for (const lid of extractRefIds(readField(node, 'lessons'))) {
+        const l = lessonsById.value.get(lid)
+        if (l) queue.push(l)
+      }
+      for (const aid of extractRefIds(readField(node, 'assignments'))) {
+        const a = assignmentsById.value.get(aid)
+        if (a) queue.push(a)
+      }
+    }
+  }
+  return out
+}
+
+async function unpublishSubtree(start: EntrySummary) {
+  if (unpublishingId.value) return
+  const targets = entriesNeedingUnpublish(start)
+  if (targets.length === 0) return
+  // Real confirm — pulling content out from under students is a
+  // big-deal action, especially when it cascades to lessons they may be
+  // mid-way through.
+  if (
+    !confirm(
+      `Unpublish "${entryTitle(start)}" and ${targets.length - 1} child entr${
+        targets.length - 1 === 1 ? 'y' : 'ies'
+      }? Students won't see this content until you republish.`,
+    )
+  ) {
+    return
+  }
+  unpublishingId.value = start.id
+  error.value = null
+  try {
+    unpublishProgress.value = { done: 0, total: targets.length }
+    for (const t of targets) {
+      try {
+        await unpublishEntry(t.id)
+      } catch (err) {
+        const msg = (err as { message?: string }).message ?? 'unpublish failed'
+        error.value = `Couldn't unpublish ${entryTitle(t)}: ${msg}`
+      }
+      unpublishProgress.value = {
+        done: unpublishProgress.value!.done + 1,
+        total: targets.length,
+      }
+    }
+    await load()
+  } finally {
+    unpublishingId.value = null
+    unpublishProgress.value = null
+  }
+}
+
+function subtreePublishedCount(start: EntrySummary): number {
+  return entriesNeedingUnpublish(start).length
+}
+
 async function addAssignment(mod: EntrySummary) {
   pendingParent.value = mod.id + ':a'
   try {
@@ -822,7 +905,7 @@ onMounted(load)
                   v-if="subtreeDraftCount(course) > 0"
                   type="button"
                   class="text-xs font-semibold text-emerald-700 hover:underline underline-offset-2 inline-flex items-center gap-1 px-2"
-                  :disabled="publishingId === course.id"
+                  :disabled="publishingId === course.id || unpublishingId === course.id"
                   :title="`Publish this course and ${subtreeDraftCount(course) - 1} child entries with pending changes`"
                   @click="publishSubtree(course)"
                 >
@@ -836,6 +919,26 @@ onMounted(load)
                   </template>
                   <template v-else>
                     Publish all ({{ subtreeDraftCount(course) }})
+                  </template>
+                </button>
+                <button
+                  v-if="subtreePublishedCount(course) > 0"
+                  type="button"
+                  class="text-xs font-semibold text-amber-700 hover:underline underline-offset-2 inline-flex items-center gap-1 px-2"
+                  :disabled="publishingId === course.id || unpublishingId === course.id"
+                  :title="`Unpublish this course and ${subtreePublishedCount(course) - 1} published child entries`"
+                  @click="unpublishSubtree(course)"
+                >
+                  <Icon
+                    :icon="unpublishingId === course.id ? 'lucide:loader-2' : 'lucide:eye-off'"
+                    width="12"
+                    :class="unpublishingId === course.id ? 'animate-spin' : ''"
+                  />
+                  <template v-if="unpublishingId === course.id && unpublishProgress">
+                    {{ unpublishProgress.done }}/{{ unpublishProgress.total }}
+                  </template>
+                  <template v-else>
+                    Unpublish all ({{ subtreePublishedCount(course) }})
                   </template>
                 </button>
                 <button
@@ -916,7 +1019,7 @@ onMounted(load)
                       v-if="subtreeDraftCount(mod) > 0"
                       type="button"
                       class="text-xs font-semibold text-emerald-700 hover:underline underline-offset-2 inline-flex items-center gap-1 px-1.5"
-                      :disabled="publishingId === mod.id"
+                      :disabled="publishingId === mod.id || unpublishingId === mod.id"
                       :title="`Publish this module and any unpublished lessons/assignments below`"
                       @click="publishSubtree(mod)"
                     >
@@ -930,6 +1033,26 @@ onMounted(load)
                       </template>
                       <template v-else>
                         Publish ({{ subtreeDraftCount(mod) }})
+                      </template>
+                    </button>
+                    <button
+                      v-if="subtreePublishedCount(mod) > 0"
+                      type="button"
+                      class="text-xs font-semibold text-amber-700 hover:underline underline-offset-2 inline-flex items-center gap-1 px-1.5"
+                      :disabled="publishingId === mod.id || unpublishingId === mod.id"
+                      :title="`Unpublish this module and its published lessons/assignments`"
+                      @click="unpublishSubtree(mod)"
+                    >
+                      <Icon
+                        :icon="unpublishingId === mod.id ? 'lucide:loader-2' : 'lucide:eye-off'"
+                        width="11"
+                        :class="unpublishingId === mod.id ? 'animate-spin' : ''"
+                      />
+                      <template v-if="unpublishingId === mod.id && unpublishProgress">
+                        {{ unpublishProgress.done }}/{{ unpublishProgress.total }}
+                      </template>
+                      <template v-else>
+                        Unpublish ({{ subtreePublishedCount(mod) }})
                       </template>
                     </button>
                     <button
