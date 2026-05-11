@@ -146,18 +146,28 @@ async function initAutoSave() {
     } catch { /* if local write fails, fall through to direct hydration */ }
   }
 
-  autoSave.value = useAutoSave(scopedKey, persistedRef)
+  // skipRestore: true because we drive restore() ourselves below.
+  // useAutoSave's built-in restore runs inside an onMounted, which fires
+  // *only if registered during component setup*. We're inside an async
+  // path called from the parent's onMounted, so by the time useAutoSave
+  // would register its hook, the parent has already mounted — Vue
+  // silently drops the late registration. Calling restore() explicitly
+  // sidesteps that timing trap entirely.
+  autoSave.value = useAutoSave(scopedKey, persistedRef, { skipRestore: true })
 
-  // Hydrate the form state from the ref after restore.
-  watch(persistedRef, (v) => {
-    if (autoSave.value?.restored) {
-      eligibility.value = v.eligibility ?? {}
-      fields.value = v.fields ?? {}
-      references.value = v.references ?? references.value
-      showcaseUrl.value = v.showcaseUrl ?? ''
-      showcaseNote.value = v.showcaseNote ?? ''
-    }
-  }, { immediate: true })
+  // Pull the localStorage payload (which is now the cloud payload, if
+  // the cloud branch above ran) into persistedRef.value, then copy each
+  // slice into its matching form ref. We don't go through a watcher
+  // because restore() uses Object.assign — a deep mutation — and the
+  // watch on persistedRef (no `deep: true`) wouldn't fire for that.
+  if (autoSave.value.restore()) {
+    const v = persistedRef.value
+    if (v.eligibility) eligibility.value = v.eligibility
+    if (v.fields) fields.value = v.fields
+    if (v.references) references.value = v.references
+    if (typeof v.showcaseUrl === 'string') showcaseUrl.value = v.showcaseUrl
+    if (typeof v.showcaseNote === 'string') showcaseNote.value = v.showcaseNote
+  }
 
   // Cloud mirror. Same debounce as the localStorage write — but we hang
   // off a separate watcher so a Firestore hiccup never blocks the local
@@ -194,6 +204,32 @@ const stepsMeta = computed<StepMeta[]>(() => {
 })
 
 const currentStep = computed(() => stepsMeta.value[stepIndex.value])
+
+// URL → stepIndex sync. Runs immediately so a deep-linked URL like
+// /apply/dynamerge/motivation parks the wizard on the right step on
+// initial mount, and re-runs on browser back/forward so history nav
+// stays coherent. Unknown / missing step param falls back to step 0
+// (eligibility). Guarded against stepsMeta being empty before the
+// program resolves — the watcher fires again once it's populated.
+watch(
+  [() => route.params.step, stepsMeta],
+  ([stepSlug, meta]) => {
+    if (!meta || meta.length === 0) return
+    const slug = typeof stepSlug === 'string' ? stepSlug : ''
+    const idx = slug ? meta.findIndex((m) => m.id === slug) : 0
+    stepIndex.value = idx >= 0 ? idx : 0
+    // Canonicalize: a bare /apply/<program> hit (or an unknown step
+    // slug like /apply/dynamerge/typo) gets rewritten to the resolved
+    // step's URL, so the address bar always reflects the wizard's
+    // actual position. Uses replace, not push — we don't want a back-
+    // button trip through a stale URL.
+    if (program.value && meta[stepIndex.value]) {
+      const target = `/apply/${program.value.slug}/${meta[stepIndex.value].id}`
+      if (route.fullPath !== target) router.replace(target)
+    }
+  },
+  { immediate: true },
+)
 
 // --- Validation per step --------------------------------------------
 
@@ -277,8 +313,7 @@ function next() {
   stepError.value = validateCurrentStep()
   if (stepError.value) return
   const completed = currentStep.value?.label ?? null
-  stepIndex.value = Math.min(stepIndex.value + 1, stepsMeta.value.length - 1)
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  goToStep(Math.min(stepIndex.value + 1, stepsMeta.value.length - 1))
   if (completed) {
     justCompletedLabel.value = completed
     if (justCompletedTimer) clearTimeout(justCompletedTimer)
@@ -288,7 +323,23 @@ function next() {
 
 function back() {
   stepError.value = null
-  stepIndex.value = Math.max(stepIndex.value - 1, 0)
+  goToStep(Math.max(stepIndex.value - 1, 0))
+}
+
+// Single chokepoint for changing the wizard's position. Updates the
+// route (replace, not push — back-button shouldn't cycle through every
+// step within a single application session, it should leave the
+// wizard) and scrolls to the top. The route watcher below picks up the
+// param change and syncs stepIndex, which keeps URL ↔ state coherent
+// regardless of how the navigation was triggered (button, refresh,
+// pasted URL).
+function goToStep(i: number) {
+  const meta = stepsMeta.value[i]
+  if (!meta || !program.value) return
+  const target = `/apply/${program.value.slug}/${meta.id}`
+  if (route.fullPath !== target) {
+    router.replace(target)
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -309,12 +360,17 @@ function removeReference(i: number) {
 
 async function handleSubmit() {
   if (!program.value || !user.value) return
-  // Final validation across all schema steps
+  // Final validation across all schema steps. Bounces stepIndex through
+  // each step so validateCurrentStep (which reads currentStep) can see
+  // the relevant slice — when something fails we leave the user parked
+  // on the offending step *and* sync that to the URL, so the address
+  // bar matches the wizard's visible position.
   for (let i = 0; i < stepsMeta.value.length; i++) {
     stepIndex.value = i
     const err = validateCurrentStep()
     if (err) {
       stepError.value = err
+      goToStep(i)
       return
     }
   }

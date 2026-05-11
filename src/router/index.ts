@@ -32,7 +32,12 @@ const routes: RouteRecordRaw[] = [
       next()
     },
   },
-  { path: '/apply/:program', name: 'apply', component: () => import('../views/apply/Apply.vue'), meta: { title: 'Apply — STAIJA', requiresAuth: true } },
+  // Optional `:step` segment makes the wizard's position bookmarkable
+  // and survives a page refresh. Apply.vue maps the slug to the
+  // matching stepsMeta entry on mount + watches the route to keep them
+  // in sync. Bare /apply/:program still works — falls back to the
+  // first step (eligibility).
+  { path: '/apply/:program/:step?', name: 'apply', component: () => import('../views/apply/Apply.vue'), meta: { title: 'Apply — STAIJA', requiresAuth: true } },
   { path: '/refs/:token', name: 'reference-upload', component: () => import('../views/refs/ReferenceUpload.vue'), meta: { title: 'Submit a reference — STAIJA' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
