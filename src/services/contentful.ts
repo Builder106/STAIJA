@@ -1,11 +1,14 @@
-// Minimal Contentful client for Vue app (Delivery + Preview)
+// Minimal Contentful Delivery API client for the Vue app. Preview API
+// (drafts) is intentionally not wired here — when staff need a
+// "preview as student" surface, route it through a server-side
+// callable so the preview token never ships to the browser.
 import { getAppConfig } from '../utils/env'
 
 export type ContentfulClientConfig = {
   spaceId: string
   environmentId: string
   token: string
-  host?: 'cdn.contentful.com' | 'preview.contentful.com'
+  host?: 'cdn.contentful.com'
 }
 
 function buildEndpoint({ spaceId, environmentId, host = 'cdn.contentful.com' }: ContentfulClientConfig, path: string): string {
@@ -38,15 +41,6 @@ export class ContentfulClient {
       token: config?.token || app.contentful.deliveryToken,
       host: config?.host || 'cdn.contentful.com'
     }
-  }
-
-  usePreview(previewToken?: string) {
-    const app = getAppConfig()
-    const token = previewToken || app.contentful?.previewToken
-    if (!token) throw new Error('Preview token not configured')
-    this.config.host = 'preview.contentful.com'
-    this.config.token = token
-    return this
   }
 
   // Generic entries fetch

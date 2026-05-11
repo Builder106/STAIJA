@@ -6,7 +6,6 @@ export interface FirebaseConfig {
   storageBucket: string
   messagingSenderId: string
   appId: string
-  measurementId?: string
 }
 
 export interface AppConfig {
@@ -18,7 +17,6 @@ export interface AppConfig {
     spaceId: string
     environmentId: string
     deliveryToken: string
-    previewToken?: string
   }
   paystack?: {
     publicKey: string
@@ -36,16 +34,6 @@ const REQUIRED_ENV_VARS = [
   'VITE_FIREBASE_MESSAGING_SENDER_ID',
   'VITE_FIREBASE_APP_ID'
 ] as const
-
-// Optional environment variables
-// const _OPTIONAL_ENV_VARS = [
-//   'VITE_FIREBASE_MEASUREMENT_ID',
-//   'VITE_APP_URL',
-//   'VITE_CONTENTFUL_SPACE_ID',
-//   'VITE_CONTENTFUL_ENV_ID',
-//   'VITE_CONTENTFUL_DELIVERY_TOKEN',
-//   'VITE_CONTENTFUL_PREVIEW_TOKEN'
-// ] as const
 
 /**
  * Validates that all required environment variables are present
@@ -84,7 +72,6 @@ export function getFirebaseConfig(): FirebaseConfig {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
   }
 }
 
@@ -104,7 +91,6 @@ export function getAppConfig(): AppConfig {
                 spaceId: import.meta.env.VITE_CONTENTFUL_SPACE_ID,
                 environmentId: import.meta.env.VITE_CONTENTFUL_ENV_ID || 'master',
                 deliveryToken: import.meta.env.VITE_CONTENTFUL_DELIVERY_TOKEN,
-                previewToken: import.meta.env.VITE_CONTENTFUL_PREVIEW_TOKEN,
               }
             : undefined,
     paystack: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
