@@ -20,7 +20,6 @@
 
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -47,6 +46,16 @@ export interface ApplicationDraftDoc {
    *  the server timestamp to materialise on first write. */
   savedAt: number
   updatedAt?: unknown // serverTimestamp
+  /** Tombstone flag. Set true by deleteDraft so other devices' auto-sync
+   *  can distinguish "the user actively deleted this" from "the cloud
+   *  copy was never written". Without it, a delete on device A would be
+   *  silently reverted by device B's localStorage on its next dashboard
+   *  load. */
+  __deleted?: boolean
+  /** Ms epoch when the tombstone was written. Compared against a stale
+   *  local draft's savedAt: if deletedAt > local.savedAt, the deletion
+   *  is newer than the local copy and wins. */
+  deletedAt?: number
 }
 
 function draftId(userId: string, program: DraftProgramSlug): string {
@@ -85,6 +94,11 @@ export async function saveDraft(
         payload,
         savedAt: Date.now(),
         updatedAt: serverTimestamp(),
+        // Explicitly clear the tombstone. A save after a delete means
+        // the applicant restarted the draft (or auto-sync revived it
+        // because deletedAt < local.savedAt). Either way the doc is
+        // now active again.
+        __deleted: false,
       },
       { merge: true },
     )
@@ -99,12 +113,35 @@ export async function saveDraft(
   }
 }
 
+/**
+ * Soft-delete: leaves a tombstone (`__deleted: true` + `deletedAt`)
+ * on the Firestore doc so other devices' auto-sync can detect "the
+ * user actively deleted this draft" vs. "the cloud copy was never
+ * written". Without a tombstone, a delete on device A is silently
+ * reverted by device B's stale localStorage on its next dashboard
+ * load.
+ *
+ * The payload field is wiped (set to {}) so we're not retaining
+ * personal data the applicant asked to discard.
+ */
 export async function deleteDraft(
   userId: string,
   program: DraftProgramSlug,
 ): Promise<void> {
   try {
-    await deleteDoc(doc(db, 'applicationDrafts', draftId(userId, program)))
+    await setDoc(
+      doc(db, 'applicationDrafts', draftId(userId, program)),
+      {
+        userId,
+        program,
+        payload: {},
+        savedAt: Date.now(),
+        updatedAt: serverTimestamp(),
+        __deleted: true,
+        deletedAt: Date.now(),
+      },
+      { merge: true },
+    )
   } catch (err) {
     console.warn('[applicationDrafts] deleteDraft failed', err)
   }

@@ -79,11 +79,19 @@ async function loadLocalDrafts(uid: string) {
 
   // Cloud pass — pull every draft the account holds. The cloud listing
   // can fail (offline / Firestore hiccup); fall through to local-only
-  // in that case.
+  // in that case. Tombstones (__deleted: true) are split into a
+  // separate map so the auto-sync below knows "was this deleted on
+  // another device?" instead of just "is there no cloud doc?".
   const cloudDocs = await listUserDrafts(uid)
   const cloud = new Map<LocalDraft['slug'], { savedAt: number }>()
+  const tombstones = new Map<LocalDraft['slug'], { deletedAt: number }>()
   for (const doc of cloudDocs) {
-    if (doc.program === 'stepup-scholars' || doc.program === 'dynamerge') {
+    if (doc.program !== 'stepup-scholars' && doc.program !== 'dynamerge') continue
+    if (doc.__deleted) {
+      tombstones.set(doc.program, {
+        deletedAt: typeof doc.deletedAt === 'number' ? doc.deletedAt : 0,
+      })
+    } else {
       cloud.set(doc.program, { savedAt: doc.savedAt })
     }
   }
@@ -91,11 +99,30 @@ async function loadLocalDrafts(uid: string) {
   // Auto-sync: any local draft missing from the cloud is pushed *now*,
   // not at "next time the user opens that wizard". Cloud-first is the
   // contract; "this browser only" should mean "we tried and failed",
-  // not "we never tried". Await so the chip rendered below reflects
-  // reality, not optimistic assumptions. saveCloudDraft returns false
-  // on failure (rules / network / auth issue) — those genuinely
-  // remain local-only and surface in the chip as the emergency state.
-  const syncTargets = [...local.entries()].filter(([slug]) => !cloud.has(slug))
+  // not "we never tried".
+  //
+  // BUT — first respect tombstones. If the cloud has a deletion
+  // newer than the local copy, the applicant actively discarded the
+  // draft on another device; we honor that by wiping the stale local
+  // entry (instead of resurrecting it). Without this check, a delete
+  // on PC silently un-deletes itself the moment phone's dashboard
+  // loads.
+  const syncTargets: Array<[LocalDraft['slug'], { savedAt: number; payload: Record<string, unknown> }]> = []
+  for (const [slug, entry] of local) {
+    if (cloud.has(slug)) continue
+    const tomb = tombstones.get(slug)
+    if (tomb && tomb.deletedAt > entry.savedAt) {
+      // Cross-device deletion wins. Wipe local so the chip doesn't
+      // render this draft at all, and skip the auto-sync push.
+      try {
+        window.localStorage.removeItem(`staija.draft.apply.${slug}.${uid}`)
+      } catch { /* private mode / quota — fine */ }
+      local.delete(slug)
+      continue
+    }
+    syncTargets.push([slug, entry])
+  }
+
   if (syncTargets.length > 0) {
     const results = await Promise.all(
       syncTargets.map(async ([slug, { savedAt, payload }]) => {
