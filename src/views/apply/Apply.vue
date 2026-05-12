@@ -227,6 +227,24 @@ async function initAutoSave() {
     },
     { deep: true },
   )
+
+  // Step navigation is a separate, immediate cloud write — not
+  // debounced. A user who navigates from one step to the next and
+  // immediately quits the browser would lose their position
+  // otherwise: the 30s debounce above doesn't fire, the localStorage
+  // save captures lastStep locally, but the cloud doesn't get it
+  // and a fresh-device resume drops them back at eligibility.
+  // Position changes are infrequent (one per Continue/Back click) so
+  // the extra Firestore writes are cheap; cross-device resume
+  // accuracy is worth them.
+  watch(lastStep, () => {
+    if (cloudTimer) {
+      clearTimeout(cloudTimer)
+      cloudTimer = null
+    }
+    if (!user.value) return
+    void saveCloudDraft(uid, slug as DraftProgramSlug, formStateForSave.value)
+  })
 }
 
 // --- Steps -----------------------------------------------------------
