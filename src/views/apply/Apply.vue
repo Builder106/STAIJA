@@ -80,12 +80,20 @@ const submittedId = ref<string | null>(null)
 
 // --- Auto-save: keyed per-program ------------------------------------
 
+// Track the last step the applicant was on so resume lands them
+// where they actually were, not back at eligibility. Updated by the
+// URL → stepIndex watcher below whenever the wizard's position
+// changes, so it stays in sync with stepIndex through every form of
+// navigation (Continue, Back, direct URL paste, browser back-button).
+const lastStep = ref<string>('')
+
 const formStateForSave = computed(() => ({
   eligibility: eligibility.value,
   fields: fields.value,
   references: references.value,
   showcaseUrl: showcaseUrl.value,
   showcaseNote: showcaseNote.value,
+  lastStep: lastStep.value,
   // Files are NOT persisted — File objects don't serialize and
   // re-uploads would be cheap to redo.
 }))
@@ -173,6 +181,23 @@ async function initAutoSave() {
     if (v.references) references.value = v.references
     if (typeof v.showcaseUrl === 'string') showcaseUrl.value = v.showcaseUrl
     if (typeof v.showcaseNote === 'string') showcaseNote.value = v.showcaseNote
+    // Cross-device resume: the same-device case is handled
+    // synchronously by readLastStepFromLocal() in the URL watcher,
+    // before this async path runs. But on a fresh device the local
+    // storage is empty at watcher time, so the URL canonicalized to
+    // eligibility. Now that we've read the cloud draft into local
+    // storage, jump to its lastStep — but only if the user hasn't
+    // navigated yet (i.e. they're still on the canonical default).
+    const restoredLast = typeof v.lastStep === 'string' ? v.lastStep : ''
+    if (
+      restoredLast &&
+      restoredLast !== 'eligibility' &&
+      currentStep.value?.id === 'eligibility' &&
+      stepsMeta.value.some((m) => m.id === restoredLast)
+    ) {
+      const idx = stepsMeta.value.findIndex((m) => m.id === restoredLast)
+      if (idx > 0) goToStep(idx)
+    }
   }
 
   // Bootstrap-push the local draft to the cloud at mount time when
@@ -223,19 +248,52 @@ const stepsMeta = computed<StepMeta[]>(() => {
 
 const currentStep = computed(() => stepsMeta.value[stepIndex.value])
 
+// Synchronously read `lastStep` from this user's localStorage draft,
+// if any. Used by the canonicalization watcher so Resume lands the
+// applicant on the exact step they left off at — not back at
+// eligibility. Runs before any await so the redirect happens
+// without a visible flash through the eligibility step.
+function readLastStepFromLocal(): string | null {
+  if (!user.value || !program.value || typeof window === 'undefined') return null
+  try {
+    const key = `staija.draft.apply.${program.value.slug}.${user.value.uid}`
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { data?: { lastStep?: unknown } }
+    const v = parsed?.data?.lastStep
+    return typeof v === 'string' && v ? v : null
+  } catch {
+    return null
+  }
+}
+
 // URL → stepIndex sync. Runs immediately so a deep-linked URL like
 // /apply/dynamerge/motivation parks the wizard on the right step on
 // initial mount, and re-runs on browser back/forward so history nav
-// stays coherent. Unknown / missing step param falls back to step 0
-// (eligibility). Guarded against stepsMeta being empty before the
-// program resolves — the watcher fires again once it's populated.
+// stays coherent. Unknown / missing step param falls back to the
+// applicant's last step (from their draft) or eligibility if no draft.
+// Guarded against stepsMeta being empty before the program resolves —
+// the watcher fires again once it's populated.
 watch(
   [() => route.params.step, stepsMeta],
   ([stepSlug, meta]) => {
     if (!meta || meta.length === 0) return
-    const slug = typeof stepSlug === 'string' ? stepSlug : ''
+    let slug = typeof stepSlug === 'string' ? stepSlug : ''
+    // Bare /apply/<program> (no step) — resume at last visited step
+    // from the draft. Falls through to step 0 if no draft / no
+    // lastStep recorded yet.
+    if (!slug) {
+      const last = readLastStepFromLocal()
+      if (last && meta.some((m) => m.id === last)) {
+        slug = last
+      }
+    }
     const idx = slug ? meta.findIndex((m) => m.id === slug) : 0
     stepIndex.value = idx >= 0 ? idx : 0
+    // Persist the new position so a future visit resumes here.
+    if (meta[stepIndex.value]) {
+      lastStep.value = meta[stepIndex.value].id
+    }
     // Canonicalize: a bare /apply/<program> hit (or an unknown step
     // slug like /apply/dynamerge/typo) gets rewritten to the resolved
     // step's URL, so the address bar always reflects the wizard's
