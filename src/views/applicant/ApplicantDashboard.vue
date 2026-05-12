@@ -447,29 +447,39 @@ onBeforeUnmount(() => {
             :key="d.slug"
             class="block group focus-ring-brand rounded-2xl"
           >
-            <UiCard class="p-6 flex items-center gap-6 border-2 !border-brand-violet/20">
-              <div class="flex-1 flex flex-col gap-1.5 min-w-0">
-                <div class="flex items-center gap-3 flex-wrap">
-                  <h3 class="font-display text-xl font-semibold m-0 truncate">
-                    {{ d.programName }}
-                  </h3>
-                  <span
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                    :class="d.source === 'cloud'
-                      ? 'bg-brand-violet/10 text-brand-violet'
-                      : 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'"
-                  >
-                    <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:cloud-off'" width="12" />
+            <UiCard class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 border-2 !border-brand-violet/20">
+              <!-- Text column. On mobile this stacks: title → chip →
+                   meta line, each on its own row. On sm+ they
+                   collapse into a tighter vertical group beside the
+                   actions, but at mobile widths the chip getting its
+                   own row prevents the title from squishing into
+                   "Step…" and the chip from collapsing into a tall
+                   vertical pill. -->
+              <div class="flex-1 flex flex-col gap-2 min-w-0">
+                <h3 class="font-display text-xl font-semibold m-0 truncate">
+                  {{ d.programName }}
+                </h3>
+                <span
+                  class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full self-start max-w-full"
+                  :class="d.source === 'cloud'
+                    ? 'bg-brand-violet/10 text-brand-violet'
+                    : 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'"
+                >
+                  <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:cloud-off'" width="12" class="shrink-0" />
+                  <span class="truncate">
                     {{ d.source === 'cloud'
                       ? 'Draft · synced to your account'
                       : 'Draft · couldn’t sync — only on this browser' }}
                   </span>
-                </div>
+                </span>
                 <p class="text-sm text-ink/60 m-0">
                   Saved {{ timeAgo(d.savedAt) }} · not submitted yet
                 </p>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
+              <!-- Actions row. On mobile: spaced apart (Discard ←/
+                   Resume →) on its own row below the text. On sm+:
+                   inline beside the text, right-aligned. -->
+              <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   class="text-xs font-semibold text-ink/50 hover:text-red-600 transition-colors px-2 py-1 rounded focus-ring-brand"
