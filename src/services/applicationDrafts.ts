@@ -23,10 +23,12 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   setDoc,
   serverTimestamp,
   where,
+  type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../config/firebase'
 
@@ -162,4 +164,41 @@ export async function listUserDrafts(userId: string): Promise<ApplicationDraftDo
     console.warn('[applicationDrafts] listUserDrafts failed', err)
     return []
   }
+}
+
+/**
+ * Live-listen for changes to the current user's drafts. Fires the
+ * callback with the full draft list on every Firestore mutation: a
+ * create, an update (e.g. saveDraft from another device), or a soft-
+ * delete (deleteDraft writing a tombstone). Returns an unsubscribe
+ * function the caller MUST call on unmount, otherwise the listener
+ * leaks across route changes.
+ *
+ * Why a live listener vs. polling: cross-device deletes and saves
+ * propagate in <1s without any user-initiated refresh. The applicant
+ * dashboard uses this so a delete on phone visibly disappears from
+ * PC immediately, instead of waiting for the next dashboard load.
+ *
+ * Errors during the snapshot stream are logged and the callback is
+ * invoked with an empty array — degrades to "no drafts visible"
+ * rather than crashing the dashboard.
+ */
+export function watchUserDrafts(
+  userId: string,
+  onChange: (drafts: ApplicationDraftDoc[]) => void,
+): Unsubscribe {
+  const q = query(
+    collection(db, 'applicationDrafts'),
+    where('userId', '==', userId),
+  )
+  return onSnapshot(
+    q,
+    (snap) => {
+      onChange(snap.docs.map((d) => d.data() as ApplicationDraftDoc))
+    },
+    (err) => {
+      console.warn('[applicationDrafts] watchUserDrafts stream error', err)
+      onChange([])
+    },
+  )
 }

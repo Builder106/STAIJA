@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
@@ -15,9 +15,10 @@ import { AuthService, DatabaseService } from '../../services/firebase'
 import type { Application } from '../../services/types'
 import { useAuth } from '../../composables/useAuth'
 import {
-  listUserDrafts,
+  watchUserDrafts,
   saveDraft as saveCloudDraft,
   deleteDraft as deleteCloudDraft,
+  type ApplicationDraftDoc,
 } from '../../services/applicationDrafts'
 
 const router = useRouter()
@@ -48,7 +49,14 @@ const PROGRAM_SLUGS: Array<{ slug: LocalDraft['slug']; name: string }> = [
 // absent so we don't surface stale work the wizard would also discard.
 const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
-async function loadLocalDrafts(uid: string) {
+// Whether we've already done the local→cloud auto-sync for this
+// mount of the dashboard. The watcher fires the reconciler on every
+// Firestore change; we only want to *push* local drafts up to cloud
+// on the first reconcile. Subsequent reconciles are pure renders
+// driven by remote mutations (e.g. a delete from another device).
+let didInitialDraftSync = false
+
+async function reconcileDrafts(uid: string, cloudDocsRaw: ApplicationDraftDoc[]) {
   if (typeof window === 'undefined') return
   // Local pass — read every cached draft's full payload (not just the
   // timestamp) so we can re-push any that haven't reached the cloud
@@ -77,12 +85,11 @@ async function loadLocalDrafts(uid: string) {
     }
   }
 
-  // Cloud pass — pull every draft the account holds. The cloud listing
-  // can fail (offline / Firestore hiccup); fall through to local-only
-  // in that case. Tombstones (__deleted: true) are split into a
-  // separate map so the auto-sync below knows "was this deleted on
-  // another device?" instead of just "is there no cloud doc?".
-  const cloudDocs = await listUserDrafts(uid)
+  // Cloud pass — use the snapshot the live listener handed us.
+  // Tombstones (__deleted: true) are split into a separate map so
+  // the auto-sync below knows "was this deleted on another device?"
+  // instead of just "is there no cloud doc?".
+  const cloudDocs = cloudDocsRaw
   const cloud = new Map<LocalDraft['slug'], { savedAt: number }>()
   const tombstones = new Map<LocalDraft['slug'], { deletedAt: number }>()
   for (const doc of cloudDocs) {
@@ -107,6 +114,11 @@ async function loadLocalDrafts(uid: string) {
   // entry (instead of resurrecting it). Without this check, a delete
   // on PC silently un-deletes itself the moment phone's dashboard
   // loads.
+  // The tombstone-wipe pass runs on every reconcile so a cross-
+  // device delete that arrives mid-session immediately wipes the
+  // local copy. The auto-push pass only runs on the FIRST reconcile
+  // (gated below) so subsequent snapshots don't trigger redundant
+  // sync writes for drafts the cloud already has.
   const syncTargets: Array<[LocalDraft['slug'], { savedAt: number; payload: Record<string, unknown> }]> = []
   for (const [slug, entry] of local) {
     if (cloud.has(slug)) continue
@@ -123,7 +135,7 @@ async function loadLocalDrafts(uid: string) {
     syncTargets.push([slug, entry])
   }
 
-  if (syncTargets.length > 0) {
+  if (syncTargets.length > 0 && !didInitialDraftSync) {
     const results = await Promise.all(
       syncTargets.map(async ([slug, { savedAt, payload }]) => {
         const ok = await saveCloudDraft(uid, slug, payload)
@@ -200,6 +212,13 @@ const sortedApplications = computed(() =>
 
 const hasApplications = computed(() => applications.value.length > 0)
 
+// Held by the snapshot subscription so we can tear it down on
+// unmount. Without the cleanup the listener leaks across route
+// changes — the Firestore stream keeps firing into a detached
+// component, and the per-mount didInitialDraftSync flag would never
+// reset on the next visit.
+let unsubscribeDrafts: (() => void) | null = null
+
 async function loadData() {
   loading.value = true
   error.value = ''
@@ -209,18 +228,36 @@ async function loadData() {
       router.push('/login')
       return
     }
-    // Drafts and Firestore applications can load in parallel — neither
-    // depends on the other.
-    const [, apps] = await Promise.all([
-      loadLocalDrafts(currentUser.uid),
-      DatabaseService.getUserApplications(currentUser.uid),
-    ])
-    applications.value = apps
+
+    // Open a live listener on the user's drafts. onSnapshot fires the
+    // callback immediately with the current state, then again on
+    // every Firestore mutation — so a delete on another device shows
+    // up here in under a second, no manual refresh needed. The
+    // didInitialDraftSync flag (reset to false below) lets the first
+    // reconcile push local-only drafts to cloud; subsequent
+    // reconciles skip the push to avoid feedback loops.
+    didInitialDraftSync = false
+    if (unsubscribeDrafts) unsubscribeDrafts()
+    unsubscribeDrafts = watchUserDrafts(currentUser.uid, async (cloudDocs) => {
+      await reconcileDrafts(currentUser.uid, cloudDocs)
+      didInitialDraftSync = true
+      // The first snapshot supplies the data we'd otherwise have
+      // awaited explicitly — flip loading off here so the dashboard
+      // can render. Applications still come from a one-shot below.
+      loading.value = false
+    })
+
+    // Applications are still one-shot — the user-asked symptom was
+    // about draft sync; promoting submitted-app sync to live is a
+    // separate UX call.
+    applications.value = await DatabaseService.getUserApplications(currentUser.uid)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load your applications.'
-  } finally {
     loading.value = false
   }
+  // Note: loading.value is flipped off inside the snapshot callback
+  // (drafts) or by the catch above. We deliberately don't put it in
+  // a finally — the try-block returns before the listener fires.
 }
 
 function toDate(value: unknown): Date {
@@ -271,6 +308,15 @@ function continueRoute(app: Application): string {
 }
 
 onMounted(loadData)
+
+onBeforeUnmount(() => {
+  // Tear down the Firestore snapshot listener so it doesn't keep
+  // firing into a detached component after the user navigates away.
+  if (unsubscribeDrafts) {
+    unsubscribeDrafts()
+    unsubscribeDrafts = null
+  }
+})
 </script>
 
 <template>
