@@ -186,9 +186,12 @@ async function initAutoSave() {
     // before this async path runs. But on a fresh device the local
     // storage is empty at watcher time, so the URL canonicalized to
     // eligibility. Now that we've read the cloud draft into local
-    // storage, jump to its lastStep — but only if the user hasn't
-    // navigated yet (i.e. they're still on the canonical default).
-    const restoredLast = typeof v.lastStep === 'string' ? v.lastStep : ''
+    // storage, jump to wherever the applicant was — favoring an
+    // explicit lastStep on the draft, then falling back to the
+    // deepest step that has any data. The fallback handles drafts
+    // saved by older bundles that didn't track lastStep, drafts
+    // affected by partial-save races, etc.
+    const restoredLast = resolveResumeStep(v as Record<string, unknown>) ?? ''
     if (
       restoredLast &&
       restoredLast !== 'eligibility' &&
@@ -266,20 +269,72 @@ const stepsMeta = computed<StepMeta[]>(() => {
 
 const currentStep = computed(() => stepsMeta.value[stepIndex.value])
 
-// Synchronously read `lastStep` from this user's localStorage draft,
-// if any. Used by the canonicalization watcher so Resume lands the
-// applicant on the exact step they left off at — not back at
-// eligibility. Runs before any await so the redirect happens
-// without a visible flash through the eligibility step.
+// Has any user-supplied data been entered for a given step? Used to
+// infer where the applicant was when an explicit lastStep marker is
+// absent (drafts saved before the lastStep tracking shipped, or drafts
+// that hit some race condition during save). `data` is the persisted
+// form state from a draft payload, with the same shape as
+// `formStateForSave.value`.
+function stepHasDataInPayload(
+  stepId: string,
+  data: Record<string, unknown>,
+): boolean {
+  if (!program.value) return false
+  if (stepId === 'eligibility') {
+    const e = data.eligibility as Record<string, unknown> | undefined
+    return e ? Object.values(e).some((v) => !!v) : false
+  }
+  if (stepId === 'references') {
+    const refs = (data.references as Array<Record<string, unknown>> | undefined) ?? []
+    return refs.some((r) => !!(r.name || r.email || r.institution || r.relationship))
+  }
+  // Files step isn't persisted; review step is a summary only.
+  if (stepId === 'files' || stepId === 'review') return false
+  // Schema-driven step (personal, academic, motivation, ...).
+  const schemaStep = program.value.steps.find((s) => s.id === stepId)
+  if (!schemaStep) return false
+  const fields = (data.fields as Record<string, unknown> | undefined) ?? {}
+  for (const f of schemaStep.fields) {
+    const v = fields[f.name]
+    if (typeof v === 'string' && v.trim()) return true
+    if (Array.isArray(v) && v.length > 0) return true
+    if (typeof v === 'number' && Number.isFinite(v)) return true
+  }
+  return false
+}
+
+// Resolve the step to resume at from a draft payload. Prefers an
+// explicit `lastStep` (set by the wizard's URL watcher on every
+// position change), but falls back to walking stepsMeta and picking
+// the deepest step that has any user-supplied data. The fallback
+// rescues drafts written before lastStep tracking shipped, drafts that
+// hit a partial-save race, and any other case where the explicit
+// marker is missing.
+function resolveResumeStep(data: Record<string, unknown>): string | null {
+  const explicit = data.lastStep
+  if (typeof explicit === 'string' && explicit) return explicit
+  if (!program.value) return null
+  let deepest = ''
+  for (const meta of stepsMeta.value) {
+    if (stepHasDataInPayload(meta.id, data)) deepest = meta.id
+  }
+  return deepest || null
+}
+
+// Synchronously read the resume step from this user's localStorage
+// draft, if any. Used by the canonicalization watcher so Resume lands
+// the applicant on the exact step they left off at — not back at
+// eligibility. Runs before any await so the redirect happens without
+// a visible flash through the eligibility step.
 function readLastStepFromLocal(): string | null {
   if (!user.value || !program.value || typeof window === 'undefined') return null
   try {
     const key = `staija.draft.apply.${program.value.slug}.${user.value.uid}`
     const raw = window.localStorage.getItem(key)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as { data?: { lastStep?: unknown } }
-    const v = parsed?.data?.lastStep
-    return typeof v === 'string' && v ? v : null
+    const parsed = JSON.parse(raw) as { data?: Record<string, unknown> }
+    if (!parsed?.data || typeof parsed.data !== 'object') return null
+    return resolveResumeStep(parsed.data)
   } catch {
     return null
   }
