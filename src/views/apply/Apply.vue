@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, type Ref } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
@@ -21,10 +21,12 @@ import {
   getDraft as getCloudDraft,
   saveDraft as saveCloudDraft,
   deleteDraft as deleteCloudDraft,
+  watchDraftDoc,
   type DraftProgramSlug,
 } from '../../services/applicationDrafts'
 import { getProgram, type FieldDef, type ProgramSchema } from './programs'
 import UiSelect from '../../components/ui/UiSelect.vue'
+import UiConfirmDialog from '../../components/ui/UiConfirmDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,6 +88,18 @@ const submittedId = ref<string | null>(null)
 // resumed step — that's the visible "eligibility flash" applicants
 // see when an existing draft is being picked back up.
 const initializing = ref(true)
+
+// Cross-device discard handling. A Firestore listener (set up inside
+// initAutoSave) watches the applicant's draft doc for the
+// __deleted: false → true transition that means "another device
+// discarded this draft while I was editing it". When detected we open
+// this modal and ask the applicant to break the tie: keep their
+// in-flight work here, or honor the discard and go home. Cleared
+// when the answer is given.
+const crossDeviceDiscardOpen = ref(false)
+// Held by the listener so we can unsubscribe on unmount — without
+// this the Firestore stream keeps firing after the wizard is gone.
+let unsubscribeDraftDoc: (() => void) | null = null
 
 // --- Auto-save: keyed per-program ------------------------------------
 
@@ -258,11 +272,63 @@ async function initAutoSave() {
     void saveCloudDraft(uid, slug as DraftProgramSlug, formStateForSave.value)
   })
 
+  // Cross-device discard listener. Fires the modal when another
+  // device tombstones this draft while the applicant is editing here.
+  // We track the previous __deleted state explicitly so the modal
+  // only opens on a *transition* false → true — not on the initial
+  // snapshot (which would be unhelpful if the doc was already in a
+  // deleted state when the wizard mounted), and not on a regular
+  // save (false → false) or a self-undelete (true → false).
+  let lastSeenDeleted: boolean | null = null
+  unsubscribeDraftDoc = watchDraftDoc(uid, slug as DraftProgramSlug, (doc) => {
+    if (!doc) {
+      lastSeenDeleted = null
+      return
+    }
+    const isDeleted = !!doc.__deleted
+    if (lastSeenDeleted === false && isDeleted) {
+      crossDeviceDiscardOpen.value = true
+    }
+    lastSeenDeleted = isDeleted
+  })
+
   // Wait one tick so any goToStep-driven router.replace from the
   // restore branch above has applied before the caller's .finally()
   // flips `initializing` off. Without this the skeleton can vanish
   // for ~1 frame on the wrong step before the route catches up.
   await nextTick()
+}
+
+function handleCrossDeviceDiscardConfirm() {
+  // Applicant chose "Discard". Honor the other device's deletion:
+  // wipe local storage so a future visit doesn't auto-revive the
+  // draft via the bootstrap-push path, then send them home. The
+  // cloud doc stays tombstoned; nothing to do on Firestore.
+  if (program.value && user.value) {
+    try {
+      window.localStorage.removeItem(
+        `staija.draft.apply.${program.value.slug}.${user.value.uid}`,
+      )
+    } catch { /* private mode / quota — fine */ }
+  }
+  router.replace('/applicant')
+}
+
+function handleCrossDeviceDiscardCancel() {
+  // Applicant chose "Keep editing here". Their in-flight state is
+  // already in memory and localStorage; the only thing to do is
+  // immediately un-delete the cloud doc so the dashboard reads
+  // correctly on the *other* device too. The 30s debounce on
+  // formStateForSave would do this eventually, but firing it now
+  // avoids a brief window where another device still sees the
+  // tombstone.
+  if (program.value && user.value) {
+    void saveCloudDraft(
+      user.value.uid,
+      program.value.slug as DraftProgramSlug,
+      formStateForSave.value,
+    )
+  }
 }
 
 // --- Steps -----------------------------------------------------------
@@ -697,6 +763,13 @@ onMounted(() => {
 watch(user, (u) => {
   if (!u && program.value) {
     router.replace({ path: '/signup', query: { redirect: route.fullPath } })
+  }
+})
+
+onBeforeUnmount(() => {
+  if (unsubscribeDraftDoc) {
+    unsubscribeDraftDoc()
+    unsubscribeDraftDoc = null
   }
 })
 
@@ -1328,4 +1401,15 @@ watch(
     </Section>
     </template>
   </div>
+
+  <UiConfirmDialog
+    v-model:open="crossDeviceDiscardOpen"
+    variant="destructive"
+    title="This draft was discarded on another device"
+    body="You're still editing here. If you keep editing, your in-progress changes will overwrite the discard. If you discard, your work on this page is lost and we'll send you back to the dashboard."
+    confirm-label="Discard"
+    cancel-label="Keep editing here"
+    @confirm="handleCrossDeviceDiscardConfirm"
+    @cancel="handleCrossDeviceDiscardCancel"
+  />
 </template>

@@ -167,6 +167,33 @@ export async function listUserDrafts(userId: string): Promise<ApplicationDraftDo
 }
 
 /**
+ * Live-listen for changes to a single draft doc. Fires the callback
+ * with the current doc (or null if the path doesn't exist yet) on
+ * every Firestore mutation — most importantly, on a soft-delete from
+ * another device, so an open wizard can detect "the applicant
+ * discarded this somewhere else" and ask the user how to resolve.
+ *
+ * Returns an Unsubscribe the caller MUST invoke on unmount.
+ */
+export function watchDraftDoc(
+  userId: string,
+  program: DraftProgramSlug,
+  onChange: (draft: ApplicationDraftDoc | null) => void,
+): Unsubscribe {
+  const ref = doc(db, 'applicationDrafts', draftId(userId, program))
+  return onSnapshot(
+    ref,
+    (snap) => {
+      onChange(snap.exists() ? (snap.data() as ApplicationDraftDoc) : null)
+    },
+    (err) => {
+      console.warn('[applicationDrafts] watchDraftDoc stream error', err)
+      onChange(null)
+    },
+  )
+}
+
+/**
  * Live-listen for changes to the current user's drafts. Fires the
  * callback with the full draft list on every Firestore mutation: a
  * create, an update (e.g. saveDraft from another device), or a soft-
