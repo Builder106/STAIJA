@@ -102,9 +102,76 @@ const showcaseFile = ref<File | null>(null)
 // off-by-default — empty here means the applicant didn't record one,
 // which is fine: the written field stays canonical and required.
 const audioByField = ref<Record<string, { blob: Blob; durationSec: number }>>({})
-function setAudio(name: string, value: { blob: Blob; durationSec: number } | null) {
+
+/** Wrap a recorded audio Blob into a File with a deterministic-ish
+ *  filename, so staging records something readable in Storage and the
+ *  finalize step can preserve the duration in the filename. */
+function audioToFile(fieldName: string, blob: Blob, durationSec: number): File {
+  const mime = blob.type || 'audio/webm'
+  const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
+  const fileName = `audio-${fieldName}-${durationSec}s.${ext}`
+  return new File([blob], fileName, { type: mime })
+}
+
+/** Called by AudioRecorder when a recording finalizes (or null on
+ *  clear). Updates the in-memory ref synchronously and fires a staging
+ *  upload so the cross-device resume picks it up. Mirrors
+ *  handleStagedFilePick for files, but the staging key is namespaced
+ *  (`audio:<fieldName>`) because there can be multiple audio entries
+ *  per draft. */
+async function setAudio(name: string, value: { blob: Blob; durationSec: number } | null) {
   if (value) audioByField.value[name] = value
   else delete audioByField.value[name]
+
+  if (!user.value || !program.value) return
+  const uid = user.value.uid
+  const slug = program.value.slug as DraftProgramSlug
+
+  // Wipe any previously-staged clip for this field before uploading the
+  // new one. Best-effort delete; orphan cron sweeps stragglers.
+  const previous = stagedFiles.value.audio?.[name]
+  if (previous?.storagePath) {
+    void deleteFromStaging(previous.storagePath)
+  }
+  // Drop previous metadata + (if value is null) early-return.
+  const nextAudio: Record<string, StagedFile> = { ...(stagedFiles.value.audio ?? {}) }
+  delete nextAudio[name]
+  stagedFiles.value = {
+    ...stagedFiles.value,
+    audio: Object.keys(nextAudio).length > 0 ? nextAudio : undefined,
+  }
+  if (!value) return
+
+  const file = audioToFile(name, value.blob, value.durationSec)
+  const inFlightKey = `audio:${name}`
+  stagingInFlight.value = new Set([...stagingInFlight.value, inFlightKey])
+  try {
+    const meta = await uploadToStaging(uid, slug, 'audio', file, { fieldName: name })
+    const merged = { ...(stagedFiles.value.audio ?? {}), [name]: meta }
+    stagedFiles.value = { ...stagedFiles.value, audio: merged }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Upload failed'
+    fileUploadError.value = `Couldn't sync your audio answer to your account: ${msg}. The recording is still attached locally — submission will use it directly.`
+  } finally {
+    const next = new Set(stagingInFlight.value)
+    next.delete(inFlightKey)
+    stagingInFlight.value = next
+  }
+}
+
+/** Applicant clicked Remove on a pre-attached audio card. Mirror of
+ *  handleStagedFileClear, namespaced by field. */
+function handleStagedAudioClear(name: string) {
+  const entry = stagedFiles.value.audio?.[name]
+  if (entry?.storagePath) {
+    void deleteFromStaging(entry.storagePath)
+  }
+  const next = { ...(stagedFiles.value.audio ?? {}) }
+  delete next[name]
+  stagedFiles.value = {
+    ...stagedFiles.value,
+    audio: Object.keys(next).length > 0 ? next : undefined,
+  }
 }
 
 /**
@@ -1295,7 +1362,16 @@ watch(
                         v-if="field.audioOptional"
                         :max-seconds="field.audioOptional.maxSeconds"
                         :prompt="field.audioOptional.prompt"
+                        :attached-audio="stagedFiles.audio?.[field.name]
+                          ? {
+                              fileName: stagedFiles.audio[field.name].fileName,
+                              sizeBytes: stagedFiles.audio[field.name].sizeBytes,
+                              contentType: stagedFiles.audio[field.name].contentType,
+                            }
+                          : null"
+                        :uploading="stagingInFlight.has(`audio:${field.name}`)"
                         @update:audio="(v) => setAudio(field.name, v)"
+                        @clear-attached="handleStagedAudioClear(field.name)"
                       />
                     </div>
                   </div>

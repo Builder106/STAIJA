@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
 import UiButton from './UiButton.vue'
 
@@ -12,12 +12,33 @@ interface Props {
   maxSeconds?: number
   /** One-line prompt rendered above the controls (e.g. "Prefer to talk it out?"). */
   prompt?: string
+  /** Metadata about an audio answer the applicant recorded in a previous
+   *  session. When present and no in-session recording exists, the
+   *  component renders a pre-attached card (filename + duration + Replace
+   *  / Remove) instead of the Start-recording button. Required for
+   *  cross-device resume — the Blob itself can't survive a reload, but
+   *  the staged-file metadata can. */
+  attachedAudio?: { fileName: string; sizeBytes: number; durationSec?: number; contentType?: string } | null
+  /** Shows an inline "Uploading…" hint after a fresh recording is
+   *  finalized, while the parent is still pushing bytes to staging. */
+  uploading?: boolean
 }
-const props = withDefaults(defineProps<Props>(), { maxSeconds: 90 })
+const props = withDefaults(defineProps<Props>(), {
+  maxSeconds: 90,
+  attachedAudio: null,
+  uploading: false,
+})
 
 export interface RecordedAudio { blob: Blob; durationSec: number }
 const emit = defineEmits<{
   (e: 'update:audio', value: RecordedAudio | null): void
+  /** Applicant clicked Remove on the pre-attached card. Parent should
+   *  wipe the staged-audio metadata + best-effort delete the Storage
+   *  object. Distinct from `update:audio(null)` which fires for clearing
+   *  a freshly-recorded clip — the parent needs to know the difference
+   *  to avoid trying to delete a Storage object that was never written
+   *  for this device. */
+  (e: 'clear-attached'): void
 }>()
 
 type State = 'idle' | 'requesting' | 'recording' | 'recorded' | 'error'
@@ -35,6 +56,22 @@ function format(sec: number) {
   const m = Math.floor(sec / 60).toString()
   const s = (sec % 60).toString().padStart(2, '0')
   return `${m}:${s}`
+}
+
+/** Render priority — fresh in-session recording beats pre-attached
+ *  beats idle controls. Once the applicant hits "Start recording" or
+ *  has a recorded clip, the attached card is shadowed. */
+const showAttached = computed(
+  () => state.value === 'idle' && !audioUrl.value && props.attachedAudio !== null,
+)
+
+function pickReplace() {
+  emit('clear-attached')
+  start()
+}
+
+function removeAttached() {
+  emit('clear-attached')
 }
 
 function teardownStream() {
@@ -126,7 +163,42 @@ onBeforeUnmount(() => {
     </div>
     <p v-if="prompt" class="text-xs text-ink/65 m-0 leading-relaxed">{{ prompt }}</p>
 
-    <div v-if="state === 'idle' || state === 'requesting'" class="flex items-center gap-2">
+    <!-- Pre-attached state: applicant recorded this in a previous
+         session; bytes live in staging. Distinct violet wash + "from
+         your previous session" hint so it's clear this didn't come from
+         this device's mic. -->
+    <div
+      v-if="showAttached && attachedAudio"
+      class="flex items-center gap-3 border-2 hairline-ink !border-brand-violet/30 rounded-xl px-3 py-3 bg-brand-violet/5"
+    >
+      <Icon icon="lucide:audio-lines" width="20" class="text-brand-violet shrink-0" />
+      <div class="flex flex-col flex-1 min-w-0">
+        <span class="text-sm font-semibold text-ink truncate">
+          {{ attachedAudio.fileName }}
+        </span>
+        <span class="text-xs text-ink/55">
+          <template v-if="attachedAudio.durationSec">{{ format(attachedAudio.durationSec) }} · </template>From your previous session
+        </span>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <button
+          type="button"
+          class="text-sm font-semibold text-ink/60 hover:text-brand-violet focus-ring-brand rounded-sm"
+          @click="pickReplace"
+        >
+          Re-record
+        </button>
+        <button
+          type="button"
+          class="text-sm font-semibold text-ink/50 hover:text-red-600 focus-ring-brand rounded-sm"
+          @click="removeAttached"
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+
+    <div v-else-if="state === 'idle' || state === 'requesting'" class="flex items-center gap-2">
       <UiButton variant="secondary" :disabled="state === 'requesting'" @click="start">
         <span class="flex items-center gap-2">
           <Icon icon="lucide:mic" width="14" />
@@ -177,7 +249,11 @@ onBeforeUnmount(() => {
             Remove
           </span>
         </button>
-        <span class="ml-auto text-ink/50">Recorded {{ format(elapsed) }}</span>
+        <span v-if="uploading" class="ml-auto text-brand-violet inline-flex items-center gap-1.5">
+          <Icon icon="lucide:loader-2" width="12" class="animate-spin" />
+          Uploading to your account…
+        </span>
+        <span v-else class="ml-auto text-ink/50">Recorded {{ format(elapsed) }}</span>
       </div>
     </div>
 
