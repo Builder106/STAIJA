@@ -1,6 +1,28 @@
 rules_version = "2";
 service firebase.storage {
   match /b/{bucket}/o {
+    // Pre-submission staging for applicants' files + audio recordings.
+    // Picked-from-disk files (transcript / ID / showcase) and in-browser
+    // audio answers land here the moment they're selected, so the
+    // applicant's draft can reference them across devices instead of
+    // forcing a re-attach on every resume. Owner-only — explicitly NO
+    // staff/admin read access: staging contents are pre-submission and
+    // may include sensitive ID scans the applicant hasn't yet committed
+    // to sharing. Once they hit Submit, the finalize Cloud Function
+    // copies the bytes into applications/<uid>/<applicationId>/... and
+    // wipes staging.
+    //
+    // Lives at a SEPARATE prefix from applications/ (not a sub-path)
+    // because Firebase Storage rules are additive across overlapping
+    // matches — nesting under applications/{uid}/_staging would still
+    // inherit the outer block's staff/admin read grant. The separate
+    // root prefix keeps it cleanly owner-private.
+    match /applicationStaging/{uid}/{rest=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 25 * 1024 * 1024;
+    }
+
     // Application uploads (transcript / ID / optional showcase): only the
     // applicant can write to their own folder; only admins / staff can
     // read. 25MB cap is generous enough for a ~90s phone video clip in

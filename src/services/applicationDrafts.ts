@@ -34,6 +34,41 @@ import { db } from '../config/firebase'
 
 export type DraftProgramSlug = 'stepup-scholars' | 'dynamerge'
 
+/**
+ * Metadata for a file or audio blob the applicant has uploaded into
+ * the per-(user, program) staging area in Firebase Storage but hasn't
+ * yet submitted. Lives in the draft payload so the applicant's
+ * uploads follow the account across devices the same way their form
+ * answers do. Bytes themselves live in Storage; only this metadata
+ * crosses to Firestore.
+ */
+export interface StagedFile {
+  /** Storage path under `applicationStaging/<uid>/<program>/...`.
+   *  Source of truth for the bytes; everything else here is for the
+   *  pre-attached UI ("transcript-CV.pdf · 2.3 MB"). */
+  storagePath: string
+  /** Original filename the applicant picked (or one we synthesised
+   *  for audio: `audio-<fieldName>-<duration>s.webm`). */
+  fileName: string
+  sizeBytes: number
+  contentType: string
+  /** Plain ms epoch — NOT a Firestore Timestamp. Firestore serialises
+   *  nested Timestamps inconsistently inside opaque payload objects,
+   *  so we keep this as a primitive for safe local/cloud round-trip. */
+  uploadedAt: number
+}
+
+/** All staged uploads attached to a single (user, program) draft.
+ *  Keys correspond to the wizard's file inputs. The `audio` map is
+ *  keyed by the motivation step's field name (today there's only one,
+ *  but the wizard schema supports multiple per program). */
+export interface StagedFiles {
+  transcript?: StagedFile
+  id?: StagedFile
+  showcase?: StagedFile
+  audio?: Record<string, StagedFile>
+}
+
 /** Shape stored in Firestore. `payload` is opaque — matches what Apply.vue
  *  hands to useAutoSave so the same restore code path works for both. */
 export interface ApplicationDraftDoc {

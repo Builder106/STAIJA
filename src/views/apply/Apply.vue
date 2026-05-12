@@ -23,7 +23,14 @@ import {
   deleteDraft as deleteCloudDraft,
   watchDraftDoc,
   type DraftProgramSlug,
+  type StagedFile,
+  type StagedFiles,
 } from '../../services/applicationDrafts'
+import {
+  uploadToStaging,
+  deleteFromStaging,
+  verifyStagedFile,
+} from '../../services/stagedFiles'
 import { getProgram, type FieldDef, type ProgramSchema } from './programs'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import UiConfirmDialog from '../../components/ui/UiConfirmDialog.vue'
@@ -58,6 +65,31 @@ const transcriptFile = ref<File | null>(null)
 const idFile = ref<File | null>(null)
 const fileUploadError = ref<string | null>(null)
 
+// Staged-file metadata — persisted in the draft payload so an
+// upload made on PC shows up as a pre-attached card when the
+// applicant resumes on phone. The actual bytes live in Firebase
+// Storage under applicationStaging/<uid>/<program>/...; this ref
+// just holds the storage path + display info for the FileUpload
+// pre-attached state. Hydrated in initAutoSave's restore branch,
+// updated by the per-FileUpload handlers below.
+const stagedFiles = ref<StagedFiles>({})
+
+// Set of in-flight staging upload keys (transcript / id / showcase /
+// audio:<fieldName>). Continue / Submit are gated on size === 0 so
+// the applicant can't navigate past a step while their file is
+// still uploading. FileUpload also shows an inline "Uploading…"
+// hint via the `:uploading` prop.
+const stagingInFlight = ref<Set<string>>(new Set())
+const anyUploadInFlight = computed(() => stagingInFlight.value.size > 0)
+
+// Guard the autosave watchers behind this flag so the FIRST save
+// doesn't fire before initAutoSave's verifyStagedFile pass has
+// pruned dead references from stagedFiles. Without it, restoring a
+// draft with a staged path the cron has since reaped would persist
+// the stale path back to cloud on the next debounce. Flipped to
+// true at the end of initAutoSave.
+const restoreComplete = ref(false)
+
 // Optional "show your work" slot — URL is the preferred path (zero
 // upload, accessible to reviewers anywhere), file is the fallback for
 // applicants without somewhere to host work. Either, both, or neither
@@ -73,6 +105,85 @@ const audioByField = ref<Record<string, { blob: Blob; durationSec: number }>>({}
 function setAudio(name: string, value: { blob: Blob; durationSec: number } | null) {
   if (value) audioByField.value[name] = value
   else delete audioByField.value[name]
+}
+
+/**
+ * Per-FileUpload handler. When the applicant picks a file, write
+ * it into the in-memory ref AND fire-and-forget an upload to the
+ * per-user staging area in Firebase Storage. The staged metadata
+ * (storage path + filename + size + type) lands in the draft
+ * payload on the next autosave debounce, so a resume on any device
+ * sees a pre-attached card.
+ *
+ * `kind` is one of 'transcript' | 'id' | 'showcase' — used to key
+ * `stagedFiles` and `stagingInFlight`. The audio handler is
+ * separate (Slice 3) because its key includes the field name.
+ *
+ * Failure mode: if the staging upload throws, we surface the
+ * message via `fileUploadError` and clear the in-memory ref so the
+ * FileUpload's empty state returns. The applicant retries by
+ * re-selecting the file. We don't try to silently retry — the
+ * compress + upload path can fail for many reasons (offline,
+ * blocked content type, rules) and most aren't recoverable
+ * without applicant action.
+ */
+async function handleStagedFilePick(
+  kind: 'transcript' | 'id' | 'showcase',
+  file: File | null,
+) {
+  // Update the live ref immediately so the FileUpload's filled
+  // state renders without waiting on the network. The submit path
+  // still uses this ref for the direct-upload fallback until
+  // Slice 4 swaps it for the finalize callable.
+  if (kind === 'transcript') transcriptFile.value = file
+  else if (kind === 'id') idFile.value = file
+  else if (kind === 'showcase') showcaseFile.value = file
+
+  if (!file) return
+  if (!user.value || !program.value) return
+
+  const uid = user.value.uid
+  const slug = program.value.slug as DraftProgramSlug
+
+  // If there was a previously-staged file for this kind, fire-and-
+  // forget its deletion before we upload the new one. Best-effort —
+  // the orphan cron sweeps anything we miss. Then drop the metadata
+  // from local state so the pre-attached card disappears in favour
+  // of the filled-with-fresh-file state.
+  const previous = stagedFiles.value[kind]
+  if (previous?.storagePath) {
+    void deleteFromStaging(previous.storagePath)
+  }
+  stagedFiles.value = { ...stagedFiles.value, [kind]: undefined }
+
+  stagingInFlight.value = new Set([...stagingInFlight.value, kind])
+  try {
+    const meta = await uploadToStaging(uid, slug, kind, file)
+    stagedFiles.value = { ...stagedFiles.value, [kind]: meta }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Upload failed'
+    fileUploadError.value = `Couldn't sync ${file.name} to your account: ${msg}. The file is still attached locally — submission will use it directly.`
+  } finally {
+    const next = new Set(stagingInFlight.value)
+    next.delete(kind)
+    stagingInFlight.value = next
+  }
+}
+
+/**
+ * Applicant clicked Remove (or Replace, which fires this first
+ * then re-opens the picker) on a pre-attached file. Wipe the
+ * Storage object best-effort + drop the metadata from local state.
+ * The live ref is already null because the FileUpload's
+ * pre-attached state only renders when no in-session file is
+ * picked, so no need to clear transcriptFile / idFile / showcaseFile.
+ */
+function handleStagedFileClear(kind: 'transcript' | 'id' | 'showcase') {
+  const entry = stagedFiles.value[kind]
+  if (entry?.storagePath) {
+    void deleteFromStaging(entry.storagePath)
+  }
+  stagedFiles.value = { ...stagedFiles.value, [kind]: undefined }
 }
 
 const stepIndex = ref(0)
@@ -117,8 +228,14 @@ const formStateForSave = computed(() => ({
   showcaseUrl: showcaseUrl.value,
   showcaseNote: showcaseNote.value,
   lastStep: lastStep.value,
-  // Files are NOT persisted — File objects don't serialize and
-  // re-uploads would be cheap to redo.
+  // File OBJECTS still aren't persisted — File / Blob can't
+  // serialize through JSON. But staging metadata (storage path +
+  // filename + size) IS persisted in `stagedFiles`, which lets the
+  // FileUpload component render a pre-attached card on resume. The
+  // bytes live in Firebase Storage at applicationStaging/<uid>/...
+  // and get copied to the final applications/<uid>/<appId>/... path
+  // by the finalizeApplicationFiles Cloud Function on submit.
+  stagedFiles: stagedFiles.value,
 }))
 // We need a Ref for useAutoSave. Wrap the computed in a ref proxy.
 const persistedRef = ref(formStateForSave.value) as Ref<typeof formStateForSave.value>
@@ -204,6 +321,45 @@ async function initAutoSave() {
     if (v.references) references.value = v.references
     if (typeof v.showcaseUrl === 'string') showcaseUrl.value = v.showcaseUrl
     if (typeof v.showcaseNote === 'string') showcaseNote.value = v.showcaseNote
+    // Staged-file metadata. Run each restored entry through
+    // verifyStagedFile so paths the orphan cron has since reaped (or
+    // entries pointing at Storage objects that never finished
+    // uploading) get pruned BEFORE the first autosave fires — that
+    // first save is gated on `restoreComplete` below for exactly
+    // this reason. Without the verify pass, a stale reference would
+    // round-trip back to cloud on the next debounce and re-haunt
+    // every future resume.
+    if (v.stagedFiles && typeof v.stagedFiles === 'object') {
+      const restored = v.stagedFiles as StagedFiles
+      const verified: StagedFiles = {}
+      const verifyOne = async (entry: StagedFile | undefined): Promise<StagedFile | undefined> => {
+        if (!entry?.storagePath) return undefined
+        const ok = await verifyStagedFile(entry.storagePath)
+        return ok ? entry : undefined
+      }
+      const [t, i, s] = await Promise.all([
+        verifyOne(restored.transcript),
+        verifyOne(restored.id),
+        verifyOne(restored.showcase),
+      ])
+      if (t) verified.transcript = t
+      if (i) verified.id = i
+      if (s) verified.showcase = s
+      if (restored.audio && typeof restored.audio === 'object') {
+        const audioPairs = await Promise.all(
+          Object.entries(restored.audio).map(async ([k, entry]) => {
+            const v = await verifyOne(entry as StagedFile)
+            return v ? ([k, v] as const) : null
+          }),
+        )
+        const audio: Record<string, StagedFile> = {}
+        for (const pair of audioPairs) {
+          if (pair) audio[pair[0]] = pair[1]
+        }
+        if (Object.keys(audio).length > 0) verified.audio = audio
+      }
+      stagedFiles.value = verified
+    }
     // Cross-device resume: the same-device case is handled
     // synchronously by readLastStepFromLocal() in the URL watcher,
     // before this async path runs. But on a fresh device the local
@@ -245,6 +401,11 @@ async function initAutoSave() {
   watch(
     formStateForSave,
     (v) => {
+      // Guard: don't write back to cloud until restoreComplete is
+      // true. The verifyStagedFile pass above prunes dead
+      // staged-file references; if the autosave fires BEFORE that
+      // pass finishes, the stale entries get persisted right back.
+      if (!restoreComplete.value) return
       if (cloudTimer) clearTimeout(cloudTimer)
       cloudTimer = setTimeout(() => {
         if (!user.value) return
@@ -264,6 +425,7 @@ async function initAutoSave() {
   // the extra Firestore writes are cheap; cross-device resume
   // accuracy is worth them.
   watch(lastStep, () => {
+    if (!restoreComplete.value) return
     if (cloudTimer) {
       clearTimeout(cloudTimer)
       cloudTimer = null
@@ -297,6 +459,13 @@ async function initAutoSave() {
   // flips `initializing` off. Without this the skeleton can vanish
   // for ~1 frame on the wrong step before the route catches up.
   await nextTick()
+
+  // Open the autosave watchers' write path. Up to now they short-
+  // circuit on !restoreComplete to prevent the verifyStagedFile
+  // prune step above from being silently overwritten by an
+  // early-firing debounce. From here on, every form change debounces
+  // a save and every lastStep change fires one immediately.
+  restoreComplete.value = true
 }
 
 function handleCrossDeviceDiscardConfirm() {
@@ -1228,7 +1397,12 @@ watch(
               <FileUpload
                 label="Transcript or grade report"
                 accept="image/*,application/pdf"
-                @update:file="(f) => transcriptFile = f"
+                :attached-file="stagedFiles.transcript
+                  ? { name: stagedFiles.transcript.fileName, sizeBytes: stagedFiles.transcript.sizeBytes, contentType: stagedFiles.transcript.contentType }
+                  : null"
+                :uploading="stagingInFlight.has('transcript')"
+                @update:file="(f) => handleStagedFilePick('transcript', f)"
+                @clear-attached="handleStagedFileClear('transcript')"
                 @error="(m) => fileUploadError = m"
               />
               <FileUpload
@@ -1382,9 +1556,14 @@ watch(
             <UiButton
               v-if="currentStep?.id !== 'review'"
               variant="gradient"
+              :disabled="anyUploadInFlight"
               @click="next"
             >
-              <span class="flex items-center gap-2">
+              <span v-if="anyUploadInFlight" class="flex items-center gap-2">
+                <Icon icon="lucide:loader-2" width="16" class="animate-spin" />
+                Finishing upload…
+              </span>
+              <span v-else class="flex items-center gap-2">
                 Continue
                 <Icon icon="lucide:arrow-right" width="16" />
               </span>
@@ -1392,10 +1571,14 @@ watch(
             <UiButton
               v-else
               variant="gradient"
-              :disabled="submitting"
+              :disabled="submitting || anyUploadInFlight"
               @click="handleSubmit"
             >
               <span v-if="submitting">Submitting…</span>
+              <span v-else-if="anyUploadInFlight" class="flex items-center gap-2">
+                <Icon icon="lucide:loader-2" width="16" class="animate-spin" />
+                Finishing upload…
+              </span>
               <span v-else class="flex items-center gap-2">
                 Submit application
                 <Icon icon="lucide:check" width="16" />
