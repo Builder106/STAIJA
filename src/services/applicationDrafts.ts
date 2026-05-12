@@ -74,7 +74,7 @@ export async function saveDraft(
   userId: string,
   program: DraftProgramSlug,
   payload: Record<string, unknown>,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const ref = doc(db, 'applicationDrafts', draftId(userId, program))
     await setDoc(
@@ -88,8 +88,14 @@ export async function saveDraft(
       },
       { merge: true },
     )
+    return true
   } catch (err) {
+    // Returning false (vs throwing) preserves the local-first
+    // contract — callers can decide whether to retry, surface an
+    // emergency-state chip, etc. The dashboard relies on this to
+    // distinguish "successfully synced" from "tried and failed".
     console.warn('[applicationDrafts] saveDraft failed', err)
+    return false
   }
 }
 

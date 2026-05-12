@@ -14,7 +14,11 @@ import UiConfirmDialog from '../../components/ui/UiConfirmDialog.vue'
 import { AuthService, DatabaseService } from '../../services/firebase'
 import type { Application } from '../../services/types'
 import { useAuth } from '../../composables/useAuth'
-import { listUserDrafts, deleteDraft as deleteCloudDraft } from '../../services/applicationDrafts'
+import {
+  listUserDrafts,
+  saveDraft as saveCloudDraft,
+  deleteDraft as deleteCloudDraft,
+} from '../../services/applicationDrafts'
 
 const router = useRouter()
 const { displayName } = useAuth()
@@ -46,20 +50,28 @@ const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
 async function loadLocalDrafts(uid: string) {
   if (typeof window === 'undefined') return
-  // Local pass — read whatever this browser has cached.
-  const local = new Map<LocalDraft['slug'], { savedAt: number }>()
+  // Local pass — read every cached draft's full payload (not just the
+  // timestamp) so we can re-push any that haven't reached the cloud
+  // yet. Reading bytes we'd skip otherwise is cheap: 2 keys at most,
+  // each a few KB.
+  interface LocalEntry { savedAt: number; payload: Record<string, unknown> }
+  const local = new Map<LocalDraft['slug'], LocalEntry>()
   for (const { slug } of PROGRAM_SLUGS) {
     const key = `staija.draft.apply.${slug}.${uid}`
     try {
       const raw = window.localStorage.getItem(key)
       if (!raw) continue
-      const parsed = JSON.parse(raw) as { v?: number; savedAt?: number }
+      const parsed = JSON.parse(raw) as {
+        v?: number
+        savedAt?: number
+        data?: Record<string, unknown>
+      }
       if (parsed.v !== 1 || typeof parsed.savedAt !== 'number') continue
       if (Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
         window.localStorage.removeItem(key)
         continue
       }
-      local.set(slug, { savedAt: parsed.savedAt })
+      local.set(slug, { savedAt: parsed.savedAt, payload: parsed.data ?? {} })
     } catch {
       try { window.localStorage.removeItem(key) } catch { /* ignore */ }
     }
@@ -76,12 +88,31 @@ async function loadLocalDrafts(uid: string) {
     }
   }
 
-  // Merge per program. The chip's job is to honestly answer "is this
-  // draft on more than this one browser?" — so the source flips to
-  // 'cloud' as soon as a Firestore mirror exists at all, even when the
-  // most recent local edit hasn't been flushed yet (the 30s debounce
-  // means local.savedAt is briefly newer right after every keystroke).
-  // The displayed "Saved X ago" still uses the freshest of the two
+  // Auto-sync: any local draft missing from the cloud is pushed *now*,
+  // not at "next time the user opens that wizard". Cloud-first is the
+  // contract; "this browser only" should mean "we tried and failed",
+  // not "we never tried". Await so the chip rendered below reflects
+  // reality, not optimistic assumptions. saveCloudDraft returns false
+  // on failure (rules / network / auth issue) — those genuinely
+  // remain local-only and surface in the chip as the emergency state.
+  const syncTargets = [...local.entries()].filter(([slug]) => !cloud.has(slug))
+  if (syncTargets.length > 0) {
+    const results = await Promise.all(
+      syncTargets.map(async ([slug, { savedAt, payload }]) => {
+        const ok = await saveCloudDraft(uid, slug, payload)
+        return { slug, savedAt, ok }
+      }),
+    )
+    for (const { slug, savedAt, ok } of results) {
+      if (ok) cloud.set(slug, { savedAt })
+    }
+  }
+
+  // Merge per program. With auto-sync above, the source flips to
+  // 'cloud' for every draft that has a Firestore mirror — including
+  // any that JUST got pushed during this dashboard load. The 'local'
+  // source is now the rare emergency state: write attempted, write
+  // failed. Displayed "Saved X ago" uses the freshest of the two
   // timestamps so the time pill doesn't lie about activity.
   const found: LocalDraft[] = []
   for (const { slug, name } of PROGRAM_SLUGS) {
@@ -253,9 +284,16 @@ onMounted(loadData)
                   <h3 class="font-display text-xl font-semibold m-0 truncate">
                     {{ d.programName }}
                   </h3>
-                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-violet/10 text-brand-violet">
-                    <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:laptop'" width="12" />
-                    {{ d.source === 'cloud' ? 'Draft · synced to your account' : 'Draft · this browser only' }}
+                  <span
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                    :class="d.source === 'cloud'
+                      ? 'bg-brand-violet/10 text-brand-violet'
+                      : 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'"
+                  >
+                    <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:cloud-off'" width="12" />
+                    {{ d.source === 'cloud'
+                      ? 'Draft · synced to your account'
+                      : 'Draft · couldn’t sync — only on this browser' }}
                   </span>
                 </div>
                 <p class="text-sm text-ink/60 m-0">
