@@ -56,6 +56,46 @@ const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 // driven by remote mutations (e.g. a delete from another device).
 let didInitialDraftSync = false
 
+// Slugs the applicant just discarded on this device that then came
+// back to life via the cloud listener — almost certainly because
+// another device chose "Keep editing here" on the cross-device
+// discard modal. Surfaced as a banner so the user isn't left
+// thinking "didn't I just delete this?" when the card reappears.
+interface RestoredAfterDiscard {
+  slug: LocalDraft['slug']
+  programName: string
+}
+const restoredAfterDiscard = ref<RestoredAfterDiscard[]>([])
+// Discard markers are kept in sessionStorage rather than localStorage
+// so they don't survive a tab close. A "this draft was restored"
+// banner is only relevant if the user is actively in the dashboard
+// session that did the discard; once they navigate away or close the
+// tab, future restorations from elsewhere are no longer surprising.
+const RECENT_DISCARD_WINDOW_MS = 30 * 60 * 1000
+
+function recordRecentDiscard(slug: LocalDraft['slug']) {
+  try {
+    sessionStorage.setItem(`staija.recentDiscard.${slug}`, String(Date.now()))
+  } catch { /* private mode / quota — fine */ }
+}
+
+function consumeRecentDiscardIfApplicable(slug: LocalDraft['slug']): boolean {
+  try {
+    const key = `staija.recentDiscard.${slug}`
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return false
+    const ts = parseInt(raw, 10)
+    sessionStorage.removeItem(key)
+    return !!ts && Date.now() - ts <= RECENT_DISCARD_WINDOW_MS
+  } catch {
+    return false
+  }
+}
+
+function dismissRestoredAfterDiscard(slug: LocalDraft['slug']) {
+  restoredAfterDiscard.value = restoredAfterDiscard.value.filter((r) => r.slug !== slug)
+}
+
 async function reconcileDrafts(uid: string, cloudDocsRaw: ApplicationDraftDoc[]) {
   if (typeof window === 'undefined') return
   // Local pass — read every cached draft's full payload (not just the
@@ -100,6 +140,21 @@ async function reconcileDrafts(uid: string, cloudDocsRaw: ApplicationDraftDoc[])
       })
     } else {
       cloud.set(doc.program, { savedAt: doc.savedAt })
+      // "Was this draft just brought back from the dead by another
+      // device?" — if we recorded a recent discard for this slug on
+      // this tab and the listener now reports it as active, that's
+      // almost certainly another device choosing "Keep editing here"
+      // on the cross-device discard modal. Surface a banner so the
+      // user knows why a draft they just deleted reappeared.
+      if (consumeRecentDiscardIfApplicable(doc.program)) {
+        const name = PROGRAM_SLUGS.find((p) => p.slug === doc.program)?.name ?? ''
+        if (!restoredAfterDiscard.value.some((r) => r.slug === doc.program)) {
+          restoredAfterDiscard.value = [
+            ...restoredAfterDiscard.value,
+            { slug: doc.program, programName: name },
+          ]
+        }
+      }
     }
   }
 
@@ -191,6 +246,11 @@ async function confirmDiscard() {
   try {
     window.localStorage.removeItem(`staija.draft.apply.${d.slug}.${uid}`)
   } catch { /* ignore */ }
+  // Mark the discard so the next reconcile can tell "this draft came
+  // back from cloud because of an in-flight edit elsewhere" apart
+  // from "this draft is here for the usual reasons". The marker
+  // lives in sessionStorage so it expires with the tab.
+  recordRecentDiscard(d.slug)
   // Cloud delete is best-effort; the localStorage wipe is the primary
   // affordance the user can observe immediately.
   await deleteCloudDraft(uid, d.slug)
@@ -337,6 +397,40 @@ onBeforeUnmount(() => {
         <Body v-else-if="!loading" class="text-ink/70 max-w-xl">
           Pick up where you left off, or start a new application for the other program.
         </Body>
+      </div>
+
+      <!-- "Your discard was undone elsewhere" banner. Fires when a
+           draft this tab just deleted reappears via the live cloud
+           listener — almost certainly because another device chose
+           "Keep editing here" on the cross-device-discard modal.
+           Surfaces the cause so the reappearing card doesn't read
+           as a bug. Dismissable per-program. -->
+      <div
+        v-if="restoredAfterDiscard.length > 0"
+        class="mb-6 flex flex-col gap-2"
+      >
+        <div
+          v-for="r in restoredAfterDiscard"
+          :key="r.slug"
+          class="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 ring-1 ring-amber-200 text-amber-900 text-sm"
+        >
+          <Icon icon="lucide:rotate-cw" width="16" class="mt-0.5 text-amber-700 shrink-0" />
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold">{{ r.programName }} draft was restored.</div>
+            <div class="text-amber-800/80 text-xs mt-0.5">
+              You discarded this on this device, but an edit on another device
+              brought it back. Discard again here if you want it gone everywhere.
+            </div>
+          </div>
+          <button
+            type="button"
+            class="text-amber-700/70 hover:text-amber-900 p-1 -m-1 shrink-0"
+            aria-label="Dismiss"
+            @click="dismissRestoredAfterDiscard(r.slug)"
+          >
+            <Icon icon="lucide:x" width="14" />
+          </button>
+        </div>
       </div>
 
       <!-- In-progress localStorage drafts. Surfaced here because they
