@@ -419,7 +419,9 @@ onBeforeUnmount(() => {
             <div class="font-semibold">{{ r.programName }} draft was restored.</div>
             <div class="text-amber-800/80 text-xs mt-0.5">
               You discarded this on this device, but an edit on another device
-              brought it back. Discard again here if you want it gone everywhere.
+              brought it back. Another discard here will fire the conflict
+              modal on the device that's still editing — they need to choose
+              "Discard" there too for it to stay gone.
             </div>
           </div>
           <button
