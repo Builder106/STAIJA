@@ -12,6 +12,7 @@ import { auth } from './config/firebase.ts'
 import { onAuthStateChanged } from 'firebase/auth'
 import { installAnalyticsRouter } from './services/analytics'
 import { i18n, currentLocale } from './i18n'
+import { startVersionWatcher } from './services/versionCheck'
 import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights'
 
@@ -19,6 +20,13 @@ import { injectSpeedInsights } from '@vercel/speed-insights'
 inject()
 // Inject Vercel Speed Insights
 injectSpeedInsights()
+
+// Auto-reload long-lived tabs when a new deploy ships. Without this,
+// a tab that loaded its HTML at 9 AM keeps referencing the 9-AM chunk
+// hashes forever — and any deploy in between leaves silently broken
+// route navigations. The watcher fetches /version.txt on tab focus
+// and reloads when the SHA no longer matches the bundle's own SHA.
+startVersionWatcher()
 
 // Wait for Firebase Auth to initialize before mounting the app
 let app: ReturnType<typeof createApp> | undefined

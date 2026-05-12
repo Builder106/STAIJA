@@ -1,15 +1,44 @@
 /// <reference types="vitest" />
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type PluginOption } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
+
+/**
+ * Emit `/version.txt` containing the deploy's commit SHA (or a "dev"
+ * stub when building locally without Vercel's env). The running app
+ * fetches this on tab focus and triggers a reload when the SHA no
+ * longer matches the SHA baked into the running bundle — that's how
+ * users with long-lived tabs find out a new deploy is live without
+ * having to manually refresh.
+ */
+function emitVersionFile(buildId: string): PluginOption {
+  return {
+    name: 'staija-version-txt',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.txt',
+        source: buildId,
+      })
+    },
+  }
+}
 
 export default defineConfig(({ mode }) => {
   loadEnv(mode, process.cwd(), '')
 
+  // Vercel exposes the commit SHA as VERCEL_GIT_COMMIT_SHA at build
+  // time. Falls back to a timestamp for local builds so dev never
+  // accidentally collides with a real deploy ID.
+  const buildId =
+    process.env.VERCEL_GIT_COMMIT_SHA ?? `dev-${Date.now().toString(36)}`
+
   return {
-    plugins: [vue(), tailwindcss()],
+    plugins: [vue(), tailwindcss(), emitVersionFile(buildId)],
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+      __BUILD_ID__: JSON.stringify(buildId),
     },
     server: {
       port: 5190,
