@@ -212,7 +212,15 @@ router.onError((error, to) => {
     /error loading dynamically imported module/i.test(msg) ||
     /^TypeError:\s*Load failed/i.test(msg) ||
     /Load failed$/i.test(msg) ||
-    /ChunkLoadError/i.test(msg)
+    /ChunkLoadError/i.test(msg) ||
+    // HTML-parsed-as-JS shapes. The SPA fallback in vercel.json used to
+    // rewrite missing /assets/*.js requests to index.html (200 OK with
+    // HTML body), and the browser would surface the parse failure as
+    // one of these. Excluded /assets/ from the rewrite, but keep the
+    // patterns around for any edge / proxy that still does the rewrite.
+    /Unexpected token\s*['"<]/i.test(msg) ||
+    /strict MIME type/i.test(msg) ||
+    /Failed to execute module/i.test(msg)
   if (isChunkLoadFailure && typeof window !== 'undefined') {
     // Tag the reload so a chunk that 404s on the *fresh* HTML too
     // (genuine 404 — route component was deleted) doesn't trap us in
