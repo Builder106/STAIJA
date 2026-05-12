@@ -397,16 +397,22 @@ function stepHasDataInPayload(
 //     marker pinned to the default even though the applicant had
 //     real progress past it. Falling back to data-based inference in
 //     that case heals the corruption.
-//   - Inference walks stepsMeta and returns the deepest step that
-//     has any user-supplied content (eligibility checkboxes, schema
-//     fields, references with values). Returns null if nothing.
+//   - Inference walks stepsMeta in order and returns the deepest
+//     CONTIGUOUSLY filled step — i.e. the walk stops at the first
+//     step with no data and returns the previous one. We don't
+//     skip past an empty step just because a later step has data:
+//     that's almost always a buggy intermediate state, and dropping
+//     the applicant past an empty required step lets them walk
+//     forward to a Submit-time validation failure. Forcing them to
+//     re-fill at the gap is the safer default.
 function resolveResumeStep(data: Record<string, unknown>): string | null {
   const explicit = typeof data.lastStep === 'string' ? data.lastStep : ''
   if (explicit && explicit !== 'eligibility') return explicit
   if (!program.value) return null
   let deepest = ''
   for (const meta of stepsMeta.value) {
-    if (stepHasDataInPayload(meta.id, data)) deepest = meta.id
+    if (!stepHasDataInPayload(meta.id, data)) break
+    deepest = meta.id
   }
   return deepest || null
 }
