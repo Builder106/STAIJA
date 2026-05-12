@@ -1408,7 +1408,12 @@ watch(
               <FileUpload
                 label="Government or school ID"
                 accept="image/*,application/pdf"
-                @update:file="(f) => idFile = f"
+                :attached-file="stagedFiles.id
+                  ? { name: stagedFiles.id.fileName, sizeBytes: stagedFiles.id.sizeBytes, contentType: stagedFiles.id.contentType }
+                  : null"
+                :uploading="stagingInFlight.has('id')"
+                @update:file="(f) => handleStagedFilePick('id', f)"
+                @clear-attached="handleStagedFileClear('id')"
                 @error="(m) => fileUploadError = m"
               />
 
@@ -1451,7 +1456,12 @@ watch(
                     accept="image/*,video/*,audio/*,application/pdf"
                     :max-size-bytes="25 * 1024 * 1024"
                     skip-compress
-                    @update:file="(f) => showcaseFile = f"
+                    :attached-file="stagedFiles.showcase
+                      ? { name: stagedFiles.showcase.fileName, sizeBytes: stagedFiles.showcase.sizeBytes, contentType: stagedFiles.showcase.contentType }
+                      : null"
+                    :uploading="stagingInFlight.has('showcase')"
+                    @update:file="(f) => handleStagedFilePick('showcase', f)"
+                    @clear-attached="handleStagedFileClear('showcase')"
                     @error="(m) => fileUploadError = m"
                   />
                 </div>
@@ -1504,17 +1514,17 @@ watch(
 
               <div class="border hairline-ink rounded-xl p-5 bg-paper/50 text-sm flex flex-col gap-1">
                 <div class="font-semibold text-ink mb-2">Files</div>
-                <div class="text-ink/70">Transcript: {{ transcriptFile?.name ?? 'not attached' }}</div>
-                <div class="text-ink/70">ID: {{ idFile?.name ?? 'not attached' }}</div>
+                <div class="text-ink/70">Transcript: {{ transcriptFile?.name ?? stagedFiles.transcript?.fileName ?? 'not attached' }}</div>
+                <div class="text-ink/70">ID: {{ idFile?.name ?? stagedFiles.id?.fileName ?? 'not attached' }}</div>
               </div>
 
               <div
-                v-if="showcaseUrl || showcaseFile || showcaseNote"
+                v-if="showcaseUrl || showcaseFile || stagedFiles.showcase || showcaseNote"
                 class="border hairline-ink rounded-xl p-5 bg-paper/50 text-sm flex flex-col gap-1"
               >
                 <div class="font-semibold text-ink mb-2">Showcase</div>
                 <div v-if="showcaseUrl" class="text-ink/70 break-all">Link: {{ showcaseUrl }}</div>
-                <div v-if="showcaseFile" class="text-ink/70">File: {{ showcaseFile.name }}</div>
+                <div v-if="showcaseFile || stagedFiles.showcase" class="text-ink/70">File: {{ showcaseFile?.name ?? stagedFiles.showcase?.fileName }}</div>
                 <div v-if="showcaseNote" class="text-ink/70">Note: {{ showcaseNote }}</div>
               </div>
 
