@@ -1275,7 +1275,7 @@ watch(
                   <FileUpload
                     label="Image, short video, audio, or PDF"
                     accept="image/*,video/*,audio/*,application/pdf"
-                    :max-size-bytes="25_000_000"
+                    :max-size-bytes="25 * 1024 * 1024"
                     skip-compress
                     @update:file="(f) => showcaseFile = f"
                     @error="(m) => fileUploadError = m"
