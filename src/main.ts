@@ -5,7 +5,10 @@ import { createApp } from 'vue'
 // `lg:grid-cols-*` and break footer / hero / other responsive grids.
 import './styles/legacy.css'
 import './style.css'
-import './styles/page-transition.css'
+// page-transition.css removed alongside the <Transition> wrapper in
+// DefaultLayout. The classes it defined (.page-enter-from etc.) are
+// no longer applied to anything; keeping the file around would just
+// be dead bytes in the bundle.
 import App from './App.vue'
 import router from './router'
 import { auth } from './config/firebase.ts'
