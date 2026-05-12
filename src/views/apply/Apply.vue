@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type Ref } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
@@ -77,6 +77,15 @@ const stepIndex = ref(0)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const submittedId = ref<string | null>(null)
+
+// True from setup until initAutoSave's async work (read cloud, restore
+// the draft, redirect to the resume step) has settled. While true the
+// wizard renders a brief skeleton instead of the full step UI. Without
+// this gate, the wizard mounts on step 0 (eligibility), then ~100ms
+// later the async restore fires goToStep and re-renders on the
+// resumed step — that's the visible "eligibility flash" applicants
+// see when an existing draft is being picked back up.
+const initializing = ref(true)
 
 // --- Auto-save: keyed per-program ------------------------------------
 
@@ -248,6 +257,12 @@ async function initAutoSave() {
     if (!user.value) return
     void saveCloudDraft(uid, slug as DraftProgramSlug, formStateForSave.value)
   })
+
+  // Wait one tick so any goToStep-driven router.replace from the
+  // restore branch above has applied before the caller's .finally()
+  // flips `initializing` off. Without this the skeleton can vanish
+  // for ~1 frame on the wrong step before the route catches up.
+  await nextTick()
 }
 
 // --- Steps -----------------------------------------------------------
@@ -649,15 +664,21 @@ async function handleSubmit() {
 // --- Auth gate -------------------------------------------------------
 
 onMounted(() => {
-  if (!program.value) return
+  if (!program.value) {
+    // Program-not-found branch renders its own card and doesn't need
+    // the wizard skeleton; reveal immediately.
+    initializing.value = false
+    return
+  }
   if (!user.value) {
     router.replace({ path: '/signup', query: { redirect: route.fullPath } })
     return
   }
-  // Fire-and-forget; the async work is the cloud-vs-local merge, but
-  // useAutoSave's localStorage restore still runs synchronously inside
-  // it, so the form rehydrates on the same paint either way.
-  void initAutoSave()
+  // initAutoSave is the async path that decides which step to land
+  // on. We always flip `initializing` off when it settles (success or
+  // failure) so a Firestore hiccup doesn't leave the wizard stuck
+  // behind the skeleton forever.
+  initAutoSave().finally(() => { initializing.value = false })
   trackApplyClick({
     program: program.value.programKey === 'stepup_scholars' ? 'stepup' : 'dynamerge',
     source: 'apply_route',
@@ -822,6 +843,36 @@ watch(
         </div>
       </Container>
     </Section>
+
+    <!-- Skeleton: held while initAutoSave reads cloud + restores +
+         maybe-redirects to the resume step. Without this the wizard
+         renders briefly on step 0 (eligibility) before the async
+         restore fires goToStep and re-renders on the resume step —
+         the visible "eligibility flash" applicants reported. The
+         skeleton apes the wizard's silhouette (header band + form
+         card) so the layout doesn't jump when the real content
+         replaces it. -->
+    <template v-else-if="initializing">
+      <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
+        <Container class="max-w-3xl">
+          <div class="h-4 w-24 bg-ink/10 rounded animate-pulse mb-3" />
+          <div class="h-10 w-2/3 bg-ink/10 rounded animate-pulse mb-6" />
+          <div class="h-3 w-3/4 bg-ink/10 rounded animate-pulse" />
+        </Container>
+      </Section>
+      <Section class="!py-12">
+        <Container class="max-w-3xl">
+          <div class="rounded-2xl border hairline-ink bg-surface p-10">
+            <div class="h-6 w-1/3 bg-ink/10 rounded animate-pulse mb-4" />
+            <div class="h-3 w-full bg-ink/10 rounded animate-pulse mb-2" />
+            <div class="h-3 w-5/6 bg-ink/10 rounded animate-pulse mb-8" />
+            <div class="h-12 w-full bg-ink/5 rounded-xl animate-pulse mb-3" />
+            <div class="h-12 w-full bg-ink/5 rounded-xl animate-pulse mb-3" />
+            <div class="h-12 w-full bg-ink/5 rounded-xl animate-pulse" />
+          </div>
+        </Container>
+      </Section>
+    </template>
 
     <template v-else>
     <!-- Header band -->
