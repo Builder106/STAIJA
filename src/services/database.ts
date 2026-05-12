@@ -24,17 +24,33 @@ export class DatabaseService {
       console.warn('Firestore not available')
       return null
     }
+    // First-call permission-denied on initial page load is almost always
+    // an App Check / auth token warmup race — onAuthStateChanged fires
+    // immediately with the cached user, but our reCAPTCHA Enterprise
+    // App Check token is still being minted. Firestore rejects the
+    // unsigned request as permission-denied. A single 500ms-deferred
+    // retry hits the now-warm token and succeeds. We only retry once
+    // and only for permission-denied so a genuinely-forbidden read
+    // (e.g. someone else's profile) still fails fast.
+    const docRef = doc(db, 'users', uid)
     try {
-      const docRef = doc(db, 'users', uid)
       const docSnap = await getDoc(docRef)
-      
-      if (docSnap.exists()) {
-        return docSnap.data() as UserProfile
-      }
-      return null
+      return docSnap.exists() ? (docSnap.data() as UserProfile) : null
     } catch (error) {
-      console.error('Get user profile error:', error)
-      throw error
+      const code = (error as { code?: string }).code
+      if (code !== 'permission-denied') {
+        console.error('Get user profile error:', error)
+        throw error
+      }
+      // Retry-once branch.
+      await new Promise((r) => setTimeout(r, 500))
+      try {
+        const docSnap = await getDoc(docRef)
+        return docSnap.exists() ? (docSnap.data() as UserProfile) : null
+      } catch (retryError) {
+        console.error('Get user profile error (after retry):', retryError)
+        throw retryError
+      }
     }
   }
 
