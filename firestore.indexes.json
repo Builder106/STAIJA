@@ -151,6 +151,14 @@
         { "fieldPath": "studentId", "order": "ASCENDING" },
         { "fieldPath": "sessionId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "applicationDrafts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "__deleted", "order": "ASCENDING" },
+        { "fieldPath": "deletedAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
