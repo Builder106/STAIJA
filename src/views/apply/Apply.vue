@@ -303,16 +303,25 @@ function stepHasDataInPayload(
   return false
 }
 
-// Resolve the step to resume at from a draft payload. Prefers an
-// explicit `lastStep` (set by the wizard's URL watcher on every
-// position change), but falls back to walking stepsMeta and picking
-// the deepest step that has any user-supplied data. The fallback
-// rescues drafts written before lastStep tracking shipped, drafts that
-// hit a partial-save race, and any other case where the explicit
-// marker is missing.
+// Resolve the step to resume at from a draft payload.
+//
+// Decision tree:
+//   - Explicit `lastStep` that's NOT 'eligibility' wins. Respects an
+//     applicant who deliberately backed up to revise an earlier
+//     step.
+//   - Explicit `lastStep === 'eligibility'` is treated as "no
+//     opinion", same as missing. Reason: pre-40d69eb bundles wrote
+//     'eligibility' during the initial URL canonicalization without
+//     consulting the saved data, so countless drafts have a corrupt
+//     marker pinned to the default even though the applicant had
+//     real progress past it. Falling back to data-based inference in
+//     that case heals the corruption.
+//   - Inference walks stepsMeta and returns the deepest step that
+//     has any user-supplied content (eligibility checkboxes, schema
+//     fields, references with values). Returns null if nothing.
 function resolveResumeStep(data: Record<string, unknown>): string | null {
-  const explicit = data.lastStep
-  if (typeof explicit === 'string' && explicit) return explicit
+  const explicit = typeof data.lastStep === 'string' ? data.lastStep : ''
+  if (explicit && explicit !== 'eligibility') return explicit
   if (!program.value) return null
   let deepest = ''
   for (const meta of stepsMeta.value) {
