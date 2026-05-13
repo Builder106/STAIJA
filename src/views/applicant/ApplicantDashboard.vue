@@ -453,15 +453,23 @@ function statusLabel(s: Application['status']) {
     case 'submitted': return 'Submitted'
     case 'under_review': return 'Under review'
     case 'accepted': return 'Accepted'
-    case 'rejected': return 'Decision sent'
+    // Applicant-facing, not admin-facing. "Decision sent" reads like
+    // an internal ops-system label — it doesn't tell the applicant
+    // what the decision WAS. "Not selected" is plain English and
+    // pairs with the rose chip below for an at-a-glance outcome.
+    case 'rejected': return 'Not selected'
   }
 }
 
-function statusTone(s: Application['status']): 'neutral' | 'progress' | 'success' | 'closed' {
+function statusTone(s: Application['status']): 'neutral' | 'progress' | 'success' | 'rejected' {
   if (s === 'draft') return 'neutral'
   if (s === 'submitted' || s === 'under_review') return 'progress'
   if (s === 'accepted') return 'success'
-  return 'closed'
+  // Rejected used to collapse into a 'closed' neutral gray bucket,
+  // making accepted vs. rejected indistinguishable on the dashboard
+  // without reading the chip text. It now gets its own rose tone so
+  // the outcome reads at a glance.
+  return 'rejected'
 }
 
 function timeAgo(d: Date): string {
@@ -738,7 +746,7 @@ onBeforeUnmount(() => {
                       statusTone(app.status) === 'neutral' && 'bg-ink/10 text-ink/70',
                       statusTone(app.status) === 'progress' && 'bg-brand-violet/10 text-brand-violet',
                       statusTone(app.status) === 'success' && 'bg-emerald-500/10 text-emerald-700',
-                      statusTone(app.status) === 'closed' && 'bg-ink/15 text-ink/65',
+                      statusTone(app.status) === 'rejected' && 'bg-rose-500/10 text-rose-700',
                     ]"
                   >
                     {{ statusLabel(app.status) }}
@@ -747,6 +755,15 @@ onBeforeUnmount(() => {
                 <p class="text-sm text-ink/60 m-0">
                   <template v-if="app.status === 'draft'">
                     Last edited {{ timeAgo(toDate(app.updatedAt ?? app.createdAt)) }}
+                  </template>
+                  <!-- Terminal statuses get a "Decided X ago" meta
+                       line anchored on reviewedAt — the date that
+                       matters to the applicant is when the decision
+                       landed, not when they submitted weeks earlier.
+                       Falls back to updatedAt if reviewedAt is
+                       missing (legacy rows). -->
+                  <template v-else-if="(app.status === 'accepted' || app.status === 'rejected') && (app.reviewedAt || app.updatedAt)">
+                    Decided {{ timeAgo(toDate(app.reviewedAt ?? app.updatedAt)) }}
                   </template>
                   <template v-else-if="app.submittedAt">
                     Submitted {{ timeAgo(toDate(app.submittedAt)) }}
