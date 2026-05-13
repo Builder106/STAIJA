@@ -40,7 +40,7 @@ export interface CompressResult {
 }
 
 const DEFAULTS: Required<CompressOptions> = {
-  maxSizeBytes: 2_000_000,
+  maxSizeBytes: 2 * 1024 * 1024,
   maxDimension: 2000,
   initialQuality: 0.85,
   minQuality: 0.5,

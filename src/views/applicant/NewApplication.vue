@@ -269,7 +269,7 @@
             <FileUpload
               label="Academic transcript *"
               accept="image/*,application/pdf"
-              :max-size-bytes="2_000_000"
+              :max-size-bytes="2 * 1024 * 1024"
               @update:file="(f) => { transcriptFile = f; transcriptError = '' }"
               @error="(msg) => transcriptError = msg"
             />

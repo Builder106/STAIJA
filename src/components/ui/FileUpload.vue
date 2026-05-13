@@ -27,7 +27,7 @@ const props = withDefaults(
   {
     label: 'Upload file',
     accept: 'image/*,application/pdf',
-    maxSizeBytes: 2_000_000,
+    maxSizeBytes: 2 * 1024 * 1024,
     skipCompress: false,
     attachedFile: null,
     uploading: false,
