@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
 import Heading from '../../components/ui/Heading.vue'
@@ -10,8 +11,9 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { useAuth } from '../../composables/useAuth'
-import { CohortService, toMillis } from '../../services/learn'
+import { CohortService, EnrollmentService, toMillis } from '../../services/learn'
 import { Timestamp } from 'firebase/firestore'
+import { functions } from '../../config/firebase'
 import type { Cohort } from '../../services/types'
 
 const { user } = useAuth()
@@ -51,6 +53,68 @@ async function load() {
     error.value = (err as { message?: string }).message ?? 'Failed to load cohorts.'
   } finally {
     loading.value = false
+  }
+}
+
+// Graduation state. The modal is a confirmation dialog that names
+// exactly how many enrollments are about to flip — staff shouldn't
+// accidentally graduate a cohort thinking they were marking it
+// inactive or whatever. Active-enrollment count is fetched lazily
+// when the modal opens so the number is fresh.
+const graduateTarget = ref<Cohort | null>(null)
+const graduateCount = ref<number | null>(null)
+const graduateCountLoading = ref(false)
+const graduating = ref(false)
+const graduateError = ref<string | null>(null)
+const graduateResult = ref<{ enrollmentsCompleted: number; rolesFlipped: number } | null>(null)
+
+async function openGraduate(c: Cohort) {
+  graduateTarget.value = c
+  graduateResult.value = null
+  graduateError.value = null
+  graduateCount.value = null
+  graduateCountLoading.value = true
+  try {
+    const enrollments = await EnrollmentService.getForCohort(c.id ?? '')
+    graduateCount.value = enrollments.length
+  } catch {
+    // Non-fatal — staff can still proceed; the callable returns the
+    // real count in its response.
+    graduateCount.value = null
+  } finally {
+    graduateCountLoading.value = false
+  }
+}
+
+function closeGraduate() {
+  graduateTarget.value = null
+  graduateResult.value = null
+  graduateError.value = null
+  graduateCount.value = null
+}
+
+async function confirmGraduate() {
+  const target = graduateTarget.value
+  if (!target?.id || graduating.value) return
+  graduating.value = true
+  graduateError.value = null
+  try {
+    const fn = httpsCallable<
+      { cohortId: string },
+      { ok: true; cohortId: string; enrollmentsCompleted: number; rolesFlipped: number }
+    >(functions, 'graduateCohort')
+    const res = await fn({ cohortId: target.id })
+    graduateResult.value = {
+      enrollmentsCompleted: res.data.enrollmentsCompleted,
+      rolesFlipped: res.data.rolesFlipped,
+    }
+    // Refresh the cohorts list so the just-graduated cohort shows
+    // status='completed' in the table without a manual page refresh.
+    await load()
+  } catch (err) {
+    graduateError.value = err instanceof Error ? err.message : 'Graduation failed.'
+  } finally {
+    graduating.value = false
   }
 }
 
@@ -209,7 +273,23 @@ onMounted(load)
                       {{ c.status }}
                     </span>
                   </td>
-                  <td class="px-5 py-3 text-right">
+                  <td class="px-5 py-3 text-right whitespace-nowrap">
+                    <!-- Graduate appears only for active cohorts. The
+                         callable is idempotent so it'd be safe to
+                         expose elsewhere, but the action's semantics
+                         (mark all enrollments complete + alumni
+                         transition) only make sense from the active
+                         state — a planned cohort has no enrollments
+                         to graduate, a completed cohort has none
+                         left. -->
+                    <button
+                      v-if="c.status === 'active'"
+                      type="button"
+                      class="text-xs font-semibold text-emerald-700 hover:underline mr-3"
+                      @click="openGraduate(c)"
+                    >
+                      Graduate
+                    </button>
                     <button
                       type="button"
                       class="text-xs font-medium text-brand-violet hover:underline mr-3"
@@ -328,5 +408,114 @@ onMounted(load)
         </UiCard>
       </Container>
     </Section>
+
+    <!-- Graduation confirmation modal. Two states:
+           (a) confirm — shows the active-enrollment count + the
+               consequence (status flip + alumni transitions) and
+               asks staff to commit.
+           (b) result — shows what landed; staff dismisses or
+               opens another cohort. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="graduateTarget"
+          class="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm flex items-center justify-center p-4"
+          @click.self="!graduating && closeGraduate()"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            class="bg-surface rounded-2xl shadow-xl max-w-md w-full border hairline-ink"
+          >
+            <template v-if="graduateResult">
+              <div class="p-6 flex flex-col gap-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Icon icon="lucide:graduation-cap" width="20" />
+                  </div>
+                  <div>
+                    <Heading :level="3" class="!text-lg !m-0">Cohort graduated</Heading>
+                    <p class="text-sm text-ink/60 m-0 mt-1">
+                      {{ graduateTarget.name || graduateTarget.courseSlug }} is now marked completed.
+                    </p>
+                  </div>
+                </div>
+                <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-t hairline-ink pt-4">
+                  <dt class="text-ink/60">Enrollments completed</dt>
+                  <dd class="text-ink font-semibold tabular-nums m-0 text-right">{{ graduateResult.enrollmentsCompleted }}</dd>
+                  <dt class="text-ink/60">Students → alumni</dt>
+                  <dd class="text-ink font-semibold tabular-nums m-0 text-right">{{ graduateResult.rolesFlipped }}</dd>
+                </dl>
+                <p
+                  v-if="graduateResult.enrollmentsCompleted > graduateResult.rolesFlipped"
+                  class="text-xs text-ink/55 m-0"
+                >
+                  {{ graduateResult.enrollmentsCompleted - graduateResult.rolesFlipped }} student(s)
+                  stayed at their current role — they have another active enrollment
+                  or weren't role='student' to begin with.
+                </p>
+              </div>
+              <div class="flex justify-end px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
+                <UiButton variant="primary" @click="closeGraduate">Done</UiButton>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="p-6 flex flex-col gap-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                    <Icon icon="lucide:graduation-cap" width="20" />
+                  </div>
+                  <div>
+                    <Heading :level="3" class="!text-lg !m-0">
+                      Graduate {{ graduateTarget.name || graduateTarget.courseSlug }}?
+                    </Heading>
+                    <p class="text-sm text-ink/60 m-0 mt-1">
+                      The cohort's status flips to <span class="font-semibold">completed</span>,
+                      all active enrollments are marked finished, and qualifying students
+                      transition to <span class="font-semibold">alumni</span>. Idempotent —
+                      safe to re-run if something fails midway.
+                    </p>
+                  </div>
+                </div>
+                <div class="rounded-xl bg-ink/[0.03] px-4 py-3 text-sm">
+                  <span class="text-ink/60">Active enrollments: </span>
+                  <span class="font-semibold tabular-nums text-ink">
+                    <template v-if="graduateCountLoading">checking…</template>
+                    <template v-else-if="graduateCount === null">unknown (callable will report)</template>
+                    <template v-else>{{ graduateCount }}</template>
+                  </span>
+                </div>
+                <p v-if="graduateError" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0">
+                  {{ graduateError }}
+                </p>
+              </div>
+              <div class="flex justify-end gap-2 px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
+                <UiButton variant="secondary" :disabled="graduating" @click="closeGraduate">
+                  Cancel
+                </UiButton>
+                <UiButton variant="primary" :disabled="graduating" @click="confirmGraduate">
+                  <span v-if="graduating" class="flex items-center gap-2">
+                    <Icon icon="lucide:loader-2" width="14" class="animate-spin" />
+                    Graduating…
+                  </span>
+                  <span v-else class="flex items-center gap-2">
+                    <Icon icon="lucide:graduation-cap" width="14" />
+                    Graduate cohort
+                  </span>
+                </UiButton>
+              </div>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

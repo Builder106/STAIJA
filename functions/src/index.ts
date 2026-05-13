@@ -74,6 +74,11 @@ export { respondToOffer } from './applicationAccept'
 // on consume. See mentorInvites.ts.
 export { createMentorInvite, consumeMentorInvite } from './mentorInvites'
 
+// Cohort graduation: marks all active enrollments in a cohort
+// 'completed' and transitions qualifying students to role='alumni'
+// in one batched commit. See cohortGraduate.ts.
+export { graduateCohort } from './cohortGraduate'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.
