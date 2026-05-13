@@ -78,6 +78,59 @@ function formatDate(d: Date | string | undefined): string {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
+/** Coerce Firestore Timestamp / ISO string / Date into a Date. The
+ *  reviewedAt field comes back as a Timestamp object from getDoc(),
+ *  and `new Date(timestampObject)` produces an Invalid Date — same
+ *  shape as the admin-side display we already had to normalise. */
+function toDate(value: unknown): Date | null {
+  if (!value) return null
+  if (value instanceof Date) return value
+  if (typeof value === 'object' && value !== null && 'toDate' in value) {
+    const fn = (value as { toDate: () => Date }).toDate
+    if (typeof fn === 'function') return fn.call(value)
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const d = new Date(value)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
+/** Whether the application has reached a terminal decision the
+ *  applicant should be told about in-app. `accepted` and `rejected`
+ *  are the canonical end states; `under_review` is still in-progress.
+ *  Decision-card render is gated on this so applications mid-flight
+ *  don't get a confusing empty card. */
+const hasDecision = computed(() => {
+  const s = application.value?.status
+  return s === 'accepted' || s === 'rejected'
+})
+
+/** Visual treatment + headline copy for the decision card. The
+ *  applicant-facing tone is softer than the admin-facing chip — they
+ *  see the decision in plain English ("You got in.") not the audit
+ *  label ("Accepted"). */
+const decisionMeta = computed(() => {
+  const s = application.value?.status
+  if (s === 'accepted') {
+    return {
+      headline: 'You got in.',
+      eyebrow: 'Acceptance',
+      icon: 'lucide:party-popper',
+      iconClass: 'text-emerald-700 bg-emerald-100',
+      cardClass: '!border-emerald-200 bg-emerald-50/40',
+    }
+  }
+  // rejected
+  return {
+    headline: 'A decision has been made.',
+    eyebrow: 'Decision',
+    icon: 'lucide:mail',
+    iconClass: 'text-rose-700 bg-rose-100',
+    cardClass: '!border-rose-200 bg-rose-50/40',
+  }
+})
+
 interface ReferenceWithStatus {
   name: string
   email: string
@@ -160,6 +213,60 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
 
     <Section class="!py-12">
       <Container class="max-w-3xl flex flex-col gap-6">
+        <!-- Decision card. Renders only for terminal statuses
+             (accepted/rejected) and surfaces the reviewer's feedback
+             text inline. Previously the status hero just told the
+             applicant to "check your inbox" — but email is unreliable
+             (spam filters, deliverability holds), so the canonical
+             copy of the decision needs to live in-app where the
+             applicant can always read it. -->
+        <UiCard
+          v-if="hasDecision"
+          class="p-6 md:p-8 bg-surface border-2"
+          :class="decisionMeta.cardClass"
+        >
+          <div class="flex items-start gap-4 mb-5">
+            <div
+              class="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+              :class="decisionMeta.iconClass"
+            >
+              <Icon :icon="decisionMeta.icon" width="22" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <Eyebrow class="text-ink/55 mb-1 block">{{ decisionMeta.eyebrow }}</Eyebrow>
+              <h2 class="font-display text-xl md:text-2xl font-semibold m-0 text-ink">
+                {{ decisionMeta.headline }}
+              </h2>
+            </div>
+          </div>
+
+          <!-- Feedback body. Whitespace-pre-wrap preserves the
+               reviewer's line breaks; staff often write a short
+               paragraph + a bulleted list of reasons / next steps. -->
+          <div v-if="application.feedback" class="mt-2">
+            <div class="text-xs uppercase tracking-wider text-ink/55 font-semibold mb-2">
+              Note from the team
+            </div>
+            <p class="text-sm text-ink/85 leading-relaxed whitespace-pre-wrap m-0">
+              {{ application.feedback }}
+            </p>
+          </div>
+          <!-- Fallback when staff saved a status change without
+               typing anything into the feedback box. We tell the
+               applicant where to look next instead of rendering a
+               weird empty space. -->
+          <p v-else class="text-sm text-ink/70 leading-relaxed m-0">
+            Check your inbox — the team sent a detailed message there.
+          </p>
+
+          <div
+            v-if="application.reviewedAt"
+            class="text-xs text-ink/50 mt-4 pt-4 border-t hairline-ink"
+          >
+            Decision sent {{ formatDate(toDate(application.reviewedAt) ?? undefined) }}
+          </div>
+        </UiCard>
+
         <!-- References -->
         <UiCard class="p-6 md:p-8 bg-surface">
           <div class="flex items-start justify-between gap-4 mb-5">
