@@ -1032,6 +1032,17 @@ async function handleSubmit() {
     }
 
     autoSave.value?.clear()
+    // Tear down the cross-device discard listener BEFORE writing the
+    // submit-tombstone. The listener watches for __deleted: false →
+    // true transitions and pops a "discarded on another device" modal
+    // for the applicant — but the tombstone we're about to write on
+    // THIS device would trip it, surfacing a modal on the very page
+    // that just successfully submitted. Detaching first means our own
+    // delete is invisible to our own listener.
+    if (unsubscribeDraftDoc) {
+      unsubscribeDraftDoc()
+      unsubscribeDraftDoc = null
+    }
     // Best-effort: wipe the cloud mirror too so a fresh device doesn't
     // pull a stale draft after submission. Failure here doesn't matter
     // — the real applications/{id} doc is what staff review.
