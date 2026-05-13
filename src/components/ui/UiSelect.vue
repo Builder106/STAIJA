@@ -315,26 +315,27 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   font-family: inherit;
   font-size: 0.875rem;
   color: inherit;
-  /* A dropdown trigger should *not* look like a text input — the
-     chevron alone wasn't enough. We use a slightly stronger border
-     plus a faint background tint so the trigger reads as a control
-     ("click me, pick from a list") instead of a field ("type here").
-     The right-side chevron well below adds a second affordance.
-     Colors derive from the live `--color-ink` token so the trigger
-     flips correctly under `[data-theme="dark"]`. */
-  border-color: color-mix(in srgb, var(--color-ink) 20%, transparent) !important;
-  background-color: color-mix(in srgb, var(--color-ink) 3%, transparent);
+  /* The trigger reads as "control, not field" because (1) the border
+     carries a hint of brand violet so it doesn't blend into a row of
+     text inputs, and (2) the right-side chevron well is permanently
+     violet-tinted — staff don't have to hover to see "this is a
+     dropdown". The previous design painted everything ink-gray on
+     idle and only revealed the violet on interaction, which made the
+     control look identical to a disabled text input until you
+     reached for it. */
+  border-color: rgba(139, 85, 255, 0.2) !important;
+  background-color: color-mix(in srgb, var(--color-ink) 2%, transparent);
   /* Match sibling text inputs' left padding (px-4 py-3) so dropdowns
      and inputs align vertically in mixed grids. Right padding is zero
      because the chevron well sits flush against the right edge. */
   padding: 0 0 0 1rem !important;
   min-height: 2.875rem;
   overflow: hidden;
-  transition: border-color 0.12s ease, background-color 0.12s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--color-ink) 36%, transparent) !important;
-  background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  border-color: rgba(139, 85, 255, 0.4) !important;
+  background-color: rgba(139, 85, 255, 0.04);
 }
 .ui-select__trigger:disabled {
   opacity: 0.5;
@@ -343,12 +344,13 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 .ui-select__trigger--open,
 .ui-select__trigger--open:hover {
   outline: none;
-  /* Was hardcoded `#fff` — punched through to white inside dark mode.
-     Use the elevated-surface token so the trigger raises against
-     `bg-paper` in both light AND dark. */
+  /* Open state: lift onto the surface token (works in light AND dark
+     where `#fff` used to punch through), and replace the border with
+     a saturated brand-violet glow ring so the open control reads as
+     "active" at a glance. */
   background-color: var(--color-surface);
   border-color: transparent !important;
-  box-shadow: 0 0 0 2px rgba(139, 85, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(139, 85, 255, 0.55), 0 4px 12px -4px rgba(139, 85, 255, 0.25);
 }
 .ui-select__value {
   overflow: hidden;
@@ -360,9 +362,11 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 .ui-select__placeholder {
   color: color-mix(in srgb, var(--color-ink) 45%, transparent);
 }
-/* Right-side "well" that hosts the chevron. The vertical hairline +
-   tinted background reads as a button-on-the-right — the visual cue
-   that this control opens a list, even before the user hovers. */
+/* Right-side chevron well — always violet, even on idle. This is the
+   single biggest "this is a dropdown" signal on the page; staff
+   shouldn't have to hover to see it. The left border ties the well
+   visually back to the trigger's violet border so the whole control
+   reads as one shape. */
 .ui-select__chevron-wrap {
   flex-shrink: 0;
   display: flex;
@@ -370,26 +374,25 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   justify-content: center;
   width: 2.25rem;
   align-self: stretch;
-  border-left: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
-  background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  border-left: 1px solid rgba(139, 85, 255, 0.2);
+  background-color: rgba(139, 85, 255, 0.08);
   transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) .ui-select__chevron-wrap {
-  background-color: rgba(139, 85, 255, 0.08);
-  border-left-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
+  background-color: rgba(139, 85, 255, 0.15);
+  border-left-color: rgba(139, 85, 255, 0.4);
 }
 .ui-select__chevron-wrap--open {
-  background-color: rgba(139, 85, 255, 0.12) !important;
-  border-left-color: rgba(139, 85, 255, 0.4) !important;
+  background-color: rgba(139, 85, 255, 0.2) !important;
+  border-left-color: rgba(139, 85, 255, 0.5) !important;
 }
 .ui-select__chevron {
-  color: color-mix(in srgb, var(--color-ink) 70%, transparent);
-  transition: color 0.12s ease;
-}
-.ui-select__trigger:hover:not(:disabled) .ui-select__chevron {
-  color: color-mix(in srgb, var(--color-ink) 92%, transparent);
-}
-.ui-select__chevron-wrap--open .ui-select__chevron {
+  /* Always brand-violet — never gray. The legacy ink-70 chevron was
+     near-invisible against the well at small sizes and gave staff no
+     visual signal that this was a dropdown vs. a label-only field.
+     The chevrons-up-down icon is symmetric, so we don't try to
+     rotate it on open; the well's color shift carries the open-state
+     signal instead. */
   color: #8b55ff;
 }
 </style>
@@ -431,24 +434,40 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
     inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
 .ui-select__option {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.5rem 0.625rem;
+  padding: 0.5rem 0.625rem 0.5rem 0.875rem;
   border-radius: 0.375rem;
   cursor: pointer;
   transition: background-color 0.08s ease;
 }
 .ui-select__option--active {
-  background-color: rgba(139, 85, 255, 0.12);
+  background-color: rgba(139, 85, 255, 0.14);
   color: #8b55ff;
 }
 .ui-select__option--selected {
   font-weight: 600;
+  color: #8b55ff;
 }
 .ui-select__option--selected:not(.ui-select__option--active) {
-  background-color: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  background-color: rgba(139, 85, 255, 0.06);
+}
+/* Violet accent rail on the currently-selected option — small but
+   carries the brand colour through to the menu surface so the
+   dropdown feels like one continuous control instead of "violet
+   trigger pops a neutral menu". */
+.ui-select__option--selected::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.625rem;
+  bottom: 0.625rem;
+  width: 2px;
+  border-radius: 1px;
+  background-color: #8b55ff;
 }
 .ui-select__option--disabled {
   cursor: not-allowed;
