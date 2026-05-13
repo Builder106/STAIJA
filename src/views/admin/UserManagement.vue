@@ -48,6 +48,79 @@ const showRoleModal = ref(false)
 const showUserDetails = ref(false)
 const selectedUser = ref<EnrichedUser | null>(null)
 const newRole = ref<UserRole | null>(null)
+
+// Mentor-invite state. The page mounts with the modal closed; staff
+// clicks "Invite a mentor" in the hero, fills in optional context
+// (note + email restriction + expiry), and submits to the
+// createMentorInvite callable. On success the modal swaps from the
+// form state to a result state with the copyable URL — staff pastes
+// it into their preferred channel (email, LinkedIn, WhatsApp).
+const showInviteModal = ref(false)
+const inviteNote = ref('')
+const inviteEmail = ref('')
+const inviteExpiresInDays = ref<number | null>(30)
+const inviteSubmitting = ref(false)
+const inviteError = ref<string | null>(null)
+const inviteResult = ref<{ url: string; expiresAt: number } | null>(null)
+const inviteCopied = ref(false)
+
+function openInviteModal() {
+  inviteNote.value = ''
+  inviteEmail.value = ''
+  inviteExpiresInDays.value = 30
+  inviteError.value = null
+  inviteResult.value = null
+  inviteCopied.value = false
+  showInviteModal.value = true
+}
+
+function closeInviteModal() {
+  showInviteModal.value = false
+  // Reset after the close-transition would have run, so a quick
+  // re-open doesn't briefly show the previous result.
+  setTimeout(() => {
+    inviteNote.value = ''
+    inviteEmail.value = ''
+    inviteResult.value = null
+    inviteError.value = null
+  }, 200)
+}
+
+async function submitInvite() {
+  if (inviteSubmitting.value) return
+  inviteSubmitting.value = true
+  inviteError.value = null
+  try {
+    const fn = httpsCallable<
+      { note?: string; email?: string; expiresInDays?: number },
+      { token: string; url: string; expiresAt: number }
+    >(functions, 'createMentorInvite')
+    const res = await fn({
+      note: inviteNote.value.trim() || undefined,
+      email: inviteEmail.value.trim() || undefined,
+      expiresInDays: inviteExpiresInDays.value ?? undefined,
+    })
+    inviteResult.value = { url: res.data.url, expiresAt: res.data.expiresAt }
+  } catch (err) {
+    inviteError.value = err instanceof Error ? err.message : 'Could not mint invite.'
+  } finally {
+    inviteSubmitting.value = false
+  }
+}
+
+async function copyInviteLink() {
+  if (!inviteResult.value) return
+  try {
+    await navigator.clipboard.writeText(inviteResult.value.url)
+    inviteCopied.value = true
+    setTimeout(() => { inviteCopied.value = false }, 1500)
+  } catch {
+    // Clipboard write can fail under strict permissions / older
+    // browsers. Show a passive hint instead of throwing — the URL
+    // is already visible in the input above so staff can hand-copy.
+    inviteError.value = "Couldn't copy automatically — select the URL and copy by hand."
+  }
+}
 const changeReason = ref('')
 const roleChanging = ref(false)
 const userAuditLogs = ref<AuditLog[]>([])
@@ -235,11 +308,21 @@ onMounted(loadUsers)
   <div class="flex flex-col bg-paper min-h-screen">
     <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
       <Container>
-        <Eyebrow class="text-brand-violet mb-3 block">Admin</Eyebrow>
-        <Heading :level="1" class="mb-3">
-          User <span class="text-brand-violet">management</span>.
-        </Heading>
-        <Body class="text-ink/70">Roles, permissions, and account status across all users.</Body>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <Eyebrow class="text-brand-violet mb-3 block">Admin</Eyebrow>
+            <Heading :level="1" class="mb-3">
+              User <span class="text-brand-violet">management</span>.
+            </Heading>
+            <Body class="text-ink/70">Roles, permissions, and account status across all users.</Body>
+          </div>
+          <UiButton variant="primary" @click="openInviteModal">
+            <span class="flex items-center gap-2">
+              <Icon icon="lucide:user-plus" width="16" />
+              Invite a mentor
+            </span>
+          </UiButton>
+        </div>
       </Container>
     </Section>
 
@@ -683,6 +766,160 @@ onMounted(loadUsers)
             <div class="flex justify-end px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
               <UiButton variant="secondary" @click="closeUserDetails">Close</UiButton>
             </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Mentor-invite modal. Two states inside one modal:
+           (a) form — collect optional note, optional email
+               restriction, and expiry days. Submit mints the token
+               server-side via createMentorInvite.
+           (b) result — show the generated URL with a copy-button.
+               Staff pastes into the channel of their choice. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showInviteModal"
+          class="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm flex items-center justify-center p-4"
+          @click.self="closeInviteModal"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            class="bg-surface rounded-2xl shadow-xl max-w-md w-full border hairline-ink"
+          >
+            <!-- Result state -->
+            <template v-if="inviteResult">
+              <div class="p-6 flex flex-col gap-5">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Icon icon="lucide:check-circle-2" width="20" />
+                  </div>
+                  <div>
+                    <Heading :level="3" class="!text-lg !m-0">Invite link ready</Heading>
+                    <p class="text-sm text-ink/60 m-0 mt-1">
+                      Copy this and send it to your mentor. Single-use,
+                      expires {{ new Date(inviteResult.expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    :value="inviteResult.url"
+                    readonly
+                    class="flex-1 border hairline-ink rounded-lg px-3 py-2 text-sm font-mono bg-paper text-ink/85 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    @focus="($event.target as HTMLInputElement).select()"
+                  />
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors focus-ring-brand"
+                    :class="inviteCopied
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-brand-violet/10 text-brand-violet border-brand-violet/30 hover:bg-brand-violet/15'"
+                    @click="copyInviteLink"
+                  >
+                    <Icon
+                      :icon="inviteCopied ? 'lucide:check' : 'lucide:clipboard'"
+                      width="14"
+                    />
+                    {{ inviteCopied ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+                <p v-if="inviteError" class="text-xs text-rose-700 m-0">{{ inviteError }}</p>
+              </div>
+              <div class="flex justify-end gap-2 px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
+                <UiButton variant="secondary" @click="openInviteModal">
+                  Mint another
+                </UiButton>
+                <UiButton variant="primary" @click="closeInviteModal">
+                  Done
+                </UiButton>
+              </div>
+            </template>
+
+            <!-- Form state -->
+            <template v-else>
+              <div class="p-6 flex flex-col gap-5">
+                <div>
+                  <Heading :level="3" class="!text-lg !m-0">Invite a mentor</Heading>
+                  <p class="text-sm text-ink/60 m-0 mt-1">
+                    Mints a single-use link. When the recipient signs
+                    in and accepts, their account becomes a mentor.
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                    Note <span class="text-ink/40 normal-case">(optional, audit-only)</span>
+                  </label>
+                  <textarea
+                    v-model="inviteNote"
+                    rows="2"
+                    maxlength="500"
+                    placeholder="e.g. Met at the Lagos demo day, wants to mentor StepUp"
+                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                    Restrict to email <span class="text-ink/40 normal-case">(optional)</span>
+                  </label>
+                  <input
+                    v-model="inviteEmail"
+                    type="email"
+                    placeholder="recipient@example.com"
+                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all"
+                  />
+                  <p class="text-xs text-ink/50 m-0">
+                    Leave blank to let anyone with the link consume it
+                    (useful if they'll sign up with a different address
+                    than you have on file).
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                    Expires in (days)
+                  </label>
+                  <input
+                    v-model.number="inviteExpiresInDays"
+                    type="number"
+                    min="1"
+                    max="180"
+                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all w-24"
+                  />
+                </div>
+
+                <p v-if="inviteError" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0">
+                  {{ inviteError }}
+                </p>
+              </div>
+              <div class="flex justify-end gap-2 px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
+                <UiButton variant="secondary" :disabled="inviteSubmitting" @click="closeInviteModal">
+                  Cancel
+                </UiButton>
+                <UiButton variant="primary" :disabled="inviteSubmitting" @click="submitInvite">
+                  <span v-if="inviteSubmitting" class="flex items-center gap-2">
+                    <Icon icon="lucide:loader-2" width="14" class="animate-spin" />
+                    Minting…
+                  </span>
+                  <span v-else class="flex items-center gap-2">
+                    <Icon icon="lucide:link" width="14" />
+                    Generate link
+                  </span>
+                </UiButton>
+              </div>
+            </template>
           </div>
         </div>
       </Transition>

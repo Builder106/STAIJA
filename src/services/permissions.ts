@@ -153,15 +153,21 @@ export class PermissionService {
     if (currentRole === newRole) return true
 
     // Lifecycle transitions:
-    //   applicant → student (accepted) or alumni (accepted but program ended)
-    //   student → alumni (graduated) or applicant (re-applying to other program)
+    //   applicant → student (accepted), alumni (accepted but program ended),
+    //               or mentor (consumed an admin's invite link)
+    //   student → alumni (graduated), applicant (re-applying to another
+    //             program), or mentor (alum-track mentor pulled in early)
     //   alumni → mentor (very common pattern), applicant, or student
     //   mentor → staff (hired full-time) or alumni (mentor stint ended)
     //   staff → admin, applicant, or mentor (staff who also mentor)
     //   admin → staff, applicant, alumni, or mentor (mostly for testing)
+    //
+    // Keep this in lockstep with `isValidRoleTransition` in
+    // firestore.rules. Drift means client-side validation passes
+    // while the server rule rejects (or vice versa).
     const allowedTransitions: Record<UserRole, UserRole[]> = {
-      'applicant': ['student', 'alumni'],
-      'student': ['alumni', 'applicant'],
+      'applicant': ['student', 'alumni', 'mentor'],
+      'student': ['alumni', 'applicant', 'mentor'],
       'alumni': ['applicant', 'student', 'mentor'],
       'mentor': ['staff', 'alumni'],
       'staff': ['admin', 'applicant', 'mentor'],

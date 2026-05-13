@@ -69,6 +69,11 @@ export { finalizeApplicationFiles } from './applicationFinalize'
 // See applicationAccept.ts.
 export { respondToOffer } from './applicationAccept'
 
+// Mentor onboarding via single-use invite tokens. Staff/admin mints a
+// token; the vetted contact opens /invite/<token> and gets role=mentor
+// on consume. See mentorInvites.ts.
+export { createMentorInvite, consumeMentorInvite } from './mentorInvites'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

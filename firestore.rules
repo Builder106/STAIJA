@@ -35,8 +35,15 @@ service cloud.firestore {
       // in lockstep — drift here means client validation passes but the rule
       // rejects (or vice versa).
       let allowedTransitions = {
-        'applicant': ['student', 'alumni'],
-        'student': ['alumni', 'applicant'],
+        // `applicant -> mentor` is now legal so the mentor-invite
+        // consume callable (admin SDK, normally bypasses rules) AND
+        // manual admin overrides from UserManagement.vue both have a
+        // path. Previously the only legal mentor source was alumni /
+        // staff / admin, so a fresh signup who got an invite link
+        // would hit the rule deny when UserManagement tried to flip
+        // them manually.
+        'applicant': ['student', 'alumni', 'mentor'],
+        'student': ['alumni', 'applicant', 'mentor'],
         'alumni': ['applicant', 'student', 'mentor'],
         'mentor': ['staff', 'alumni'],
         'staff': ['admin', 'applicant', 'mentor'],
@@ -297,6 +304,24 @@ service cloud.firestore {
     // assignment UI yet — set up in Firestore directly or via a future admin
     // tool). Mentors see only their own pairings. Students could conceivably
     // see "who is my mentor", but that surface doesn't exist yet, so the
+    // Single-use mentor-invite tokens. Both writes route through the
+    // `createMentorInvite` / `consumeMentorInvite` callables (admin
+    // SDK, bypasses these rules) — so client writes are denied
+    // outright. Reads are scoped to staff/admin so the pending-invites
+    // list in UserManagement can render, AND to the invite's prospective
+    // consumer so the `/invite/<token>` landing page can show context
+    // (issuer name, optional email restriction, expiry) before the
+    // user clicks "Accept invitation". The consumer read is open to
+    // any authenticated user because we can't pre-bind the token to a
+    // uid — the whole point of the invite is to onboard somebody who
+    // doesn't have an account yet. The token itself acts as the
+    // capability; readers without the token can't enumerate.
+    match /mentorInvites/{token} {
+      allow get: if request.auth != null;
+      allow list: if hasAnyRole(['staff', 'admin']);
+      allow create, update, delete: if false;
+    }
+
     // student-side read is omitted until a UX is decided.
     match /mentor_assignments/{assignmentId} {
       allow read: if isAuthenticated() && (

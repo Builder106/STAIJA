@@ -39,6 +39,10 @@ const routes: RouteRecordRaw[] = [
   // first step (eligibility).
   { path: '/apply/:program/:step?', name: 'apply', component: () => import('../views/apply/Apply.vue'), meta: { title: 'Apply — STAIJA', requiresAuth: true } },
   { path: '/refs/:token', name: 'reference-upload', component: () => import('../views/refs/ReferenceUpload.vue'), meta: { title: 'Submit a reference — STAIJA' } },
+  // Mentor-invite consume landing. Public so unauthenticated visitors
+  // can see who invited them; the view itself bounces to /login with
+  // `?redirect=/invite/<token>` when no session exists.
+  { path: '/invite/:token', name: 'mentor-invite', component: () => import('../views/InviteAccept.vue'), meta: { title: 'Accept your mentor invitation — STAIJA' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
