@@ -319,9 +319,11 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
      chevron alone wasn't enough. We use a slightly stronger border
      plus a faint background tint so the trigger reads as a control
      ("click me, pick from a list") instead of a field ("type here").
-     The right-side chevron well below adds a second affordance. */
-  border-color: rgba(14, 18, 23, 0.2) !important;
-  background-color: rgba(14, 18, 23, 0.025);
+     The right-side chevron well below adds a second affordance.
+     Colors derive from the live `--color-ink` token so the trigger
+     flips correctly under `[data-theme="dark"]`. */
+  border-color: color-mix(in srgb, var(--color-ink) 20%, transparent) !important;
+  background-color: color-mix(in srgb, var(--color-ink) 3%, transparent);
   /* Match sibling text inputs' left padding (px-4 py-3) so dropdowns
      and inputs align vertically in mixed grids. Right padding is zero
      because the chevron well sits flush against the right edge. */
@@ -331,8 +333,8 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) {
-  border-color: rgba(14, 18, 23, 0.36) !important;
-  background-color: rgba(14, 18, 23, 0.05);
+  border-color: color-mix(in srgb, var(--color-ink) 36%, transparent) !important;
+  background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
 .ui-select__trigger:disabled {
   opacity: 0.5;
@@ -341,7 +343,10 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 .ui-select__trigger--open,
 .ui-select__trigger--open:hover {
   outline: none;
-  background-color: #fff;
+  /* Was hardcoded `#fff` — punched through to white inside dark mode.
+     Use the elevated-surface token so the trigger raises against
+     `bg-paper` in both light AND dark. */
+  background-color: var(--color-surface);
   border-color: transparent !important;
   box-shadow: 0 0 0 2px rgba(139, 85, 255, 0.5);
 }
@@ -353,7 +358,7 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   align-self: center;
 }
 .ui-select__placeholder {
-  color: rgba(14, 18, 23, 0.45);
+  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
 }
 /* Right-side "well" that hosts the chevron. The vertical hairline +
    tinted background reads as a button-on-the-right — the visual cue
@@ -365,24 +370,24 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   justify-content: center;
   width: 2.25rem;
   align-self: stretch;
-  border-left: 1px solid rgba(14, 18, 23, 0.12);
-  background-color: rgba(14, 18, 23, 0.035);
+  border-left: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
   transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) .ui-select__chevron-wrap {
   background-color: rgba(139, 85, 255, 0.08);
-  border-left-color: rgba(14, 18, 23, 0.24);
+  border-left-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
 }
 .ui-select__chevron-wrap--open {
   background-color: rgba(139, 85, 255, 0.12) !important;
   border-left-color: rgba(139, 85, 255, 0.4) !important;
 }
 .ui-select__chevron {
-  color: rgba(14, 18, 23, 0.7);
+  color: color-mix(in srgb, var(--color-ink) 70%, transparent);
   transition: color 0.12s ease;
 }
 .ui-select__trigger:hover:not(:disabled) .ui-select__chevron {
-  color: rgba(14, 18, 23, 0.92);
+  color: color-mix(in srgb, var(--color-ink) 92%, transparent);
 }
 .ui-select__chevron-wrap--open .ui-select__chevron {
   color: #8b55ff;
@@ -391,16 +396,25 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 
 <style>
 /* Unscoped — popover lives in <body> via Teleport so scoped styles
-   wouldn't reach it. Prefixed class names keep these from leaking. */
+   wouldn't reach it. Prefixed class names keep these from leaking.
+   Colors derive from the `--color-*` tokens defined on `:root` (and
+   flipped under `[data-theme="dark"]`) so the menu reads correctly
+   on both light and dark surfaces — and even though the popover is
+   in <body>, `:root` variables resolve from the document root, so
+   the dark token flip cascades here automatically. */
 .ui-select__menu {
   position: fixed;
   z-index: 60;
   margin: 0;
   padding: 0.25rem;
   list-style: none;
-  background: #ffffff;
-  border: 1px solid rgba(14, 18, 23, 0.1);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
   border-radius: 0.625rem;
+  /* Shadows must read as depth on BOTH light and dark surfaces. The
+     base shadow uses a static dark color (works on light surfaces);
+     dark mode below swaps in a stronger black + a faint inner glow
+     so the menu still lifts off `--color-paper` near-black. */
   box-shadow:
     0 8px 24px -8px rgba(14, 18, 23, 0.18),
     0 2px 6px -2px rgba(14, 18, 23, 0.08);
@@ -408,7 +422,13 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   overflow-y: auto;
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
-  color: #0e1217;
+  color: var(--color-ink);
+}
+[data-theme="dark"] .ui-select__menu {
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.6),
+    0 4px 10px -2px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
 .ui-select__option {
   display: flex;
@@ -421,21 +441,21 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
   transition: background-color 0.08s ease;
 }
 .ui-select__option--active {
-  background-color: rgba(139, 85, 255, 0.1);
+  background-color: rgba(139, 85, 255, 0.12);
   color: #8b55ff;
 }
 .ui-select__option--selected {
   font-weight: 600;
 }
 .ui-select__option--selected:not(.ui-select__option--active) {
-  background-color: rgba(14, 18, 23, 0.04);
+  background-color: color-mix(in srgb, var(--color-ink) 5%, transparent);
 }
 .ui-select__option--disabled {
   cursor: not-allowed;
-  color: rgba(14, 18, 23, 0.4);
+  color: color-mix(in srgb, var(--color-ink) 40%, transparent);
 }
 .ui-select__option--disabled .ui-select__option-hint {
-  color: rgba(14, 18, 23, 0.45);
+  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
   font-style: italic;
 }
 .ui-select__option-label {
@@ -447,7 +467,7 @@ const listId = computed(() => (props.id ? `${props.id}-listbox` : undefined))
 .ui-select__option-hint {
   font-size: 0.75rem;
   font-weight: 400;
-  color: rgba(14, 18, 23, 0.55);
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
 }
 .ui-select__check {
   flex-shrink: 0;
