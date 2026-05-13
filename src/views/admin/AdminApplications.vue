@@ -17,6 +17,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
 import Heading from '../../components/ui/Heading.vue'
@@ -26,6 +27,7 @@ import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import { functions } from '../../config/firebase'
 
 const router = useRouter()
 
@@ -231,6 +233,34 @@ function openApplication(applicationId: string) {
  *  indicator on the row is the visual cue for "this one's ready". */
 function placeInCohort(userId: string) {
   router.push({ path: '/admin/enroll', query: { applicant: userId } })
+}
+
+// Re-offer-to-deferred state. Per-application loading flag so two
+// parallel re-offers don't overlap their UI; the callable itself is
+// idempotent so a double-click is safe, but the Re-offer button
+// should still show "working" while the request is in flight.
+const reOfferingIds = ref<Set<string>>(new Set())
+
+async function reOfferDeferred(applicationId: string) {
+  if (reOfferingIds.value.has(applicationId)) return
+  reOfferingIds.value = new Set([...reOfferingIds.value, applicationId])
+  try {
+    const fn = httpsCallable<
+      { applicationId: string },
+      { ok: true; changed: boolean }
+    >(functions, 'reOfferToDeferredApplicant')
+    await fn({ applicationId })
+    // Refresh so the row's spotResponse drops + the chip indicator +
+    // Place-in-cohort button switch back to their "ready to enroll"
+    // treatment without a manual page refresh.
+    await loadApplications()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Re-offer failed.'
+  } finally {
+    const next = new Set(reOfferingIds.value)
+    next.delete(applicationId)
+    reOfferingIds.value = next
+  }
 }
 
 /** CSV export of the currently-filtered list. Quotes every cell so
@@ -556,6 +586,26 @@ onMounted(loadApplications)
                   </td>
                   <td class="p-4 text-right whitespace-nowrap" @click.stop>
                     <div class="inline-flex items-center gap-4">
+                      <!-- Re-offer: only deferred rows. Clears the
+                           applicant's spotResponse so they see the
+                           three CTAs again on their next visit. Use
+                           when a new cycle opens and you're
+                           converting last cycle's deferreds back
+                           into live offers. -->
+                      <button
+                        v-if="app.status === 'accepted' && app.spotResponse === 'deferred'"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:underline focus-ring-brand rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="reOfferingIds.has(app.id!)"
+                        @click="reOfferDeferred(app.id!)"
+                      >
+                        <Icon
+                          :icon="reOfferingIds.has(app.id!) ? 'lucide:loader-2' : 'lucide:rotate-ccw'"
+                          width="14"
+                          :class="reOfferingIds.has(app.id!) ? 'animate-spin' : ''"
+                        />
+                        {{ reOfferingIds.has(app.id!) ? 'Re-offering…' : 'Re-offer' }}
+                      </button>
                       <!-- Place-in-cohort gating:
                            - Hidden entirely for declined applicants —
                              enrolling someone who said "no thanks" is

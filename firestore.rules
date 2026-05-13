@@ -57,7 +57,15 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can read their own profile; staff/admin can read any (needed
       // for the admin user-management screen and the alumni directory).
-      allow read: if isOwner(userId) || hasAnyRole(['staff', 'admin']);
+      // Mentor profiles are visible to any authenticated user so the
+      // /mentors/<uid> page can render — students need to see who their
+      // assigned mentor is, and cohort coordinators surface mentor pools.
+      // Email is denormalised on UserProfile but already visible elsewhere
+      // (references, sessions); opening mentor docs doesn't expose new
+      // sensitive fields.
+      allow read: if isOwner(userId) ||
+                     hasAnyRole(['staff', 'admin']) ||
+                     (request.auth != null && resource.data.role == 'mentor');
 
       // Users can update their own profile (except role). updatedAt is
       // allowed because DatabaseService.updateUserProfile stamps it on

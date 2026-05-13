@@ -67,7 +67,7 @@ export { finalizeApplicationFiles } from './applicationFinalize'
 // the applicant picks one of accept / decline / defer on their Status
 // page Decision card and this callable records the response.
 // See applicationAccept.ts.
-export { respondToOffer } from './applicationAccept'
+export { respondToOffer, reOfferToDeferredApplicant } from './applicationAccept'
 
 // Mentor onboarding via single-use invite tokens. Staff/admin mints a
 // token; the vetted contact opens /invite/<token> and gets role=mentor

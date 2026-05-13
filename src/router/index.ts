@@ -43,6 +43,10 @@ const routes: RouteRecordRaw[] = [
   // can see who invited them; the view itself bounces to /login with
   // `?redirect=/invite/<token>` when no session exists.
   { path: '/invite/:token', name: 'mentor-invite', component: () => import('../views/InviteAccept.vue'), meta: { title: 'Accept your mentor invitation — STAIJA' } },
+  // Mentor profile view. Authenticated read of any user where
+  // role='mentor' (rule layer enforces this). Linked from student
+  // dashboards / cohort surfaces / admin user lists.
+  { path: '/mentors/:uid', name: 'mentor-profile', component: () => import('../views/MentorProfile.vue'), meta: { title: 'Mentor — STAIJA', requiresAuth: true } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },

@@ -115,3 +115,105 @@ export const respondToOffer = onCall<RespondInput>(
     return { ok: true, response: input.response, spotRespondedAt }
   },
 )
+
+/**
+ * reOfferToDeferredApplicant — staff-initiated reset of a deferred
+ * response so the applicant gets a fresh accept/decline/defer
+ * handshake. Used when the new cycle opens and staff is converting
+ * the deferred queue back into a live offer.
+ *
+ * Clears spotResponse / spotRespondedAt / spotResponseNote on the
+ * application. On the applicant's next visit to their Status page,
+ * the three CTAs render again because spotResponse is undefined —
+ * same code path as a freshly-accepted application that hasn't
+ * been responded to yet.
+ *
+ * Does NOT send an email here — that's a separate concern. Staff
+ * usually pairs this action with a manual "we're opening the new
+ * cycle, here's your spot" outreach. A "your spot is open again"
+ * automated email would be a sensible Phase 2 if the workflow ever
+ * runs without manual outreach.
+ *
+ * Constrained to deferred responses only — re-offering a declined
+ * applicant would override their explicit "no thanks", and
+ * re-offering an accepted applicant is meaningless. Both cases
+ * throw a precondition error.
+ */
+interface ReOfferInput {
+  applicationId: string
+}
+
+interface ReOfferResult {
+  ok: true
+  /** Whether the response was actually cleared. False if the
+   *  application had no spotResponse to begin with — idempotent
+   *  re-fires are no-ops. */
+  changed: boolean
+}
+
+async function callerRole(uid: string): Promise<string | null> {
+  const snap = await admin.firestore().collection('users').doc(uid).get()
+  return (snap.data()?.role as string | undefined) ?? null
+}
+
+export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
+  {
+    region: 'us-central1',
+    memory: '256MiB',
+    timeoutSeconds: 30,
+    enforceAppCheck: true,
+  },
+  async (req): Promise<ReOfferResult> => {
+    if (!req.auth) {
+      throw new HttpsError('unauthenticated', 'You must be signed in.')
+    }
+    const role = await callerRole(req.auth.uid)
+    if (role !== 'staff' && role !== 'admin') {
+      throw new HttpsError('permission-denied', 'Staff or admin role required.')
+    }
+
+    const { applicationId } = req.data ?? ({} as ReOfferInput)
+    if (!applicationId || typeof applicationId !== 'string') {
+      throw new HttpsError('invalid-argument', 'applicationId required.')
+    }
+
+    const db = admin.firestore()
+    const ref = db.collection('applications').doc(applicationId)
+    const snap = await ref.get()
+    if (!snap.exists) {
+      throw new HttpsError('not-found', 'Application not found.')
+    }
+    const data = snap.data() as {
+      status?: string
+      spotResponse?: string
+    }
+    if (data.status !== 'accepted') {
+      throw new HttpsError(
+        'failed-precondition',
+        'Re-offer only applies to accepted applications.',
+      )
+    }
+    // Idempotent — if there's nothing to clear, exit clean.
+    if (!data.spotResponse) {
+      return { ok: true, changed: false }
+    }
+    // Restrict to deferred. Re-opening a decline overrides the
+    // applicant's explicit "no thanks"; re-opening an accept is
+    // meaningless. Staff has the admin User Management surface if
+    // they genuinely need to force one of those flows.
+    if (data.spotResponse !== 'deferred') {
+      throw new HttpsError(
+        'failed-precondition',
+        `Re-offer only applies to deferred applicants. This one is ${data.spotResponse}.`,
+      )
+    }
+
+    await ref.update({
+      spotResponse: admin.firestore.FieldValue.delete(),
+      spotRespondedAt: admin.firestore.FieldValue.delete(),
+      spotResponseNote: admin.firestore.FieldValue.delete(),
+      updatedAt: new Date(),
+    })
+    return { ok: true, changed: true }
+  },
+)

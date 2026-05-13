@@ -163,6 +163,83 @@ function handleReset() {
   saveError.value = null
 }
 
+// --- Mentor profile editor -------------------------------------------
+//
+// Only rendered when userProfile.role === 'mentor'. mentorBio +
+// mentorAvailability are initially captured on the /invite landing
+// page during onboarding (both optional there), and this surface
+// lets mentors edit them after the fact without going through
+// admin. Lives in its own form (not the public-profile form above)
+// so saving "what I'm an expert in" doesn't accidentally commit a
+// half-finished displayName edit and vice versa.
+
+const MENTOR_BIO_MAX = 1000
+const MENTOR_AVAILABILITY_MAX = 500
+
+interface MentorForm {
+  mentorBio: string
+  mentorAvailability: string
+}
+
+const mentorForm = ref<MentorForm>({ mentorBio: '', mentorAvailability: '' })
+const mentorOriginal = ref<MentorForm>({ mentorBio: '', mentorAvailability: '' })
+
+watch(
+  userProfile,
+  (p) => {
+    mentorForm.value.mentorBio = p?.mentorBio ?? ''
+    mentorForm.value.mentorAvailability = p?.mentorAvailability ?? ''
+    mentorOriginal.value = { ...mentorForm.value }
+  },
+  { immediate: true },
+)
+
+const mentorDirty = computed(
+  () =>
+    mentorForm.value.mentorBio !== mentorOriginal.value.mentorBio ||
+    mentorForm.value.mentorAvailability !== mentorOriginal.value.mentorAvailability,
+)
+const mentorBioOver = computed(() => mentorForm.value.mentorBio.length > MENTOR_BIO_MAX)
+const mentorAvailabilityOver = computed(
+  () => mentorForm.value.mentorAvailability.length > MENTOR_AVAILABILITY_MAX,
+)
+const mentorSaving = ref(false)
+const mentorSaveError = ref<string | null>(null)
+const mentorSaveSuccess = ref(false)
+const canSaveMentor = computed(
+  () => mentorDirty.value && !mentorBioOver.value && !mentorAvailabilityOver.value && !mentorSaving.value,
+)
+
+async function handleSaveMentor() {
+  if (!canSaveMentor.value || !user.value) return
+  mentorSaving.value = true
+  mentorSaveError.value = null
+  mentorSaveSuccess.value = false
+  try {
+    const updates: Record<string, string> = {}
+    if (mentorForm.value.mentorBio !== mentorOriginal.value.mentorBio) {
+      updates.mentorBio = mentorForm.value.mentorBio.trim()
+    }
+    if (mentorForm.value.mentorAvailability !== mentorOriginal.value.mentorAvailability) {
+      updates.mentorAvailability = mentorForm.value.mentorAvailability.trim()
+    }
+    await DatabaseService.updateUserProfile(user.value.uid, updates)
+    await refreshProfile()
+    mentorOriginal.value = { ...mentorForm.value }
+    mentorSaveSuccess.value = true
+    setTimeout(() => (mentorSaveSuccess.value = false), 3000)
+  } catch (err) {
+    mentorSaveError.value = (err as { message?: string }).message ?? 'Could not save changes.'
+  } finally {
+    mentorSaving.value = false
+  }
+}
+
+function handleResetMentor() {
+  mentorForm.value = { ...mentorOriginal.value }
+  mentorSaveError.value = null
+}
+
 function getInitials(name: string | null | undefined) {
   if (!name) return '?'
   return name
@@ -622,6 +699,76 @@ async function handleDelete() {
                 {{ saving ? 'Saving…' : 'Save changes' }}
               </UiButton>
               <UiButton variant="secondary" :disabled="!dirty || saving" @click="handleReset">Reset</UiButton>
+            </div>
+          </div>
+        </UiCard>
+
+        <!-- Mentor profile (mentors only). The bio + availability
+             fields were captured optionally on the /invite landing
+             page during onboarding; this is where mentors edit them
+             later. Both are visible to students viewing the
+             mentor-profile page, so this is "public to authenticated
+             users" in practice — the placeholder copy reflects that. -->
+        <UiCard v-if="userProfile?.role === 'mentor'" class="p-6 md:p-10 bg-surface">
+          <Eyebrow class="text-brand-violet mb-3 block">Mentor</Eyebrow>
+          <Heading :level="2" class="mb-2 text-xl">Mentor profile</Heading>
+          <Body class="text-ink/60 text-sm mb-6">
+            Visible to your assigned students and cohort coordinators on your mentor profile page.
+          </Body>
+          <div class="flex flex-col gap-5">
+            <div class="flex flex-col gap-2">
+              <label for="mentorBio" class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                Area of expertise
+              </label>
+              <textarea
+                id="mentorBio"
+                v-model="mentorForm.mentorBio"
+                rows="4"
+                :maxlength="MENTOR_BIO_MAX + 200"
+                placeholder="e.g. ML engineer at Spotify, focus on recommender systems and time-series. PhD in stats."
+                class="border hairline-ink rounded-xl px-4 py-3 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+              />
+              <div class="flex justify-between text-xs">
+                <span class="text-ink/50">Helps students know if you're the right fit for their interests.</span>
+                <span :class="mentorBioOver ? 'text-red-600 font-semibold' : 'text-ink/40'">
+                  {{ mentorForm.mentorBio.length }} / {{ MENTOR_BIO_MAX }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="mentorAvailability" class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                Availability
+              </label>
+              <textarea
+                id="mentorAvailability"
+                v-model="mentorForm.mentorAvailability"
+                rows="2"
+                :maxlength="MENTOR_AVAILABILITY_MAX + 200"
+                placeholder="e.g. Weeknights after 7pm WAT, 2-3 hours/week. Async messaging works too."
+                class="border hairline-ink rounded-xl px-4 py-3 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+              />
+              <div class="flex justify-between text-xs">
+                <span class="text-ink/50">When + how often you can show up for sessions.</span>
+                <span :class="mentorAvailabilityOver ? 'text-red-600 font-semibold' : 'text-ink/40'">
+                  {{ mentorForm.mentorAvailability.length }} / {{ MENTOR_AVAILABILITY_MAX }}
+                </span>
+              </div>
+            </div>
+
+            <p v-if="mentorSaveError" class="text-sm text-red-600">{{ mentorSaveError }}</p>
+            <p v-else-if="mentorSaveSuccess" class="text-sm text-emerald-700">
+              <Icon icon="lucide:check" width="14" class="inline -mt-0.5" /> Saved.
+            </p>
+
+            <div class="flex flex-wrap gap-3 pt-2">
+              <UiButton variant="primary" :disabled="!canSaveMentor" @click="handleSaveMentor">
+                <Icon v-if="mentorSaving" icon="lucide:loader-2" width="14" class="animate-spin" />
+                {{ mentorSaving ? 'Saving…' : 'Save changes' }}
+              </UiButton>
+              <UiButton variant="secondary" :disabled="!mentorDirty || mentorSaving" @click="handleResetMentor">
+                Reset
+              </UiButton>
             </div>
           </div>
         </UiCard>
