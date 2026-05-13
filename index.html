@@ -2,21 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="src/assets/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/src/assets/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- No font preloads here. We tried pinning the specific woff2 URLs
-         Google currently serves for IBM Plex Sans 600 + Inter 400, but
-         Google rotates those filenames silently on every CSS version
-         bump. A stale pinned URL produces a hard 404 (not a silent
-         no-op) and the "preloaded but not used" warning floods the
-         console. The metric-matched fallback @font-face block in
-         src/style.css handles the LCP/CLS concern instead: the
-         fallback occupies the same bounding box as the web font, so
-         the FOUT swap is layout-neutral. Preconnect above gets us
-         most of the TCP/TLS savings the preload was after. -->
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts are self-hosted now — see src/styles/fonts.css for the
+         @font-face declarations + the metric-matched fallback faces.
+         No fonts.googleapis.com preconnect or stylesheet link needed,
+         which saves the third-party DNS + TLS + CSS round-trip on cold
+         loads. The woff2 files live in /public/fonts/ and ride the
+         same Vercel edge cache as the rest of the static assets. -->
+    <!-- Preload the latin-subset IBM Plex Sans 700 woff2 — the LCP
+         element on the homepage is the hero <h1> headline which uses
+         the display face at 700. Preloading lets it download in
+         parallel with the HTML+JS rather than waiting for the CSS
+         parse to discover the @font-face. The hash in the filename
+         is stable for as long as we don't re-run the regeneration
+         script in src/styles/fonts.css; if it does change, this
+         preload will 404 silently and we fall back to discovery via
+         CSS — degraded but not broken. -->
+    <link
+      rel="preload"
+      href="/fonts/zYXzKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1syxeKYbSB4Zh.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <title>STAIJA</title>
     <meta name="description" content="STAIJA nurtures Africa’s next generation of scientist‑leaders through research programs, mentorship and community." />
 

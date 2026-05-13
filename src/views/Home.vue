@@ -98,7 +98,11 @@ onMounted(async () => {
          otherwise paper/ink/editorial; the hero is where the brand
          gradient gets to be loud, so the page feels like a cousin of
          the violet→cyan logo instead of a foil to it. -->
-    <Section class="min-h-dvh flex items-center !pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white dark:text-ink-static">
+    <!-- min-h-svh (small viewport height) is locked to the smallest possible
+         viewport for the device. min-h-dvh recalculates as mobile browser
+         chrome (URL bar) shows/hides during scroll, causing the hero to
+         resize and pushing everything below it — a CLS source. -->
+    <Section class="min-h-svh flex items-center !pt-12 !pb-20 md:!pt-20 md:!pb-28 relative overflow-hidden bg-gradient-hero text-white dark:text-ink-static">
       <!-- Soft accent glow behind the Lottie. Hidden on small screens
            where the artwork stacks below the copy and the glow would
            wash out the headline. -->
@@ -164,9 +168,14 @@ onMounted(async () => {
             </div>
           </Motion>
 
+          <!-- Pure opacity fade — the previous scale 0.95 → 1 triggered GPU
+               compositor work during the LCP window (headline paint).
+               Dropping the scale frees that budget. The aspect-ratio
+               container already reserves the box, so no CLS even though
+               the Lottie content paints in asynchronously. -->
           <Motion
-            :initial="{ opacity: 0, scale: 0.95 }"
-            :animate="{ opacity: 1, scale: 1 }"
+            :initial="{ opacity: 0 }"
+            :animate="{ opacity: 1 }"
             :transition="{ duration: 0.5, delay: 0.2 }"
             class="relative w-full aspect-[4/3] lg:aspect-square flex items-center justify-center"
           >
@@ -282,12 +291,19 @@ onMounted(async () => {
          doesn't jump down ~700px once Contentful resolves. After load:
          if there's no story, the section collapses (acceptable — only
          happens on an empty CMS, not in production). The min-height
-         applies to the inner area only; section padding is from Section. -->
+         applies to the inner area only; section padding is from Section.
+
+         The min-h floor is applied UNCONDITIONALLY (not only during loading)
+         so the section maintains a stable height across the loading→loaded
+         transition. Previously the floor was dropped the moment content
+         arrived, so loaded content of a different height shifted the page.
+         Numbers approximate the real loaded layout: aspect-4/3 image at
+         ~58% column width (lg:col-span-7) → ~440px image height + adjacent
+         text column. -->
     <Section v-if="!contentLoaded || featuredStory" class="bg-paper">
       <Container>
         <div
-          class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center"
-          :class="!contentLoaded && !featuredStory ? 'min-h-[450px] lg:min-h-[520px]' : ''"
+          class="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-[450px] lg:min-h-[520px]"
         >
           <template v-if="featuredStory">
           <Motion
@@ -298,12 +314,21 @@ onMounted(async () => {
             :transition="{ duration: 0.6 }"
           >
             <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
+            <!-- width/height pin the intrinsic aspect ratio so the browser
+                 reserves the box before the bytes arrive. The parent Motion
+                 already has aspect-[4/3], but a width-less <img> can still
+                 race against decode in some browsers. eager loading because
+                 this image is the second visible block below the fold — by
+                 the time most users hit it, prefetching is cheap and lazy
+                 risks a visible decode pop. -->
             <img
               v-if="featuredStory.hero"
               :src="featuredStory.hero"
               :alt="featuredStory.title"
+              width="800"
+              height="600"
               class="w-full h-full object-cover"
-              loading="lazy"
+              decoding="async"
             />
           </Motion>
           <Motion
@@ -341,9 +366,11 @@ onMounted(async () => {
          footer doesn't drop ~470px when Contentful resolves. After load:
          empty CMS collapses the section, which only happens off-prod. -->
     <Section v-if="!contentLoaded || upcomingEvents.length > 0" class="bg-surface">
-      <Container
-        :class="!contentLoaded && upcomingEvents.length === 0 ? 'min-h-[400px] lg:min-h-[440px]' : ''"
-      >
+      <!-- min-h floor applied unconditionally — see Featured Story above for
+           the rationale. Without this, the section collapses to fit loaded
+           events content (or empties out, on empty CMS), causing the footer
+           to shift. -->
+      <Container class="min-h-[400px] lg:min-h-[440px]">
         <template v-if="upcomingEvents.length > 0">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div class="max-w-2xl">

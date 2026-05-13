@@ -139,7 +139,7 @@ function layout(body: string): string {
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 36px;">
                 <tr>
                   <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="https://staija.org/STAIJA.png" width="32" height="32" alt="" style="display:block;border:0;" />
+                    <img src="https://staija.org/staija-64.png" width="32" height="32" alt="" style="display:block;border:0;" />
                   </td>
                   <td style="vertical-align:middle;">
                     <span style="font-family:${SERIF};font-size:17px;font-weight:700;color:${INK};letter-spacing:-0.2px;">STAIJA</span>

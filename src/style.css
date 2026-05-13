@@ -6,37 +6,11 @@
 
 @import "tailwindcss";
 
-/* Fallback @font-face declarations with metric overrides that mimic the
-   web fonts' geometry. Used to neutralize CLS from font-display: swap:
-   while IBM Plex Sans / Inter are loading, the browser renders the
-   fallback at the SAME glyph metrics as the web font, so when the
-   woff2 finally arrives there's no visible reflow.
-
-   Numbers are the standard fallback-adjust values emitted by Next.js's
-   `next/font` for these two faces (computed from font tables, locked to
-   `local('Arial')` on the assumption it's present on every consumer OS
-   we care about). They map Arial's metrics onto IBM Plex Sans / Inter
-   so the line-box height and per-glyph advance widths match.
-
-   Reference for the methodology: https://web.dev/articles/font-fallbacks
-*/
-@font-face {
-  font-family: 'IBM Plex Sans Fallback';
-  src: local('Arial');
-  size-adjust: 102.2%;
-  ascent-override: 96.4%;
-  descent-override: 25.5%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: 'Inter Fallback';
-  src: local('Arial');
-  size-adjust: 107.64%;
-  ascent-override: 90%;
-  descent-override: 22.43%;
-  line-gap-override: 0%;
-}
+/* Self-hosted web fonts + metric-matched fallbacks. Moved out of this
+   file (which Tailwind processes) into a standalone CSS that ships the
+   raw @font-face declarations Google would have served, but pointing
+   to /public/fonts/ on our own origin instead of fonts.gstatic.com. */
+@import "./styles/fonts.css";
 
 
 /* Enable a `dark:` variant that activates when [data-theme="dark"] is
@@ -95,7 +69,7 @@
      don't ship Arial. */
    --font-display: 'IBM Plex Sans', 'IBM Plex Sans Fallback', system-ui, sans-serif;
    --font-sans: 'Inter', 'Inter Fallback', sans-serif;
-   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+   --font-mono: 'IBM Plex Mono', 'IBM Plex Mono Fallback', ui-monospace, monospace;
 
    --radius-xl: 12px;
    --radius-2xl: 16px;

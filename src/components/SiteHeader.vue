@@ -14,7 +14,7 @@ const isScrolled = ref(false)
 const mobileOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
-const { isAuthenticated, displayName, signOut, user, userProfile } = useAuth()
+const { isAuthenticated, displayName, signOut, user, userProfile, loading } = useAuth()
 
 const avatarSrc = computed(() =>
   resolveAvatarSrc({
@@ -48,8 +48,17 @@ const navLinks = [
   { name: 'About', href: '/about' },
 ]
 
+// rAF-throttle the scroll handler so we coalesce burst scroll events into
+// at most one update per frame. Without this, scroll fires hundreds of
+// times during a fast scroll and each call writes to the reactive ref,
+// triggering Vue's reactivity for no perceptible gain.
+let scrollFrame = 0
 function handleScroll() {
-  isScrolled.value = window.scrollY > 20
+  if (scrollFrame) return
+  scrollFrame = requestAnimationFrame(() => {
+    isScrolled.value = window.scrollY > 20
+    scrollFrame = 0
+  })
 }
 
 async function handleSignOut() {
@@ -57,21 +66,41 @@ async function handleSignOut() {
   router.push('/')
 }
 
-onMounted(() => window.addEventListener('scroll', handleScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  // Set initial state for pages loaded mid-scroll (e.g. back/forward nav
+  // restoring scrollY). Without this, isScrolled defaults to false and
+  // the header renders unscrolled even if the page is deep-scrolled.
+  handleScroll()
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  if (scrollFrame) cancelAnimationFrame(scrollFrame)
+})
 watch(() => route.fullPath, () => { mobileOpen.value = false })
 </script>
 
 <template>
+  <!-- Header padding is fixed at py-5 (not toggling py-4 ↔ py-6 on scroll)
+       because that 16px vertical delta caused a scroll-driven CLS every
+       time the user crossed the scrollY > 20 threshold. The visual cue
+       that the user has scrolled comes from the border-bottom alone now. -->
   <header
-    class="sticky top-0 z-50 w-full transition-all duration-200 bg-paper"
-    :class="isScrolled ? 'border-b hairline-ink py-4' : 'py-6'"
+    class="sticky top-0 z-50 w-full py-5 transition-colors duration-200 bg-paper"
+    :class="isScrolled ? 'border-b hairline-ink' : 'border-b border-transparent'"
   >
     <Container>
       <div class="flex items-center justify-between">
         <RouterLink to="/" class="flex items-center gap-2 focus-ring-brand rounded-sm" aria-label="STAIJA — home">
+          <!-- Right-sized logo variants. The master 1563×1563 STAIJA.png is
+               1.07 MB and was the single biggest bandwidth hit on cold
+               loads. staija-40 / staija-80 are pre-rasterized via sips
+               (commit message: "right-size header/footer logo"). srcset
+               1x / 2x covers retina without shipping more bytes than
+               needed; on 1x displays the browser only fetches staija-40. -->
           <img
-            src="/STAIJA.png"
+            src="/staija-40.png"
+            srcset="/staija-40.png 1x, /staija-80.png 2x"
             alt="STAIJA"
             width="40"
             height="40"
@@ -90,45 +119,60 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
           </RouterLink>
         </nav>
 
-        <div class="hidden lg:flex items-center gap-4">
+        <!-- CLS guard: this sticky header reflows the entire page when its
+             contents change height. Firebase Auth resolves asynchronously
+             (no SSR — Vite SPA), so first paint always shows the auth-
+             unresolved state, then either the unauthenticated (narrow) or
+             authenticated (wide) cluster swaps in. To prevent that swap
+             from shifting the page below:
+               1. min-w on the cluster reserves the footprint of the wider
+                  authenticated layout, so no horizontal reflow.
+               2. justify-end packs items to the right within the reserved
+                  width, so the brand mark on the left stays fixed.
+               3. v-if="!loading" delays rendering the auth-conditional
+                  content until Firebase resolves — no flash of the wrong
+                  state for returning users. -->
+        <div class="hidden lg:flex items-center justify-end gap-4 min-w-[260px] xl:min-w-[340px]">
           <ThemeToggle />
-          <template v-if="isAuthenticated">
-            <RouterLink
-              v-if="donationsEnabled"
-              to="/donor"
-              class="text-sm font-medium text-ink/70 hover:text-brand-violet transition-colors focus-ring-brand rounded-sm"
-            >
-              My donations
-            </RouterLink>
-            <RouterLink
-              :to="dashboardPath"
-              class="text-sm font-semibold text-ink hover:text-brand-violet transition-colors focus-ring-brand rounded-full flex items-center gap-2"
-            >
-              <img
-                :src="avatarSrc"
-                :alt="displayName ?? 'Avatar'"
-                class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-violet/30 shrink-0"
-              />
-              <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>
-            </RouterLink>
-            <RouterLink
-              to="/account/settings"
-              class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
-            >
-              Settings
-            </RouterLink>
-            <UiButton
-              variant="secondary"
-              type="button"
-              @click="handleSignOut"
-            >
-              Sign out
-            </UiButton>
-          </template>
-          <template v-else>
-            <UiButton variant="secondary" :to="'/login'">
-              Sign in
-            </UiButton>
+          <template v-if="!loading">
+            <template v-if="isAuthenticated">
+              <RouterLink
+                v-if="donationsEnabled"
+                to="/donor"
+                class="text-sm font-medium text-ink/70 hover:text-brand-violet transition-colors focus-ring-brand rounded-sm"
+              >
+                My donations
+              </RouterLink>
+              <RouterLink
+                :to="dashboardPath"
+                class="text-sm font-semibold text-ink hover:text-brand-violet transition-colors focus-ring-brand rounded-full flex items-center gap-2"
+              >
+                <img
+                  :src="avatarSrc"
+                  :alt="displayName ?? 'Avatar'"
+                  class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-violet/30 shrink-0"
+                />
+                <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>
+              </RouterLink>
+              <RouterLink
+                to="/account/settings"
+                class="text-sm font-medium text-ink/70 hover:text-ink transition-colors focus-ring-brand rounded-sm"
+              >
+                Settings
+              </RouterLink>
+              <UiButton
+                variant="secondary"
+                type="button"
+                @click="handleSignOut"
+              >
+                Sign out
+              </UiButton>
+            </template>
+            <template v-else>
+              <UiButton variant="secondary" :to="'/login'">
+                Sign in
+              </UiButton>
+            </template>
           </template>
           <UiButton v-if="donationsEnabled" variant="primary" :to="'/donate'">Donate</UiButton>
         </div>
