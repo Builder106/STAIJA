@@ -516,17 +516,35 @@ onMounted(loadApplications)
                       :class="STATUS_META[app.status]?.pill"
                     >
                       {{ STATUS_META[app.status]?.label || app.status }}
-                      <!-- Spot-confirmed indicator. Only renders on
-                           accepted rows where the applicant has fired
-                           the acceptOffer callable. Signals to staff
-                           which accepted apps are ready for cohort
-                           assignment without an extra click. -->
+                      <!-- Spot-response indicator. Only renders on
+                           accepted rows where the applicant has
+                           replied. Three states map to three icons so
+                           staff can triage at a glance:
+                             - ✓ emerald → ready to enroll
+                             - ✗ rose    → applicant declined, do NOT
+                                          enroll
+                             - clock amber → applicant deferred,
+                                          revisit next cycle -->
                       <Icon
-                        v-if="app.status === 'accepted' && app.spotAccepted"
+                        v-if="app.status === 'accepted' && app.spotResponse === 'accepted'"
                         icon="lucide:check"
                         width="12"
                         class="text-emerald-700"
-                        :aria-label="'Applicant confirmed their spot'"
+                        :aria-label="'Applicant accepted their spot'"
+                      />
+                      <Icon
+                        v-else-if="app.status === 'accepted' && app.spotResponse === 'declined'"
+                        icon="lucide:x"
+                        width="12"
+                        class="text-rose-700"
+                        :aria-label="'Applicant declined the offer'"
+                      />
+                      <Icon
+                        v-else-if="app.status === 'accepted' && app.spotResponse === 'deferred'"
+                        icon="lucide:clock"
+                        width="12"
+                        class="text-amber-700"
+                        :aria-label="'Applicant deferred to next cycle'"
                       />
                     </span>
                   </td>
@@ -538,10 +556,25 @@ onMounted(loadApplications)
                   </td>
                   <td class="p-4 text-right whitespace-nowrap" @click.stop>
                     <div class="inline-flex items-center gap-4">
+                      <!-- Place-in-cohort gating:
+                           - Hidden entirely for declined applicants —
+                             enrolling someone who said "no thanks" is
+                             a clear bug, so we remove the affordance.
+                           - Shown for accepted + no-response + deferred,
+                             but deferred renders muted so staff treats
+                             it as an explicit override (the applicant
+                             said "next cycle" — proceeding now is a
+                             conscious choice). -->
                       <button
-                        v-if="app.status === 'accepted'"
+                        v-if="app.status === 'accepted' && app.spotResponse !== 'declined'"
                         type="button"
-                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:underline focus-ring-brand rounded-sm"
+                        class="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline focus-ring-brand rounded-sm"
+                        :class="app.spotResponse === 'deferred'
+                          ? 'text-ink/45 hover:text-amber-700'
+                          : 'text-emerald-700'"
+                        :title="app.spotResponse === 'deferred'
+                          ? 'Applicant deferred to next cycle. Override only if you have a reason.'
+                          : undefined"
                         @click="placeInCohort(app.userId)"
                       >
                         <Icon icon="lucide:user-plus" width="14" />

@@ -166,18 +166,28 @@ export interface Application {
     relationship: string
   }[]
   /**
-   * Whether the accepted applicant has actively confirmed they want
-   * to take the offered spot. Stays `false` / undefined until the
-   * applicant clicks "Accept your spot" on their detail page, which
-   * fires the `acceptOffer` callable. Used by the admin queue to
-   * distinguish "we made the offer" from "the offer was accepted and
-   * we can enroll them now" — staff can still enroll either way, but
-   * the indicator lets them triage the ready cohort intake.
+   * The applicant's response to the offered spot. Set by the
+   * `respondToOffer` callable when the applicant clicks one of the
+   * three actions on their Status page Decision card:
+   *
+   *   - 'accepted' → ready for cohort placement
+   *   - 'declined' → applicant is out; staff should not enroll
+   *   - 'deferred' → applicant wants the next cycle instead; staff
+   *                  re-offers when that cycle opens
+   *
+   * Changes are allowed (accept → defer is a real story) so the
+   * latest value wins. Undefined until the applicant has acted; the
+   * admin queue shows "awaiting response" treatment until then.
    */
-  spotAccepted?: boolean
-  /** Ms epoch when the applicant confirmed the spot. Plain primitive
-   *  (not Firestore Timestamp) so the field round-trips cleanly. */
-  spotAcceptedAt?: number
+  spotResponse?: 'accepted' | 'declined' | 'deferred'
+  /** Ms epoch of the most recent response. Plain primitive (not
+   *  Firestore Timestamp) so the field round-trips cleanly. Bumped
+   *  whenever spotResponse changes. */
+  spotRespondedAt?: number
+  /** Optional free-text reason the applicant left when declining or
+   *  deferring. Surfaced to staff in the queue / review surface;
+   *  blank for accept (the CTA is one-click). */
+  spotResponseNote?: string
   documents?: {
     cv?: string
     transcript?: string

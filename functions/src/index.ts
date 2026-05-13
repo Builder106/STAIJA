@@ -64,9 +64,10 @@ export { lmsAssetUpload } from './lmsAssetUpload'
 export { finalizeApplicationFiles } from './applicationFinalize'
 
 // Applicant-initiated handshake: when staff accepts the application,
-// the applicant clicks "Accept your spot" on their Status page and
-// this callable records the confirmation. See applicationAccept.ts.
-export { acceptOffer } from './applicationAccept'
+// the applicant picks one of accept / decline / defer on their Status
+// page Decision card and this callable records the response.
+// See applicationAccept.ts.
+export { respondToOffer } from './applicationAccept'
 
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing

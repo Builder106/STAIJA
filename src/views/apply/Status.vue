@@ -140,36 +140,93 @@ const decisionMeta = computed(() => {
   }
 })
 
-// "Accept your spot" CTA state. Only meaningful for status='accepted'
-// applications; renders the button when the applicant hasn't yet
-// confirmed, and a "confirmed" state with the confirmation date once
-// they have. The `acceptOffer` callable does the actual write
-// server-side via admin SDK; we re-read the doc afterward so the UI
-// flips to the confirmed state without an optimistic-update guess.
-const accepting = ref(false)
-const acceptError = ref<string | null>(null)
+// Three-way response handshake for status='accepted' applications.
+// The applicant picks one of accept / decline / defer; accept is a
+// one-click action while decline + defer expand an inline panel so
+// the applicant can leave an optional note before confirming. All
+// three flow through the same `respondToOffer` callable — server
+// admin SDK writes the response, and we re-read the doc so the UI
+// reflects authoritative state instead of an optimistic local guess.
+type SpotResponse = 'accepted' | 'declined' | 'deferred'
 
-async function acceptSpot() {
+const responding = ref(false)
+const respondError = ref<string | null>(null)
+/** Which of the destructive responses (decline / defer) is currently
+ *  expanded for confirmation. Null when neither panel is open. */
+const expandedResponse = ref<'declined' | 'deferred' | null>(null)
+const responseNote = ref('')
+
+function openResponsePanel(kind: 'declined' | 'deferred') {
+  expandedResponse.value = kind
+  responseNote.value = ''
+  respondError.value = null
+}
+
+function closeResponsePanel() {
+  expandedResponse.value = null
+  responseNote.value = ''
+}
+
+async function submitResponse(response: SpotResponse) {
   const id = application.value?.id ?? (route.params.id as string)
-  if (!id || accepting.value) return
-  accepting.value = true
-  acceptError.value = null
+  if (!id || responding.value) return
+  responding.value = true
+  respondError.value = null
   try {
     const fn = httpsCallable<
-      { applicationId: string },
-      { ok: true; spotAcceptedAt: number }
-    >(functions, 'acceptOffer')
-    await fn({ applicationId: id })
-    // Re-fetch so the card flips to the "spot confirmed" state with
-    // the server-authoritative timestamp instead of an optimistic
-    // local guess.
+      { applicationId: string; response: SpotResponse; note?: string },
+      { ok: true; response: SpotResponse; spotRespondedAt: number }
+    >(functions, 'respondToOffer')
+    await fn({
+      applicationId: id,
+      response,
+      note: response === 'accepted' ? undefined : responseNote.value.trim() || undefined,
+    })
+    // Re-fetch so the card flips to the response-confirmed state
+    // with the server-authoritative timestamp + persisted note.
     await load()
+    expandedResponse.value = null
+    responseNote.value = ''
   } catch (err) {
-    acceptError.value = err instanceof Error ? err.message : 'Could not confirm your spot. Try again.'
+    respondError.value =
+      err instanceof Error ? err.message : 'Could not record your response. Try again.'
   } finally {
-    accepting.value = false
+    responding.value = false
   }
 }
+
+/** Visual + copy treatment for the four post-response states. Each
+ *  branch is a complete description of what the card should say AFTER
+ *  the applicant has acted — the still-deciding pre-response state is
+ *  rendered separately in the template. */
+const responseConfirmedMeta = computed(() => {
+  const r = application.value?.spotResponse
+  if (r === 'accepted') {
+    return {
+      icon: 'lucide:check-circle-2',
+      iconClass: 'text-emerald-700',
+      heading: 'Spot accepted',
+      body: "We'll be in touch about your cohort and mentor pairing. Watch your inbox over the next few days.",
+    }
+  }
+  if (r === 'declined') {
+    return {
+      icon: 'lucide:x-circle',
+      iconClass: 'text-rose-700',
+      heading: 'Spot declined',
+      body: "Thanks for letting us know. The team won't follow up about this cycle.",
+    }
+  }
+  if (r === 'deferred') {
+    return {
+      icon: 'lucide:clock',
+      iconClass: 'text-amber-700',
+      heading: 'Deferred to next cycle',
+      body: "We'll hold your acceptance and reach out when the next cycle opens.",
+    }
+  }
+  return null
+})
 
 interface ReferenceWithStatus {
   name: string
@@ -301,62 +358,151 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
             Decision sent {{ formatDate(toDate(application.reviewedAt) ?? undefined) }}
           </div>
 
-          <!-- Accept-your-spot handshake. Only renders for accepted
-               applications, and only when the applicant hasn't yet
-               confirmed. After they confirm, the next branch swaps
-               in a "spot accepted" state so the affordance isn't a
-               re-clickable button forever. -->
+          <!-- Three-way response handshake. Only renders for accepted
+               applications. Branches:
+                 1. No response yet → three CTAs (accept primary,
+                    decline + defer as secondary text buttons).
+                 2. Decline / defer expanded → inline confirmation
+                    panel with optional reason textarea.
+                 3. Response recorded → confirmed state with the
+                    response-specific icon + copy. -->
           <div
             v-if="application.status === 'accepted'"
             class="mt-5 pt-5 border-t hairline-ink flex flex-col gap-3"
           >
-            <template v-if="!application.spotAccepted">
-              <p class="text-sm text-ink/85 leading-relaxed m-0">
-                Confirm you want the offered spot so we can place you in a cohort.
-              </p>
-              <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <UiButton
-                  variant="gradient"
-                  :disabled="accepting"
-                  @click="acceptSpot"
-                >
-                  <span class="flex items-center gap-2">
-                    <Icon
-                      :icon="accepting ? 'lucide:loader-2' : 'lucide:check'"
-                      width="16"
-                      :class="accepting ? 'animate-spin' : ''"
-                    />
-                    {{ accepting ? 'Confirming…' : 'Accept your spot' }}
-                  </span>
-                </UiButton>
-                <span class="text-xs text-ink/55">
-                  Need more time?
-                  <a
-                    href="mailto:hello@staija.org"
-                    class="text-brand-violet hover:underline"
-                  >
-                    Email us.
-                  </a>
-                </span>
-              </div>
-              <p
-                v-if="acceptError"
-                role="alert"
-                class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0"
-              >
-                {{ acceptError }}
-              </p>
-            </template>
-            <template v-else>
-              <div class="flex items-center gap-2 text-sm font-semibold text-emerald-700">
-                <Icon icon="lucide:check-circle-2" width="18" />
-                Spot accepted<span v-if="application.spotAcceptedAt" class="font-normal text-ink/60">
-                  · {{ formatDate(new Date(application.spotAcceptedAt)) }}
+            <!-- (3) Already responded — show the confirmed state -->
+            <template v-if="application.spotResponse && responseConfirmedMeta">
+              <div class="flex items-center gap-2 text-sm font-semibold" :class="responseConfirmedMeta.iconClass">
+                <Icon :icon="responseConfirmedMeta.icon" width="18" />
+                {{ responseConfirmedMeta.heading }}<span v-if="application.spotRespondedAt" class="font-normal text-ink/60">
+                  · {{ formatDate(new Date(application.spotRespondedAt)) }}
                 </span>
               </div>
               <p class="text-sm text-ink/70 leading-relaxed m-0">
-                We'll be in touch about your cohort and mentor pairing. Watch your
-                inbox over the next few days.
+                {{ responseConfirmedMeta.body }}
+              </p>
+              <div
+                v-if="application.spotResponseNote"
+                class="text-xs text-ink/55 italic border-l-2 border-ink/15 pl-3"
+              >
+                "{{ application.spotResponseNote }}"
+              </div>
+              <p class="text-xs text-ink/50 m-0">
+                Need to change your response? Email
+                <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">
+                  hello@staija.org
+                </a>.
+              </p>
+            </template>
+
+            <!-- (2) Decline / defer confirmation expanded -->
+            <template v-else-if="expandedResponse">
+              <div
+                class="rounded-xl border p-4 flex flex-col gap-3"
+                :class="expandedResponse === 'declined'
+                  ? '!border-rose-200 bg-rose-50/40'
+                  : '!border-amber-200 bg-amber-50/40'"
+              >
+                <div class="flex items-center gap-2 text-sm font-semibold text-ink">
+                  <Icon
+                    :icon="expandedResponse === 'declined' ? 'lucide:x-circle' : 'lucide:clock'"
+                    width="16"
+                    :class="expandedResponse === 'declined' ? 'text-rose-700' : 'text-amber-700'"
+                  />
+                  {{ expandedResponse === 'declined'
+                    ? "Decline this cycle's offer?"
+                    : 'Defer to the next cycle?' }}
+                </div>
+                <p class="text-sm text-ink/75 leading-relaxed m-0">
+                  {{ expandedResponse === 'declined'
+                    ? "We'll close out the offer and won't follow up about this cycle. You can apply again next time."
+                    : "We'll hold your acceptance and reach out when the next cycle opens — usually a few months from now." }}
+                </p>
+                <textarea
+                  v-model="responseNote"
+                  rows="3"
+                  :placeholder="expandedResponse === 'declined'
+                    ? 'Anything you want us to know? (optional)'
+                    : 'A short note for the team. (optional)'"
+                  maxlength="1000"
+                  class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+                />
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <UiButton
+                    :variant="expandedResponse === 'declined' ? 'primary' : 'gradient'"
+                    :disabled="responding"
+                    @click="submitResponse(expandedResponse)"
+                  >
+                    <span class="flex items-center gap-2">
+                      <Icon
+                        :icon="responding ? 'lucide:loader-2' : (expandedResponse === 'declined' ? 'lucide:x' : 'lucide:clock')"
+                        width="16"
+                        :class="responding ? 'animate-spin' : ''"
+                      />
+                      {{ responding
+                        ? 'Sending…'
+                        : (expandedResponse === 'declined' ? 'Confirm decline' : 'Confirm defer') }}
+                    </span>
+                  </UiButton>
+                  <button
+                    type="button"
+                    class="text-sm font-semibold text-ink/60 hover:text-ink focus-ring-brand rounded-sm px-3 py-2"
+                    @click="closeResponsePanel"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+              <p
+                v-if="respondError"
+                role="alert"
+                class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0"
+              >
+                {{ respondError }}
+              </p>
+            </template>
+
+            <!-- (1) No response yet — three CTAs -->
+            <template v-else>
+              <p class="text-sm text-ink/85 leading-relaxed m-0">
+                Confirm you want the offered spot so we can place you in a cohort.
+              </p>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
+                <UiButton
+                  variant="gradient"
+                  :disabled="responding"
+                  @click="submitResponse('accepted')"
+                >
+                  <span class="flex items-center gap-2">
+                    <Icon
+                      :icon="responding ? 'lucide:loader-2' : 'lucide:check'"
+                      width="16"
+                      :class="responding ? 'animate-spin' : ''"
+                    />
+                    {{ responding ? 'Confirming…' : 'Accept your spot' }}
+                  </span>
+                </UiButton>
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-ink/60 hover:text-amber-700 focus-ring-brand rounded-sm px-3 py-2"
+                  @click="openResponsePanel('deferred')"
+                >
+                  Defer to next cycle
+                </button>
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-ink/60 hover:text-rose-700 focus-ring-brand rounded-sm px-3 py-2"
+                  @click="openResponsePanel('declined')"
+                >
+                  Decline the offer
+                </button>
+              </div>
+              <p
+                v-if="respondError"
+                role="alert"
+                class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0"
+              >
+                {{ respondError }}
               </p>
             </template>
           </div>
