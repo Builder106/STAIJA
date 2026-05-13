@@ -61,10 +61,13 @@ service cloud.firestore {
 
       // Users can update their own profile (except role). updatedAt is
       // allowed because DatabaseService.updateUserProfile stamps it on
-      // every write.
+      // every write. mentorBio + mentorAvailability are open to every
+      // owner (not just mentors) so a future signup who anticipates
+      // becoming a mentor can fill them in early — they're inert on
+      // non-mentor accounts.
       allow update: if isOwner(userId) &&
                    request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['displayName', 'photoURL', 'avatarSlot', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'updatedAt']);
+                   .hasOnly(['displayName', 'photoURL', 'avatarSlot', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'mentorBio', 'mentorAvailability', 'updatedAt']);
 
       // Only admins can create users with roles
       allow create: if hasRole('admin') ||

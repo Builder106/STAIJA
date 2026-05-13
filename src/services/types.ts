@@ -82,6 +82,14 @@ export interface UserProfile {
   // (uploaded photo wins over picked slot wins over seed).
   avatarSlot?: number | null
   bio?: string
+  /** Mentor-specific profile fields, captured optionally at invite-
+   *  consume time and editable later from account settings. Empty
+   *  strings on non-mentor users; the consume flow only writes them
+   *  when populated. Kept on UserProfile (rather than a separate
+   *  `mentors/` collection) so the existing user-doc reads in the
+   *  admin / cohort UIs pick them up without an extra round-trip. */
+  mentorBio?: string
+  mentorAvailability?: string
   role: UserRole
   createdAt: Date
   updatedAt: Date
@@ -507,4 +515,11 @@ export interface MentorInvite {
    *  insensitive). Without this, anyone with the URL can claim the
    *  invite — fine for trusted forwards, risky if the link leaks. */
   email?: string
+  /** Set true when staff revokes the invite from the admin UI before
+   *  it's been consumed. Consume rejects revoked tokens with a clear
+   *  message. Once revoked, the row is read-only — to "un-revoke"
+   *  staff just mints a fresh invite. */
+  revoked?: boolean
+  revokedAt?: number
+  revokedBy?: string
 }

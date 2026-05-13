@@ -17,8 +17,10 @@ import {
   type UserRole,
   type AuditLog,
 } from '../../services/firebase'
-import { auth, functions } from '../../config/firebase'
+import { collection, getDocs, orderBy, query, limit as fsLimit } from 'firebase/firestore'
+import { auth, db, functions } from '../../config/firebase'
 import { useAuth } from '../../composables/useAuth'
+import type { MentorInvite } from '../../services/types'
 
 interface EnrichedUser {
   uid: string
@@ -59,29 +61,36 @@ const showInviteModal = ref(false)
 const inviteNote = ref('')
 const inviteEmail = ref('')
 const inviteExpiresInDays = ref<number | null>(30)
+const inviteCount = ref<number>(1)
 const inviteSubmitting = ref(false)
 const inviteError = ref<string | null>(null)
-const inviteResult = ref<{ url: string; expiresAt: number } | null>(null)
-const inviteCopied = ref(false)
+/** Array because bulk minting returns N invites — single-mint is
+ *  `inviteResults.value.length === 1`, which collapses to the same
+ *  UI shape (one row, one Copy button) for the common case. */
+const inviteResults = ref<Array<{ url: string; expiresAt: number }>>([])
+/** Per-URL copy-feedback state. Keys are the URLs themselves so we
+ *  don't need to track index → URL separately. */
+const copiedFlags = ref<Record<string, boolean>>({})
+const copiedAll = ref(false)
 
 function openInviteModal() {
   inviteNote.value = ''
   inviteEmail.value = ''
   inviteExpiresInDays.value = 30
+  inviteCount.value = 1
   inviteError.value = null
-  inviteResult.value = null
-  inviteCopied.value = false
+  inviteResults.value = []
+  copiedFlags.value = {}
+  copiedAll.value = false
   showInviteModal.value = true
 }
 
 function closeInviteModal() {
   showInviteModal.value = false
-  // Reset after the close-transition would have run, so a quick
-  // re-open doesn't briefly show the previous result.
   setTimeout(() => {
     inviteNote.value = ''
     inviteEmail.value = ''
-    inviteResult.value = null
+    inviteResults.value = []
     inviteError.value = null
   }, 200)
 }
@@ -92,15 +101,27 @@ async function submitInvite() {
   inviteError.value = null
   try {
     const fn = httpsCallable<
-      { note?: string; email?: string; expiresInDays?: number },
-      { token: string; url: string; expiresAt: number }
+      { note?: string; email?: string; expiresInDays?: number; count?: number },
+      { invites: Array<{ token: string; url: string; expiresAt: number }> }
     >(functions, 'createMentorInvite')
     const res = await fn({
       note: inviteNote.value.trim() || undefined,
-      email: inviteEmail.value.trim() || undefined,
+      // Email restriction is ignored server-side when count > 1, but
+      // we still send it for the single-invite case where staff
+      // wants to lock to a specific recipient.
+      email: inviteCount.value === 1 && inviteEmail.value.trim()
+        ? inviteEmail.value.trim()
+        : undefined,
       expiresInDays: inviteExpiresInDays.value ?? undefined,
+      count: inviteCount.value,
     })
-    inviteResult.value = { url: res.data.url, expiresAt: res.data.expiresAt }
+    inviteResults.value = res.data.invites.map((i) => ({
+      url: i.url,
+      expiresAt: i.expiresAt,
+    }))
+    // Reload the pending-invites table so the newly minted rows show
+    // up immediately without a manual refresh.
+    void loadMentorInvites()
   } catch (err) {
     inviteError.value = err instanceof Error ? err.message : 'Could not mint invite.'
   } finally {
@@ -108,18 +129,107 @@ async function submitInvite() {
   }
 }
 
-async function copyInviteLink() {
-  if (!inviteResult.value) return
+async function copyInviteLink(url: string) {
   try {
-    await navigator.clipboard.writeText(inviteResult.value.url)
-    inviteCopied.value = true
-    setTimeout(() => { inviteCopied.value = false }, 1500)
+    await navigator.clipboard.writeText(url)
+    copiedFlags.value = { ...copiedFlags.value, [url]: true }
+    setTimeout(() => {
+      copiedFlags.value = { ...copiedFlags.value, [url]: false }
+    }, 1500)
   } catch {
-    // Clipboard write can fail under strict permissions / older
-    // browsers. Show a passive hint instead of throwing — the URL
-    // is already visible in the input above so staff can hand-copy.
     inviteError.value = "Couldn't copy automatically — select the URL and copy by hand."
   }
+}
+
+/** "Copy all" packs the URLs into a newline-separated string —
+ *  suitable for pasting into an email, a Slack message, a spreadsheet
+ *  cell. Falls back to individual-copy errors silently; the per-row
+ *  Copy buttons are the recovery path. */
+async function copyAllInviteLinks() {
+  if (inviteResults.value.length === 0) return
+  try {
+    await navigator.clipboard.writeText(inviteResults.value.map((i) => i.url).join('\n'))
+    copiedAll.value = true
+    setTimeout(() => { copiedAll.value = false }, 1500)
+  } catch {
+    inviteError.value = "Couldn't copy automatically — copy each link by hand."
+  }
+}
+
+// Pending-invites table state. Loaded on mount + after each mint /
+// revoke so the staff doesn't have to manually refresh. Caps at 50
+// recent rows; older invites are still queryable via Firestore
+// Console if needed, but the operational surface is "recent
+// pending + recently-consumed", not the full history.
+type InviteRow = MentorInvite & { id: string; status: 'pending' | 'consumed' | 'expired' | 'revoked' }
+const mentorInvites = ref<InviteRow[]>([])
+const mentorInvitesLoading = ref(false)
+const revokingTokens = ref<Set<string>>(new Set())
+
+function inviteStatus(invite: MentorInvite): InviteRow['status'] {
+  if (invite.revoked === true) return 'revoked'
+  if (invite.consumed === true) return 'consumed'
+  if (typeof invite.expiresAt === 'number' && invite.expiresAt < Date.now()) return 'expired'
+  return 'pending'
+}
+
+async function loadMentorInvites() {
+  mentorInvitesLoading.value = true
+  try {
+    const q = query(
+      collection(db, 'mentorInvites'),
+      orderBy('createdAt', 'desc'),
+      fsLimit(50),
+    )
+    const snap = await getDocs(q)
+    mentorInvites.value = snap.docs.map((d) => {
+      const data = d.data() as MentorInvite
+      return { ...data, id: d.id, status: inviteStatus(data) }
+    })
+  } catch (err) {
+    // Non-fatal — the list is auxiliary; UserManagement still
+    // functions without it.
+    console.warn('[UserManagement] loadMentorInvites failed', err)
+    mentorInvites.value = []
+  } finally {
+    mentorInvitesLoading.value = false
+  }
+}
+
+async function revokeInvite(token: string) {
+  if (revokingTokens.value.has(token)) return
+  revokingTokens.value = new Set([...revokingTokens.value, token])
+  try {
+    const fn = httpsCallable<
+      { token: string },
+      { ok: true; changed: boolean }
+    >(functions, 'revokeMentorInvite')
+    await fn({ token })
+    await loadMentorInvites()
+  } catch (err) {
+    console.warn('[UserManagement] revokeMentorInvite failed', err)
+  } finally {
+    const next = new Set(revokingTokens.value)
+    next.delete(token)
+    revokingTokens.value = next
+  }
+}
+
+function formatInviteDate(ms: number | undefined): string {
+  if (!ms) return '—'
+  return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+/** Rebuild the public invite URL from a token. The originally-minted
+ *  URL is returned in the createMentorInvite response (and we still
+ *  use that for fresh mints), but the pending-invites list reads the
+ *  stored doc and re-assembles the URL client-side from the
+ *  document's token. Using window.location.origin keeps preview /
+ *  dev deploys honest — a staging environment shouldn't copy
+ *  production URLs out of staff's clipboard. */
+function inviteUrlFor(token: string): string {
+  if (typeof window === 'undefined') return `/invite/${token}`
+  return `${window.location.origin}/invite/${token}`
 }
 const changeReason = ref('')
 const roleChanging = ref(false)
@@ -301,7 +411,10 @@ function getActivityText(log: AuditLog) {
   return 'Activity logged'
 }
 
-onMounted(loadUsers)
+onMounted(() => {
+  loadUsers()
+  void loadMentorInvites()
+})
 </script>
 
 <template>
@@ -550,6 +663,99 @@ onMounted(loadUsers)
             </div>
           </div>
         </UiCard>
+
+        <!-- Pending mentor invites. Top 50 recent invites across all
+             states (pending / consumed / expired / revoked) — covers
+             the "did I send that link?" and "did they ever click?"
+             operational questions without a full history view. -->
+        <UiCard class="overflow-hidden bg-surface">
+          <div class="px-5 py-4 flex items-center justify-between border-b hairline-ink">
+            <div>
+              <h2 class="font-display text-lg font-semibold m-0 text-ink">Mentor invites</h2>
+              <p class="text-xs text-ink/55 m-0 mt-1">Most recent 50. Refreshes after mint or revoke.</p>
+            </div>
+            <button
+              type="button"
+              class="text-xs font-semibold text-brand-violet hover:underline focus-ring-brand rounded-sm"
+              :disabled="mentorInvitesLoading"
+              @click="loadMentorInvites"
+            >
+              {{ mentorInvitesLoading ? 'Loading…' : 'Refresh' }}
+            </button>
+          </div>
+          <div v-if="mentorInvites.length === 0 && !mentorInvitesLoading" class="px-5 py-10 text-center text-sm text-ink/55">
+            No invites yet. Mint one via "Invite a mentor" above.
+          </div>
+          <div v-else-if="mentorInvitesLoading && mentorInvites.length === 0" class="px-5 py-10 text-center text-sm text-ink/55">
+            <Icon icon="lucide:loader-2" width="20" class="animate-spin inline" />
+          </div>
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-ink/[0.03] text-ink/60">
+                <tr>
+                  <th class="text-left font-semibold px-5 py-3">Status</th>
+                  <th class="text-left font-semibold px-5 py-3">Issued by</th>
+                  <th class="text-left font-semibold px-5 py-3">Issued</th>
+                  <th class="text-left font-semibold px-5 py-3">Expires</th>
+                  <th class="text-left font-semibold px-5 py-3">Restricted to</th>
+                  <th class="text-left font-semibold px-5 py-3">Note</th>
+                  <th class="text-right font-semibold px-5 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="invite in mentorInvites"
+                  :key="invite.id"
+                  class="border-t hairline-ink hover:bg-ink/[0.015]"
+                >
+                  <td class="px-5 py-3">
+                    <span
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize"
+                      :class="{
+                        'bg-brand-violet/10 text-brand-violet': invite.status === 'pending',
+                        'bg-emerald-50 text-emerald-700': invite.status === 'consumed',
+                        'bg-amber-50 text-amber-700': invite.status === 'expired',
+                        'bg-rose-50 text-rose-700': invite.status === 'revoked',
+                      }"
+                    >
+                      {{ invite.status }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3 text-ink/80 text-xs">{{ invite.createdByName }}</td>
+                  <td class="px-5 py-3 text-ink/70 text-xs whitespace-nowrap">{{ formatInviteDate(invite.createdAt) }}</td>
+                  <td class="px-5 py-3 text-ink/70 text-xs whitespace-nowrap">{{ formatInviteDate(invite.expiresAt) }}</td>
+                  <td class="px-5 py-3 text-ink/70 text-xs">{{ invite.email ?? '—' }}</td>
+                  <td class="px-5 py-3 text-ink/70 text-xs max-w-[16rem] truncate">{{ invite.note ?? '—' }}</td>
+                  <td class="px-5 py-3 text-right whitespace-nowrap">
+                    <button
+                      v-if="invite.status === 'pending'"
+                      type="button"
+                      class="text-xs font-medium text-brand-violet hover:underline mr-3"
+                      @click="copyInviteLink(inviteUrlFor(invite.id))"
+                    >
+                      {{ copiedFlags[inviteUrlFor(invite.id)] ? 'Copied' : 'Copy link' }}
+                    </button>
+                    <button
+                      v-if="invite.status === 'pending'"
+                      type="button"
+                      class="text-xs font-medium text-rose-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      :disabled="revokingTokens.has(invite.id)"
+                      @click="revokeInvite(invite.id)"
+                    >
+                      {{ revokingTokens.has(invite.id) ? 'Revoking…' : 'Revoke' }}
+                    </button>
+                    <span
+                      v-else-if="invite.status === 'consumed'"
+                      class="text-xs text-ink/50"
+                    >
+                      claimed
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </UiCard>
       </Container>
     </Section>
 
@@ -796,53 +1002,77 @@ onMounted(loadUsers)
             aria-modal="true"
             class="bg-surface rounded-2xl shadow-xl max-w-md w-full border hairline-ink"
           >
-            <!-- Result state -->
-            <template v-if="inviteResult">
+            <!-- Result state. One row per minted invite — single-mint
+                 collapses to a single row, bulk-mint renders N rows
+                 with per-row Copy and a single "Copy all" affordance
+                 at the bottom. -->
+            <template v-if="inviteResults.length > 0">
               <div class="p-6 flex flex-col gap-5">
                 <div class="flex items-start gap-3">
                   <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
                     <Icon icon="lucide:check-circle-2" width="20" />
                   </div>
                   <div>
-                    <Heading :level="3" class="!text-lg !m-0">Invite link ready</Heading>
+                    <Heading :level="3" class="!text-lg !m-0">
+                      {{ inviteResults.length === 1 ? 'Invite link ready' : `${inviteResults.length} invite links ready` }}
+                    </Heading>
                     <p class="text-sm text-ink/60 m-0 mt-1">
-                      Copy this and send it to your mentor. Single-use,
-                      expires {{ new Date(inviteResult.expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}.
+                      Each is single-use, expiring {{ new Date(inviteResults[0].expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}.
                     </p>
                   </div>
                 </div>
-                <div class="flex gap-2">
-                  <input
-                    type="text"
-                    :value="inviteResult.url"
-                    readonly
-                    class="flex-1 border hairline-ink rounded-lg px-3 py-2 text-sm font-mono bg-paper text-ink/85 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                    @focus="($event.target as HTMLInputElement).select()"
-                  />
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors focus-ring-brand"
-                    :class="inviteCopied
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-brand-violet/10 text-brand-violet border-brand-violet/30 hover:bg-brand-violet/15'"
-                    @click="copyInviteLink"
+                <div class="flex flex-col gap-2 max-h-72 overflow-y-auto">
+                  <div
+                    v-for="invite in inviteResults"
+                    :key="invite.url"
+                    class="flex gap-2"
                   >
-                    <Icon
-                      :icon="inviteCopied ? 'lucide:check' : 'lucide:clipboard'"
-                      width="14"
+                    <input
+                      type="text"
+                      :value="invite.url"
+                      readonly
+                      class="flex-1 border hairline-ink rounded-lg px-3 py-2 text-sm font-mono bg-paper text-ink/85 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                      @focus="($event.target as HTMLInputElement).select()"
                     />
-                    {{ inviteCopied ? 'Copied' : 'Copy' }}
-                  </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors focus-ring-brand shrink-0"
+                      :class="copiedFlags[invite.url]
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-brand-violet/10 text-brand-violet border-brand-violet/30 hover:bg-brand-violet/15'"
+                      @click="copyInviteLink(invite.url)"
+                    >
+                      <Icon
+                        :icon="copiedFlags[invite.url] ? 'lucide:check' : 'lucide:clipboard'"
+                        width="14"
+                      />
+                      {{ copiedFlags[invite.url] ? 'Copied' : 'Copy' }}
+                    </button>
+                  </div>
                 </div>
                 <p v-if="inviteError" class="text-xs text-rose-700 m-0">{{ inviteError }}</p>
               </div>
-              <div class="flex justify-end gap-2 px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
-                <UiButton variant="secondary" @click="openInviteModal">
-                  Mint another
-                </UiButton>
-                <UiButton variant="primary" @click="closeInviteModal">
-                  Done
-                </UiButton>
+              <div class="flex justify-between gap-2 px-6 py-4 border-t hairline-ink bg-ink/[0.02]">
+                <button
+                  v-if="inviteResults.length > 1"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 text-sm font-semibold rounded-lg px-3 py-2 border transition-colors focus-ring-brand"
+                  :class="copiedAll
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-brand-violet/10 text-brand-violet border-brand-violet/30 hover:bg-brand-violet/15'"
+                  @click="copyAllInviteLinks"
+                >
+                  <Icon :icon="copiedAll ? 'lucide:check' : 'lucide:copy'" width="14" />
+                  {{ copiedAll ? 'All copied' : 'Copy all' }}
+                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                  <UiButton variant="secondary" @click="openInviteModal">
+                    Mint more
+                  </UiButton>
+                  <UiButton variant="primary" @click="closeInviteModal">
+                    Done
+                  </UiButton>
+                </div>
               </div>
             </template>
 
@@ -872,32 +1102,47 @@ onMounted(loadUsers)
 
                 <div class="flex flex-col gap-2">
                   <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
-                    Restrict to email <span class="text-ink/40 normal-case">(optional)</span>
+                    Restrict to email <span class="text-ink/40 normal-case">(optional, single invite only)</span>
                   </label>
                   <input
                     v-model="inviteEmail"
                     type="email"
+                    :disabled="inviteCount > 1"
                     placeholder="recipient@example.com"
-                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all"
+                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <p class="text-xs text-ink/50 m-0">
-                    Leave blank to let anyone with the link consume it
-                    (useful if they'll sign up with a different address
-                    than you have on file).
+                    {{ inviteCount > 1
+                      ? 'Email restriction only applies when minting a single invite.'
+                      : 'Leave blank to let anyone with the link consume it.' }}
                   </p>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
-                    Expires in (days)
-                  </label>
-                  <input
-                    v-model.number="inviteExpiresInDays"
-                    type="number"
-                    min="1"
-                    max="180"
-                    class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all w-24"
-                  />
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="flex flex-col gap-2">
+                    <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                      How many?
+                    </label>
+                    <input
+                      v-model.number="inviteCount"
+                      type="number"
+                      min="1"
+                      max="50"
+                      class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                      Expires in (days)
+                    </label>
+                    <input
+                      v-model.number="inviteExpiresInDays"
+                      type="number"
+                      min="1"
+                      max="180"
+                      class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all"
+                    />
+                  </div>
                 </div>
 
                 <p v-if="inviteError" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0">

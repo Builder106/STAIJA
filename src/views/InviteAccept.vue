@@ -48,6 +48,13 @@ const accepting = ref(false)
 const acceptError = ref<string | null>(null)
 const accepted = ref(false)
 
+/** Optional profile metadata collected before the consume call.
+ *  Both are skippable — the mentor can fill them in later from
+ *  account settings. The callable trims + caps server-side so
+ *  unsanitised input here is fine. */
+const mentorBioInput = ref('')
+const mentorAvailabilityInput = ref('')
+
 /** Pre-flight read of the invite doc. mentorInvites is `allow get`
  *  for any signed-in user, so this works regardless of role. For
  *  signed-OUT visitors the read fails — we render a CTA to sign in
@@ -115,10 +122,14 @@ async function acceptInvite() {
   acceptError.value = null
   try {
     const fn = httpsCallable<
-      { token: string },
+      { token: string; bio?: string; availability?: string },
       { ok: true; changed: boolean }
     >(functions, 'consumeMentorInvite')
-    await fn({ token: token.value })
+    await fn({
+      token: token.value,
+      bio: mentorBioInput.value.trim() || undefined,
+      availability: mentorAvailabilityInput.value.trim() || undefined,
+    })
     accepted.value = true
     // Tiny delay so the success state paints visibly before we
     // navigate away — bouncing instantly to /mentor would feel
@@ -268,6 +279,38 @@ onMounted(loadInvite)
             </div>
             <div class="text-xs text-ink/50">
               Expires {{ formatDate(invite.expiresAt) }}.
+            </div>
+
+            <!-- Optional profile metadata. Both fields skippable —
+                 nothing requires them up-front; mentor can fill in
+                 later from account settings. The callable trims +
+                 caps server-side so what we send doesn't need
+                 length/format guards here. -->
+            <div class="flex flex-col gap-4 pt-2 mt-2 border-t hairline-ink">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                  What's your area of expertise? <span class="text-ink/40 normal-case">(optional)</span>
+                </label>
+                <textarea
+                  v-model="mentorBioInput"
+                  rows="3"
+                  maxlength="1000"
+                  placeholder="e.g. ML engineer at Spotify, focus on recommender systems and time-series. PhD in stats."
+                  class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+                />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                  When are you available? <span class="text-ink/40 normal-case">(optional)</span>
+                </label>
+                <textarea
+                  v-model="mentorAvailabilityInput"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="e.g. Weeknights after 7pm WAT, 2-3 hours/week. Async messaging works too."
+                  class="border hairline-ink rounded-lg px-3 py-2 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+                />
+              </div>
             </div>
           </UiCard>
           <p

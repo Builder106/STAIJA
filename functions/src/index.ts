@@ -72,7 +72,7 @@ export { respondToOffer } from './applicationAccept'
 // Mentor onboarding via single-use invite tokens. Staff/admin mints a
 // token; the vetted contact opens /invite/<token> and gets role=mentor
 // on consume. See mentorInvites.ts.
-export { createMentorInvite, consumeMentorInvite } from './mentorInvites'
+export { createMentorInvite, consumeMentorInvite, revokeMentorInvite } from './mentorInvites'
 
 // Cohort graduation: marks all active enrollments in a cohort
 // 'completed' and transitions qualifying students to role='alumni'
