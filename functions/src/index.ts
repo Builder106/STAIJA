@@ -63,6 +63,11 @@ export { lmsAssetUpload } from './lmsAssetUpload'
 // `documents` field with the final paths. See applicationFinalize.ts.
 export { finalizeApplicationFiles } from './applicationFinalize'
 
+// Applicant-initiated handshake: when staff accepts the application,
+// the applicant clicks "Accept your spot" on their Status page and
+// this callable records the confirmation. See applicationAccept.ts.
+export { acceptOffer } from './applicationAccept'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

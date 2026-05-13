@@ -79,11 +79,28 @@ export const enrollStudent = onCall<EnrollInput>(
       mentorPool?: string[]
     }
 
-    const studentSnap = await db.collection('users').doc(studentId).get()
+    const studentRef = db.collection('users').doc(studentId)
+    const studentSnap = await studentRef.get()
     if (!studentSnap.exists) {
       throw new HttpsError('not-found', `Student ${studentId} not found.`)
     }
     const student = studentSnap.data() as { email?: string; displayName?: string; role?: string }
+
+    // Role transition. Until now, enrolling an applicant didn't change
+    // their role — they stayed `applicant` even after landing in a
+    // cohort, which meant their dashboard kept showing the post-apply
+    // queue surface instead of the LMS, and the role-gated routes
+    // (e.g. /learn) silently denied them. We flip to `student` here
+    // so the enrollment is a complete state transition: read access
+    // to lessons / sessions / mentor surfaces unlocks in one server
+    // round-trip. Idempotent against re-enrollment because we only
+    // bump when the current role is applicant.
+    if (student.role === 'applicant') {
+      await studentRef.update({
+        role: 'student',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    }
 
     // Pick a mentor.
     let resolvedMentorId = mentorId

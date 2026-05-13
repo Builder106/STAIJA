@@ -165,6 +165,19 @@ export interface Application {
     institution: string
     relationship: string
   }[]
+  /**
+   * Whether the accepted applicant has actively confirmed they want
+   * to take the offered spot. Stays `false` / undefined until the
+   * applicant clicks "Accept your spot" on their detail page, which
+   * fires the `acceptOffer` callable. Used by the admin queue to
+   * distinguish "we made the offer" from "the offer was accepted and
+   * we can enroll them now" — staff can still enroll either way, but
+   * the indicator lets them triage the ready cohort intake.
+   */
+  spotAccepted?: boolean
+  /** Ms epoch when the applicant confirmed the spot. Plain primitive
+   *  (not Firestore Timestamp) so the field round-trips cleanly. */
+  spotAcceptedAt?: number
   documents?: {
     cv?: string
     transcript?: string

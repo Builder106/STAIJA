@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
@@ -12,6 +13,8 @@ import UiSelect from '../../components/ui/UiSelect.vue'
 import { CohortService, enrollStudent } from '../../services/learn'
 import { DatabaseService } from '../../services/database'
 import type { Cohort, UserProfile } from '../../services/types'
+
+const route = useRoute()
 
 const cohorts = ref<Cohort[]>([])
 const candidates = ref<UserProfile[]>([])
@@ -47,6 +50,17 @@ async function load() {
     candidates.value = allUsers.filter(
       (u) => u.role === 'applicant' || u.role === 'student',
     )
+    // Pre-fill from ?applicant=<uid> on the URL. AdminApplications'
+    // "Place in cohort" button hands the student off via this query
+    // param so staff don't have to scroll through the whole candidate
+    // list looking for the person they just accepted. Only honour
+    // values that actually exist in the candidate set — a stale uid
+    // from a copy-pasted URL silently no-ops instead of locking the
+    // picker to nothing.
+    const presetApplicant = route.query.applicant
+    if (typeof presetApplicant === 'string' && candidates.value.some((u) => u.uid === presetApplicant)) {
+      selectedStudentId.value = presetApplicant
+    }
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Failed to load.'
   } finally {

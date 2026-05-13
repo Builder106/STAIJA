@@ -222,6 +222,17 @@ function openApplication(applicationId: string) {
   router.push(`/admin/applications/${applicationId}`)
 }
 
+/** Route to the manual-enroll surface with the applicant's uid
+ *  pre-filled. The EnrollStudent page reads `?applicant=<uid>` on
+ *  mount and locks the student picker to that uid, so staff can pick
+ *  a cohort + mentor without hunting through the full candidate list.
+ *  Available on every accepted application — staff can still enroll
+ *  before the applicant explicitly accepts, but the spot-confirmed
+ *  indicator on the row is the visual cue for "this one's ready". */
+function placeInCohort(userId: string) {
+  router.push({ path: '/admin/enroll', query: { applicant: userId } })
+}
+
 /** CSV export of the currently-filtered list. Quotes every cell so
  *  commas inside research interests / names don't corrupt the
  *  column boundaries — the legacy export joined `researchInterests`
@@ -501,10 +512,22 @@ onMounted(loadApplications)
                   </td>
                   <td class="p-4">
                     <span
-                      class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
+                      class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
                       :class="STATUS_META[app.status]?.pill"
                     >
                       {{ STATUS_META[app.status]?.label || app.status }}
+                      <!-- Spot-confirmed indicator. Only renders on
+                           accepted rows where the applicant has fired
+                           the acceptOffer callable. Signals to staff
+                           which accepted apps are ready for cohort
+                           assignment without an extra click. -->
+                      <Icon
+                        v-if="app.status === 'accepted' && app.spotAccepted"
+                        icon="lucide:check"
+                        width="12"
+                        class="text-emerald-700"
+                        :aria-label="'Applicant confirmed their spot'"
+                      />
                     </span>
                   </td>
                   <td class="p-4 text-sm text-ink/75 whitespace-nowrap">
@@ -513,15 +536,26 @@ onMounted(loadApplications)
                   <td class="p-4 text-sm text-ink/65 max-w-[12rem] truncate">
                     {{ shortInterests(app.researchInterests) }}
                   </td>
-                  <td class="p-4 text-right" @click.stop>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-violet hover:underline focus-ring-brand rounded-sm"
-                      @click="openApplication(app.id!)"
-                    >
-                      Open
-                      <Icon icon="lucide:arrow-right" width="14" />
-                    </button>
+                  <td class="p-4 text-right whitespace-nowrap" @click.stop>
+                    <div class="inline-flex items-center gap-4">
+                      <button
+                        v-if="app.status === 'accepted'"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:underline focus-ring-brand rounded-sm"
+                        @click="placeInCohort(app.userId)"
+                      >
+                        <Icon icon="lucide:user-plus" width="14" />
+                        Place in cohort
+                      </button>
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-violet hover:underline focus-ring-brand rounded-sm"
+                        @click="openApplication(app.id!)"
+                      >
+                        Open
+                        <Icon icon="lucide:arrow-right" width="14" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>

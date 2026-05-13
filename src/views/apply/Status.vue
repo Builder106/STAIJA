@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
 import Heading from '../../components/ui/Heading.vue'
@@ -10,6 +11,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import { DatabaseService } from '../../services/database'
+import { functions } from '../../config/firebase'
 import type { Application } from '../../services/types'
 
 const route = useRoute()
@@ -137,6 +139,37 @@ const decisionMeta = computed(() => {
     cardClass: '!border-rose-200 bg-rose-50/40',
   }
 })
+
+// "Accept your spot" CTA state. Only meaningful for status='accepted'
+// applications; renders the button when the applicant hasn't yet
+// confirmed, and a "confirmed" state with the confirmation date once
+// they have. The `acceptOffer` callable does the actual write
+// server-side via admin SDK; we re-read the doc afterward so the UI
+// flips to the confirmed state without an optimistic-update guess.
+const accepting = ref(false)
+const acceptError = ref<string | null>(null)
+
+async function acceptSpot() {
+  const id = application.value?.id ?? (route.params.id as string)
+  if (!id || accepting.value) return
+  accepting.value = true
+  acceptError.value = null
+  try {
+    const fn = httpsCallable<
+      { applicationId: string },
+      { ok: true; spotAcceptedAt: number }
+    >(functions, 'acceptOffer')
+    await fn({ applicationId: id })
+    // Re-fetch so the card flips to the "spot confirmed" state with
+    // the server-authoritative timestamp instead of an optimistic
+    // local guess.
+    await load()
+  } catch (err) {
+    acceptError.value = err instanceof Error ? err.message : 'Could not confirm your spot. Try again.'
+  } finally {
+    accepting.value = false
+  }
+}
 
 interface ReferenceWithStatus {
   name: string
@@ -266,6 +299,66 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
             :class="application.feedback ? 'mt-4 pt-4 border-t hairline-ink' : ''"
           >
             Decision sent {{ formatDate(toDate(application.reviewedAt) ?? undefined) }}
+          </div>
+
+          <!-- Accept-your-spot handshake. Only renders for accepted
+               applications, and only when the applicant hasn't yet
+               confirmed. After they confirm, the next branch swaps
+               in a "spot accepted" state so the affordance isn't a
+               re-clickable button forever. -->
+          <div
+            v-if="application.status === 'accepted'"
+            class="mt-5 pt-5 border-t hairline-ink flex flex-col gap-3"
+          >
+            <template v-if="!application.spotAccepted">
+              <p class="text-sm text-ink/85 leading-relaxed m-0">
+                Confirm you want the offered spot so we can place you in a cohort.
+              </p>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <UiButton
+                  variant="gradient"
+                  :disabled="accepting"
+                  @click="acceptSpot"
+                >
+                  <span class="flex items-center gap-2">
+                    <Icon
+                      :icon="accepting ? 'lucide:loader-2' : 'lucide:check'"
+                      width="16"
+                      :class="accepting ? 'animate-spin' : ''"
+                    />
+                    {{ accepting ? 'Confirming…' : 'Accept your spot' }}
+                  </span>
+                </UiButton>
+                <span class="text-xs text-ink/55">
+                  Need more time?
+                  <a
+                    href="mailto:hello@staija.org"
+                    class="text-brand-violet hover:underline"
+                  >
+                    Email us.
+                  </a>
+                </span>
+              </div>
+              <p
+                v-if="acceptError"
+                role="alert"
+                class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 m-0"
+              >
+                {{ acceptError }}
+              </p>
+            </template>
+            <template v-else>
+              <div class="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                <Icon icon="lucide:check-circle-2" width="18" />
+                Spot accepted<span v-if="application.spotAcceptedAt" class="font-normal text-ink/60">
+                  · {{ formatDate(new Date(application.spotAcceptedAt)) }}
+                </span>
+              </div>
+              <p class="text-sm text-ink/70 leading-relaxed m-0">
+                We'll be in touch about your cohort and mentor pairing. Watch your
+                inbox over the next few days.
+              </p>
+            </template>
           </div>
         </UiCard>
 
