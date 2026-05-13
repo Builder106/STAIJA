@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
@@ -272,6 +272,60 @@ const sortedApplications = computed(() =>
 
 const hasApplications = computed(() => applications.value.length > 0)
 
+/** Map the `applications` collection's underscored program key to the
+ *  hyphenated draft slug. The two collections were authored against
+ *  slightly different naming conventions; this is the shim. */
+function applicationProgramToDraftSlug(p: Application['program']): LocalDraft['slug'] {
+  return p === 'stepup_scholars' ? 'stepup-scholars' : 'dynamerge'
+}
+
+/** Slugs the applicant has already SUBMITTED an application for. A
+ *  draft for any slug in this set is stale by definition — the user
+ *  can't submit the same program twice, so anything the wizard had
+ *  buffered for that slug shouldn't be offered to "Resume". */
+const submittedSlugs = computed(() => {
+  const set = new Set<LocalDraft['slug']>()
+  for (const app of applications.value) {
+    // status === 'draft' is the legacy NewApplication path — those
+    // show up under "Your applications" as a Draft row and don't
+    // shadow the wizard's separate draft surface. Only submitted-or-
+    // later applications hide the wizard draft.
+    if (app.status !== 'draft') set.add(applicationProgramToDraftSlug(app.program))
+  }
+  return set
+})
+
+/** Drafts safe to render to the user. Filters out any slug already
+ *  covered by a submitted application. Without this filter, a draft
+ *  whose `savedAt` happened to be newer than the cross-device
+ *  submit-tombstone would auto-resurrect on this device's reconcile
+ *  (saveCloudDraft sets __deleted: false on every write), leaving the
+ *  applicant looking at both a "Drafts in progress" card AND a
+ *  matching "Submitted" application card for the same program. */
+const visibleDrafts = computed(() =>
+  localDrafts.value.filter((d) => !submittedSlugs.value.has(d.slug)),
+)
+
+/** When submittedSlugs grows, evict the matching local cache entry
+ *  AND tombstone the cloud draft. Without the eviction, the next
+ *  reconcile would auto-sync the local entry back up and resurrect
+ *  the cross-device tombstone — the cycle that produced the
+ *  "draft-and-submitted-at-the-same-time" UI in the first place.
+ *  Best-effort: failures here are caught by the next reconcile (and
+ *  next session's mount), not user-visible. */
+watch(submittedSlugs, (next) => {
+  if (next.size === 0) return
+  const uid = AuthService.getCurrentUser()?.uid
+  if (!uid) return
+  for (const d of localDrafts.value) {
+    if (!next.has(d.slug)) continue
+    try {
+      window.localStorage.removeItem(`staija.draft.apply.${d.slug}.${uid}`)
+    } catch { /* private mode / quota — fine */ }
+    void deleteCloudDraft(uid, d.slug)
+  }
+})
+
 // Held by the snapshot subscription so we can tear it down on
 // unmount. Without the cleanup the listener leaks across route
 // changes — the Firestore stream keeps firing into a detached
@@ -446,7 +500,7 @@ onBeforeUnmount(() => {
       <div class="flex flex-col gap-3 mb-12">
         <Eyebrow class="text-brand-violet">Applicant dashboard</Eyebrow>
         <Heading :level="1">Hi, <span class="text-brand-violet">{{ firstName }}</span>.</Heading>
-        <Body v-if="!loading && !hasApplications && localDrafts.length === 0" class="text-ink/70 max-w-xl">
+        <Body v-if="!loading && !hasApplications && visibleDrafts.length === 0" class="text-ink/70 max-w-xl">
           You haven't started an application yet. Pick a program below to begin —
           it takes about 20 minutes and your progress saves automatically.
         </Body>
@@ -499,11 +553,11 @@ onBeforeUnmount(() => {
            aren't Firestore docs yet — without this card the dashboard
            reads as "empty" while the applicant's draft sits invisibly
            in browser storage. -->
-      <div v-if="!loading && !error && localDrafts.length > 0" class="mb-10">
+      <div v-if="!loading && !error && visibleDrafts.length > 0" class="mb-10">
         <Eyebrow class="text-brand-violet mb-4 block">Drafts in progress</Eyebrow>
         <div class="flex flex-col gap-4">
           <div
-            v-for="d in localDrafts"
+            v-for="d in visibleDrafts"
             :key="d.slug"
             class="block group focus-ring-brand rounded-2xl"
           >
