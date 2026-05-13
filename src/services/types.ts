@@ -196,7 +196,7 @@ export interface Application {
    * Set by `onApplicationStatusChange` when Mailgun rejects the
    * applicant-facing email. Cleared automatically on a successful
    * retry. Surfaces a "Retry email" banner on the admin application
-   * view ([AdminViewApplication.vue](../views/admin/AdminViewApplication.vue))
+   * view ([ReviewApplication.vue](../views/admin/ReviewApplication.vue))
    * which calls the `retryApplicationEmail` callable.
    */
   lastEmailFailure?: {

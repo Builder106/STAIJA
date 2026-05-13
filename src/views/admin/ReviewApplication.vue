@@ -21,6 +21,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
 import Heading from '../../components/ui/Heading.vue'
@@ -31,6 +32,7 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 import { StorageService } from '../../services/storageService'
+import { functions } from '../../config/firebase'
 import { resolveAvatarSrc } from '../../services/avatar'
 
 const router = useRouter()
@@ -48,6 +50,17 @@ const reviewForm = ref({
   status: 'submitted' as 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected',
   feedback: '',
 })
+
+// Email-failure retry state. `lastEmailFailure` on the application doc
+// is set by onApplicationStatusChange when Mailgun rejects the
+// applicant-facing send (typo'd address, deliverability hold, etc.).
+// The banner lets staff fix the failure inline without going to the
+// Firebase Console; clicking Retry re-derives the email from the
+// current status so a typo fixed since the failure picks up
+// automatically.
+const retrying = ref(false)
+const retryMessage = ref('')
+const retryTone = ref<'success' | 'error'>('success')
 
 /** Resolved Storage download URLs, keyed by logical document kind
  *  (`transcript`, `id`, `showcase`, `recommendationLetter`, or
@@ -149,6 +162,41 @@ const documentRows = computed<DocumentRow[]>(() => {
   }
   return rows
 })
+
+function failureKindLabel(kind: 'submitted' | 'accepted' | 'rejected' | string): string {
+  if (kind === 'submitted') return 'Submission-confirmation'
+  if (kind === 'accepted') return 'Acceptance'
+  if (kind === 'rejected') return 'Status-update'
+  return 'Applicant'
+}
+
+const failureWhen = computed(() => {
+  const d = toDate(application.value?.lastEmailFailure?.attemptedAt)
+  return d ? d.toLocaleString() : ''
+})
+
+async function retryEmail() {
+  if (!application.value?.id || retrying.value) return
+  retrying.value = true
+  retryMessage.value = ''
+  try {
+    const fn = httpsCallable<
+      { applicationId: string },
+      { ok: boolean; kind: string; to: string }
+    >(functions, 'retryApplicationEmail')
+    const res = await fn({ applicationId: application.value.id })
+    retryMessage.value = `Email re-sent to ${res.data.to}.`
+    retryTone.value = 'success'
+    // Reload so the banner clears — lastEmailFailure is deleted on a
+    // successful retry by the Cloud Function.
+    await loadApplication()
+  } catch (err) {
+    retryMessage.value = err instanceof Error ? err.message : 'Retry failed.'
+    retryTone.value = 'error'
+  } finally {
+    retrying.value = false
+  }
+}
 
 function formatDate(date: Date | undefined | null): string {
   if (!date) return 'Not submitted'
@@ -340,6 +388,61 @@ onMounted(loadApplication)
                 </span>
               </div>
             </div>
+          </div>
+        </Container>
+      </Section>
+
+      <!-- Email-failure banner. Fires when the applicant-facing
+           status-update email was rejected by Mailgun. The Retry
+           button calls the same Cloud Function the legacy view used,
+           and the application doc reload after success clears the
+           banner so the reviewer doesn't have to refresh by hand. -->
+      <Section
+        v-if="application.lastEmailFailure"
+        class="!pt-6 !pb-0"
+      >
+        <Container class="max-w-6xl">
+          <div
+            role="status"
+            class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 p-4 sm:p-5 rounded-2xl border border-rose-200 bg-rose-50 text-rose-900"
+          >
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <Icon icon="lucide:mail-x" width="22" class="text-rose-700 mt-0.5 shrink-0" />
+              <div class="flex flex-col gap-1 min-w-0">
+                <div class="text-sm font-semibold">Couldn't email the applicant.</div>
+                <div class="text-sm text-rose-800">
+                  {{ failureKindLabel(application.lastEmailFailure.kind) }} email to
+                  <code class="px-1 py-0.5 rounded bg-rose-100 font-mono text-xs">{{ application.lastEmailFailure.to }}</code>
+                  failed<span v-if="failureWhen"> {{ failureWhen }}</span>.
+                </div>
+                <div class="text-xs font-mono text-rose-700/80 break-words">
+                  {{ application.lastEmailFailure.error }}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              :disabled="retrying"
+              class="shrink-0 self-start sm:self-center inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white bg-rose-700 hover:bg-rose-800 disabled:opacity-50 disabled:cursor-not-allowed focus-ring-brand transition-colors"
+              @click="retryEmail"
+            >
+              <Icon
+                :icon="retrying ? 'lucide:loader-2' : 'lucide:refresh-cw'"
+                width="14"
+                :class="retrying ? 'animate-spin' : ''"
+              />
+              {{ retrying ? 'Retrying…' : 'Retry email' }}
+            </button>
+          </div>
+          <div
+            v-if="retryMessage"
+            role="status"
+            class="mt-3 text-sm rounded-xl px-3 py-2 border"
+            :class="retryTone === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : 'bg-rose-50 border-rose-200 text-rose-900'"
+          >
+            {{ retryMessage }}
           </div>
         </Container>
       </Section>

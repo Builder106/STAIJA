@@ -143,8 +143,7 @@
                 </div>
               </td>
               <td class="actions">
-                <button @click="viewApplication(application.id!)" class="btn-view">View</button>
-                <button @click="reviewApplication(application.id!)" class="btn-review">Review</button>
+                <button @click="openApplication(application.id!)" class="btn-review">Open</button>
               </td>
             </tr>
           </tbody>
@@ -346,12 +345,12 @@ const bulkUpdateStatus = async (status: 'draft' | 'submitted' | 'under_review' |
   }
 }
 
-const viewApplication = (applicationId: string) => {
+// Single navigation handler for the row's action button. The
+// previous "View" and "Review" buttons sent staff to two different
+// surfaces (read-only view vs. decision form) — those surfaces have
+// been merged, so one click goes straight to the unified review page.
+const openApplication = (applicationId: string) => {
   router.push(`/admin/applications/${applicationId}`)
-}
-
-const reviewApplication = (applicationId: string) => {
-  router.push(`/admin/applications/${applicationId}/review`)
 }
 
 const exportApplications = () => {

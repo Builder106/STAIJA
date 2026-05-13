@@ -68,8 +68,15 @@ const routes: RouteRecordRaw[] = [
   // Staff/Admin routes
   { path: '/admin', name: 'admin', component: () => import('../views/Admin.vue'), meta: { title: 'Admin Panel — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
   { path: '/admin/applications', name: 'admin-applications', component: () => import('../views/admin/AdminApplications.vue'), meta: { title: 'Applications Management — STAIJA', requiresAuth: true, permissions: ['view_applications'] } },
-  { path: '/admin/applications/:id', name: 'admin-view-application', component: () => import('../views/admin/AdminViewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
-  { path: '/admin/applications/:id/review', name: 'admin-review-application', component: () => import('../views/admin/ReviewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
+  // The "view" and "review" admin surfaces collapsed into one. The
+  // legacy AdminViewApplication.vue rendered the same data on a
+  // separate /:id route, then required a second click to reach the
+  // decision form at /:id/review — two-step navigation for what's
+  // really one task. ReviewApplication.vue now serves both paths;
+  // /:id/review stays as an alias so any existing bookmarks +
+  // outbound links (e.g. the Admin overview's "Open" links) keep
+  // working without a redirect round-trip.
+  { path: '/admin/applications/:id', name: 'admin-review-application', component: () => import('../views/admin/ReviewApplication.vue'), alias: '/admin/applications/:id/review', meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
   { path: '/admin/programs', name: 'admin-programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
   { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
