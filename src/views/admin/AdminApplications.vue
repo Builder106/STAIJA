@@ -1,248 +1,125 @@
-<template>
-  <div class="admin-applications">
-    <header class="page-header">
-      <div class="header-content">
-        <h1>Application Management</h1>
-        <p class="subtitle">Review and manage all program applications</p>
-      </div>
-      <div class="header-actions">
-        <button @click="exportApplications" class="btn-secondary">Export Data</button>
-      </div>
-    </header>
-
-    <!-- Filters and Search -->
-    <div class="filters-section">
-      <div class="filters-row">
-        <div class="search-box">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search by name, email, or research interests..."
-            class="search-input"
-          />
-        </div>
-        <div class="filter-controls">
-          <UiSelect
-            v-model="statusFilter"
-            :match-width="false"
-            placeholder="All Statuses"
-            :options="[
-              { value: '',             label: 'All Statuses' },
-              { value: 'submitted',    label: 'Submitted' },
-              { value: 'under_review', label: 'Under Review' },
-              { value: 'accepted',     label: 'Accepted' },
-              { value: 'rejected',     label: 'Rejected' },
-            ]"
-          />
-          <UiSelect
-            v-model="programFilter"
-            :match-width="false"
-            placeholder="All Programs"
-            :options="[
-              { value: '',                label: 'All Programs' },
-              { value: 'stepup_scholars', label: 'StepUp Scholars' },
-              { value: 'dynamerge',       label: 'Dynamerge' },
-            ]"
-          />
-          <UiSelect
-            v-model="sortBy"
-            :match-width="false"
-            :options="[
-              { value: 'submittedAt',            label: 'Date Submitted' },
-              { value: 'createdAt',              label: 'Date Created' },
-              { value: 'program',                label: 'Program' },
-              { value: 'status',                 label: 'Status' },
-              { value: 'personalInfo.firstName', label: 'Name' },
-            ]"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Bulk Actions -->
-    <div v-if="selectedApplications.length > 0" class="bulk-actions">
-      <span>{{ selectedApplications.length }} applications selected</span>
-      <div class="bulk-buttons">
-        <button @click="bulkUpdateStatus('under_review')" class="btn-secondary">Mark Under Review</button>
-        <button @click="bulkUpdateStatus('accepted')" class="btn-success">Accept Selected</button>
-        <button @click="bulkUpdateStatus('rejected')" class="btn-danger">Reject Selected</button>
-        <button @click="clearSelection" class="btn-clear">Clear Selection</button>
-      </div>
-    </div>
-
-    <!-- Applications Table -->
-    <div class="applications-container">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading applications...</p>
-      </div>
-
-      <div v-else-if="filteredApplications.length === 0" class="empty-state">
-        <div class="empty-icon"><Icon icon="lucide:clipboard-list" /></div>
-        <h3>No applications found</h3>
-        <p v-if="hasFilters">
-          No applications match your current filters. Try adjusting your search criteria.
-        </p>
-        <p v-else>
-          No applications have been submitted yet.
-        </p>
-      </div>
-
-      <div v-else class="applications-table">
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  :checked="allSelected"
-                  @change="toggleSelectAll"
-                />
-              </th>
-              <th>Applicant</th>
-              <th>Program</th>
-              <th>Status</th>
-              <th>Submitted</th>
-              <th>Research Interests</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="application in filteredApplications"
-              :key="application.id"
-              :class="{ selected: selectedApplications.includes(application.id!) }"
-            >
-              <td>
-                <input
-                  type="checkbox"
-                  :checked="selectedApplications.includes(application.id!)"
-                  @change="toggleSelection(application.id!)"
-                />
-              </td>
-              <td class="applicant-info">
-                <div class="applicant-name">
-                  {{ application.personalInfo.firstName }} {{ application.personalInfo.lastName }}
-                </div>
-                <div class="applicant-email">{{ application.personalInfo.email }}</div>
-              </td>
-              <td>
-                <span class="program-badge">
-                  {{ application.program === 'stepup_scholars' ? 'StepUp Scholars' : 'Dynamerge' }}
-                </span>
-              </td>
-              <td>
-                <span class="status-badge" :class="`status-${application.status}`">
-                  {{ formatStatus(application.status) }}
-                </span>
-              </td>
-              <td>{{ formatDate(application.submittedAt) }}</td>
-              <td>
-                <div class="interests-list">
-                  {{ application.researchInterests.slice(0, 2).join(', ') }}{{ application.researchInterests.length > 2 ? '...' : '' }}
-                </div>
-              </td>
-              <td class="actions">
-                <button @click="openApplication(application.id!)" class="btn-review">Open</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Statistics -->
-    <div v-if="!loading && applications.length > 0" class="statistics-section">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-number">{{ applications.length }}</span>
-          <span class="stat-label">Total Applications</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">{{ submittedCount }}</span>
-          <span class="stat-label">Submitted</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">{{ underReviewCount }}</span>
-          <span class="stat-label">Under Review</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">{{ acceptedCount }}</span>
-          <span class="stat-label">Accepted</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">{{ rejectedCount }}</span>
-          <span class="stat-label">Rejected</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error Message -->
-    <div v-if="error" class="error-message">
-      <p>{{ error }}</p>
-      <button @click="loadApplications" class="btn-primary">Retry</button>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
+/**
+ * Admin application triage surface — the queue staff scan before
+ * drilling into individual reviews.
+ *
+ * The legacy version used the codebase's pre-design-system CSS
+ * vocabulary (--color-primary, --color-secondary, --color-background)
+ * which were never defined as actual tokens, so the Export Data
+ * button rendered as white text on a transparent background, the
+ * Program column's pill rendered as white text on white, and the
+ * Submitted column showed "Invalid Date" because `new Date(timestamp)`
+ * doesn't coerce a Firestore Timestamp object. This rewrite drops the
+ * legacy CSS entirely and uses the same UiCard / UiButton / Section /
+ * status-chip vocabulary the unified review page already uses, so the
+ * two surfaces feel like one product instead of two.
+ */
 import { ref, computed, onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
-import { DatabaseService, AuthService, type Application } from '../../services/firebase'
+import { Icon } from '@iconify/vue'
+import Container from '../../components/ui/Container.vue'
+import Section from '../../components/ui/Section.vue'
+import Heading from '../../components/ui/Heading.vue'
+import Body from '../../components/ui/Body.vue'
+import Eyebrow from '../../components/ui/Eyebrow.vue'
+import UiButton from '../../components/ui/UiButton.vue'
+import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
+import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 
 const router = useRouter()
 
-// Reactive data
 const applications = ref<Application[]>([])
 const loading = ref(true)
 const error = ref('')
 const selectedApplications = ref<string[]>([])
 
-// Filters
 const searchQuery = ref('')
 const statusFilter = ref('')
 const programFilter = ref('')
 const sortBy = ref('submittedAt')
 
-// Computed properties
+/** Status presentation map. Single source of truth so the chip tones
+ *  match the unified review page — staff scanning the list and
+ *  staff inside an open application see the same colour for the same
+ *  state, instead of two different visual languages. */
+interface StatusMeta {
+  label: string
+  pill: string
+}
+const STATUS_META: Record<Application['status'], StatusMeta> = {
+  draft:        { label: 'Draft',         pill: 'bg-ink/5 text-ink/60 border-ink/15' },
+  submitted:    { label: 'Submitted',     pill: 'bg-brand-violet/10 text-brand-violet border-brand-violet/30' },
+  under_review: { label: 'Under review',  pill: 'bg-amber-50 text-amber-700 border-amber-200' },
+  accepted:     { label: 'Accepted',      pill: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  rejected:     { label: 'Decision sent', pill: 'bg-rose-50 text-rose-700 border-rose-200' },
+}
+
+const PROGRAM_LABEL: Record<Application['program'], string> = {
+  stepup_scholars: 'StepUp Scholars',
+  dynamerge:       'Dynamerge',
+}
+
+/** Coerce Firestore Timestamp / ISO string / Date into a real Date.
+ *  Without this the bare `new Date(timestampObject)` call returned an
+ *  Invalid Date and surfaced "Invalid Date" in the table cell — the
+ *  ALL-CAPS clue you saw on the legacy surface. */
+function toDate(value: unknown): Date | null {
+  if (!value) return null
+  if (value instanceof Date) return value
+  if (typeof value === 'object' && value !== null && 'toDate' in value) {
+    const fn = (value as { toDate: () => Date }).toDate
+    if (typeof fn === 'function') return fn.call(value)
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const d = new Date(value)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
+function formatDate(value: unknown): string {
+  const d = toDate(value)
+  if (!d) return '—'
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
 const filteredApplications = computed(() => {
   let filtered = applications.value
 
-  // Apply search filter
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(app => 
-      app.personalInfo.firstName.toLowerCase().includes(query) ||
-      app.personalInfo.lastName.toLowerCase().includes(query) ||
-      app.personalInfo.email.toLowerCase().includes(query) ||
-      app.researchInterests.some(interest => 
-        interest.toLowerCase().includes(query)
-      )
+    const q = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(
+      (app) =>
+        app.personalInfo.firstName.toLowerCase().includes(q) ||
+        app.personalInfo.lastName.toLowerCase().includes(q) ||
+        app.personalInfo.email.toLowerCase().includes(q) ||
+        app.researchInterests.some((i) => i.toLowerCase().includes(q)),
     )
   }
-
-  // Apply status filter
   if (statusFilter.value) {
-    filtered = filtered.filter(app => app.status === statusFilter.value)
+    filtered = filtered.filter((app) => app.status === statusFilter.value)
   }
-
-  // Apply program filter
   if (programFilter.value) {
-    filtered = filtered.filter(app => app.program === programFilter.value)
+    filtered = filtered.filter((app) => app.program === programFilter.value)
   }
 
-  // Apply sorting
-  filtered.sort((a, b) => {
+  // Sort. Out-of-the-list null timestamps go to the bottom so the
+  // newest reviewable applications are always on top. localeCompare
+  // covers the string columns.
+  const sorted = [...filtered]
+  sorted.sort((a, b) => {
     switch (sortBy.value) {
-      case 'submittedAt':
-        if (!a.submittedAt && !b.submittedAt) return 0
-        if (!a.submittedAt) return 1
-        if (!b.submittedAt) return -1
-        return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-      case 'createdAt':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'submittedAt': {
+        const aT = toDate(a.submittedAt)?.getTime() ?? 0
+        const bT = toDate(b.submittedAt)?.getTime() ?? 0
+        return bT - aT
+      }
+      case 'createdAt': {
+        const aT = toDate(a.createdAt)?.getTime() ?? 0
+        const bT = toDate(b.createdAt)?.getTime() ?? 0
+        return bT - aT
+      }
       case 'program':
         return a.program.localeCompare(b.program)
       case 'status':
@@ -253,121 +130,119 @@ const filteredApplications = computed(() => {
         return 0
     }
   })
-
-  return filtered
+  return sorted
 })
 
-const hasFilters = computed(() => {
-  return searchQuery.value || statusFilter.value || programFilter.value
-})
-
-const allSelected = computed(() => {
-  return filteredApplications.value.length > 0 && 
-         filteredApplications.value.every(app => selectedApplications.value.includes(app.id!))
-})
-
-// Statistics
-const submittedCount = computed(() => 
-  applications.value.filter(app => app.status === 'submitted').length
+const hasFilters = computed(
+  () => !!(searchQuery.value || statusFilter.value || programFilter.value),
 )
 
-const underReviewCount = computed(() => 
-  applications.value.filter(app => app.status === 'under_review').length
+const allSelected = computed(
+  () =>
+    filteredApplications.value.length > 0 &&
+    filteredApplications.value.every((app) => selectedApplications.value.includes(app.id!)),
 )
 
-const acceptedCount = computed(() => 
-  applications.value.filter(app => app.status === 'accepted').length
-)
+const submittedCount   = computed(() => applications.value.filter((a) => a.status === 'submitted').length)
+const underReviewCount = computed(() => applications.value.filter((a) => a.status === 'under_review').length)
+const acceptedCount    = computed(() => applications.value.filter((a) => a.status === 'accepted').length)
+const rejectedCount    = computed(() => applications.value.filter((a) => a.status === 'rejected').length)
 
-const rejectedCount = computed(() => 
-  applications.value.filter(app => app.status === 'rejected').length
-)
+/** Sorted snapshot of researchInterests for the cell. The legacy view
+ *  used `.slice(0, 2).join(', ') + '...'` unconditionally — adds an
+ *  ellipsis even when there are exactly 2 interests. Cheap to fix
+ *  while we're rewriting the cell. */
+function shortInterests(list: string[] | undefined | null): string {
+  if (!list || list.length === 0) return '—'
+  if (list.length <= 2) return list.join(', ')
+  return `${list.slice(0, 2).join(', ')} +${list.length - 2}`
+}
 
-// Methods
-const loadApplications = async () => {
+async function loadApplications() {
   loading.value = true
   error.value = ''
-
   try {
     const currentUser = AuthService.getCurrentUser()
     if (!currentUser) {
       router.push('/login')
       return
     }
-
-    const allApps = await DatabaseService.getAllApplications()
-    applications.value = allApps
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load applications'
+    applications.value = await DatabaseService.getAllApplications()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load applications'
   } finally {
     loading.value = false
   }
 }
 
-const toggleSelection = (applicationId: string) => {
-  const index = selectedApplications.value.indexOf(applicationId)
-  if (index > -1) {
-    selectedApplications.value.splice(index, 1)
-  } else {
-    selectedApplications.value.push(applicationId)
-  }
+function toggleSelection(applicationId: string) {
+  const idx = selectedApplications.value.indexOf(applicationId)
+  if (idx > -1) selectedApplications.value.splice(idx, 1)
+  else selectedApplications.value.push(applicationId)
 }
 
-const toggleSelectAll = () => {
-  if (allSelected.value) {
-    selectedApplications.value = []
-  } else {
-    selectedApplications.value = filteredApplications.value.map(app => app.id!)
-  }
+function toggleSelectAll() {
+  if (allSelected.value) selectedApplications.value = []
+  else selectedApplications.value = filteredApplications.value.map((a) => a.id!)
 }
 
-const clearSelection = () => {
+function clearSelection() {
   selectedApplications.value = []
 }
 
-const bulkUpdateStatus = async (status: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected') => {
-  if (selectedApplications.value.length === 0) return
+/** Whether a bulk action is currently in flight — disables every
+ *  bulk button so the staffer doesn't accidentally double-fire while
+ *  the first batch is still hitting Firestore. */
+const bulking = ref(false)
 
+async function bulkUpdateStatus(status: Application['status']) {
+  if (selectedApplications.value.length === 0 || bulking.value) return
+  bulking.value = true
   try {
-    for (const applicationId of selectedApplications.value) {
-      await DatabaseService.updateApplication(applicationId, {
-        status,
-        reviewedAt: new Date(),
-        reviewedBy: AuthService.getCurrentUser()?.email || 'Unknown'
-      })
-    }
-    
-    // Reload applications and clear selection
+    const reviewer = AuthService.getCurrentUser()?.email || 'Unknown'
+    await Promise.all(
+      selectedApplications.value.map((id) =>
+        DatabaseService.updateApplication(id, {
+          status,
+          reviewedAt: new Date(),
+          reviewedBy: reviewer,
+        }),
+      ),
+    )
     await loadApplications()
     selectedApplications.value = []
-  } catch (err: any) {
-    error.value = err.message || 'Failed to update applications'
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Bulk update failed'
+  } finally {
+    bulking.value = false
   }
 }
 
-// Single navigation handler for the row's action button. The
-// previous "View" and "Review" buttons sent staff to two different
-// surfaces (read-only view vs. decision form) — those surfaces have
-// been merged, so one click goes straight to the unified review page.
-const openApplication = (applicationId: string) => {
+function openApplication(applicationId: string) {
   router.push(`/admin/applications/${applicationId}`)
 }
 
-const exportApplications = () => {
-  // Simple CSV export
-  const csvContent = [
-    ['Name', 'Email', 'Program', 'Status', 'Submitted', 'Research Interests'].join(','),
-    ...filteredApplications.value.map(app => [
-      `${app.personalInfo.firstName} ${app.personalInfo.lastName}`,
-      app.personalInfo.email,
-      app.program,
-      app.status,
-      app.submittedAt ? new Date(app.submittedAt).toISOString() : '',
-      app.researchInterests.join('; ')
-    ].join(','))
-  ].join('\n')
-
-  const blob = new Blob([csvContent], { type: 'text/csv' })
+/** CSV export of the currently-filtered list. Quotes every cell so
+ *  commas inside research interests / names don't corrupt the
+ *  column boundaries — the legacy export joined `researchInterests`
+ *  with `; ` to dodge this, but a name with a comma still broke. */
+function exportApplications() {
+  const cell = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const rows = [
+    ['Name', 'Email', 'Program', 'Status', 'Submitted', 'Research Interests'].map(cell).join(','),
+    ...filteredApplications.value.map((app) =>
+      [
+        `${app.personalInfo.firstName} ${app.personalInfo.lastName}`,
+        app.personalInfo.email,
+        PROGRAM_LABEL[app.program] || app.program,
+        STATUS_META[app.status]?.label || app.status,
+        toDate(app.submittedAt)?.toISOString() ?? '',
+        (app.researchInterests || []).join('; '),
+      ].map(cell).join(','),
+    ),
+  ]
+  const csv = rows.join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -376,418 +251,331 @@ const exportApplications = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const formatDate = (date: Date | undefined) => {
-  if (!date) return 'Not submitted'
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-const formatStatus = (status: string) => {
-  const statusMap: Record<string, string> = {
-    draft: 'Draft',
-    submitted: 'Submitted',
-    under_review: 'Under Review',
-    accepted: 'Accepted',
-    rejected: 'Rejected'
-  }
-  return statusMap[status] || status
-}
-
-// Lifecycle
-onMounted(() => {
-  loadApplications()
-})
+onMounted(loadApplications)
 </script>
 
-<style scoped>
-.admin-applications {
-  min-height: 100vh;
-  background: var(--color-background);
-  padding: 2rem;
-}
+<template>
+  <div class="flex flex-col bg-paper min-h-screen">
+    <!-- Hero band. Mirrors the unified ReviewApplication.vue header
+         so jumping between the queue and an open review stays
+         visually coherent. -->
+    <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
+      <Container class="max-w-6xl">
+        <Eyebrow class="text-brand-violet mb-3 block">Admin</Eyebrow>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div class="flex flex-col gap-2">
+            <Heading :level="1" class="!text-3xl md:!text-4xl !m-0">
+              Applications
+            </Heading>
+            <Body class="text-ink/70 m-0">
+              Review and triage every program application.
+            </Body>
+          </div>
+          <UiButton
+            variant="secondary"
+            :disabled="filteredApplications.length === 0"
+            @click="exportApplications"
+          >
+            <span class="flex items-center gap-2">
+              <Icon icon="lucide:download" width="16" />
+              Export CSV
+            </span>
+          </UiButton>
+        </div>
+      </Container>
+    </Section>
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--color-border);
-}
+    <Section class="!py-10">
+      <Container class="max-w-6xl flex flex-col gap-6">
+        <!-- Stats strip. Five compact cards so staff see the queue
+             shape at a glance before scanning the table. Numbers
+             reflect the FULL set, not the filtered subset — filters
+             change what's visible below, not what's true. -->
+        <div v-if="!loading && applications.length > 0" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div
+            v-for="stat in [
+              { label: 'Total',        value: applications.length, tone: 'text-ink' },
+              { label: 'Submitted',    value: submittedCount,   tone: 'text-brand-violet' },
+              { label: 'Under review', value: underReviewCount, tone: 'text-amber-700' },
+              { label: 'Accepted',     value: acceptedCount,    tone: 'text-emerald-700' },
+              { label: 'Decision sent',value: rejectedCount,    tone: 'text-rose-700' },
+            ]"
+            :key="stat.label"
+            class="bg-surface border hairline-ink rounded-2xl p-4 flex flex-col items-start gap-1"
+          >
+            <span class="text-xs uppercase tracking-wider text-ink/55 font-semibold">{{ stat.label }}</span>
+            <span class="font-display text-2xl font-semibold tabular-nums" :class="stat.tone">{{ stat.value }}</span>
+          </div>
+        </div>
 
-.header-content h1 {
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-}
+        <!-- Filters + search. Search left, filters right. On mobile
+             they stack with a label-less search at the top — staff
+             scrolling on mobile shouldn't have to scroll past every
+             dropdown to reach the input. -->
+        <UiCard class="p-4 md:p-5 bg-surface flex flex-col gap-3">
+          <div class="relative">
+            <Icon
+              icon="lucide:search"
+              width="16"
+              class="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40 pointer-events-none"
+            />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search by name, email, or research interest…"
+              class="w-full border hairline-ink rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-paper"
+            />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <UiSelect
+              v-model="statusFilter"
+              placeholder="All statuses"
+              :options="[
+                { value: '',             label: 'All statuses' },
+                { value: 'submitted',    label: 'Submitted' },
+                { value: 'under_review', label: 'Under review' },
+                { value: 'accepted',     label: 'Accepted' },
+                { value: 'rejected',     label: 'Decision sent' },
+              ]"
+            />
+            <UiSelect
+              v-model="programFilter"
+              placeholder="All programs"
+              :options="[
+                { value: '',                label: 'All programs' },
+                { value: 'stepup_scholars', label: 'StepUp Scholars' },
+                { value: 'dynamerge',       label: 'Dynamerge' },
+              ]"
+            />
+            <UiSelect
+              v-model="sortBy"
+              :options="[
+                { value: 'submittedAt',            label: 'Sort: Date submitted' },
+                { value: 'createdAt',              label: 'Sort: Date created' },
+                { value: 'program',                label: 'Sort: Program' },
+                { value: 'status',                 label: 'Sort: Status' },
+                { value: 'personalInfo.firstName', label: 'Sort: Name' },
+              ]"
+            />
+          </div>
+        </UiCard>
 
-.subtitle {
-  color: var(--color-text-secondary);
-  font-size: 1.1rem;
-}
+        <!-- Bulk-action bar. Renders only when one+ rows are
+             selected, with the count surfaced for ambiguity-free
+             affordance ("9 selected · Accept selected"). Disabled
+             while a bulk op is in flight so the staffer can't
+             double-fire. -->
+        <div
+          v-if="selectedApplications.length > 0"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-2xl border border-brand-violet/30 bg-brand-violet/5"
+        >
+          <span class="text-sm font-semibold text-ink">
+            {{ selectedApplications.length }} selected
+          </span>
+          <div class="flex flex-wrap gap-2 flex-1">
+            <button
+              type="button"
+              :disabled="bulking"
+              class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 disabled:opacity-50 transition-colors focus-ring-brand"
+              @click="bulkUpdateStatus('under_review')"
+            >
+              <Icon icon="lucide:eye" width="14" /> Mark under review
+            </button>
+            <button
+              type="button"
+              :disabled="bulking"
+              class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 disabled:opacity-50 transition-colors focus-ring-brand"
+              @click="bulkUpdateStatus('accepted')"
+            >
+              <Icon icon="lucide:check" width="14" /> Accept selected
+            </button>
+            <button
+              type="button"
+              :disabled="bulking"
+              class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 disabled:opacity-50 transition-colors focus-ring-brand"
+              @click="bulkUpdateStatus('rejected')"
+            >
+              <Icon icon="lucide:x" width="14" /> Decline selected
+            </button>
+          </div>
+          <button
+            type="button"
+            :disabled="bulking"
+            class="text-sm font-semibold text-ink/60 hover:text-ink focus-ring-brand rounded-sm disabled:opacity-50"
+            @click="clearSelection"
+          >
+            Clear
+          </button>
+        </div>
 
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+        <!-- Inline error. Same rose pill the review surface uses for
+             save errors so the visual vocabulary stays consistent. -->
+        <div
+          v-if="error"
+          role="alert"
+          class="flex items-center justify-between gap-3 p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-900"
+        >
+          <div class="flex items-center gap-3">
+            <Icon icon="lucide:alert-circle" width="20" class="text-rose-700 shrink-0" />
+            <span class="text-sm">{{ error }}</span>
+          </div>
+          <UiButton variant="secondary" @click="loadApplications">Retry</UiButton>
+        </div>
 
-.filters-row {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
+        <!-- Loading skeleton. Holds the page shape so the first paint
+             doesn't reflow when applications land. -->
+        <div v-if="loading" class="flex flex-col gap-3">
+          <div v-for="i in 4" :key="i" class="h-20 bg-ink/5 rounded-2xl animate-pulse" />
+        </div>
 
-.search-box {
-  flex: 1;
-}
+        <!-- Empty state -->
+        <UiCard
+          v-else-if="filteredApplications.length === 0"
+          class="p-10 md:p-16 bg-surface flex flex-col items-center gap-3 text-center"
+        >
+          <div class="w-14 h-14 rounded-full bg-brand-violet/10 flex items-center justify-center">
+            <Icon icon="lucide:clipboard-list" width="28" class="text-brand-violet" />
+          </div>
+          <Heading :level="3" class="!text-xl !m-0">
+            {{ hasFilters ? 'No applications match your filters.' : 'No applications yet.' }}
+          </Heading>
+          <Body class="text-ink/65 m-0 max-w-md">
+            {{ hasFilters
+              ? 'Adjust the status / program filters or clear the search to see more.'
+              : 'Applications submitted through the wizard land here for review.' }}
+          </Body>
+        </UiCard>
 
-.search-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
+        <!-- Applications list. Desktop renders a proper table for
+             scan-ability across columns; mobile collapses each row
+             into a stacked card with the same data, prioritising the
+             applicant name + status chip + Open button. -->
+        <template v-else>
+          <!-- Desktop / tablet (md+) — table -->
+          <UiCard class="hidden md:block bg-surface overflow-hidden p-0">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-ink/[0.025]">
+                  <th class="text-left p-4 w-10">
+                    <input
+                      type="checkbox"
+                      :checked="allSelected"
+                      class="rounded border-ink/20 text-brand-violet focus:ring-brand-violet"
+                      @change="toggleSelectAll"
+                    />
+                  </th>
+                  <th class="text-left p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Applicant</th>
+                  <th class="text-left p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Program</th>
+                  <th class="text-left p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Status</th>
+                  <th class="text-left p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Submitted</th>
+                  <th class="text-left p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Interests</th>
+                  <th class="text-right p-4 text-xs uppercase tracking-wider text-ink/55 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="app in filteredApplications"
+                  :key="app.id"
+                  class="border-t hairline-ink hover:bg-ink/[0.025] transition-colors cursor-pointer"
+                  :class="{ '!bg-brand-violet/5': selectedApplications.includes(app.id!) }"
+                  @click="openApplication(app.id!)"
+                >
+                  <td class="p-4" @click.stop>
+                    <input
+                      type="checkbox"
+                      :checked="selectedApplications.includes(app.id!)"
+                      class="rounded border-ink/20 text-brand-violet focus:ring-brand-violet"
+                      @change="toggleSelection(app.id!)"
+                    />
+                  </td>
+                  <td class="p-4">
+                    <div class="font-semibold text-ink text-sm">
+                      {{ app.personalInfo.firstName }} {{ app.personalInfo.lastName }}
+                    </div>
+                    <div class="text-xs text-ink/55 truncate">{{ app.personalInfo.email }}</div>
+                  </td>
+                  <td class="p-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-ink/5 text-ink/80">
+                      {{ PROGRAM_LABEL[app.program] || app.program }}
+                    </span>
+                  </td>
+                  <td class="p-4">
+                    <span
+                      class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
+                      :class="STATUS_META[app.status]?.pill"
+                    >
+                      {{ STATUS_META[app.status]?.label || app.status }}
+                    </span>
+                  </td>
+                  <td class="p-4 text-sm text-ink/75 whitespace-nowrap">
+                    {{ formatDate(app.submittedAt) }}
+                  </td>
+                  <td class="p-4 text-sm text-ink/65 max-w-[12rem] truncate">
+                    {{ shortInterests(app.researchInterests) }}
+                  </td>
+                  <td class="p-4 text-right" @click.stop>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-violet hover:underline focus-ring-brand rounded-sm"
+                      @click="openApplication(app.id!)"
+                    >
+                      Open
+                      <Icon icon="lucide:arrow-right" width="14" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </UiCard>
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.filter-controls {
-  display: flex;
-  gap: 1rem;
-}
-
-.filter-select {
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: white;
-  cursor: pointer;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.bulk-actions {
-  background: var(--color-background-secondary);
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.bulk-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.applications-container {
-  margin-bottom: 2rem;
-}
-
-.loading-state, .empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--color-text-secondary);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--color-border);
-  border-top: 4px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.empty-state h3 {
-  color: var(--color-text);
-  margin-bottom: 0.5rem;
-}
-
-.applications-table {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-}
-
-th {
-  background: var(--color-background-secondary);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-tr:hover {
-  background: var(--color-background-secondary);
-}
-
-tr.selected {
-  background: #eff6ff;
-}
-
-.applicant-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.applicant-name {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.applicant-email {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.program-badge {
-  background: var(--color-primary);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.status-submitted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-under_review {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-accepted {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.interests-list {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-view, .btn-review {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.btn-view {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.btn-view:hover {
-  background: var(--color-primary);
-  color: white;
-}
-
-.btn-review {
-  color: var(--color-secondary);
-  border-color: var(--color-secondary);
-}
-
-.btn-review:hover {
-  background: var(--color-secondary);
-  color: white;
-}
-
-.statistics-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 1rem;
-  background: var(--color-background-secondary);
-  border-radius: 8px;
-}
-
-.stat-number {
-  display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  color: var(--color-primary);
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-clear {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: var(--color-primary-dark);
-}
-
-.btn-secondary {
-  background: var(--color-secondary);
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: var(--color-secondary-dark);
-}
-
-.btn-success {
-  background: #10b981;
-  color: white;
-}
-
-.btn-success:hover {
-  background: #059669;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-.btn-clear {
-  background: #6b7280;
-  color: white;
-}
-
-.btn-clear:hover {
-  background: #4b5563;
-}
-
-.error-message {
-  text-align: center;
-  padding: 2rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #dc2626;
-}
-
-.error-message p {
-  margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-  .admin-applications {
-    padding: 1rem;
-  }
-  
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .filters-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filter-controls {
-    flex-direction: column;
-  }
-  
-  .bulk-actions {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .bulk-buttons {
-    flex-wrap: wrap;
-  }
-  
-  .applications-table {
-    overflow-x: auto;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-</style>
+          <!-- Mobile — stacked cards. Checkbox + name + email +
+               status chip + Open. Tap-area is the full card. -->
+          <div class="md:hidden flex flex-col gap-3">
+            <div
+              v-for="app in filteredApplications"
+              :key="app.id"
+              class="bg-surface border hairline-ink rounded-2xl p-4 flex flex-col gap-3"
+              :class="{ '!border-brand-violet/30 bg-brand-violet/5': selectedApplications.includes(app.id!) }"
+              @click="openApplication(app.id!)"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3 flex-1 min-w-0" @click.stop>
+                  <input
+                    type="checkbox"
+                    :checked="selectedApplications.includes(app.id!)"
+                    class="mt-1 rounded border-ink/20 text-brand-violet focus:ring-brand-violet shrink-0"
+                    @change="toggleSelection(app.id!)"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-ink text-sm">
+                      {{ app.personalInfo.firstName }} {{ app.personalInfo.lastName }}
+                    </div>
+                    <div class="text-xs text-ink/55 truncate">{{ app.personalInfo.email }}</div>
+                  </div>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border whitespace-nowrap shrink-0"
+                  :class="STATUS_META[app.status]?.pill"
+                >
+                  {{ STATUS_META[app.status]?.label || app.status }}
+                </span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-ink/60">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-ink/5 text-ink/80 font-semibold">
+                  {{ PROGRAM_LABEL[app.program] || app.program }}
+                </span>
+                <span>{{ formatDate(app.submittedAt) }}</span>
+              </div>
+              <div
+                v-if="app.researchInterests && app.researchInterests.length > 0"
+                class="text-xs text-ink/65 truncate"
+              >
+                {{ shortInterests(app.researchInterests) }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </Container>
+    </Section>
+  </div>
+</template>
