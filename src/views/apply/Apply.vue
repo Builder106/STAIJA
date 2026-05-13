@@ -12,6 +12,8 @@ import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import AudioRecorder from '../../components/ui/AudioRecorder.vue'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '../../config/firebase'
 import { useAuth } from '../../composables/useAuth'
 import { useAutoSave } from '../../composables/useAutoSave'
 import { DatabaseService } from '../../services/database'
@@ -909,49 +911,124 @@ async function handleSubmit() {
       submittedAt: new Date(),
     } as Parameters<typeof DatabaseService.createApplication>[0])
 
-    // Upload files (post-create so we have the application id)
-    const uploads: Promise<unknown>[] = []
-    if (transcriptFile.value) {
-      uploads.push(
-        StorageService.uploadFile(
-          transcriptFile.value,
-          `applications/${user.value.uid}/${applicationId}/transcript-${transcriptFile.value.name}`,
-        ),
-      )
+    // File submission. Preferred path: hand the staged storage paths to
+    // the `finalizeApplicationFiles` callable, which server-side copies
+    // the bytes from applicationStaging/... into the canonical
+    // applications/<uid>/<applicationId>/... folder and patches the doc's
+    // `documents` field. Avoids re-uploading bytes the applicant already
+    // pushed to staging when they picked the file — a real bandwidth win
+    // on transcripts + ID scans + audio + showcase together.
+    //
+    // Safety-net fallback: for any kind where a live `File` ref is set
+    // but the staging metadata is missing (the applicant picked AND
+    // submitted before staging finished, or staging upload threw), fall
+    // through to a direct upload + patch the doc ourselves. Continue /
+    // Submit are gated on `anyUploadInFlight` so this fallback should
+    // be extremely rare; keeping it means a transient Storage hiccup
+    // during the pick-staging step doesn't block submission.
+    const stagedPaths: Record<string, string> = {}
+    if (stagedFiles.value.transcript?.storagePath) {
+      stagedPaths.transcript = stagedFiles.value.transcript.storagePath
     }
-    if (idFile.value) {
-      uploads.push(
-        StorageService.uploadFile(
-          idFile.value,
-          `applications/${user.value.uid}/${applicationId}/id-${idFile.value.name}`,
-        ),
-      )
+    if (stagedFiles.value.id?.storagePath) {
+      stagedPaths.id = stagedFiles.value.id.storagePath
     }
-    if (showcaseFile.value) {
-      uploads.push(
-        StorageService.uploadFile(
-          showcaseFile.value,
-          `applications/${user.value.uid}/${applicationId}/showcase-${showcaseFile.value.name}`,
-        ),
-      )
+    if (stagedFiles.value.showcase?.storagePath) {
+      stagedPaths.showcase = stagedFiles.value.showcase.storagePath
     }
-    // Optional audio answers — one file per field that has audioOptional set.
-    // Convention-based naming so admin review can find them by prefix, same
-    // as transcript/ID. We pick a small filename ext from the recorded MIME.
+    for (const [fieldName, meta] of Object.entries(stagedFiles.value.audio ?? {})) {
+      if (meta?.storagePath) stagedPaths[`audio:${fieldName}`] = meta.storagePath
+    }
+
+    if (Object.keys(stagedPaths).length > 0) {
+      const finalize = httpsCallable<
+        { applicationId: string; program: DraftProgramSlug; stagedPaths: Record<string, string> },
+        { finalized: Record<string, string> }
+      >(functions, 'finalizeApplicationFiles')
+      try {
+        await finalize({
+          applicationId,
+          program: program.value.slug as DraftProgramSlug,
+          stagedPaths,
+        })
+      } catch (err) {
+        // The application doc was created, so we don't fail submit
+        // here — the user sees the success page either way and the
+        // partial files (if any) are still reviewable. Fallback path
+        // below picks up any kinds where the live File ref is set and
+        // staging metadata happens to be missing, plugging the
+        // common "picked-then-submitted-in-under-a-second" gap.
+        console.warn('[Apply] finalizeApplicationFiles failed:', err)
+      }
+    }
+
+    // Direct-upload safety net for kinds where staging metadata is
+    // missing but the live File ref is set. Mirrors the finalize fn's
+    // documents-patch convention so admin lookup works either way.
+    const fallbackUploads: Array<{ kind: string; file: File; finalPath: string }> = []
+    if (transcriptFile.value && !stagedFiles.value.transcript) {
+      fallbackUploads.push({
+        kind: 'transcript',
+        file: transcriptFile.value,
+        finalPath: `applications/${user.value.uid}/${applicationId}/transcript-${transcriptFile.value.name}`,
+      })
+    }
+    if (idFile.value && !stagedFiles.value.id) {
+      fallbackUploads.push({
+        kind: 'id',
+        file: idFile.value,
+        finalPath: `applications/${user.value.uid}/${applicationId}/id-${idFile.value.name}`,
+      })
+    }
+    if (showcaseFile.value && !stagedFiles.value.showcase) {
+      fallbackUploads.push({
+        kind: 'showcase',
+        file: showcaseFile.value,
+        finalPath: `applications/${user.value.uid}/${applicationId}/showcase-${showcaseFile.value.name}`,
+      })
+    }
+    const fallbackAudio: Array<{ fieldName: string; file: File; finalPath: string }> = []
     for (const [fieldName, audio] of Object.entries(audioByField.value)) {
+      if (stagedFiles.value.audio?.[fieldName]) continue
       const mime = audio.blob.type || 'audio/webm'
       const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
       const filename = `audio-${fieldName}-${audio.durationSec}s.${ext}`
       const file = new File([audio.blob], filename, { type: mime })
-      uploads.push(
-        StorageService.uploadFile(
-          file,
-          `applications/${user.value.uid}/${applicationId}/${filename}`,
-        ),
-      )
+      fallbackAudio.push({
+        fieldName,
+        file,
+        finalPath: `applications/${user.value.uid}/${applicationId}/${filename}`,
+      })
     }
-    if (uploads.length > 0) {
-      await Promise.all(uploads)
+    if (fallbackUploads.length > 0 || fallbackAudio.length > 0) {
+      try {
+        await Promise.all([
+          ...fallbackUploads.map((u) => StorageService.uploadFile(u.file, u.finalPath)),
+          ...fallbackAudio.map((u) => StorageService.uploadFile(u.file, u.finalPath)),
+        ])
+        // Patch the documents field for the fallback paths so admin UI
+        // can find them. Best-effort — uploads succeeding is the important
+        // half; the doc patch is bookkeeping.
+        const documentsPatch: Record<string, string | Record<string, string>> = {}
+        for (const u of fallbackUploads) documentsPatch[u.kind] = u.finalPath
+        if (fallbackAudio.length > 0) {
+          const audioMap: Record<string, string> = {}
+          for (const u of fallbackAudio) audioMap[u.fieldName] = u.finalPath
+          documentsPatch.audio = audioMap
+        }
+        try {
+          await DatabaseService.updateApplication(applicationId, { documents: documentsPatch })
+        } catch (err) {
+          console.warn('[Apply] fallback documents patch failed:', err)
+        }
+      } catch (err) {
+        // Don't fail the whole submit — application doc exists, partial
+        // files are still reviewable, and re-throwing here would push
+        // the user back into the wizard with no clear retry path
+        // (resubmitting would create a duplicate application). Log so
+        // the issue surfaces in monitoring; admin sees what landed.
+        console.warn('[Apply] fallback upload failed:', err)
+      }
     }
 
     autoSave.value?.clear()

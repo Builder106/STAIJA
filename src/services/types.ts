@@ -168,7 +168,18 @@ export interface Application {
   documents?: {
     cv?: string
     transcript?: string
+    /** Government / school ID photo or scan. Path set by
+     *  `finalizeApplicationFiles` from the staged upload. */
+    id?: string
+    /** Optional "show your work" file (image / video / audio / PDF).
+     *  URL counterpart lives in `showcase.url`. Both can coexist —
+     *  reviewers see whichever the applicant attached. */
+    showcase?: string
     recommendationLetter?: string
+    /** Audio answers, keyed by motivation field name. Most programs
+     *  only have one (currently always `motivation`) but the wizard
+     *  schema supports multiple per program. */
+    audio?: Record<string, string>
   }
   /**
    * Optional "show me something you've made" slot. URL is preferred —

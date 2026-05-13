@@ -56,6 +56,12 @@ export { lmsContentAdmin } from './lmsContentAdmin'
 // as a published Asset. Uses the same secrets as lmsContentAdmin.
 export { lmsAssetUpload } from './lmsAssetUpload'
 
+// Application submit finalize: copies staged uploads
+// (`applicationStaging/<uid>/<program>/...`) into the canonical
+// per-application Storage folder and patches the application doc's
+// `documents` field with the final paths. See applicationFinalize.ts.
+export { finalizeApplicationFiles } from './applicationFinalize'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.
