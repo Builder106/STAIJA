@@ -79,6 +79,12 @@ export { createMentorInvite, consumeMentorInvite, revokeMentorInvite } from './m
 // in one batched commit. See cohortGraduate.ts.
 export { graduateCohort } from './cohortGraduate'
 
+// Daily cron that batches the "your spot is open again" email to
+// every deferred applicant when a new cohort is approaching its
+// start date — safety net for the manual bulk-re-offer flow.
+// See cohortCycleCron.ts.
+export { reOfferDeferredOnCohortStart } from './cohortCycleCron'
+
 // setNewsletterSubscription is intentionally not re-exported until
 // MAILGUN_LIST_ADDRESS is set in Secret Manager and a Mailgun mailing
 // list exists. Same gating pattern as subscribeNewsletter above.

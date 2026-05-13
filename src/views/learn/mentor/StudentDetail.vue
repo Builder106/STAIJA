@@ -8,6 +8,7 @@ import Heading from '../../../components/ui/Heading.vue'
 import Body from '../../../components/ui/Body.vue'
 import Eyebrow from '../../../components/ui/Eyebrow.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
+import UiButton from '../../../components/ui/UiButton.vue'
 import { useAuth } from '../../../composables/useAuth'
 import { DatabaseService } from '../../../services/database'
 import { MentorService } from '../../../services/mentor'
@@ -97,6 +98,68 @@ const statusClass: Record<string, string> = {
   graded: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
 }
 
+// Quick-copy email feedback. The student profile has the address in
+// plain text already, but a one-click copy beats select-all-then-cmd-c
+// when mentors are queuing outreach in a separate tab.
+const emailCopied = ref(false)
+async function copyEmail() {
+  const email = student.value?.email
+  if (!email) return
+  try {
+    await navigator.clipboard.writeText(email)
+    emailCopied.value = true
+    setTimeout(() => { emailCopied.value = false }, 1500)
+  } catch {
+    // Clipboard API can fail under strict-permissions browsers.
+    // Silently fail — the address is right there in the link above.
+  }
+}
+
+// Inline feedback composer. Previously this surface only had a link
+// out to /mentor/feedback/:studentId, which meant mentors lost the
+// student context (their progress / submissions list) every time
+// they wanted to write a note. The composer here writes directly via
+// the same MentorService.submitFeedback path the dedicated page uses
+// and prepends the new row to the local feedback list on success —
+// no reload required, mentor stays on the page.
+const feedbackDraft = ref('')
+const feedbackSubmitting = ref(false)
+const feedbackError = ref<string | null>(null)
+const feedbackSuccess = ref(false)
+
+async function submitFeedback() {
+  const content = feedbackDraft.value.trim()
+  if (!content || feedbackSubmitting.value) return
+  if (!user.value || !student.value) return
+  feedbackSubmitting.value = true
+  feedbackError.value = null
+  feedbackSuccess.value = false
+  try {
+    const id = await MentorService.submitFeedback({
+      mentorId: user.value.uid,
+      studentId: student.value.uid,
+      content,
+    })
+    feedback.value = [
+      {
+        id,
+        mentorId: user.value.uid,
+        studentId: student.value.uid,
+        content,
+        submittedAt: new Date(),
+      },
+      ...feedback.value,
+    ]
+    feedbackDraft.value = ''
+    feedbackSuccess.value = true
+    setTimeout(() => { feedbackSuccess.value = false }, 2000)
+  } catch (err) {
+    feedbackError.value = err instanceof Error ? err.message : 'Could not save feedback.'
+  } finally {
+    feedbackSubmitting.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -126,6 +189,41 @@ onMounted(load)
         </UiCard>
 
         <template v-else-if="student && enrollment">
+          <!-- Quick actions: email, schedule a session for this
+               cohort. Previously the mentor had to jump back to the
+               dashboard and hunt for a "schedule session" link
+               unrelated to the student they were already viewing —
+               surfacing it inline keeps the mentor in flow. -->
+          <UiCard class="p-5 bg-surface flex flex-col sm:flex-row sm:items-center gap-3">
+            <a
+              v-if="student.email"
+              :href="`mailto:${student.email}`"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-brand-violet/10 text-brand-violet hover:bg-brand-violet/15 focus-ring-brand transition-colors"
+            >
+              <Icon icon="lucide:mail" width="14" />
+              Email {{ student.displayName?.split(' ')[0] || 'student' }}
+            </a>
+            <button
+              v-if="student.email"
+              type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors focus-ring-brand"
+              :class="emailCopied
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'border-ink/15 text-ink/75 hover:bg-ink/5'"
+              @click="copyEmail"
+            >
+              <Icon :icon="emailCopied ? 'lucide:check' : 'lucide:clipboard'" width="14" />
+              {{ emailCopied ? 'Copied' : 'Copy email' }}
+            </button>
+            <RouterLink
+              to="/learn/mentor/schedule"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border border-ink/15 text-ink/75 hover:bg-ink/5 focus-ring-brand transition-colors"
+            >
+              <Icon icon="lucide:calendar-plus" width="14" />
+              Schedule a session
+            </RouterLink>
+          </UiCard>
+
           <UiCard class="p-6 md:p-8 bg-surface">
             <Eyebrow class="text-ink/50 mb-2 block">Progress</Eyebrow>
             <p class="text-ink text-sm">
@@ -167,12 +265,46 @@ onMounted(load)
 
           <div>
             <Eyebrow class="text-ink/50 mb-3 block">Feedback you've left</Eyebrow>
-            <RouterLink
-              :to="{ name: 'mentor-feedback', params: { studentId: student.uid } }"
-              class="text-xs text-brand-violet hover:underline mb-3 inline-block"
-            >
-              + Leave new feedback
-            </RouterLink>
+
+            <!-- Inline composer. Replaces a "+ Leave new feedback"
+                 link that used to navigate away to a dedicated page
+                 and made the mentor lose all the student context
+                 they were just reading. The submit handler writes
+                 via MentorService.submitFeedback (same path the
+                 standalone page uses) and prepends the new row to
+                 the local list on success — no reload. -->
+            <UiCard class="p-5 md:p-6 bg-surface mb-3 flex flex-col gap-3">
+              <textarea
+                v-model="feedbackDraft"
+                rows="3"
+                placeholder="Leave a note for the student — what's going well, what to focus on next…"
+                class="border hairline-ink rounded-xl px-4 py-3 text-sm bg-paper focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all resize-y"
+              />
+              <div class="flex flex-wrap items-center gap-3">
+                <UiButton
+                  variant="primary"
+                  :disabled="!feedbackDraft.trim() || feedbackSubmitting"
+                  @click="submitFeedback"
+                >
+                  <span v-if="feedbackSubmitting" class="flex items-center gap-2">
+                    <Icon icon="lucide:loader-2" width="14" class="animate-spin" />
+                    Sending…
+                  </span>
+                  <span v-else class="flex items-center gap-2">
+                    <Icon icon="lucide:send-horizontal" width="14" />
+                    Send feedback
+                  </span>
+                </UiButton>
+                <p v-if="feedbackError" class="text-xs text-rose-700 m-0">{{ feedbackError }}</p>
+                <p v-else-if="feedbackSuccess" class="text-xs text-emerald-700 m-0">
+                  <Icon icon="lucide:check" width="12" class="inline -mt-0.5" /> Saved.
+                </p>
+                <p v-else class="text-xs text-ink/45 m-0">
+                  The student sees this on their dashboard.
+                </p>
+              </div>
+            </UiCard>
+
             <UiCard v-if="feedback.length === 0" class="p-6 bg-surface">
               <Body class="text-ink/60 text-sm">No feedback yet.</Body>
             </UiCard>

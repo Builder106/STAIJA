@@ -382,6 +382,16 @@ export interface Cohort {
   // Students accepted before the cohort starts wait here. onCohortStart
   // (Phase 2) drains them into enrollments at kickoff.
   queuedStudentIds?: string[]
+  /** True once the `reOfferDeferredOnCohortStart` cron has fired the
+   *  batched re-offer pass for this cohort. Prevents the daily cron
+   *  from re-emailing every deferred applicant each morning while
+   *  the cohort sits within the trigger window. Cleared back to
+   *  undefined would let a manual re-run happen; staff doesn't need
+   *  to touch this field in the normal flow. */
+  deferredsAutoReOffered?: boolean
+  /** Plain ms epoch when the auto-re-offer pass fired. Surfaced in
+   *  the admin Cohorts table so staff can verify the cron ran. */
+  deferredsAutoReOfferedAt?: number
   createdAt: Date
   createdBy?: string
 }
