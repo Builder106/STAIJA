@@ -46,6 +46,7 @@ const routes: RouteRecordRaw[] = [
   // Mentor profile view. Authenticated read of any user where
   // role='mentor' (rule layer enforces this). Linked from student
   // dashboards / cohort surfaces / admin user lists.
+  { path: '/mentors', name: 'mentors-index', component: () => import('../views/MentorsIndex.vue'), meta: { title: 'Mentors — STAIJA', requiresAuth: true } },
   { path: '/mentors/:uid', name: 'mentor-profile', component: () => import('../views/MentorProfile.vue'), meta: { title: 'Mentor — STAIJA', requiresAuth: true } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },

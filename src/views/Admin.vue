@@ -38,9 +38,24 @@ const underReviewCount = computed(() =>
 const acceptedCount = computed(() =>
   applications.value.filter((a) => a.status === 'accepted').length,
 )
+// Accepted applicants who deferred their spot. Surfaces the cycle-
+// change re-offer queue at first paint of /admin so staff doesn't
+// have to remember "oh right, I should filter the queue when a new
+// cohort opens".
+const deferredCount = computed(() =>
+  applications.value.filter(
+    (a) => a.status === 'accepted' && a.spotResponse === 'deferred',
+  ).length,
+)
 
 const pendingReview = computed(() =>
   applications.value.filter((a) => a.status === 'submitted').slice(0, 5),
+)
+
+const deferredApplicants = computed(() =>
+  applications.value
+    .filter((a) => a.status === 'accepted' && a.spotResponse === 'deferred')
+    .slice(0, 5),
 )
 
 async function loadData() {
@@ -135,7 +150,7 @@ onMounted(loadData)
 
       <template v-else>
         <!-- Stat cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           <UiCard class="p-6 flex flex-col gap-2">
             <Eyebrow class="text-brand-violet">Needs review</Eyebrow>
             <div class="font-display text-4xl font-semibold tracking-tight text-ink">
@@ -157,6 +172,27 @@ onMounted(loadData)
             </div>
             <p class="text-sm text-ink/60 m-0">Across all cohorts</p>
           </UiCard>
+          <!-- Deferred: surfaces the cycle-change re-offer queue at
+               first paint. Clickable like the rest, links straight
+               to the filtered /admin/applications view. -->
+          <RouterLink
+            to="/admin/applications?response=deferred"
+            class="focus-ring-brand rounded-2xl"
+          >
+            <UiCard
+              hoverable
+              class="p-6 flex flex-col gap-2"
+              :class="deferredCount > 0 ? '!border-amber-200 bg-amber-50/30' : ''"
+            >
+              <Eyebrow class="text-amber-700">Deferred</Eyebrow>
+              <div class="font-display text-4xl font-semibold tracking-tight text-ink">
+                {{ deferredCount }}
+              </div>
+              <p class="text-sm text-ink/60 m-0">
+                {{ deferredCount === 1 ? 'Awaiting re-offer' : 'Awaiting re-offer when cycle opens' }}
+              </p>
+            </UiCard>
+          </RouterLink>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -211,6 +247,63 @@ onMounted(loadData)
                   />
                 </UiCard>
               </RouterLink>
+            </div>
+
+            <!-- Deferred applicants queue. Renders only when there
+                 are deferred entries — most cycles this list is
+                 empty so we don't waste vertical space. Each row
+                 links straight to the unified review page for that
+                 application; the bulk "Re-offer all" entry point
+                 lives on /admin/applications?response=deferred where
+                 staff can multi-select before firing. -->
+            <div
+              v-if="deferredApplicants.length > 0"
+              class="flex flex-col gap-4 mt-10"
+            >
+              <div class="flex items-end justify-between gap-4">
+                <div>
+                  <Heading :level="2">Deferred applicants</Heading>
+                  <p class="text-sm text-ink/60 m-0 mt-1">
+                    Hold a fresh handshake for these when the next cycle opens.
+                  </p>
+                </div>
+                <RouterLink
+                  to="/admin/applications?response=deferred"
+                  class="text-sm font-semibold text-amber-700 hover:underline shrink-0"
+                >
+                  View all →
+                </RouterLink>
+              </div>
+              <div class="flex flex-col gap-3">
+                <RouterLink
+                  v-for="app in deferredApplicants"
+                  :key="app.id"
+                  :to="`/admin/applications/${app.id}`"
+                  class="block group focus-ring-brand rounded-2xl"
+                >
+                  <UiCard hoverable class="p-5 flex items-center gap-4 !border-amber-200/60 bg-amber-50/20">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <Icon icon="lucide:clock" width="18" />
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1 min-w-0">
+                      <div class="flex items-center gap-3 flex-wrap">
+                        <h3 class="font-semibold text-base m-0 truncate">
+                          {{ applicantName(app) }}
+                        </h3>
+                        <UiChip>{{ programLabel(app.program) }}</UiChip>
+                      </div>
+                      <p class="text-sm text-ink/60 m-0">
+                        Deferred {{ timeAgo(app.spotRespondedAt ?? app.reviewedAt) }}
+                      </p>
+                    </div>
+                    <Icon
+                      icon="lucide:arrow-right"
+                      width="18"
+                      class="text-amber-700 transition-transform group-hover:translate-x-1 shrink-0"
+                    />
+                  </UiCard>
+                </RouterLink>
+              </div>
             </div>
           </div>
 

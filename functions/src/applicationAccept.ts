@@ -23,7 +23,18 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
+import { sendMailgun, spotReOfferedEmail } from './emailTemplates'
+
+const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
+const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
+
+function programLabel(program: string): string {
+  if (program === 'stepup_scholars') return 'StepUp Scholars'
+  if (program === 'dynamerge') return 'Dynamerge'
+  return 'STAIJA'
+}
 
 type SpotResponse = 'accepted' | 'declined' | 'deferred'
 
@@ -158,6 +169,7 @@ async function callerRole(uid: string): Promise<string | null> {
 
 export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
   {
+    secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
     region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
@@ -186,6 +198,9 @@ export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
     const data = snap.data() as {
       status?: string
       spotResponse?: string
+      program?: string
+      userId?: string
+      personalInfo?: { firstName?: string; email?: string }
     }
     if (data.status !== 'accepted') {
       throw new HttpsError(
@@ -193,7 +208,9 @@ export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
         'Re-offer only applies to accepted applications.',
       )
     }
-    // Idempotent — if there's nothing to clear, exit clean.
+    // Idempotent — if there's nothing to clear, exit clean. No email
+    // fires in this branch either; the applicant already received
+    // the original acceptance email.
     if (!data.spotResponse) {
       return { ok: true, changed: false }
     }
@@ -214,6 +231,43 @@ export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
       spotResponseNote: admin.firestore.FieldValue.delete(),
       updatedAt: new Date(),
     })
+
+    // Fire the "your spot is open again" email. Best-effort — a
+    // Mailgun outage shouldn't fail the re-offer call (the state
+    // change already happened, the applicant will discover the
+    // open offer next time they visit the dashboard). Recipient
+    // address falls back to the user-doc email if personalInfo
+    // wasn't populated for some legacy reason.
+    try {
+      let to = data.personalInfo?.email
+      if (!to && data.userId) {
+        const userSnap = await db.collection('users').doc(data.userId).get()
+        to = (userSnap.data()?.email as string | undefined) ?? undefined
+      }
+      if (to) {
+        const firstName = data.personalInfo?.firstName?.trim() || 'there'
+        const { html, text } = spotReOfferedEmail({
+          firstName,
+          programLabel: programLabel(data.program ?? ''),
+          applicationId,
+        })
+        await sendMailgun({
+          apiKey: MAILGUN_API_KEY.value(),
+          domain: MAILGUN_DOMAIN.value(),
+          to,
+          subject: `Your ${programLabel(data.program ?? '')} spot is open again`,
+          text,
+          html,
+        })
+      } else {
+        console.warn(
+          `[reOfferToDeferredApplicant] no email on file for application ${applicationId}; state changed but no email sent`,
+        )
+      }
+    } catch (err) {
+      console.error('[reOfferToDeferredApplicant] email send failed', err)
+    }
+
     return { ok: true, changed: true }
   },
 )

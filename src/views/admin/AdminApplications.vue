@@ -14,8 +14,8 @@
  * status-chip vocabulary the unified review page already uses, so the
  * two surfaces feel like one product instead of two.
  */
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
@@ -36,9 +36,17 @@ const loading = ref(true)
 const error = ref('')
 const selectedApplications = ref<string[]>([])
 
+const route = useRoute()
+
 const searchQuery = ref('')
 const statusFilter = ref('')
 const programFilter = ref('')
+// New filter for the spot-response field. Only meaningful for
+// accepted applications (which are the only ones that can have a
+// response). Default empty = "all". Bound to ?response=… in the URL
+// so the admin overview's "Deferred applicants" card can deep-link
+// straight into the filtered view.
+const responseFilter = ref('')
 const sortBy = ref('submittedAt')
 
 /** Status presentation map. Single source of truth so the chip tones
@@ -105,6 +113,15 @@ const filteredApplications = computed(() => {
   if (programFilter.value) {
     filtered = filtered.filter((app) => app.program === programFilter.value)
   }
+  if (responseFilter.value === 'awaiting') {
+    // "Awaiting response" = accepted but no spotResponse yet.
+    // Useful for chasing applicants who haven't confirmed.
+    filtered = filtered.filter(
+      (app) => app.status === 'accepted' && !app.spotResponse,
+    )
+  } else if (responseFilter.value) {
+    filtered = filtered.filter((app) => app.spotResponse === responseFilter.value)
+  }
 
   // Sort. Out-of-the-list null timestamps go to the bottom so the
   // newest reviewable applications are always on top. localeCompare
@@ -136,8 +153,24 @@ const filteredApplications = computed(() => {
 })
 
 const hasFilters = computed(
-  () => !!(searchQuery.value || statusFilter.value || programFilter.value),
+  () => !!(searchQuery.value || statusFilter.value || programFilter.value || responseFilter.value),
 )
+
+// Seed the response filter from the URL on mount + keep it synced.
+// The admin overview's "Deferred applicants" card links straight
+// here with `?response=deferred`, and staff sharing a link to a
+// filtered view shouldn't lose the filter on reload.
+onMounted(() => {
+  const r = route.query.response
+  if (typeof r === 'string' && ['accepted', 'declined', 'deferred', 'awaiting'].includes(r)) {
+    responseFilter.value = r
+  }
+})
+watch(responseFilter, (v) => {
+  // Replace, not push — staff cycling through filters shouldn't
+  // bloat the back-button history.
+  void router.replace({ query: { ...route.query, response: v || undefined } })
+})
 
 const allSelected = computed(
   () =>
@@ -263,6 +296,58 @@ async function reOfferDeferred(applicationId: string) {
   }
 }
 
+/** True when any selected row is currently deferred. Drives whether
+ *  the bulk "Re-offer selected" button is even worth showing — if no
+ *  selected row has spotResponse='deferred', the action is a no-op
+ *  (the callable would throw failed-precondition on each call). */
+const bulkReOfferEligible = computed(() => {
+  if (selectedApplications.value.length === 0) return false
+  const selectedSet = new Set(selectedApplications.value)
+  return applications.value.some(
+    (app) =>
+      app.id !== undefined &&
+      selectedSet.has(app.id) &&
+      app.status === 'accepted' &&
+      app.spotResponse === 'deferred',
+  )
+})
+
+async function bulkReOffer() {
+  if (!bulkReOfferEligible.value || bulking.value) return
+  bulking.value = true
+  try {
+    const selectedSet = new Set(selectedApplications.value)
+    const eligible = applications.value.filter(
+      (app) =>
+        app.id !== undefined &&
+        selectedSet.has(app.id) &&
+        app.status === 'accepted' &&
+        app.spotResponse === 'deferred',
+    )
+    const fn = httpsCallable<
+      { applicationId: string },
+      { ok: true; changed: boolean }
+    >(functions, 'reOfferToDeferredApplicant')
+    // Settled (not all) so a failure on one row doesn't strand the
+    // others mid-batch — the callable is per-application and each
+    // call fires its own email. Log partial failures and let the
+    // reload reveal the surviving deferred rows.
+    const results = await Promise.allSettled(
+      eligible.map((app) => fn({ applicationId: app.id! })),
+    )
+    const failed = results.filter((r) => r.status === 'rejected').length
+    if (failed > 0) {
+      error.value = `${failed} of ${eligible.length} re-offers failed. Try again or open the row to see the error.`
+    }
+    await loadApplications()
+    selectedApplications.value = []
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Bulk re-offer failed.'
+  } finally {
+    bulking.value = false
+  }
+}
+
 /** CSV export of the currently-filtered list. Quotes every cell so
  *  commas inside research interests / names don't corrupt the
  *  column boundaries — the legacy export joined `researchInterests`
@@ -367,7 +452,7 @@ onMounted(loadApplications)
               class="w-full border hairline-ink rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-paper"
             />
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <UiSelect
               v-model="statusFilter"
               placeholder="All statuses"
@@ -386,6 +471,17 @@ onMounted(loadApplications)
                 { value: '',                label: 'All programs' },
                 { value: 'stepup_scholars', label: 'StepUp Scholars' },
                 { value: 'dynamerge',       label: 'Dynamerge' },
+              ]"
+            />
+            <UiSelect
+              v-model="responseFilter"
+              placeholder="Any response"
+              :options="[
+                { value: '',         label: 'Any response' },
+                { value: 'awaiting', label: 'Awaiting response' },
+                { value: 'accepted', label: 'Spot accepted' },
+                { value: 'declined', label: 'Spot declined' },
+                { value: 'deferred', label: 'Deferred' },
               ]"
             />
             <UiSelect
@@ -437,6 +533,22 @@ onMounted(loadApplications)
               @click="bulkUpdateStatus('rejected')"
             >
               <Icon icon="lucide:x" width="14" /> Decline selected
+            </button>
+            <!-- Bulk re-offer. Only renders when at least one
+                 selected row is currently deferred — otherwise the
+                 callable would throw failed-precondition on each
+                 row and waste the staff's time. The action fires the
+                 re-offer email per row via Promise.allSettled so a
+                 transient failure on one applicant doesn't strand
+                 the others. -->
+            <button
+              v-if="bulkReOfferEligible"
+              type="button"
+              :disabled="bulking"
+              class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 disabled:opacity-50 transition-colors focus-ring-brand"
+              @click="bulkReOffer"
+            >
+              <Icon icon="lucide:rotate-ccw" width="14" /> Re-offer deferred
             </button>
           </div>
           <button

@@ -274,6 +274,42 @@ export function applicationRejectedEmail(params: {
   return { html, text }
 }
 
+export function spotReOfferedEmail(params: {
+  firstName: string
+  programLabel: string
+  applicationId: string
+}): { html: string; text: string } {
+  const { firstName, programLabel, applicationId } = params
+  const dashboardUrl = `https://staija.org/applicant/applications/${applicationId}`
+
+  const html = layout(`
+    ${eyebrow(programLabel)}
+    ${heading('Your spot is open again.')}
+    ${p(`Hi ${firstName},`)}
+    ${p(`Last cycle you deferred your ${programLabel} acceptance — that cycle's open now. Your spot is waiting if you'd like it.`)}
+    ${p(`Sign in to confirm, decline, or defer again. The team will start placing applicants in cohorts within a few days, so a quick response helps us plan.`, 'margin-bottom:0;')}
+    ${button('Respond to your offer', dashboardUrl)}
+    ${refBox(applicationId)}
+    ${p('— STAIJA', 'margin-bottom:0;')}
+  `)
+
+  const text = [
+    `Hi ${firstName},`,
+    ``,
+    `Last cycle you deferred your ${programLabel} acceptance — that cycle's open now. Your spot is waiting if you'd like it.`,
+    ``,
+    `Sign in to confirm, decline, or defer again. The team will start placing applicants in cohorts within a few days, so a quick response helps us plan.`,
+    ``,
+    `Respond: ${dashboardUrl}`,
+    ``,
+    `Your reference number: ${applicationId}`,
+    ``,
+    `— STAIJA`,
+  ].join('\n')
+
+  return { html, text }
+}
+
 export function referenceInviteEmail(params: {
   refName: string
   applicantName: string

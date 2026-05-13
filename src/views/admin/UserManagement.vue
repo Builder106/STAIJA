@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { httpsCallable } from 'firebase/functions'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
@@ -615,6 +616,19 @@ onMounted(() => {
                     {{ formatRelative(user.lastSignInTime) }}
                   </td>
                   <td class="px-5 py-3 text-right whitespace-nowrap">
+                    <!-- Mentor public profile link. Only renders for
+                         users with role='mentor' — the page itself
+                         renders a "not a mentor" empty state for
+                         everyone else, but offering the link only
+                         where it works keeps the row tidy. -->
+                    <RouterLink
+                      v-if="user.role === 'mentor'"
+                      :to="`/mentors/${user.uid}`"
+                      class="text-xs font-medium text-brand-violet hover:underline"
+                    >
+                      View profile
+                    </RouterLink>
+                    <span v-if="user.role === 'mentor'" class="text-ink/20 mx-2">·</span>
                     <button
                       type="button"
                       class="text-xs font-medium text-brand-violet hover:underline disabled:text-ink/30 disabled:cursor-not-allowed disabled:no-underline"
