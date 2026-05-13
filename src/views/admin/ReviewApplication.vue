@@ -113,6 +113,61 @@ const isDirty = computed(() => {
   )
 })
 
+/** Days the application has been waiting since the applicant
+ *  submitted it. Drives the "X days in queue" chip in the hero — at
+ *  scale this is the single most useful piece of metadata for triage
+ *  (which app has been sitting longest?), and the legacy surface
+ *  buried it under a paragraph of "Submitted: October 12, 2026". */
+const daysInQueue = computed<number | null>(() => {
+  const submitted = toDate(application.value?.submittedAt)
+  if (!submitted) return null
+  const ms = Date.now() - submitted.getTime()
+  if (ms < 0) return null
+  return Math.floor(ms / (24 * 60 * 60 * 1000))
+})
+
+const queueChip = computed<{ label: string; tone: string } | null>(() => {
+  const days = daysInQueue.value
+  if (days === null || application.value?.status !== 'submitted') return null
+  const label = days === 0 ? 'New today' : days === 1 ? '1 day in queue' : `${days} days in queue`
+  // Tone climbs with age so a 30-day-old "submitted" jumps out red.
+  const tone =
+    days >= 14
+      ? 'bg-rose-50 text-rose-700 border-rose-200'
+      : days >= 7
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-ink/5 text-ink/60 border-ink/15'
+  return { label, tone }
+})
+
+/** Word count helper for the long-form fields. Splits on whitespace
+ *  rather than tokenising properly — the value is a skim signal, not
+ *  a precise count, so the cheap version is good enough. */
+function wordCount(text: string | undefined | null): number {
+  if (!text) return 0
+  return text.trim().split(/\s+/).filter(Boolean).length
+}
+
+const motivationWords = computed(() => wordCount(application.value?.motivation))
+const experienceWords = computed(() => wordCount(application.value?.experience))
+
+/** Reference to the feedback textarea so quick-actions can land focus
+ *  there after setting a status — the staff flow is "decide → write a
+ *  one-line reason → save", so dropping the cursor in the textarea
+ *  removes one click from the path. */
+const feedbackInput = ref<HTMLTextAreaElement | null>(null)
+
+/** Bump the status to a new value AND focus the feedback field. Used
+ *  by the quick-action buttons (Accept / Mark under review / Decline)
+ *  so the most common transitions are one-click affairs — the verbose
+ *  dropdown stays for edge cases like reverting to "Submitted". */
+function quickSetStatus(status: typeof reviewForm.value.status) {
+  reviewForm.value.status = status
+  // Defer focus to next tick so the textarea has rendered if it was
+  // hidden mid-state-change (it isn't today, but cheap insurance).
+  setTimeout(() => feedbackInput.value?.focus(), 0)
+}
+
 const personalRows = computed(() => {
   const p = application.value?.personalInfo
   if (!p) return []
@@ -374,6 +429,14 @@ onMounted(loadApplication)
                 >
                   {{ currentStatusMeta.label }}
                 </span>
+                <span
+                  v-if="queueChip"
+                  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border"
+                  :class="queueChip.tone"
+                >
+                  <Icon icon="lucide:clock" width="12" />
+                  {{ queueChip.label }}
+                </span>
                 <a
                   :href="`mailto:${application.personalInfo.email}`"
                   class="text-sm text-ink/70 hover:text-brand-violet focus-ring-brand rounded-sm transition-colors"
@@ -519,18 +582,28 @@ onMounted(loadApplication)
 
               <!-- Motivation -->
               <UiCard v-if="application.motivation" class="p-6 md:p-8 bg-surface">
-                <div class="flex items-center gap-3 mb-5">
-                  <Icon icon="lucide:sparkles" width="20" class="text-brand-violet" />
-                  <h2 class="font-display text-xl font-semibold m-0 text-ink">Motivation</h2>
+                <div class="flex items-center justify-between gap-3 mb-5">
+                  <div class="flex items-center gap-3">
+                    <Icon icon="lucide:sparkles" width="20" class="text-brand-violet" />
+                    <h2 class="font-display text-xl font-semibold m-0 text-ink">Motivation</h2>
+                  </div>
+                  <span class="text-xs text-ink/50 tabular-nums shrink-0">
+                    {{ motivationWords }} words
+                  </span>
                 </div>
                 <p class="text-sm text-ink/85 leading-relaxed whitespace-pre-wrap m-0">{{ application.motivation }}</p>
               </UiCard>
 
               <!-- Experience -->
               <UiCard v-if="application.experience" class="p-6 md:p-8 bg-surface">
-                <div class="flex items-center gap-3 mb-5">
-                  <Icon icon="lucide:briefcase" width="20" class="text-brand-violet" />
-                  <h2 class="font-display text-xl font-semibold m-0 text-ink">Experience</h2>
+                <div class="flex items-center justify-between gap-3 mb-5">
+                  <div class="flex items-center gap-3">
+                    <Icon icon="lucide:briefcase" width="20" class="text-brand-violet" />
+                    <h2 class="font-display text-xl font-semibold m-0 text-ink">Experience</h2>
+                  </div>
+                  <span class="text-xs text-ink/50 tabular-nums shrink-0">
+                    {{ experienceWords }} words
+                  </span>
                 </div>
                 <p class="text-sm text-ink/85 leading-relaxed whitespace-pre-wrap m-0">{{ application.experience }}</p>
               </UiCard>
@@ -672,6 +745,52 @@ onMounted(loadApplication)
                   <h2 class="font-display text-lg font-semibold m-0 text-ink">Decision</h2>
                 </div>
 
+                <!-- Quick-action row. The full status dropdown lives
+                     below for edge cases (reverting to "Submitted",
+                     etc.), but >95% of decisions land on one of these
+                     three transitions — one tap + write feedback +
+                     save instead of dropdown-click-pick-tab-write. -->
+                <div class="flex flex-col gap-2">
+                  <span class="text-xs uppercase tracking-wider text-ink/55 font-semibold">
+                    Quick decision
+                  </span>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold border transition-colors focus-ring-brand"
+                      :class="reviewForm.status === 'accepted'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'"
+                      @click="quickSetStatus('accepted')"
+                    >
+                      <Icon icon="lucide:check" width="14" />
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold border transition-colors focus-ring-brand"
+                      :class="reviewForm.status === 'under_review'
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
+                      @click="quickSetStatus('under_review')"
+                    >
+                      <Icon icon="lucide:eye" width="14" />
+                      Review
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold border transition-colors focus-ring-brand"
+                      :class="reviewForm.status === 'rejected'
+                        ? 'bg-rose-700 text-white border-rose-700'
+                        : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'"
+                      @click="quickSetStatus('rejected')"
+                    >
+                      <Icon icon="lucide:x" width="14" />
+                      Decline
+                    </button>
+                  </div>
+                </div>
+
                 <div class="flex flex-col gap-2">
                   <label
                     :for="`status-${application.id}`"
@@ -700,6 +819,7 @@ onMounted(loadApplication)
                   </label>
                   <textarea
                     :id="`feedback-${application.id}`"
+                    ref="feedbackInput"
                     v-model="reviewForm.feedback"
                     rows="8"
                     placeholder="Tell the applicant what stood out, what's pending, what's next…"
