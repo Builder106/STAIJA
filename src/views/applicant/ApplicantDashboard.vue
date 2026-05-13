@@ -279,6 +279,56 @@ const hasApplications = computed(() => applications.value.length > 0)
 // reset on the next visit.
 let unsubscribeDrafts: (() => void) | null = null
 
+/**
+ * Synchronous local-storage pass — reads cached drafts and populates
+ * `localDrafts` so the first paint shows the applicant's work without
+ * waiting on Firestore.
+ *
+ * Why this exists. `watchUserDrafts`' `onSnapshot` is the canonical
+ * cross-device source, but its initial snapshot can stall for up to a
+ * minute when the WebChannel handshake falls back to long-polling
+ * under content-blocker or restrictive-network conditions (the same
+ * scenario `experimentalAutoDetectLongPolling: true` in firebase.ts
+ * mitigates but doesn't fully eliminate). Gating render on that
+ * snapshot meant the dashboard would spin for ~60s instead of showing
+ * the perfectly-good local copy that's already in IndexedDB. Painting
+ * from local first means the page is interactive immediately; the
+ * snapshot still runs and replaces this with reconciled data when it
+ * arrives.
+ *
+ * Safe to call before reconcileDrafts. The listener's first callback
+ * overwrites `localDrafts` with the full local-vs-cloud merge, so any
+ * brief discrepancy (e.g. a cloud-only draft from another device that
+ * hasn't synced to this browser yet) resolves itself within a
+ * snapshot cycle.
+ */
+function hydrateLocalDraftsSync(uid: string) {
+  if (typeof window === 'undefined') return
+  const found: LocalDraft[] = []
+  for (const { slug, name } of PROGRAM_SLUGS) {
+    const key = `staija.draft.apply.${slug}.${uid}`
+    try {
+      const raw = window.localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw) as { v?: number; savedAt?: number }
+      if (parsed.v !== 1 || typeof parsed.savedAt !== 'number') continue
+      if (Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+        window.localStorage.removeItem(key)
+        continue
+      }
+      found.push({
+        slug,
+        programName: name,
+        savedAt: new Date(parsed.savedAt),
+        source: 'local',
+      })
+    } catch {
+      try { window.localStorage.removeItem(key) } catch { /* ignore */ }
+    }
+  }
+  localDrafts.value = found
+}
+
 async function loadData() {
   loading.value = true
   error.value = ''
@@ -289,6 +339,11 @@ async function loadData() {
       return
     }
 
+    // First paint: cached drafts from localStorage. Synchronous, so
+    // the empty-state vs. has-drafts UI resolves correctly the first
+    // time it renders.
+    hydrateLocalDraftsSync(currentUser.uid)
+
     // Open a live listener on the user's drafts. onSnapshot fires the
     // callback immediately with the current state, then again on
     // every Firestore mutation — so a delete on another device shows
@@ -296,15 +351,18 @@ async function loadData() {
     // didInitialDraftSync flag (reset to false below) lets the first
     // reconcile push local-only drafts to cloud; subsequent
     // reconciles skip the push to avoid feedback loops.
+    //
+    // Crucially: `loading` is NOT flipped off inside this callback
+    // anymore. Doing so meant a stalled long-polling probe kept the
+    // dashboard spinning for ~60s on flaky networks. Now we flip
+    // loading off after the one-shot applications fetch returns —
+    // the snapshot callback continues to reconcile drafts in the
+    // background as cloud data arrives.
     didInitialDraftSync = false
     if (unsubscribeDrafts) unsubscribeDrafts()
     unsubscribeDrafts = watchUserDrafts(currentUser.uid, async (cloudDocs) => {
       await reconcileDrafts(currentUser.uid, cloudDocs)
       didInitialDraftSync = true
-      // The first snapshot supplies the data we'd otherwise have
-      // awaited explicitly — flip loading off here so the dashboard
-      // can render. Applications still come from a one-shot below.
-      loading.value = false
     })
 
     // Applications are still one-shot — the user-asked symptom was
@@ -313,11 +371,13 @@ async function loadData() {
     applications.value = await DatabaseService.getUserApplications(currentUser.uid)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load your applications.'
+  } finally {
+    // First paint unblocks here. The drafts listener may still be
+    // pending its initial snapshot — that's fine, hydrateLocalDrafts
+    // already filled `localDrafts` from cache, and the reconcile will
+    // update it in place when (or if) the snapshot arrives.
     loading.value = false
   }
-  // Note: loading.value is flipped off inside the snapshot callback
-  // (drafts) or by the catch above. We deliberately don't put it in
-  // a finally — the try-block returns before the listener fires.
 }
 
 function toDate(value: unknown): Date {
