@@ -184,8 +184,52 @@ async function remove(c: Cohort) {
   }
 }
 
+// Re-arm the deferred-re-offer cron for a cohort that's already been
+// processed. Clears the two tracking fields so the next daily cron
+// run picks it up again — useful when staff wants a fresh batch of
+// emails to go out (e.g. after extending a cohort's startDate, or
+// when the first pass found zero deferreds because the deferred
+// responses landed AFTER the cron ran). Per-row loading flag so a
+// click can't fire twice. The confirm() is deliberate: re-arming
+// produces user-visible emails on the next cron run, and staff
+// should know they're queueing that side effect.
+const rearmingIds = ref<Set<string>>(new Set())
+
+async function rearmDeferredsCron(c: Cohort) {
+  if (!c.id || rearmingIds.value.has(c.id)) return
+  if (!confirm(
+    `Re-arm the deferred re-offer cron for "${c.name || c.courseSlug}"?\n\n` +
+    `The next daily cron run will email every deferred applicant in this ` +
+    `program. They'll see the three-CTA handshake on their dashboard again.`,
+  )) return
+  rearmingIds.value = new Set([...rearmingIds.value, c.id])
+  try {
+    await CohortService.rearmDeferredsCron(c.id)
+    await load()
+  } catch (err) {
+    error.value = (err as { message?: string }).message ?? 'Re-arm failed.'
+  } finally {
+    const next = new Set(rearmingIds.value)
+    next.delete(c.id)
+    rearmingIds.value = next
+  }
+}
+
 function fmtDate(value: unknown) {
   return new Date(toMillis(value)).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+/** Plain ms epoch → short readable date. Separate from `fmtDate`
+ *  because `deferredsAutoReOfferedAt` is stored as a primitive ms
+ *  number (the cron writes `Date.now()`), not a Firestore Timestamp,
+ *  so it bypasses the toMillis wrap. */
+function fmtMsDate(ms: number | undefined): string {
+  if (!ms) return ''
+  return new Date(ms).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -257,6 +301,20 @@ onMounted(load)
                   <td class="px-5 py-3">
                     <div class="text-ink font-medium">{{ c.name || c.courseSlug }}</div>
                     <div class="text-ink/60 text-xs">v{{ c.courseVersion }}</div>
+                    <!-- Cron audit line. Renders only when the
+                         reOfferDeferredOnCohortStart cron has fired
+                         for this cohort — staff sees at a glance
+                         which cohorts already had their deferreds
+                         re-opened. The companion Re-arm button in
+                         the Actions column clears this. -->
+                    <div
+                      v-if="c.deferredsAutoReOffered && c.deferredsAutoReOfferedAt"
+                      class="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                      :title="`Deferred applicants re-offered by the daily cron on ${fmtMsDate(c.deferredsAutoReOfferedAt)}`"
+                    >
+                      <Icon icon="lucide:mail-check" width="10" />
+                      Deferreds re-offered {{ fmtMsDate(c.deferredsAutoReOfferedAt) }}
+                    </div>
                   </td>
                   <td class="px-5 py-3 text-ink/80 capitalize">
                     {{ c.program.replace('_', ' ') }}
@@ -289,6 +347,21 @@ onMounted(load)
                       @click="openGraduate(c)"
                     >
                       Graduate
+                    </button>
+                    <!-- Re-arm only renders when the cron has already
+                         fired. Lets staff queue a fresh email round
+                         to deferred applicants without touching
+                         Firestore Console. The confirm() spells out
+                         the side effect (emails will be sent) so a
+                         mis-click doesn't surprise anyone. -->
+                    <button
+                      v-if="c.deferredsAutoReOffered === true"
+                      type="button"
+                      class="text-xs font-medium text-amber-700 hover:underline mr-3 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+                      :disabled="!!c.id && rearmingIds.has(c.id)"
+                      @click="rearmDeferredsCron(c)"
+                    >
+                      {{ c.id && rearmingIds.has(c.id) ? 'Re-arming…' : 'Re-arm' }}
                     </button>
                     <button
                       type="button"

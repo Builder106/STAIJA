@@ -21,6 +21,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
   orderBy,
@@ -162,6 +163,27 @@ export class CohortService {
 
   static async deleteCohort(cohortId: string): Promise<void> {
     await deleteDoc(doc(db, 'cohorts', cohortId))
+  }
+
+  /**
+   * Clear the two `deferredsAutoReOffered*` markers so the next run
+   * of `reOfferDeferredOnCohortStart` will process this cohort
+   * again. Used by the Cohorts admin "Re-arm" action when staff
+   * wants the cron to re-fire the batched re-offer email — e.g.
+   * after editing a cohort's startDate forward, or after the first
+   * pass picked up zero applicants because they all hit the deferred
+   * state AFTER the cron ran.
+   *
+   * Field-level deletes via FieldValue.deleteField() so the doc
+   * returns to its pre-cron state instead of carrying false +
+   * stale-timestamp metadata. Staff/admin rule on cohorts already
+   * permits this write; no callable needed.
+   */
+  static async rearmDeferredsCron(cohortId: string): Promise<void> {
+    await updateDoc(doc(db, 'cohorts', cohortId), {
+      deferredsAutoReOffered: deleteField(),
+      deferredsAutoReOfferedAt: deleteField(),
+    })
   }
 }
 
