@@ -132,16 +132,23 @@ service cloud.firestore {
           //    Locked to that one field, and only allowed while the
           //    application hasn't moved into formal review yet —
           //    no editing attachments after staff start reviewing.
+          //    `updatedAt` is whitelisted because
+          //    DatabaseService.updateApplication always bumps it.
           request.auth != null &&
           isOwner(resource.data.userId) &&
           resource.data.status in ['draft', 'submitted'] &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['documents'])
+            .hasOnly(['documents', 'updatedAt'])
         ) || (
           // 3. Staff/admin reviewing — narrow allow-list of fields.
+          //    `updatedAt` is whitelisted because
+          //    DatabaseService.updateApplication always bumps it on
+          //    every call site; without this the Save-review button
+          //    fired "Missing or insufficient permissions" even for
+          //    legitimate staff reviewers.
           hasAnyRole(['staff', 'admin']) &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'feedback'])
+            .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'feedback', 'updatedAt'])
         );
 
       // Delete: applicant can withdraw their own at any stage; staff
