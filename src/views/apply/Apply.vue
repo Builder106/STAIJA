@@ -1118,6 +1118,27 @@ function relativeTime(date: Date): string {
   return `${days} days ago`
 }
 
+/** Compact "saved at" stamp for the inline draft indicator. A draft
+ *  restored from yesterday's session shows just a time, which reads as
+ *  "saved seconds ago" and is misleading. Anchoring it to the day
+ *  removes the ambiguity without bloating the chip. */
+function savedAtLabel(date: Date): string {
+  const now = new Date()
+  const sameDay = date.toDateString() === now.toDateString()
+  const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  if (sameDay) return time
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === yesterday.toDateString()) return `Yesterday, ${time}`
+  const sameYear = date.getFullYear() === now.getFullYear()
+  const dateLabel = date.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+  return `${dateLabel}, ${time}`
+}
+
 // --- Field helpers for tags input -----------------------------------
 
 // Raw text per tags field, kept separately from `fields[name]` (which
@@ -1714,7 +1735,7 @@ watch(
               v-else-if="autoSave?.lastSavedAt"
               class="text-xs text-ink/50 hidden sm:inline"
             >
-              Draft saved · {{ autoSave.lastSavedAt.toLocaleTimeString() }}
+              Draft saved · {{ savedAtLabel(autoSave.lastSavedAt) }}
             </span>
             <UiButton
               v-if="currentStep?.id !== 'review'"
