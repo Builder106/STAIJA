@@ -3,6 +3,14 @@
   <img alt="STAIJA — web platform for Nigeria's STEM scholars and scientist-leaders" src="tools/banner/banner-light.png">
 </picture>
 
+[![Demo](https://img.shields.io/badge/demo-live-success.svg)](https://staija.org)
+[![Vue](https://img.shields.io/badge/Vue-3.5%2B-4FC08D.svg?logo=vuedotjs&logoColor=white)](https://vuejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28.svg?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF.svg?logo=vite&logoColor=white)](https://vitejs.dev)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
+
 # STAIJA
 
 Web platform for STAIJA's StepUp Scholars and Dynamerge programs — application management, applicant tracking, mentorship, and public content for STEM students across Nigeria.
@@ -191,3 +199,7 @@ firebase deploy --only firestore,storage
 | `mentor` | Assigned mentors |
 | `staff` | STAIJA team (@staija.org email, verified) |
 | `admin` | Full access |
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
