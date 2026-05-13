@@ -56,7 +56,12 @@ const statusInfo = computed(() => {
   if (s === 'submitted') return { label: 'Under review', tone: 'amber', desc: 'We have your application. A reviewer will get to it within 5 business days.' }
   if (s === 'under_review') return { label: 'In active review', tone: 'sky', desc: "A reviewer is reading through it now. You'll hear from us soon." }
   if (s === 'accepted') return { label: 'Accepted', tone: 'emerald', desc: "You're in. Check your inbox for next steps." }
-  if (s === 'rejected') return { label: 'Decision made', tone: 'rose', desc: 'A decision has been made. Check your inbox for the message from the team.' }
+  // Mirror the dashboard chip's "Not selected" so an applicant who
+  // scans the dashboard sees the SAME plain-English outcome when they
+  // click through. The legacy "Decision made" / "A decision has been
+  // made" copy stayed ambiguous between accepted and rejected, which
+  // is exactly what we don't want at the moment we deliver bad news.
+  if (s === 'rejected') return { label: 'Not selected', tone: 'rose', desc: "We couldn't move you forward this cycle. The full note from the team is below." }
   return { label: 'Draft', tone: 'ink', desc: 'You have an unfinished application. Pick up where you left off.' }
 })
 
@@ -121,9 +126,11 @@ const decisionMeta = computed(() => {
       cardClass: '!border-emerald-200 bg-emerald-50/40',
     }
   }
-  // rejected
+  // rejected — say the outcome out loud. "A decision has been made"
+  // could equally describe an acceptance; the applicant shouldn't
+  // have to scan the chip colour to know which one they got.
   return {
-    headline: 'A decision has been made.',
+    headline: 'Not selected this cycle.',
     eyebrow: 'Decision',
     icon: 'lucide:mail',
     iconClass: 'text-rose-700 bg-rose-100',
