@@ -27,6 +27,7 @@ export {
 export { onUserCreated } from './welcome'
 export { sendReferenceReminders } from './referenceReminders'
 export { reapApplicationDraftTombstones } from './applicationDraftsCron'
+export { reapApplicationStagedFiles } from './applicationStagedFilesCron'
 export { deleteAccount } from './account'
 export { adminListUsers } from './adminUsers'
 export { signOutEverywhere } from './security'

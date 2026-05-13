@@ -30,7 +30,8 @@ import {
   where,
   type Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '../config/firebase'
+import { deleteObject, ref as storageRef } from 'firebase/storage'
+import { db, storage } from '../config/firebase'
 
 export type DraftProgramSlug = 'stepup-scholars' | 'dynamerge'
 
@@ -166,6 +167,21 @@ export async function deleteDraft(
   program: DraftProgramSlug,
 ): Promise<void> {
   try {
+    // Best-effort: wipe any staged uploads the applicant pre-uploaded
+    // for this draft before tombstoning the doc. The orphan cron sweeps
+    // anything we miss, so failures here are non-fatal. We fire all
+    // deletes in parallel because we don't care which finishes first —
+    // the cron picks up stragglers either way.
+    const stagedPaths = collectStagedPaths(await readPayload(userId, program))
+    if (stagedPaths.length > 0) {
+      await Promise.allSettled(
+        stagedPaths.map((path) =>
+          deleteObject(storageRef(storage, path)).catch((err) => {
+            console.warn('[applicationDrafts] deleteDraft staged-file cleanup failed', path, err)
+          }),
+        ),
+      )
+    }
     await setDoc(
       doc(db, 'applicationDrafts', draftId(userId, program)),
       {
@@ -182,6 +198,41 @@ export async function deleteDraft(
   } catch (err) {
     console.warn('[applicationDrafts] deleteDraft failed', err)
   }
+}
+
+/** Read just enough of the draft to enumerate staged uploads. Returns
+ *  an empty object on any failure — the caller treats that as "nothing
+ *  to clean up", and the orphan cron sweeps stragglers regardless. */
+async function readPayload(
+  userId: string,
+  program: DraftProgramSlug,
+): Promise<Record<string, unknown>> {
+  try {
+    const snap = await getDoc(doc(db, 'applicationDrafts', draftId(userId, program)))
+    if (!snap.exists()) return {}
+    const payload = (snap.data() as ApplicationDraftDoc).payload
+    return (payload as Record<string, unknown>) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+/** Walk a draft payload and pull every staged-file Storage path. Defensive
+ *  about shape — old drafts predate StagedFiles and won't have the field. */
+function collectStagedPaths(payload: Record<string, unknown>): string[] {
+  const stagedFiles = payload.stagedFiles as StagedFiles | undefined
+  if (!stagedFiles) return []
+  const paths: string[] = []
+  for (const key of ['transcript', 'id', 'showcase'] as const) {
+    const entry = stagedFiles[key]
+    if (entry?.storagePath) paths.push(entry.storagePath)
+  }
+  if (stagedFiles.audio) {
+    for (const entry of Object.values(stagedFiles.audio)) {
+      if (entry?.storagePath) paths.push(entry.storagePath)
+    }
+  }
+  return paths
 }
 
 /** List every cloud draft the current user has — used by the applicant
