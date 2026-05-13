@@ -240,10 +240,11 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
             </div>
           </div>
 
-          <!-- Feedback body. Whitespace-pre-wrap preserves the
-               reviewer's line breaks; staff often write a short
-               paragraph + a bulleted list of reasons / next steps. -->
-          <div v-if="application.feedback" class="mt-2">
+          <!-- Feedback body. Renders only when staff actually wrote
+               one. If they didn't, the headline + reviewedAt footer
+               below ARE the decision — no need to invent a phantom
+               "detailed message" the applicant should go look for. -->
+          <div v-if="application.feedback">
             <div class="text-xs uppercase tracking-wider text-ink/55 font-semibold mb-2">
               Note from the team
             </div>
@@ -251,17 +252,11 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
               {{ application.feedback }}
             </p>
           </div>
-          <!-- Fallback when staff saved a status change without
-               typing anything into the feedback box. We tell the
-               applicant where to look next instead of rendering a
-               weird empty space. -->
-          <p v-else class="text-sm text-ink/70 leading-relaxed m-0">
-            Check your inbox — the team sent a detailed message there.
-          </p>
 
           <div
             v-if="application.reviewedAt"
-            class="text-xs text-ink/50 mt-4 pt-4 border-t hairline-ink"
+            class="text-xs text-ink/50"
+            :class="application.feedback ? 'mt-4 pt-4 border-t hairline-ink' : ''"
           >
             Decision sent {{ formatDate(toDate(application.reviewedAt) ?? undefined) }}
           </div>
