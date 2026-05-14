@@ -134,11 +134,23 @@ VITE_CONTENTFUL_MANAGEMENT_TOKEN
 VITE_CONTENTFUL_ENV_ID
 
 VITE_PAYSTACK_PUBLIC_KEY
-VITE_NEWSLETTER_ENDPOINT
+VITE_NEWSLETTER_ENDPOINT            # subscribeNewsletter Cloud Function URL
+VITE_PUBLIC_MENTORS_ENDPOINT        # getPublicMentors Cloud Function URL (public mentor showcase)
+VITE_REFERRER_NAME_ENDPOINT         # resolveReferrerName Cloud Function URL (personalised /stay-connected hero)
 VITE_APP_URL
 
 VITE_RECAPTCHA_ENTERPRISE_SITE_KEY  # Firebase App Check site key (public)
 ```
+
+The three `*_ENDPOINT` vars are optional. Each surface degrades to a sensible
+empty state when its endpoint is unset:
+
+- `VITE_NEWSLETTER_ENDPOINT` unset → newsletter forms record intent locally and
+  show a fake-success state (no real signup happens).
+- `VITE_PUBLIC_MENTORS_ENDPOINT` unset → `/stay-connected`'s mentor showcase
+  renders its "Mentor profiles coming soon" empty state.
+- `VITE_REFERRER_NAME_ENDPOINT` unset → `/stay-connected` falls back to the
+  generic hero copy even when `?ref=u-<uid>` is in the URL.
 
 `.env` is gitignored. It is only read by the Vite build — Cloud Functions read secrets from Firebase Secret Manager, not from `.env`.
 
