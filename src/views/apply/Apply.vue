@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, type Ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from '../../components/ui/Container.vue'
@@ -18,6 +18,7 @@ import { useAuth } from '../../composables/useAuth'
 import { useAutoSave } from '../../composables/useAutoSave'
 import { DatabaseService } from '../../services/database'
 import { StorageService } from '../../services/storageService'
+import { ProgramService } from '../../services/programService'
 import { trackApplyClick } from '../../services/analytics'
 import {
   getDraft as getCloudDraft,
@@ -1070,11 +1071,6 @@ onMounted(() => {
     router.replace({ path: '/signup', query: { redirect: route.fullPath } })
     return
   }
-  // initAutoSave is the async path that decides which step to land
-  // on. We always flip `initializing` off when it settles (success or
-  // failure) so a Firestore hiccup doesn't leave the wizard stuck
-  // behind the skeleton forever.
-  initAutoSave().finally(() => { initializing.value = false })
   trackApplyClick({
     program: program.value.programKey === 'stepup_scholars' ? 'stepup' : 'dynamerge',
     source: 'apply_route',
@@ -1088,6 +1084,32 @@ onMounted(() => {
     fields.value.firstName = parts[0] ?? ''
     fields.value.lastName = parts.slice(1).join(' ') ?? ''
   }
+  // Closed-cycle gate + draft init. We hold the skeleton up while
+  // ProgramService reads the Firestore program doc so the wizard never
+  // flashes through an open state on its way to /stay-connected. When
+  // no Firestore doc exists (fresh project), there's no window to
+  // enforce — treat that as "open" so dev / staging always works.
+  // ProgramService failures fall through to "open" too, so a Firestore
+  // outage doesn't trap applicants in the fallback page.
+  void (async () => {
+    try {
+      const liveProgram = await ProgramService.getProgram(program.value!.slug)
+      if (liveProgram && !ProgramService.isApplicationOpen(liveProgram)) {
+        router.replace({
+          path: '/stay-connected',
+          query: { from: program.value!.slug, reason: 'closed' },
+        })
+        return
+      }
+    } catch {
+      // Treat as "open" — see comment above.
+    }
+    // initAutoSave is the async path that decides which step to land
+    // on. We always flip `initializing` off when it settles (success or
+    // failure) so a Firestore hiccup doesn't leave the wizard stuck
+    // behind the skeleton forever.
+    initAutoSave().finally(() => { initializing.value = false })
+  })()
 })
 
 watch(user, (u) => {
@@ -1404,6 +1426,17 @@ watch(
                   <span class="text-sm text-ink/80 leading-relaxed">{{ e.label }}</span>
                 </label>
               </div>
+              <!-- Honest exit for applicants who realize this isn't the
+                   right fit (wrong age, wrong country, wrong cycle).
+                   Always visible — better than silently disabling
+                   Continue forever. -->
+              <RouterLink
+                :to="`/stay-connected?from=${program.slug}&reason=eligibility`"
+                class="text-sm text-ink/60 hover:text-brand-violet transition-colors inline-flex items-center gap-1.5 focus-ring-brand rounded-sm self-start"
+              >
+                Not the right fit for this cycle? Stay connected
+                <Icon icon="lucide:arrow-right" width="14" />
+              </RouterLink>
             </div>
 
             <!-- Schema-driven steps -->

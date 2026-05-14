@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Icon } from '@iconify/vue'
+import { httpsCallable } from 'firebase/functions'
 import Container from '../../components/ui/Container.vue'
 import Section from '../../components/ui/Section.vue'
 import Heading from '../../components/ui/Heading.vue'
@@ -23,6 +24,7 @@ import {
   type ProgramMentor,
 } from '../../services/firebase'
 import { ProgramService } from '../../services/programService'
+import { functions } from '../../config/firebase'
 
 interface ProgramDraft {
   pitch: string
@@ -48,6 +50,148 @@ const error = ref('')
 const seeding = ref(false)
 const savingId = ref<string | null>(null)
 const toast = ref<{ kind: 'success' | 'error'; text: string } | null>(null)
+
+// Cycle-open announcements: per-program send state + last audience
+// preview. The preview is a separate dry-run callable invocation so
+// admin can see how many subscribers are about to be emailed before
+// committing to the irreversible send.
+type AnnouncementState = 'idle' | 'previewing' | 'sending' | 'success' | 'error'
+const announcementState = reactive<Record<string, AnnouncementState>>({})
+const announcementPreview = reactive<Record<string, { segmentSize: number } | null>>({})
+const announcementMessage = reactive<Record<string, string | null>>({})
+
+interface SendInterestSegmentResult {
+  ok: boolean
+  segmentSize: number
+  sent: number
+  failed: number
+  dryRun?: boolean
+}
+
+function interestTagForSlug(slug: string): 'stepup-next' | 'dynamerge-next' | null {
+  if (slug === 'stepup-scholars') return 'stepup-next'
+  if (slug === 'dynamerge') return 'dynamerge-next'
+  return null
+}
+
+/** Time-since stamp for the most recent next-cycle-opened announcement
+ *  to this program's segment, or null when nothing's been sent. Reads
+ *  the `lastAnnouncedAt.next-cycle-opened` field maintained server-side
+ *  by sendInterestSegmentEmail. Used to surface "Announced 2 hr ago —
+ *  send again?" so admin doesn't re-spam the segment mid-cycle. */
+function lastAnnouncedTimeAgo(p: Program): string | null {
+  const stamp = p.lastAnnouncedAt?.['next-cycle-opened']
+  if (!stamp) return null
+  return timeAgo(stamp)
+}
+
+/** Human-format an ISO date string ("2026-06-03") for the email body
+ *  ("June 3"). Falls back to the raw string if the date doesn't
+ *  parse — better an ugly date than a thrown render. */
+function formatCycleDate(iso: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+}
+
+async function previewAnnouncement(p: Program) {
+  if (!p.id) return
+  const slug = p.slug
+  const tag = interestTagForSlug(slug)
+  if (!tag) {
+    announcementMessage[p.id] = `No interest segment is wired for "${slug}" yet.`
+    announcementState[p.id] = 'error'
+    return
+  }
+  announcementState[p.id] = 'previewing'
+  announcementMessage[p.id] = null
+  try {
+    const fn = httpsCallable<
+      { interestTag: string; templateName: string; dryRun: true },
+      SendInterestSegmentResult
+    >(functions, 'sendInterestSegmentEmail')
+    const res = await fn({
+      interestTag: tag,
+      templateName: 'next-cycle-opened',
+      dryRun: true,
+    })
+    announcementPreview[p.id] = { segmentSize: res.data.segmentSize }
+    announcementState[p.id] = 'idle'
+  } catch (err) {
+    announcementState[p.id] = 'error'
+    announcementMessage[p.id] =
+      err instanceof Error ? err.message : 'Could not check the audience size.'
+  }
+}
+
+async function sendAnnouncement(p: Program) {
+  if (!p.id) return
+  const slug = p.slug
+  const tag = interestTagForSlug(slug)
+  if (!tag) {
+    announcementMessage[p.id] = `No interest segment is wired for "${slug}" yet.`
+    announcementState[p.id] = 'error'
+    return
+  }
+  const draft = drafts[p.id]
+  if (!draft?.applicationStart || !draft?.applicationEnd) {
+    announcementMessage[p.id] = 'Set both application open and close dates before announcing.'
+    announcementState[p.id] = 'error'
+    return
+  }
+  const audienceSize = announcementPreview[p.id]?.segmentSize ?? 0
+  const confirmMsg = audienceSize > 0
+    ? `Send the "${p.name} applications are open" email to ${audienceSize} subscribers right now? This can't be undone.`
+    : `No audience preview has been loaded. Send the announcement anyway?`
+  if (typeof window !== 'undefined' && !window.confirm(confirmMsg)) return
+
+  announcementState[p.id] = 'sending'
+  announcementMessage[p.id] = null
+  try {
+    const fn = httpsCallable<
+      {
+        interestTag: string
+        templateName: string
+        context: {
+          programLabel: string
+          applyUrl: string
+          applicationEnd?: string
+        }
+      },
+      SendInterestSegmentResult
+    >(functions, 'sendInterestSegmentEmail')
+    const res = await fn({
+      interestTag: tag,
+      templateName: 'next-cycle-opened',
+      context: {
+        programLabel: p.name,
+        applyUrl: `https://staija.org/apply/${slug}`,
+        applicationEnd: formatCycleDate(draft.applicationEnd),
+      },
+    })
+    announcementState[p.id] = 'success'
+    announcementMessage[p.id] = `Sent ${res.data.sent} of ${res.data.segmentSize}` +
+      (res.data.failed > 0 ? ` (${res.data.failed} failed — see Functions logs)` : '') + '.'
+    // Clear preview so a follow-up announcement starts from a fresh
+    // audience count (subscribers may have changed in the meantime).
+    announcementPreview[p.id] = null
+    // Optimistically reflect the new server-side stamp locally so
+    // the "Already announced" warning appears immediately. The
+    // canonical write lives on the Firestore program doc — next
+    // page load will pull it back.
+    if (res.data.sent > 0) {
+      p.lastAnnouncedAt = {
+        ...(p.lastAnnouncedAt ?? {}),
+        'next-cycle-opened': new Date(),
+      }
+    }
+  } catch (err) {
+    announcementState[p.id] = 'error'
+    announcementMessage[p.id] =
+      err instanceof Error ? err.message : 'Could not send the announcement.'
+  }
+}
 
 const sortedPrograms = computed(() =>
   [...programs.value].sort((a, b) => a.name.localeCompare(b.name)),
@@ -862,6 +1006,91 @@ const DYNAMERGE_SEED: SeedTemplate = {
                     class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans"
                   />
                 </label>
+              </div>
+
+              <!-- Cycle-open announcement. Fans out to /stay-connected
+                   subscribers tagged with this program's "next cycle"
+                   interest. Always shows the Preview button so admin
+                   can see audience size; only allows Send after a
+                   preview returns successfully. Save your date edits
+                   first — the announcement reads from the draft (not
+                   the persisted doc) so unsaved dates flow through. -->
+              <div class="flex flex-col gap-2 mt-2 rounded-xl border hairline-ink bg-paper/40 p-4">
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-xs font-semibold text-ink/70 uppercase tracking-wide">
+                    Announce next cycle
+                  </span>
+                  <p class="text-xs text-ink/60 m-0">
+                    Email subscribers tagged "{{ p.slug === 'stepup-scholars' ? 'StepUp Scholars — next cycle' : (p.slug === 'dynamerge' ? 'Dynamerge — next cycle' : 'this program') }}"
+                    on the /stay-connected mailing list. Uses the dates above.
+                  </p>
+                </div>
+                <!-- "Last announced" warning. Surfaces when a prior
+                     send is recorded so admin doesn't accidentally
+                     re-spam the segment mid-cycle. Stamp is written
+                     server-side by sendInterestSegmentEmail. -->
+                <div
+                  v-if="lastAnnouncedTimeAgo(p)"
+                  class="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs"
+                >
+                  <Icon icon="lucide:alert-triangle" width="14" class="text-amber-700 mt-0.5 shrink-0" />
+                  <span>
+                    Already announced <strong>{{ lastAnnouncedTimeAgo(p) }}</strong>.
+                    Re-sending will hit every subscriber in this segment again.
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 mt-1">
+                  <UiButton
+                    variant="secondary"
+                    :disabled="announcementState[p.id] === 'previewing' || announcementState[p.id] === 'sending'"
+                    @click="previewAnnouncement(p)"
+                  >
+                    <Icon
+                      v-if="announcementState[p.id] === 'previewing'"
+                      icon="lucide:loader-2"
+                      width="14"
+                      class="animate-spin"
+                    />
+                    <Icon v-else icon="lucide:users" width="14" />
+                    {{ announcementState[p.id] === 'previewing' ? 'Counting…' : 'Preview audience' }}
+                  </UiButton>
+                  <UiButton
+                    variant="primary"
+                    :disabled="
+                      !announcementPreview[p.id] ||
+                      announcementPreview[p.id]?.segmentSize === 0 ||
+                      announcementState[p.id] === 'sending' ||
+                      !drafts[p.id].applicationStart ||
+                      !drafts[p.id].applicationEnd
+                    "
+                    @click="sendAnnouncement(p)"
+                  >
+                    <Icon
+                      v-if="announcementState[p.id] === 'sending'"
+                      icon="lucide:loader-2"
+                      width="14"
+                      class="animate-spin"
+                    />
+                    <Icon v-else icon="lucide:send" width="14" />
+                    {{ announcementState[p.id] === 'sending' ? 'Sending…' : 'Send announcement' }}
+                  </UiButton>
+                  <span
+                    v-if="announcementPreview[p.id]"
+                    class="text-xs text-ink/65"
+                  >
+                    Audience:
+                    <strong class="text-ink">{{ announcementPreview[p.id]?.segmentSize ?? 0 }}</strong>
+                    {{ (announcementPreview[p.id]?.segmentSize ?? 0) === 1 ? 'subscriber' : 'subscribers' }}
+                  </span>
+                </div>
+                <p
+                  v-if="announcementMessage[p.id]"
+                  :class="announcementState[p.id] === 'error'
+                    ? 'text-xs text-red-700 m-0 mt-1'
+                    : 'text-xs text-emerald-700 m-0 mt-1'"
+                >
+                  {{ announcementMessage[p.id] }}
+                </p>
               </div>
             </div>
 

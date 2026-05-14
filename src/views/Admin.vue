@@ -390,6 +390,19 @@ onMounted(loadData)
                 </div>
               </RouterLink>
 
+              <RouterLink
+                to="/admin/referrals"
+                class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
+              >
+                <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
+                  <Icon icon="lucide:trophy" width="20" class="text-brand-violet" />
+                </div>
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <span class="font-semibold text-base">Referrals</span>
+                  <span class="text-sm text-ink/60">Who's bringing in new subscribers</span>
+                </div>
+              </RouterLink>
+
               <a
                 v-if="isAdmin"
                 href="https://app.contentful.com/spaces/zcw0qx1phkan/"

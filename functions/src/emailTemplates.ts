@@ -17,15 +17,18 @@
  */
 
 // --- Brand tokens -------------------------------------------------------
+// Exported so sibling template modules (e.g. newsletterTemplates.ts) can
+// pull from the same palette without redefining colours. Adding a token
+// here means updating src/style.css @theme block too.
 
-const VIOLET = '#8B55FF'
-const INK = '#0E1217'
-const PAPER = '#F1F5F9'  // slate-100 — keeps in sync with --color-paper in src/style.css
-const OUTER_BG = '#E2E8F0'  // slate-200 — slightly darker than paper for outer background
-const MUTED = '#9C9087'
-const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-const SERIF = "Georgia, 'Times New Roman', serif"
-const MONO = "'Courier New', Courier, monospace"
+export const VIOLET = '#8B55FF'
+export const INK = '#0E1217'
+export const PAPER = '#F1F5F9'  // slate-100 — keeps in sync with --color-paper in src/style.css
+export const OUTER_BG = '#E2E8F0'  // slate-200 — slightly darker than paper for outer background
+export const MUTED = '#9C9087'
+export const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+export const SERIF = "Georgia, 'Times New Roman', serif"
+export const MONO = "'Courier New', Courier, monospace"
 
 // --- Shared Mailgun sender ---------------------------------------------
 
@@ -61,9 +64,12 @@ export async function sendMailgun(params: MailgunSendParams): Promise<void> {
   }
 }
 
-// --- Internal rendering helpers ----------------------------------------
+// --- Rendering helpers --------------------------------------------------
+// Exported alongside the brand tokens so sibling template modules build
+// against the same primitives. refBox stays private because it's
+// application-specific (references an applicationId).
 
-function button(label: string, url: string): string {
+export function button(label: string, url: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
         <tr>
           <td>
@@ -94,23 +100,23 @@ function refBox(applicationId: string): string {
       </table>`
 }
 
-function eyebrow(text: string): string {
+export function eyebrow(text: string): string {
   return `<p style="margin:0 0 16px;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.08em;text-transform:uppercase;">${text}</p>`
 }
 
-function heading(text: string): string {
+export function heading(text: string): string {
   return `<h1 style="margin:0 0 28px;font-family:${SERIF};font-size:27px;font-weight:700;color:${INK};line-height:1.2;">${text}</h1>`
 }
 
-function p(text: string, styles = ''): string {
+export function p(text: string, styles = ''): string {
   return `<p style="margin:0 0 16px;font-family:${SANS};font-size:15px;color:${INK};line-height:1.75;${styles}">${text}</p>`
 }
 
-function divider(): string {
+export function divider(): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;width:100%;"><tr><td style="border-top:1px solid #EDE9E1;font-size:0;line-height:0;">&nbsp;</td></tr></table>`
 }
 
-function layout(body: string): string {
+export function layout(body: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -640,3 +646,9 @@ export function referenceReminderEmail(params: {
 
   return { html, text }
 }
+
+// Newsletter campaign templates (nextCycleOpenedEmail, mentorIntroEmail,
+// notifyMeWelcomeEmail) live in newsletterTemplates.ts. They share the
+// layout primitives exported from this file but stay in their own
+// module — different cadence, different deliverability profile, and
+// keeps this file from sliding past 1500 lines.

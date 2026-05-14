@@ -75,7 +75,7 @@ service cloud.firestore {
       // non-mentor accounts.
       allow update: if isOwner(userId) &&
                    request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(['displayName', 'photoURL', 'avatarSlot', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'mentorBio', 'mentorAvailability', 'updatedAt']);
+                   .hasOnly(['displayName', 'photoURL', 'avatarSlot', 'bio', 'program', 'applicationStatus', 'directoryHidden', 'emailPreferences', 'mentorBio', 'mentorAvailability', 'mentorPublicProfile', 'updatedAt']);
 
       // Only admins can create users with roles
       allow create: if hasRole('admin') ||
@@ -429,6 +429,41 @@ service cloud.firestore {
         resource.data.studentId == request.auth.uid ||
         hasAnyRole(['staff', 'admin'])
       );
+      allow write: if false;
+    }
+
+    // Per-referrer signup counters, written exclusively by the
+    // subscribeNewsletter Cloud Function (Admin SDK bypasses rules).
+    // Staff/admin reads power the future leaderboard UI; the visitor
+    // who *owns* a referral id reads their own row by direct doc id
+    // so they can see their personal count without leaking the rest
+    // of the table. The doc id is `u-<uid>` for signed-in referrers
+    // and `a-<random>` for anonymous ones — the owner check matches
+    // the signed-in shape so anonymous rows stay staff-only.
+    match /referralStats/{referrerId} {
+      allow read: if hasAnyRole(['staff', 'admin']) ||
+                     (isAuthenticated() && referrerId == 'u-' + request.auth.uid);
+      allow write: if false;
+    }
+
+    // Announcement audit log, written exclusively by the
+    // sendInterestSegmentEmail callable (Admin SDK bypasses rules).
+    // Staff/admin read it back for the "last announced X ago"
+    // indicator on /admin/programs and for retrospective review of
+    // which segment got which template when. Closed to everyone else
+    // — the doc contains the full subject + body context, which is
+    // staff-only.
+    match /announcements/{announcementId} {
+      allow read: if hasAnyRole(['staff', 'admin']);
+      allow write: if false;
+    }
+
+    // Audit log for /stay-connected subscriber announcements. Written
+    // by the sendInterestSegmentEmail callable (Admin SDK bypasses
+    // rules) every time a segment send fires — staff/admin reads
+    // power a future "what we sent and when" admin surface.
+    match /announcements/{announcementId} {
+      allow read: if hasAnyRole(['staff', 'admin']);
       allow write: if false;
     }
   }

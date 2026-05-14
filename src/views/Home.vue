@@ -166,6 +166,16 @@ onMounted(async () => {
                 </UiButton>
               </Magnetic>
             </div>
+            <!-- Tertiary path for visitors who can't (or aren't ready
+                 to) apply. One quiet line under the CTAs — discoverable
+                 without competing with the primary action. -->
+            <RouterLink
+              to="/stay-connected"
+              class="text-sm text-white/70 hover:text-white inline-flex items-center gap-1.5 transition-colors w-fit"
+            >
+              Not eligible yet, or between cycles? Stay connected
+              <Icon icon="lucide:arrow-right" width="14" />
+            </RouterLink>
           </Motion>
 
           <!-- Pure opacity fade — the previous scale 0.95 → 1 triggered GPU

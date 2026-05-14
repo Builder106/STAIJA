@@ -90,6 +90,13 @@ export interface UserProfile {
    *  admin / cohort UIs pick them up without an extra round-trip. */
   mentorBio?: string
   mentorAvailability?: string
+  /** Mentor opt-in for the public showcase on /stay-connected. When
+   *  true, the `getPublicMentors` Cloud Function returns this mentor's
+   *  sanitized public subset (name, photo, bio, availability) to
+   *  anonymous visitors. Default false — mentors aren't surfaced
+   *  publicly until they explicitly flip the toggle in account
+   *  settings. Ignored on non-mentor accounts. */
+  mentorPublicProfile?: boolean
   role: UserRole
   createdAt: Date
   updatedAt: Date
@@ -262,6 +269,13 @@ export interface Program {
   mentors: ProgramMentor[]
   dates: ProgramDates
   status: 'active' | 'inactive' | 'draft'
+  /** When the sendInterestSegmentEmail callable last fired for a
+   *  given template name against this program's audience. Keyed by
+   *  template name (e.g. `'next-cycle-opened'`) so a follow-up
+   *  template against the same segment doesn't fuzz the read.
+   *  Stamped server-side; admin UI surfaces "Announced N ago" so
+   *  staff don't accidentally re-spam the segment. */
+  lastAnnouncedAt?: Record<string, Date>
   createdAt: Date
   updatedAt: Date
   updatedBy: string

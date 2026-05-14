@@ -48,6 +48,10 @@ const routes: RouteRecordRaw[] = [
   // dashboards / cohort surfaces / admin user lists.
   { path: '/mentors', name: 'mentors-index', component: () => import('../views/MentorsIndex.vue'), meta: { title: 'Mentors — STAIJA', requiresAuth: true } },
   { path: '/mentors/:uid', name: 'mentor-profile', component: () => import('../views/MentorProfile.vue'), meta: { title: 'Mentor — STAIJA', requiresAuth: true } },
+  // Public landing for visitors who aren't eligible / aren't ready /
+  // hit a closed application window. Doubles as the apply-flow's
+  // graceful exit and as a permanent destination linked from home.
+  { path: '/stay-connected', name: 'stay-connected', component: () => import('../views/StayConnected.vue'), meta: { title: 'Stay connected — STAIJA' } },
   { path: '/about', name: 'about', component: () => import('../views/About.vue'), meta: { title: 'About' } },
   { path: '/press', name: 'press', component: () => import('../views/Press.vue'), meta: { title: 'Press — STAIJA' } },
   { path: '/blog', name: 'blog', component: () => import('../views/Blog.vue'), meta: { title: 'Stories' } },
@@ -90,6 +94,10 @@ const routes: RouteRecordRaw[] = [
   { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
   { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   { path: '/admin/enroll', name: 'admin-enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  // Referral leaderboard — top /stay-connected referrers by signup
+  // count. Gated on view_all_users so staff + admin both see it
+  // (matches the firestore.rules read on referralStats).
+  { path: '/admin/referrals', name: 'admin-referrals', component: () => import('../views/admin/Referrals.vue'), meta: { title: 'Referrals — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
   // Temporary — Phase 1 avatar motion preview. Any signed-in user can
   // view it (no permission gate) so dev/staging accounts without an
   // admin role still see the route. Delete once avatar work ships.

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { httpsCallable } from 'firebase/functions'
 import {
   EmailAuthProvider,
@@ -179,16 +179,18 @@ const MENTOR_AVAILABILITY_MAX = 500
 interface MentorForm {
   mentorBio: string
   mentorAvailability: string
+  mentorPublicProfile: boolean
 }
 
-const mentorForm = ref<MentorForm>({ mentorBio: '', mentorAvailability: '' })
-const mentorOriginal = ref<MentorForm>({ mentorBio: '', mentorAvailability: '' })
+const mentorForm = ref<MentorForm>({ mentorBio: '', mentorAvailability: '', mentorPublicProfile: false })
+const mentorOriginal = ref<MentorForm>({ mentorBio: '', mentorAvailability: '', mentorPublicProfile: false })
 
 watch(
   userProfile,
   (p) => {
     mentorForm.value.mentorBio = p?.mentorBio ?? ''
     mentorForm.value.mentorAvailability = p?.mentorAvailability ?? ''
+    mentorForm.value.mentorPublicProfile = p?.mentorPublicProfile === true
     mentorOriginal.value = { ...mentorForm.value }
   },
   { immediate: true },
@@ -197,7 +199,8 @@ watch(
 const mentorDirty = computed(
   () =>
     mentorForm.value.mentorBio !== mentorOriginal.value.mentorBio ||
-    mentorForm.value.mentorAvailability !== mentorOriginal.value.mentorAvailability,
+    mentorForm.value.mentorAvailability !== mentorOriginal.value.mentorAvailability ||
+    mentorForm.value.mentorPublicProfile !== mentorOriginal.value.mentorPublicProfile,
 )
 const mentorBioOver = computed(() => mentorForm.value.mentorBio.length > MENTOR_BIO_MAX)
 const mentorAvailabilityOver = computed(
@@ -216,12 +219,15 @@ async function handleSaveMentor() {
   mentorSaveError.value = null
   mentorSaveSuccess.value = false
   try {
-    const updates: Record<string, string> = {}
+    const updates: Record<string, string | boolean> = {}
     if (mentorForm.value.mentorBio !== mentorOriginal.value.mentorBio) {
       updates.mentorBio = mentorForm.value.mentorBio.trim()
     }
     if (mentorForm.value.mentorAvailability !== mentorOriginal.value.mentorAvailability) {
       updates.mentorAvailability = mentorForm.value.mentorAvailability.trim()
+    }
+    if (mentorForm.value.mentorPublicProfile !== mentorOriginal.value.mentorPublicProfile) {
+      updates.mentorPublicProfile = mentorForm.value.mentorPublicProfile
     }
     await DatabaseService.updateUserProfile(user.value.uid, updates)
     await refreshProfile()
@@ -755,6 +761,37 @@ async function handleDelete() {
                 </span>
               </div>
             </div>
+
+            <!-- Public showcase opt-in. Off by default. When on, this
+                 mentor's name, photo, bio, and availability surface to
+                 anonymous visitors on /stay-connected via the
+                 getPublicMentors callable. Email + emailPreferences
+                 are never returned by that endpoint regardless of
+                 this toggle. -->
+            <label class="flex items-start justify-between gap-4 cursor-pointer pt-4 border-t hairline-ink">
+              <div class="flex-1">
+                <div class="text-sm font-medium text-ink mb-1">Show me on the public mentor showcase</div>
+                <div class="text-xs text-ink/60">
+                  When on, your name, photo, bio, and availability appear on
+                  <RouterLink to="/stay-connected" class="text-brand-violet hover:underline">/stay-connected</RouterLink>
+                  — the page we point prospective applicants and curious visitors at.
+                  Your email and notification preferences stay private either way.
+                </div>
+              </div>
+              <button
+                type="button"
+                class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors mt-0.5"
+                :class="mentorForm.mentorPublicProfile ? 'bg-brand-violet' : 'bg-ink/20'"
+                role="switch"
+                :aria-checked="mentorForm.mentorPublicProfile"
+                @click.prevent="mentorForm.mentorPublicProfile = !mentorForm.mentorPublicProfile"
+              >
+                <span
+                  class="inline-block h-5 w-5 rounded-full bg-surface shadow translate-y-0.5 transition-transform"
+                  :class="mentorForm.mentorPublicProfile ? 'translate-x-5' : 'translate-x-0.5'"
+                />
+              </button>
+            </label>
 
             <p v-if="mentorSaveError" class="text-sm text-red-600">{{ mentorSaveError }}</p>
             <p v-else-if="mentorSaveSuccess" class="text-sm text-emerald-700">

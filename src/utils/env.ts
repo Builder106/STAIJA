@@ -23,6 +23,14 @@ export interface AppConfig {
   }
   /** Public URL of the deployed `subscribeNewsletter` Cloud Function. */
   newsletterEndpoint?: string
+  /** Public URL of the deployed `getPublicMentors` Cloud Function. When
+   *  unset (e.g. local dev without functions emulator), the public
+   *  mentor showcase on /stay-connected renders its empty state. */
+  publicMentorsEndpoint?: string
+  /** Public URL of the deployed `resolveReferrerName` Cloud Function.
+   *  Used by /stay-connected to personalise the hero when a visitor
+   *  arrives via `?ref=u-<uid>`. Unset → generic hero copy. */
+  referrerNameEndpoint?: string
 }
 
 // Required environment variables
@@ -96,7 +104,9 @@ export function getAppConfig(): AppConfig {
     paystack: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
       ? { publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY }
       : undefined,
-    newsletterEndpoint: import.meta.env.VITE_NEWSLETTER_ENDPOINT
+    newsletterEndpoint: import.meta.env.VITE_NEWSLETTER_ENDPOINT,
+    publicMentorsEndpoint: import.meta.env.VITE_PUBLIC_MENTORS_ENDPOINT,
+    referrerNameEndpoint: import.meta.env.VITE_REFERRER_NAME_ENDPOINT,
   }
 }
 

@@ -74,6 +74,28 @@ export { respondToOffer, reOfferToDeferredApplicant } from './applicationAccept'
 // on consume. See mentorInvites.ts.
 export { createMentorInvite, consumeMentorInvite, revokeMentorInvite } from './mentorInvites'
 
+// Anonymous HTTP read of opted-in mentors for the /stay-connected
+// public showcase. Reads via Admin SDK so the strict mentor-doc
+// Firestore rule (auth required) stays in place; only mentors who
+// flipped `mentorPublicProfile: true` are returned, and only the
+// sanitized public subset (no email / emailPreferences). See
+// getPublicMentors.ts.
+export { getPublicMentors } from './getPublicMentors'
+
+// Anonymous HTTP lookup of a single user's display name, used to
+// personalise the /stay-connected hero ("Alice sent you here.") when
+// a visitor lands with `?ref=u-<uid>`. Returns *only* displayName;
+// never email or any other field. Edge-cached for an hour. See
+// resolveReferrerName.ts.
+export { resolveReferrerName } from './resolveReferrerName'
+
+// Admin/staff callable that fans out a templated email to
+// /stay-connected subscribers segmented by `interestTag`. Backs the
+// drip surface for the augmented newsletter (next-cycle-open, mentor-
+// welcome, general-update). Requires MAILGUN_LIST_ADDRESS in Secret
+// Manager — same dependency as subscribeNewsletter. See announceCycle.ts.
+export { sendInterestSegmentEmail } from './announceCycle'
+
 // Cohort graduation: marks all active enrollments in a cohort
 // 'completed' and transitions qualifying students to role='alumni'
 // in one batched commit. See cohortGraduate.ts.

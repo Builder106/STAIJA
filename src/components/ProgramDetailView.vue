@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from './ui/Container.vue'
@@ -97,13 +97,33 @@ const FALLBACKS: Record<string, ProgramView> = {
 // the canonical version if a Program doc exists.
 const program = ref<ProgramView | null>(FALLBACKS[props.slug] ?? null)
 
+// Application window status, driven by the Firestore program's
+// applicationStart / applicationEnd. `null` when no live program doc
+// exists (fresh project) — we treat that as "open" so dev / staging
+// always shows a working CTA. 'upcoming' / 'closed' both swap the
+// Apply CTA's target to /stay-connected so visitors get an honest
+// destination instead of a dead form.
+const applicationStatus = ref<'open' | 'closed' | 'upcoming' | null>(null)
+
+const isApplyOpen = computed(
+  () => applicationStatus.value === null || applicationStatus.value === 'open',
+)
+const closedReason = computed(() =>
+  applicationStatus.value === 'upcoming' ? 'upcoming' : 'closed',
+)
+
 async function loadProgram() {
   program.value = FALLBACKS[props.slug] ?? null
+  applicationStatus.value = null
   try {
     const fromStore = await ProgramService.getProgram(props.slug)
-    if (fromStore) program.value = toView(fromStore)
+    if (fromStore) {
+      program.value = toView(fromStore)
+      applicationStatus.value = ProgramService.getApplicationStatus(fromStore)
+    }
   } catch {
-    // Network error / permission issue — keep the fallback in view.
+    // Network error / permission issue — keep the fallback in view
+    // and the CTA in its default "open" stance.
   }
 }
 
@@ -208,18 +228,30 @@ function toggleFaq(i: number) {
           </Motion>
 
           <Motion
-            class="mt-8"
+            class="mt-8 flex flex-wrap items-center gap-4"
             :initial="{ opacity: 0 }"
             :animate="{ opacity: 1 }"
             :transition="{ duration: 0.4, delay: 0.4 }"
           >
             <UiButton
+              v-if="isApplyOpen"
               :to="`/apply/${slug}`"
               class="!bg-white !text-ink-static hover:!bg-paper-static hover:shadow-lg"
               @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_hero' })"
             >
               Apply to {{ program.name }}
             </UiButton>
+            <template v-else>
+              <UiButton
+                :to="`/stay-connected?from=${slug}&reason=${closedReason}`"
+                class="!bg-white !text-ink-static hover:!bg-paper-static hover:shadow-lg"
+              >
+                {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
+              </UiButton>
+              <span class="text-sm text-paper-static/70">
+                Applications {{ closedReason === 'upcoming' ? 'open soon' : 'are closed for this cycle' }}.
+              </span>
+            </template>
           </Motion>
         </div>
       </Container>
@@ -389,14 +421,23 @@ function toggleFaq(i: number) {
       <Container>
         <div class="text-center flex flex-col items-center">
           <Heading :level="2" class="!text-white mb-8 max-w-2xl">
-            Ready to start your journey with STAIJA?
+            <template v-if="isApplyOpen">Ready to start your journey with STAIJA?</template>
+            <template v-else>Not this cycle? Stay close for the next one.</template>
           </Heading>
           <UiButton
+            v-if="isApplyOpen"
             :to="'/signup'"
             class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
             @click="trackApplyClick({ program: slug === 'stepup-scholars' ? 'stepup' : 'dynamerge', source: 'program_cta_banner' })"
           >
             Apply to {{ program.name }}
+          </UiButton>
+          <UiButton
+            v-else
+            :to="`/stay-connected?from=${slug}&reason=${closedReason}`"
+            class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
+          >
+            {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
           </UiButton>
         </div>
       </Container>
