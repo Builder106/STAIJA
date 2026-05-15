@@ -67,6 +67,35 @@ const STATUS_META: Record<Application['status'], StatusMeta> = {
   rejected:     { label: 'Decision sent', pill: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
+// Compound status label for the row chip + CSV export. When the
+// applicant has responded to an accepted offer, we surface both
+// states (staff's decision + applicant's response) in one chip:
+//
+//   Accepted              — staff said yes, applicant hasn't replied
+//   Accepted · Confirmed  — applicant accepted the spot, ready to enroll
+//   Accepted · Declined   — applicant turned down the spot, do not enroll
+//   Accepted · Deferred   — applicant deferred to next cycle, re-offer later
+//
+// The pill colour shifts to the *response* tone (rose for declined,
+// amber for deferred, emerald for confirmed) so the row's row-tone
+// signals "what staff should do next" at a glance: emerald → enroll,
+// rose → close out, amber → revisit. The earlier 12-px icon
+// indicator next to a plain "Accepted" chip was easy to misread as a
+// generic close button — this one trades icon real estate for words.
+function statusBadgeFor(app: Application): { label: string; pill: string } {
+  const base = STATUS_META[app.status]
+  if (app.status !== 'accepted' || !app.spotResponse) {
+    return { label: base?.label ?? app.status, pill: base?.pill ?? '' }
+  }
+  if (app.spotResponse === 'accepted') {
+    return { label: 'Accepted · Confirmed', pill: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+  }
+  if (app.spotResponse === 'declined') {
+    return { label: 'Accepted · Declined', pill: 'bg-rose-50 text-rose-700 border-rose-200' }
+  }
+  return { label: 'Accepted · Deferred', pill: 'bg-amber-50 text-amber-700 border-amber-200' }
+}
+
 const PROGRAM_LABEL: Record<Application['program'], string> = {
   stepup_scholars: 'StepUp Scholars',
   dynamerge:       'Dynamerge',
@@ -363,7 +392,7 @@ function exportApplications() {
         `${app.personalInfo.firstName} ${app.personalInfo.lastName}`,
         app.personalInfo.email,
         PROGRAM_LABEL[app.program] || app.program,
-        STATUS_META[app.status]?.label || app.status,
+        statusBadgeFor(app).label,
         toDate(app.submittedAt)?.toISOString() ?? '',
         (app.researchInterests || []).join('; '),
       ].map(cell).join(','),
@@ -655,41 +684,17 @@ onMounted(loadApplications)
                     </span>
                   </td>
                   <td class="p-4">
+                    <!-- Compound status chip: "Accepted · Declined"
+                         etc. when the applicant has responded. The
+                         pill colour follows the response (rose for
+                         declined, amber for deferred) so the row's
+                         tone tells staff what to do next.
+                         See statusBadgeFor() up top. -->
                     <span
-                      class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
-                      :class="STATUS_META[app.status]?.pill"
+                      class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
+                      :class="statusBadgeFor(app).pill"
                     >
-                      {{ STATUS_META[app.status]?.label || app.status }}
-                      <!-- Spot-response indicator. Only renders on
-                           accepted rows where the applicant has
-                           replied. Three states map to three icons so
-                           staff can triage at a glance:
-                             - ✓ emerald → ready to enroll
-                             - ✗ rose    → applicant declined, do NOT
-                                          enroll
-                             - clock amber → applicant deferred,
-                                          revisit next cycle -->
-                      <Icon
-                        v-if="app.status === 'accepted' && app.spotResponse === 'accepted'"
-                        icon="lucide:check"
-                        width="12"
-                        class="text-emerald-700"
-                        :aria-label="'Applicant accepted their spot'"
-                      />
-                      <Icon
-                        v-else-if="app.status === 'accepted' && app.spotResponse === 'declined'"
-                        icon="lucide:x"
-                        width="12"
-                        class="text-rose-700"
-                        :aria-label="'Applicant declined the offer'"
-                      />
-                      <Icon
-                        v-else-if="app.status === 'accepted' && app.spotResponse === 'deferred'"
-                        icon="lucide:clock"
-                        width="12"
-                        class="text-amber-700"
-                        :aria-label="'Applicant deferred to next cycle'"
-                      />
+                      {{ statusBadgeFor(app).label }}
                     </span>
                   </td>
                   <td class="p-4 text-sm text-ink/75 whitespace-nowrap">
@@ -786,9 +791,9 @@ onMounted(loadApplications)
                 </div>
                 <span
                   class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border whitespace-nowrap shrink-0"
-                  :class="STATUS_META[app.status]?.pill"
+                  :class="statusBadgeFor(app).pill"
                 >
-                  {{ STATUS_META[app.status]?.label || app.status }}
+                  {{ statusBadgeFor(app).label }}
                 </span>
               </div>
               <div class="flex items-center gap-3 text-xs text-ink/60">
