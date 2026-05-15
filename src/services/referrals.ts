@@ -19,6 +19,9 @@
  * be an obvious spam vector.
  */
 
+import { getAppConfig } from '../utils/env'
+import { auth } from '../config/firebase'
+
 const REF_ID_KEY = 'staija.refId'
 const REFERRER_ID_KEY = 'staija.referrerId'
 
@@ -88,13 +91,51 @@ export function getOrMintMyReferralId(uid: string | null): string {
  * caller wants to react.
  *
  * No-ops on the server (SSR) and in storage-blocked environments.
+ *
+ * Self-referral guard. Two halves, both necessary because main.ts
+ * calls this once *before* the Firebase auth listener resolves (so
+ * `auth.currentUser` is null on the initial hit), then again from
+ * `router.afterEach` once the app's mounted:
+ *
+ *   1. **Refuse to write** a `?ref=` that matches the current
+ *      visitor's own id (`u-<uid>` post-auth, or the local
+ *      `a-<short>` we minted as a sharer).
+ *   2. **Also clear** an already-stored stale self-ref so the
+ *      post-auth recapture cleans up after the pre-auth initial
+ *      capture wrote a self-credit before we knew who the visitor
+ *      was. Without (2) the pre-auth window leaves a permanent
+ *      self-credit in localStorage.
+ *
+ * Without this guard a user could open their own share link in
+ * another tab and bump their own `referralStats` counter on a
+ * subsequent signup with a different email.
  */
 export function captureReferrerFromUrl(): string | null {
   if (typeof window === 'undefined') return null
   try {
     const params = new URLSearchParams(window.location.search)
     const raw = params.get('ref')
+
+    // Build the set of ids that count as "me" right now.
+    const selfIds = new Set<string>()
+    const signedInUid = auth.currentUser?.uid ?? null
+    if (signedInUid) selfIds.add(`u-${signedInUid}`)
+    const myAnonId = window.localStorage.getItem(REF_ID_KEY)
+    if (myAnonId) selfIds.add(myAnonId)
+
+    // Half 2: scrub any stored self-credit from a prior call that
+    // landed before we knew the auth state. Runs every call, so the
+    // post-auth recapture from router.afterEach finishes the cleanup
+    // even when the current URL has no `?ref=`.
+    const stored = window.localStorage.getItem(REFERRER_ID_KEY)
+    if (stored && selfIds.has(stored)) {
+      window.localStorage.removeItem(REFERRER_ID_KEY)
+    }
+
+    // Half 1: refuse to write a self-ref on this call.
     if (!isLikelyValidRefId(raw)) return null
+    if (selfIds.has(raw)) return null
+
     window.localStorage.setItem(REFERRER_ID_KEY, raw)
     return raw
   } catch {
@@ -131,10 +172,6 @@ export async function resolveReferrerDisplayName(
   const uid = referrerId.slice(2)
   if (!uid) return null
 
-  // Imported lazily so this module doesn't bring in the env utility
-  // when the caller never needs the lookup (most callers only mint
-  // ids and forward attribution).
-  const { getAppConfig } = await import('../utils/env')
   const endpoint = getAppConfig().referrerNameEndpoint
   if (!endpoint) return null
 

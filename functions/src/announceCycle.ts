@@ -114,11 +114,12 @@ async function fetchListMembers(opts: {
     for (const member of page.items ?? []) {
       if (member.subscribed) all.push(member)
     }
-    // Mailgun returns the same `next` URL when there are no more
-    // pages — break when the URL stops changing or there are fewer
-    // results than the page limit.
+    // Mailgun's `paging.next` keeps pointing at the same URL once
+    // we're past the end — exit when the cursor stops moving. The
+    // earlier "items.length < limit" heuristic exited one page too
+    // early when the list size was an exact multiple of the limit.
     const nextUrl = page.paging?.next
-    if (!nextUrl || nextUrl === next || (page.items?.length ?? 0) < 1000) {
+    if (!nextUrl || nextUrl === next) {
       next = null
     } else {
       next = nextUrl

@@ -24,13 +24,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-
-const ALLOWED_ORIGINS = [
-  'https://staija.org',
-  'https://www.staija.org',
-  'http://localhost:5190',
-  'http://localhost:5173',
-]
+import { isAllowedOrigin } from './cors'
 
 // Firebase Auth uids are 28-character alphanumeric strings. Anything
 // outside that shape isn't a real uid and we bail before the read.
@@ -44,7 +38,7 @@ export const resolveReferrerName = onRequest(
   },
   async (req, res) => {
     const origin = req.header('origin') || ''
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       res.set('Access-Control-Allow-Origin', origin)
       res.set('Vary', 'Origin')
       res.set('Access-Control-Allow-Methods', 'GET, OPTIONS')

@@ -27,16 +27,10 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
+import { isAllowedOrigin } from './cors'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_LIST_ADDRESS = defineSecret('MAILGUN_LIST_ADDRESS')
-
-const ALLOWED_ORIGINS = [
-  'https://staija.org',
-  'https://www.staija.org',
-  'http://localhost:5190',
-  'http://localhost:5173',
-]
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -117,7 +111,7 @@ export const subscribeNewsletter = onRequest(
   },
   async (req, res) => {
     const origin = req.header('origin') || ''
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       res.set('Access-Control-Allow-Origin', origin)
       res.set('Vary', 'Origin')
       res.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
