@@ -19,8 +19,10 @@ import {
   normalizeSlug,
   type EntrySummary,
 } from '../../../services/lmsContent'
+import { useAdminBase } from '../../../composables/useAdminBase'
 
 const router = useRouter()
+const { adminBase } = useAdminBase()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -244,10 +246,11 @@ function closeDrawer() {
 const drawerEditPath = computed(() => {
   const e = drawerEntry.value
   if (!e) return ''
-  if (e.contentType === 'course') return `/admin/content/courses/${e.id}`
-  if (e.contentType === 'module') return `/admin/content/modules/${e.id}`
-  if (e.contentType === 'lesson') return `/admin/content/lessons/${e.id}`
-  return `/admin/content/assignments/${e.id}`
+  const base = `${adminBase.value}/content`
+  if (e.contentType === 'course') return `${base}/courses/${e.id}`
+  if (e.contentType === 'module') return `${base}/modules/${e.id}`
+  if (e.contentType === 'lesson') return `${base}/lessons/${e.id}`
+  return `${base}/assignments/${e.id}`
 })
 
 function drawerTypeLabel(e: EntrySummary): string {
@@ -541,7 +544,7 @@ async function addModule(course: EntrySummary) {
         modules: [...existing, created.id],
       },
     })
-    router.push(`/admin/content/modules/${created.id}`)
+    router.push(`${adminBase.value}/content/modules/${created.id}`)
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Could not add module.'
   } finally {
@@ -568,7 +571,7 @@ async function addLesson(mod: EntrySummary) {
         lessons: [...existing, created.id],
       },
     })
-    router.push(`/admin/content/lessons/${created.id}`)
+    router.push(`${adminBase.value}/content/lessons/${created.id}`)
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Could not add lesson.'
   } finally {
@@ -748,7 +751,7 @@ async function addAssignment(mod: EntrySummary) {
         assignments: [...existing, created.id],
       },
     })
-    router.push(`/admin/content/assignments/${created.id}`)
+    router.push(`${adminBase.value}/content/assignments/${created.id}`)
   } catch (err) {
     error.value = (err as { message?: string }).message ?? 'Could not add assignment.'
   } finally {
@@ -778,7 +781,7 @@ onMounted(load)
         <LmsOnboarding />
 
         <RouterLink
-          to="/admin/content/outline"
+          :to="`${adminBase}/content/outline`"
           class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/60 hover:bg-brand-violet/5 transition-colors focus-ring-brand bg-gradient-to-br from-brand-violet/5 to-brand-sky/5"
         >
           <div class="w-10 h-10 rounded-xl bg-brand-violet/15 flex items-center justify-center shrink-0">
@@ -882,7 +885,7 @@ onMounted(load)
                 </button>
                 <Icon icon="lucide:book-open" width="14" class="text-brand-violet shrink-0" />
                 <RouterLink
-                  :to="`/admin/content/courses/${course.id}`"
+                  :to="`${adminBase}/content/courses/${course.id}`"
                   class="flex-1 min-w-0 text-sm font-medium text-ink hover:text-brand-violet truncate"
                 >
                   {{ entryTitle(course) }}
@@ -996,7 +999,7 @@ onMounted(load)
                     </button>
                     <Icon icon="lucide:layers" width="13" class="text-ink/60 shrink-0" />
                     <RouterLink
-                      :to="`/admin/content/modules/${mod.id}`"
+                      :to="`${adminBase}/content/modules/${mod.id}`"
                       class="flex-1 min-w-0 text-sm text-ink hover:text-brand-violet truncate"
                     >
                       {{ entryTitle(mod) }}
@@ -1108,7 +1111,7 @@ onMounted(load)
                       <span v-else class="w-2.5 shrink-0" />
                       <Icon icon="lucide:file-text" width="12" class="text-ink/50 shrink-0" />
                       <RouterLink
-                        :to="`/admin/content/lessons/${lesson.id}`"
+                        :to="`${adminBase}/content/lessons/${lesson.id}`"
                         class="flex-1 min-w-0 text-sm text-ink/85 hover:text-brand-violet truncate"
                       >
                         {{ entryTitle(lesson) }}
@@ -1158,7 +1161,7 @@ onMounted(load)
                       <span v-else class="w-2.5 shrink-0" />
                       <Icon icon="lucide:clipboard-edit" width="12" class="text-ink/50 shrink-0" />
                       <RouterLink
-                        :to="`/admin/content/assignments/${assign.id}`"
+                        :to="`${adminBase}/content/assignments/${assign.id}`"
                         class="flex-1 min-w-0 text-sm text-ink/85 hover:text-brand-violet truncate"
                       >
                         {{ entryTitle(assign) }}
@@ -1232,7 +1235,7 @@ onMounted(load)
               <RouterLink
                 v-for="m in orphans.modules"
                 :key="m.id"
-                :to="`/admin/content/modules/${m.id}`"
+                :to="`${adminBase}/content/modules/${m.id}`"
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(m) }}
@@ -1244,7 +1247,7 @@ onMounted(load)
               <RouterLink
                 v-for="l in orphans.lessons"
                 :key="l.id"
-                :to="`/admin/content/lessons/${l.id}`"
+                :to="`${adminBase}/content/lessons/${l.id}`"
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(l) }}
@@ -1256,7 +1259,7 @@ onMounted(load)
               <RouterLink
                 v-for="a in orphans.assignments"
                 :key="a.id"
-                :to="`/admin/content/assignments/${a.id}`"
+                :to="`${adminBase}/content/assignments/${a.id}`"
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(a) }}

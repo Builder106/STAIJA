@@ -20,8 +20,7 @@ export type {
 } from './types'
 
 export { ROLE_PERMISSIONS, ALL_ROLES, ALL_PERMISSIONS, PermissionService } from './permissions'
-export { postLoginRouteName } from './postLoginRedirect'
-export type { PostLoginRouteName } from './postLoginRedirect'
+export { postLoginRoute } from './postLoginRedirect'
 export { AuditService } from './audit'
 export { RoleTransitionService } from './roleTransition'
 export { AuthService } from './auth'

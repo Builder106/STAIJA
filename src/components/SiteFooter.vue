@@ -12,10 +12,13 @@ import { useAuth } from '../composables/useAuth'
 import { usePermissions } from '../composables/usePermissions'
 
 const { isAuthenticated } = useAuth()
-const { isStaff, isStudent, isAlumni, isMentor } = usePermissions()
+const { isAdmin, isStaff, isStudent, isAlumni, isMentor } = usePermissions()
 
 const dashboardPath = computed(() => {
-  if (isStaff.value) return '/admin'
+  // Admin and staff get separate URL prefixes; isAdmin is strict and
+  // isStaff returns true for both, so check isAdmin first.
+  if (isAdmin.value) return '/admin'
+  if (isStaff.value) return '/staff'
   if (isStudent.value) return '/learn'
   if (isAlumni.value) return '/alumni'
   if (isMentor.value) return '/mentor'

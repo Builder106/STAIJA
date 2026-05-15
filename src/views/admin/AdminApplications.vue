@@ -28,8 +28,10 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 import { functions } from '../../config/firebase'
+import { useAdminBase } from '../../composables/useAdminBase'
 
 const router = useRouter()
+const { adminBase } = useAdminBase()
 
 const applications = ref<Application[]>([])
 const loading = ref(true)
@@ -254,7 +256,7 @@ async function bulkUpdateStatus(status: Application['status']) {
 }
 
 function openApplication(applicationId: string) {
-  router.push(`/admin/applications/${applicationId}`)
+  router.push(`${adminBase.value}/applications/${applicationId}`)
 }
 
 /** Route to the manual-enroll surface with the applicant's uid
@@ -265,7 +267,7 @@ function openApplication(applicationId: string) {
  *  before the applicant explicitly accepts, but the spot-confirmed
  *  indicator on the row is the visual cue for "this one's ready". */
 function placeInCohort(userId: string) {
-  router.push({ path: '/admin/enroll', query: { applicant: userId } })
+  router.push({ path: `${adminBase.value}/enroll`, query: { applicant: userId } })
 }
 
 // Re-offer-to-deferred state. Per-application loading flag so two

@@ -9,7 +9,7 @@ import Body from '../components/ui/Body.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import { AuthService } from '../services/auth'
 import { primeProfileCache } from '../router'
-import { postLoginRouteName } from '../services/postLoginRedirect'
+import { postLoginRoute } from '../services/postLoginRedirect'
 
 const router = useRouter()
 const firstName = ref('')
@@ -43,7 +43,7 @@ async function onGoogle() {
   try {
     const { credential, role } = await AuthService.signInWithGoogle()
     primeProfileCache(credential.user.uid, role)
-    router.push({ name: postLoginRouteName(role) })
+    router.push(postLoginRoute(role))
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Google sign up failed'
   } finally {

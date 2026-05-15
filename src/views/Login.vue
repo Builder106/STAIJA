@@ -10,7 +10,7 @@ import UiButton from '../components/ui/UiButton.vue'
 import type { UserRole } from '../services/types'
 import { AuthService } from '../services/auth'
 import { primeProfileCache } from '../router'
-import { postLoginRouteName } from '../services/postLoginRedirect'
+import { postLoginRoute } from '../services/postLoginRedirect'
 
 const router = useRouter()
 const route = useRoute()
@@ -23,7 +23,7 @@ function redirectAfterAuth(uid: string, role: UserRole | null) {
   primeProfileCache(uid, role)
   const redirect = route.query.redirect as string | undefined
   if (redirect) return router.push(redirect)
-  router.push({ name: postLoginRouteName(role) })
+  router.push(postLoginRoute(role))
 }
 
 async function onSubmit(e: Event) {

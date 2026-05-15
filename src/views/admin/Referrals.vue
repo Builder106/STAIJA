@@ -26,6 +26,9 @@ import {
   fetchReferralLeaderboard,
   type ReferralLeaderboardRow,
 } from '../../services/referralLeaderboard'
+import { useAdminBase } from '../../composables/useAdminBase'
+
+const { adminBase } = useAdminBase()
 
 const rows = ref<ReferralLeaderboardRow[]>([])
 const loading = ref(true)
@@ -167,7 +170,7 @@ onMounted(load)
                 <div class="flex flex-col gap-0.5 min-w-0">
                   <template v-if="row.identified && row.uid">
                     <RouterLink
-                      :to="`/admin/users?uid=${row.uid}`"
+                      :to="`${adminBase}/users?uid=${row.uid}`"
                       class="font-semibold text-ink hover:text-brand-violet transition-colors truncate focus-ring-brand rounded-sm"
                     >
                       {{ row.displayName }}

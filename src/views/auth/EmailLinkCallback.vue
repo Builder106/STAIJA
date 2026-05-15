@@ -55,7 +55,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdditionalUserInfo } from 'firebase/auth'
 import { Icon } from '@iconify/vue'
-import { AuthService, DatabaseService, postLoginRouteName } from '../../services/firebase'
+import { AuthService, DatabaseService } from '../../services/firebase'
+import { postLoginRoute } from '../../services/postLoginRedirect'
 
 const router = useRouter()
 
@@ -94,10 +95,10 @@ const completeSignIn = async () => {
           const profile = await DatabaseService.getUserProfile(user.uid)
           resolvedRole = profile?.role ?? null
         } catch {
-          // Fall through with role=null — postLoginRouteName returns 'home'
+          // Fall through with role=null — postLoginRoute returns { name: 'home' }
         }
       }
-      router.push({ name: postLoginRouteName(resolvedRole) })
+      router.push(postLoginRoute(resolvedRole))
     }, 2000)
     
   } catch (err: any) {

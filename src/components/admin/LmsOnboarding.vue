@@ -6,7 +6,12 @@ import {
   listEntries,
   type LmsContentType,
 } from '../../services/lmsContent'
+import { useAdminBase } from '../../composables/useAdminBase'
 
+// `newPath` is stored as a suffix relative to the admin/staff base
+// (e.g. `/content/lessons/new`) so the template can prepend whichever
+// prefix the current visitor is on. Avoids the onboarding card
+// pivoting URLs from /staff/* to /admin/* mid-flow.
 interface Step {
   key: LmsContentType
   number: number
@@ -22,7 +27,7 @@ const STEPS: Step[] = [
     number: 1,
     title: 'Write your first lesson',
     why: 'Lessons are the smallest unit — a body of rich text, a video, attachments. Authoring bottom-up means you start here.',
-    newPath: '/admin/content/lessons/new',
+    newPath: '/content/lessons/new',
     ctaLabel: 'New lesson',
   },
   {
@@ -30,7 +35,7 @@ const STEPS: Step[] = [
     number: 2,
     title: 'Add an assignment prompt',
     why: 'Assignments are the prompts students submit against. Define what type of submission you accept (text, file, link).',
-    newPath: '/admin/content/assignments/new',
+    newPath: '/content/assignments/new',
     ctaLabel: 'New assignment',
   },
   {
@@ -38,7 +43,7 @@ const STEPS: Step[] = [
     number: 3,
     title: 'Bundle them into a module',
     why: 'Modules group lessons + assignments and decide whether students move through them in order or jump around.',
-    newPath: '/admin/content/modules/new',
+    newPath: '/content/modules/new',
     ctaLabel: 'New module',
   },
   {
@@ -46,10 +51,12 @@ const STEPS: Step[] = [
     number: 4,
     title: 'Wrap modules into a course',
     why: "Courses are the top level — pin a version (e.g. 2026-summer), choose a program, and the modules you've built fall into place.",
-    newPath: '/admin/content/courses/new',
+    newPath: '/content/courses/new',
     ctaLabel: 'New course',
   },
 ]
+
+const { adminBase } = useAdminBase()
 
 const DISMISS_KEY = 'staija:lms-onboarding-dismissed'
 
@@ -215,7 +222,7 @@ function isDone(step: Step) {
         </div>
         <RouterLink
           v-if="!isDone(step)"
-          :to="step.newPath"
+          :to="`${adminBase}${step.newPath}`"
           class="shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors focus-ring-brand"
           :class="
             nextStepKey === step.key

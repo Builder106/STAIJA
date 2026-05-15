@@ -11,27 +11,28 @@
  * email/password, or magic link all land on the same role-appropriate
  * dashboard. Drift here means one path ends up at /admin while another
  * ends up at /home for the same user.
+ *
+ * Admin vs staff URL split: returns `{ path: '/admin' }` for admin and
+ * `{ path: '/staff' }` for staff so the two roles never share a URL.
+ * Other roles return a named route — those don't have the dual-URL
+ * concern.
  */
 
+import type { RouteLocationRaw } from 'vue-router'
 import type { UserRole } from './types'
 import { PermissionService } from './permissions'
 
-export type PostLoginRouteName =
-  | 'admin'
-  | 'student-dashboard'
-  | 'alumni-home'
-  | 'mentor-dashboard'
-  | 'applicant-dashboard'
-  | 'home'
-
-export function postLoginRouteName(role: UserRole | null | undefined): PostLoginRouteName {
-  if (!role) return 'home'
-  if (PermissionService.isStaffRole(role)) return 'admin'
-  if (PermissionService.isStudentRole(role)) return 'student-dashboard'
-  if (PermissionService.isAlumniRole(role)) return 'alumni-home'
-  if (PermissionService.isMentorRole(role)) return 'mentor-dashboard'
+export function postLoginRoute(role: UserRole | null | undefined): RouteLocationRaw {
+  if (!role) return { name: 'home' }
+  // isAdminRole first — isStaffRole returns true for admin too, so the
+  // order matters; we want admin → /admin, not admin → /staff.
+  if (PermissionService.isAdminRole(role)) return { path: '/admin' }
+  if (PermissionService.isStaffRole(role)) return { path: '/staff' }
+  if (PermissionService.isStudentRole(role)) return { name: 'student-dashboard' }
+  if (PermissionService.isAlumniRole(role)) return { name: 'alumni-home' }
+  if (PermissionService.isMentorRole(role)) return { name: 'mentor-dashboard' }
   if (PermissionService.hasPermission(role, 'view_own_applications')) {
-    return 'applicant-dashboard'
+    return { name: 'applicant-dashboard' }
   }
-  return 'home'
+  return { name: 'home' }
 }

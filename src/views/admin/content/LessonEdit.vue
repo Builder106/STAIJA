@@ -22,11 +22,13 @@ import {
 import { emptyDocument } from '../../../services/richTextSerializer'
 import { lessonMediaAssist, type LessonMediaResult } from '../../../services/ai'
 import { useFormDirty } from '../../../composables/useFormDirty'
+import { useAdminBase } from '../../../composables/useAdminBase'
 import type { Document, TopLevelBlock } from '@contentful/rich-text-types'
 import { BLOCKS } from '@contentful/rich-text-types'
 
 const route = useRoute()
 const router = useRouter()
+const { adminBase } = useAdminBase()
 
 const isNew = computed(() => route.params.id === 'new' || !route.params.id)
 const id = ref<string | null>(isNew.value ? null : (route.params.id as string))
@@ -88,7 +90,7 @@ async function save() {
     } else {
       const created = await createEntry({ type: 'lesson', fields: form.value })
       id.value = created.id
-      router.replace({ path: `/admin/content/lessons/${created.id}` })
+      router.replace({ path: `${adminBase.value}/content/lessons/${created.id}` })
     }
     markClean()
   } catch (err) {
@@ -110,7 +112,7 @@ async function saveAndPublish() {
       const created = await createEntry({ type: 'lesson', fields: form.value })
       entryId = created.id
       id.value = created.id
-      router.replace({ path: `/admin/content/lessons/${created.id}` })
+      router.replace({ path: `${adminBase.value}/content/lessons/${created.id}` })
     }
     await publishEntry(entryId!)
     isPublished.value = true
@@ -277,7 +279,7 @@ onMounted(load)
     <Section class="!pt-10 !pb-6 border-b hairline-ink">
       <Container class="max-w-3xl">
         <RouterLink
-          to="/admin/content/lessons"
+          :to="`${adminBase}/content/lessons`"
           class="text-xs text-ink/60 hover:text-ink mb-3 inline-flex items-center gap-1"
         >
           <Icon icon="lucide:arrow-left" width="12" /> All lessons

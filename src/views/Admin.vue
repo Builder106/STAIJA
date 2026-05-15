@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { Icon } from '@iconify/vue'
 import Container from '../components/ui/Container.vue'
 import Section from '../components/ui/Section.vue'
@@ -12,6 +12,7 @@ import { DatabaseService } from '../services/firebase'
 import type { Application } from '../services/firebase'
 import { useAuth } from '../composables/useAuth'
 import { usePermissions } from '../composables/usePermissions'
+import { useAdminBase } from '../composables/useAdminBase'
 
 const { displayName } = useAuth()
 // `isAdmin` is strict — staff is NOT admin. We use it to hide tiles that
@@ -19,6 +20,26 @@ const { displayName } = useAuth()
 // `isStaff` returns true for staff AND admin in this codebase, so it's
 // not a useful distinguisher here — we explicitly check isAdmin.
 const { isAdmin } = usePermissions()
+// Preserves /admin vs /staff in every internal link on this page —
+// see useAdminBase for the rationale.
+const { adminBase } = useAdminBase()
+
+// Role-aware labels so a staff account doesn't see "ADMIN" branding
+// across the page. `isAdmin` is strict (admin only); anyone else
+// landing here is by definition staff (the route's `view_all_users`
+// permission gate admits both, and only admin/staff hold it).
+const roleLabel = computed(() => (isAdmin.value ? 'Admin' : 'Staff'))
+
+// Override the route-level document.title ("Admin Panel — STAIJA")
+// so a staff member's browser tab also reads "Staff Panel — STAIJA".
+// Runs reactively because the user profile (and therefore isAdmin)
+// loads asynchronously after mount; a static onMounted set would race
+// the auth listener and stamp the wrong label on a slow load.
+watchEffect(() => {
+  if (typeof document !== 'undefined') {
+    document.title = `${roleLabel.value} Panel — STAIJA`
+  }
+})
 
 const applications = ref<Application[]>([])
 const loading = ref(true)
@@ -117,8 +138,8 @@ onMounted(loadData)
     <Container>
       <!-- Greeting -->
       <div class="flex flex-col gap-3 mb-12">
-        <Eyebrow class="text-brand-violet">Admin</Eyebrow>
-        <Heading :level="1">Hi, {{ firstName }}.</Heading>
+        <Eyebrow class="text-brand-violet">{{ roleLabel }}</Eyebrow>
+        <Heading :level="1">Hi, <span class="text-brand-violet">{{ firstName }}</span>.</Heading>
         <Body class="text-ink/70 max-w-xl">
           Review applications, manage users, set up mentor pairings.
           Editorial content lives in Contentful — the link is below.
@@ -176,7 +197,7 @@ onMounted(loadData)
                first paint. Clickable like the rest, links straight
                to the filtered /admin/applications view. -->
           <RouterLink
-            to="/admin/applications?response=deferred"
+            :to="`${adminBase}/applications?response=deferred`"
             class="focus-ring-brand rounded-2xl"
           >
             <UiCard
@@ -202,7 +223,7 @@ onMounted(loadData)
               <Heading :level="2">Pending review</Heading>
               <RouterLink
                 v-if="applications.length > 0"
-                to="/admin/applications"
+                :to="`${adminBase}/applications`"
                 class="text-sm font-semibold text-brand-violet hover:underline"
               >
                 View all →
@@ -225,7 +246,7 @@ onMounted(loadData)
               <RouterLink
                 v-for="app in pendingReview"
                 :key="app.id"
-                :to="`/admin/applications/${app.id}/review`"
+                :to="`${adminBase}/applications/${app.id}/review`"
                 class="block group focus-ring-brand rounded-2xl"
               >
                 <UiCard hoverable class="p-5 flex items-center gap-4">
@@ -268,7 +289,7 @@ onMounted(loadData)
                   </p>
                 </div>
                 <RouterLink
-                  to="/admin/applications?response=deferred"
+                  :to="`${adminBase}/applications?response=deferred`"
                   class="text-sm font-semibold text-amber-700 hover:underline shrink-0"
                 >
                   View all →
@@ -278,7 +299,7 @@ onMounted(loadData)
                 <RouterLink
                   v-for="app in deferredApplicants"
                   :key="app.id"
-                  :to="`/admin/applications/${app.id}`"
+                  :to="`${adminBase}/applications/${app.id}`"
                   class="block group focus-ring-brand rounded-2xl"
                 >
                   <UiCard hoverable class="p-5 flex items-center gap-4 !border-amber-200/60 bg-amber-50/20">
@@ -312,7 +333,7 @@ onMounted(loadData)
             <Heading :level="2">Quick actions</Heading>
             <div class="flex flex-col gap-3">
               <RouterLink
-                to="/admin/applications"
+                :to="`${adminBase}/applications`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -326,7 +347,7 @@ onMounted(loadData)
 
               <RouterLink
                 v-if="isAdmin"
-                to="/admin/users"
+                :to="`${adminBase}/users`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -339,7 +360,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
-                to="/admin/programs"
+                :to="`${adminBase}/programs`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -352,7 +373,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
-                to="/admin/cohorts"
+                :to="`${adminBase}/cohorts`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -365,7 +386,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
-                to="/admin/enroll"
+                :to="`${adminBase}/enroll`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -378,7 +399,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
-                to="/admin/content"
+                :to="`${adminBase}/content`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">
@@ -391,7 +412,7 @@ onMounted(loadData)
               </RouterLink>
 
               <RouterLink
-                to="/admin/referrals"
+                :to="`${adminBase}/referrals`"
                 class="flex items-start gap-4 p-5 rounded-2xl border hairline-ink hover:border-brand-violet/40 hover:bg-brand-violet/5 transition-colors focus-ring-brand"
               >
                 <div class="w-10 h-10 rounded-xl bg-brand-violet/10 flex items-center justify-center shrink-0">

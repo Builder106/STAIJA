@@ -23,14 +23,19 @@ const avatarSrc = computed(() =>
     seed: user.value?.uid ?? '',
   })
 )
-const { isStaff, isMentor, isStudent, isAlumni } = usePermissions()
+const { isAdmin, isStaff, isMentor, isStudent, isAlumni } = usePermissions()
 
 // Where the "Dashboard" link in the header points, by role. Mirrors the
 // router's post-login redirect cascade in src/router/index.ts so an
 // authenticated user lands at the same place via the header link as via
 // the post-login fallback.
+//
+// Admin/staff URL split: admin → /admin, staff → /staff (mutually
+// exclusive in this codebase — `isAdmin` is strict, `isStaff` returns
+// true for both; we check `isAdmin` first to land admin on /admin).
 const dashboardPath = computed(() => {
-  if (isStaff.value) return '/admin'
+  if (isAdmin.value) return '/admin'
+  if (isStaff.value) return '/staff'
   // Students land in the LMS directly. The legacy /student dashboard
   // is kept around with quick-link buttons that all point to /learn,
   // but going straight there is the better UX for active learners.

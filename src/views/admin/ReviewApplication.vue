@@ -34,9 +34,11 @@ import { DatabaseService, AuthService, type Application } from '../../services/f
 import { StorageService } from '../../services/storageService'
 import { functions } from '../../config/firebase'
 import { resolveAvatarSrc } from '../../services/avatar'
+import { useAdminBase } from '../../composables/useAdminBase'
 
 const router = useRouter()
 const route = useRoute()
+const { adminBase } = useAdminBase()
 
 const application = ref<Application | null>(null)
 const applicantPhotoURL = ref<string | null>(null)
@@ -353,7 +355,7 @@ async function saveReview() {
       reviewedAt: new Date(),
       reviewedBy: currentUser?.email || 'Unknown',
     })
-    router.push('/admin/applications')
+    router.push(`${adminBase.value}/applications`)
   } catch (err) {
     saveError.value = err instanceof Error ? err.message : 'Save failed. Try again.'
   } finally {
@@ -401,7 +403,7 @@ onMounted(loadApplication)
       <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
         <Container class="max-w-6xl">
           <RouterLink
-            to="/admin/applications"
+            :to="`${adminBase}/applications`"
             class="inline-flex items-center gap-2 text-sm font-semibold text-ink/60 hover:text-brand-violet transition-colors mb-6 focus-ring-brand rounded-sm"
           >
             <Icon icon="lucide:arrow-left" width="16" /> All applications

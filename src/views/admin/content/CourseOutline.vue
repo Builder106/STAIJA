@@ -11,6 +11,7 @@ import UiButton from '../../../components/ui/UiButton.vue'
 import UiCard from '../../../components/ui/UiCard.vue'
 import UiSelect from '../../../components/ui/UiSelect.vue'
 import { outlineCourse, type OutlineCoursePayload, type OutlineCourseResult } from '../../../services/ai'
+import { useAdminBase } from '../../../composables/useAdminBase'
 
 // Form state. Defaults are tuned for a "typical" first run — staff can
 // tweak before generating. Audience and version are optional; the
@@ -27,6 +28,7 @@ const error = ref<string | null>(null)
 const result = ref<OutlineCourseResult | null>(null)
 
 const router = useRouter()
+const { adminBase } = useAdminBase()
 
 const canSubmit = computed(
   () =>
@@ -63,7 +65,7 @@ async function handleSubmit() {
 
 function openCourseEditor() {
   if (!result.value) return
-  router.push(`/admin/content/courses/${result.value.courseId}`)
+  router.push(`${adminBase.value}/content/courses/${result.value.courseId}`)
 }
 </script>
 
@@ -72,7 +74,7 @@ function openCourseEditor() {
     <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
       <Container class="max-w-3xl">
         <RouterLink
-          to="/admin/content"
+          :to="`${adminBase}/content`"
           class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink/60 hover:text-brand-violet transition-colors mb-6 focus-ring-brand rounded-sm"
         >
           <Icon icon="lucide:arrow-left" width="14" /> Course content

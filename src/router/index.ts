@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { auth } from '../config/firebase.ts'
-import { DatabaseService, PermissionService, postLoginRouteName, type Permission } from '../services/firebase.ts'
+import { DatabaseService, PermissionService, type Permission } from '../services/firebase.ts'
+import { postLoginRoute } from '../services/postLoginRedirect'
 import type { UserRole } from '../services/types'
 import { donationsEnabled } from '../config/features.ts'
 
@@ -78,9 +79,17 @@ const routes: RouteRecordRaw[] = [
   { path: '/student/mentor', name: 'student-mentor', component: () => import('../views/student/MentorSupport.vue'), meta: { title: 'Mentor Support — STAIJA', requiresAuth: true, permissions: ['access_mentor_support'] } },
   { path: '/student/progress', name: 'student-progress', component: () => import('../views/student/Progress.vue'), meta: { title: 'My Progress — STAIJA', requiresAuth: true, permissions: ['access_student_portal'] } },
   
-  // Staff/Admin routes
-  { path: '/admin', name: 'admin', component: () => import('../views/Admin.vue'), meta: { title: 'Admin Panel — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
-  { path: '/admin/applications', name: 'admin-applications', component: () => import('../views/admin/AdminApplications.vue'), meta: { title: 'Applications Management — STAIJA', requiresAuth: true, permissions: ['view_applications'] } },
+  // Staff/Admin routes.
+  //
+  // URL-split: admin lands on `/admin/*`, staff lands on `/staff/*`.
+  // Every route below carries a `/staff/...` alias so the same
+  // component renders under either prefix; a beforeEach guard further
+  // down redirects cross-prefix accidents (staff hitting /admin/* or
+  // admin hitting /staff/*) so the URL always matches the role.
+  // In-component RouterLinks use `useAdminBase()` to stay on whichever
+  // prefix the visitor is already on.
+  { path: '/admin', name: 'admin', alias: '/staff', component: () => import('../views/Admin.vue'), meta: { title: 'Admin Panel — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
+  { path: '/admin/applications', name: 'admin-applications', alias: '/staff/applications', component: () => import('../views/admin/AdminApplications.vue'), meta: { title: 'Applications Management — STAIJA', requiresAuth: true, permissions: ['view_applications'] } },
   // The "view" and "review" admin surfaces collapsed into one. The
   // legacy AdminViewApplication.vue rendered the same data on a
   // separate /:id route, then required a second click to reach the
@@ -89,38 +98,43 @@ const routes: RouteRecordRaw[] = [
   // /:id/review stays as an alias so any existing bookmarks +
   // outbound links (e.g. the Admin overview's "Open" links) keep
   // working without a redirect round-trip.
-  { path: '/admin/applications/:id', name: 'admin-review-application', component: () => import('../views/admin/ReviewApplication.vue'), alias: '/admin/applications/:id/review', meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
-  { path: '/admin/programs', name: 'admin-programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
-  { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
-  { path: '/admin/cohorts', name: 'admin-cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/enroll', name: 'admin-enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/applications/:id', name: 'admin-review-application', alias: ['/admin/applications/:id/review', '/staff/applications/:id', '/staff/applications/:id/review'], component: () => import('../views/admin/ReviewApplication.vue'), meta: { title: 'Review Application — STAIJA', requiresAuth: true, permissions: ['review_applications'] } },
+  { path: '/admin/programs', name: 'admin-programs', alias: '/staff/programs', component: () => import('../views/admin/ProgramManagement.vue'), meta: { title: 'Program Management — STAIJA', requiresAuth: true, permissions: ['manage_program_settings'] } },
+  { path: '/admin/users', name: 'admin-users', alias: '/staff/users', component: () => import('../views/admin/UserManagement.vue'), meta: { title: 'User Management — STAIJA', requiresAuth: true, permissions: ['manage_users'] } },
+  { path: '/admin/cohorts', name: 'admin-cohorts', alias: '/staff/cohorts', component: () => import('../views/admin/Cohorts.vue'), meta: { title: 'Cohorts — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/enroll', name: 'admin-enroll', alias: '/staff/enroll', component: () => import('../views/admin/EnrollStudent.vue'), meta: { title: 'Enroll student — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   // Referral leaderboard — top /stay-connected referrers by signup
   // count. Gated on view_all_users so staff + admin both see it
   // (matches the firestore.rules read on referralStats).
-  { path: '/admin/referrals', name: 'admin-referrals', component: () => import('../views/admin/Referrals.vue'), meta: { title: 'Referrals — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
+  { path: '/admin/referrals', name: 'admin-referrals', alias: '/staff/referrals', component: () => import('../views/admin/Referrals.vue'), meta: { title: 'Referrals — STAIJA', requiresAuth: true, permissions: ['view_all_users'] } },
   // Temporary — Phase 1 avatar motion preview. Any signed-in user can
   // view it (no permission gate) so dev/staging accounts without an
   // admin role still see the route. Delete once avatar work ships.
-  { path: '/admin/avatar-preview', name: 'admin-avatar-preview', component: () => import('../views/admin/AvatarPreview.vue'), meta: { title: 'Avatar preview — STAIJA', requiresAuth: true } },
+  { path: '/admin/avatar-preview', name: 'admin-avatar-preview', alias: '/staff/avatar-preview', component: () => import('../views/admin/AvatarPreview.vue'), meta: { title: 'Avatar preview — STAIJA', requiresAuth: true } },
 
   // LMS content authoring (STAIJA-native wrapper around Contentful Management API).
   // Both staff and admin can manage course content via manage_cohorts permission.
-  { path: '/admin/content', name: 'admin-content', component: () => import('../views/admin/content/ContentHome.vue'), meta: { title: 'Course content — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/outline', name: 'admin-content-outline', component: () => import('../views/admin/content/CourseOutline.vue'), meta: { title: 'AI course outliner — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content', name: 'admin-content', alias: '/staff/content', component: () => import('../views/admin/content/ContentHome.vue'), meta: { title: 'Course content — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/outline', name: 'admin-content-outline', alias: '/staff/content/outline', component: () => import('../views/admin/content/CourseOutline.vue'), meta: { title: 'AI course outliner — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
   // The four flat-list routes (/admin/content/{courses,modules,lessons,assignments})
   // were retired in favour of the tree view at /admin/content. We keep
   // redirects so any old bookmarks or links from prior emails don't 404.
   // Path-specific :id routes still match (e.g. /admin/content/courses/new
   // and /admin/content/courses/<id>) — Vue Router matches the longer
-  // path first.
-  { path: '/admin/content/courses', redirect: { name: 'admin-content' } },
-  { path: '/admin/content/courses/:id', name: 'admin-content-course-edit', component: () => import('../views/admin/content/CourseEdit.vue'), meta: { title: 'Edit course — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/modules', redirect: { name: 'admin-content' } },
-  { path: '/admin/content/modules/:id', name: 'admin-content-module-edit', component: () => import('../views/admin/content/ModuleEdit.vue'), meta: { title: 'Edit module — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/lessons', redirect: { name: 'admin-content' } },
-  { path: '/admin/content/lessons/:id', name: 'admin-content-lesson-edit', component: () => import('../views/admin/content/LessonEdit.vue'), meta: { title: 'Edit lesson — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
-  { path: '/admin/content/assignments', redirect: { name: 'admin-content' } },
-  { path: '/admin/content/assignments/:id', name: 'admin-content-assignment-edit', component: () => import('../views/admin/content/AssignmentEdit.vue'), meta: { title: 'Edit assignment — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  // path first. Redirects are path-based (not name-based) so /staff
+  // visitors don't get bounced over to /admin.
+  { path: '/admin/content/courses', redirect: '/admin/content' },
+  { path: '/staff/content/courses', redirect: '/staff/content' },
+  { path: '/admin/content/courses/:id', name: 'admin-content-course-edit', alias: '/staff/content/courses/:id', component: () => import('../views/admin/content/CourseEdit.vue'), meta: { title: 'Edit course — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/modules', redirect: '/admin/content' },
+  { path: '/staff/content/modules', redirect: '/staff/content' },
+  { path: '/admin/content/modules/:id', name: 'admin-content-module-edit', alias: '/staff/content/modules/:id', component: () => import('../views/admin/content/ModuleEdit.vue'), meta: { title: 'Edit module — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/lessons', redirect: '/admin/content' },
+  { path: '/staff/content/lessons', redirect: '/staff/content' },
+  { path: '/admin/content/lessons/:id', name: 'admin-content-lesson-edit', alias: '/staff/content/lessons/:id', component: () => import('../views/admin/content/LessonEdit.vue'), meta: { title: 'Edit lesson — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
+  { path: '/admin/content/assignments', redirect: '/admin/content' },
+  { path: '/staff/content/assignments', redirect: '/staff/content' },
+  { path: '/admin/content/assignments/:id', name: 'admin-content-assignment-edit', alias: '/staff/content/assignments/:id', component: () => import('../views/admin/content/AssignmentEdit.vue'), meta: { title: 'Edit assignment — STAIJA', requiresAuth: true, permissions: ['manage_cohorts'] } },
 
   // LMS routes — student-facing
   { path: '/learn', name: 'learn-home', component: () => import('../views/learn/CourseHome.vue'), meta: { title: 'My course — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
@@ -292,12 +306,33 @@ router.beforeEach(async (to, _from, next) => {
 
     if (!userRole) return next({ name: 'login' })
 
-    if (PermissionService.hasAnyPermission(userRole, requiredPermissions)) {
-      return next()
+    if (!PermissionService.hasAnyPermission(userRole, requiredPermissions)) {
+      // User lacks permission for this route — send to their own dashboard.
+      return next(postLoginRoute(userRole))
     }
 
-    // User lacks permission for this route — send to their own dashboard.
-    return next({ name: postLoginRouteName(userRole) })
+    // Cross-prefix guard. /admin/* and /staff/* serve the same
+    // components, but the URL should match the visitor's role:
+    //   - admin role → /admin/* (redirect away from /staff/*)
+    //   - staff role → /staff/* (redirect away from /admin/*)
+    // A stale bookmark or hard-coded link that targets the wrong
+    // prefix gets re-pointed instead of rendering an off-brand URL.
+    // Only fires on routes that have both a /admin and /staff form;
+    // permission-gated routes outside this split (login, learn, etc.)
+    // are untouched.
+    const targetPath = to.path
+    const isAdmin = PermissionService.isAdminRole(userRole)
+    const isStaff = PermissionService.isStaffRole(userRole) && !isAdmin
+    if (isStaff && targetPath.startsWith('/admin')) {
+      const swapped = targetPath.replace(/^\/admin/, '/staff') + (to.hash ?? '')
+      return next({ path: swapped, query: to.query, replace: true })
+    }
+    if (isAdmin && targetPath.startsWith('/staff')) {
+      const swapped = targetPath.replace(/^\/staff/, '/admin') + (to.hash ?? '')
+      return next({ path: swapped, query: to.query, replace: true })
+    }
+
+    return next()
   } catch (error) {
     console.error('Auth guard error:', error)
     return next({ name: 'login' })
