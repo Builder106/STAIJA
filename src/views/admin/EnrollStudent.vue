@@ -161,7 +161,16 @@ async function submit() {
       cohortId: selectedCohortId.value,
       mentorId: selectedMentorId.value || undefined,
     })
-    success.value = `Enrolled — assigned to mentor ${result.mentorId.slice(0, 8)}…`
+    // Resolve the assigned mentor's uid → display name against the
+    // already-loaded users list. Falls back to email, then to the
+    // short uid prefix so a staff race (mentor added between page
+    // load and submit) still produces a readable message.
+    const mentor = allUsers.value.find((u) => u.uid === result.mentorId)
+    const mentorLabel =
+      mentor?.displayName?.trim() ||
+      mentor?.email ||
+      `${result.mentorId.slice(0, 8)}…`
+    success.value = `Enrolled — assigned to ${mentorLabel}.`
     selectedStudentId.value = ''
     selectedMentorId.value = ''
   } catch (err) {
