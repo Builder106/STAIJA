@@ -29,7 +29,7 @@ sequenceDiagram
     participant Firestore
     participant Mailgun
 
-    rect rgb(232, 235, 240)
+    rect rgba(128, 128, 128, 0.12)
         Note over Applicant,Mailgun: Sign up & apply
         Applicant->>STAIJA: Sign up (email or Google)
         STAIJA->>Firestore: users.create (role=applicant)
@@ -38,7 +38,7 @@ sequenceDiagram
         STAIJA->>Mailgun: "We received your application"
     end
 
-    rect rgb(232, 235, 240)
+    rect rgba(128, 128, 128, 0.12)
         Note over Applicant,Mailgun: Staff review
         Staff->>STAIJA: Open admin review queue
         STAIJA->>Firestore: applications where status=pending
@@ -46,21 +46,21 @@ sequenceDiagram
         STAIJA->>Firestore: applications.update + roleTransition (applicant → student)
     end
 
-    rect rgb(232, 235, 240)
+    rect rgba(128, 128, 128, 0.12)
         Note over Applicant,Mailgun: Cohort & mentor pairing
         STAIJA->>Firestore: enrollments.create (cohort)
         STAIJA->>Firestore: mentors.match (assignment)
         STAIJA->>Mailgun: "You're in" + mentor intro
     end
 
-    rect rgb(232, 235, 240)
+    rect rgba(128, 128, 128, 0.12)
         Note over Applicant,Mailgun: Program (LMS)
         Applicant->>STAIJA: Lessons, assignments, sessions
         Mentor->>STAIJA: Schedule sessions, leave feedback
         STAIJA->>Firestore: progress, sessionNotes, feedback
     end
 
-    rect rgb(232, 235, 240)
+    rect rgba(128, 128, 128, 0.12)
         Note over Applicant,Mailgun: Alumni
         STAIJA->>Firestore: roleTransition (student → alumni)
         STAIJA->>Mailgun: Graduation email + alumni resources
