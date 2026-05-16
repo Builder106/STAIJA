@@ -12,7 +12,7 @@ import UiButton from '../../components/ui/UiButton.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { CohortService, EnrollmentService, enrollStudent } from '../../services/learn'
 import { DatabaseService } from '../../services/database'
-import type { Cohort, Enrollment, UserProfile } from '../../services/types'
+import type { Application, Cohort, Enrollment, UserProfile } from '../../services/types'
 
 const route = useRoute()
 
@@ -42,6 +42,77 @@ const submitting = ref(false)
 const selectedCohort = computed(() =>
   cohorts.value.find((c) => c.id === selectedCohortId.value),
 )
+
+/** The selected applicant's own applications, fetched on selection
+ *  change. Drives the cohort filter so staff can't accidentally
+ *  enroll a Dynamerge-accepted applicant into a StepUp cohort (the
+ *  server-side guard in enrollStudent catches it too, but failing
+ *  loud at submit time is worse UX than not surfacing the wrong
+ *  cohort to begin with). null while loading or before a student is
+ *  picked. */
+const applicantApplications = ref<Application[] | null>(null)
+const applicantAppsLoading = ref(false)
+
+/** Programs the selected applicant has an accepted+confirmed
+ *  application for. The enrollStudent callable requires this match
+ *  (and a spotResponse='accepted' on the matching app); we mirror
+ *  that gate in the picker so staff see the eligible cohorts only. */
+const eligiblePrograms = computed<Set<string>>(() => {
+  const apps = applicantApplications.value
+  if (!apps) return new Set()
+  const programs = new Set<string>()
+  for (const a of apps) {
+    if (a.status === 'accepted' && a.spotResponse === 'accepted' && a.program) {
+      programs.add(a.program)
+    }
+  }
+  return programs
+})
+
+/** Existing-student short-circuit: a candidate who's already
+ *  `role='student'` is enrolling in a second cohort, which doesn't
+ *  re-run the application gate (matches the enrollStudent callable's
+ *  role-flip skip). For them, every active cohort is fair game. */
+const selectedCandidate = computed(() =>
+  candidates.value.find((u) => u.uid === selectedStudentId.value),
+)
+const candidateIsExistingStudent = computed(
+  () => selectedCandidate.value?.role === 'student',
+)
+
+/** Cohorts the staff can actually enroll the selected applicant
+ *  into. Falls back to the full list when no applicant is selected
+ *  yet, or when the candidate is an existing student. */
+const eligibleCohorts = computed<Cohort[]>(() => {
+  if (!selectedStudentId.value) return cohorts.value
+  if (candidateIsExistingStudent.value) return cohorts.value
+  if (!applicantApplications.value) return [] // still loading
+  return cohorts.value.filter((c) => eligiblePrograms.value.has(c.program))
+})
+
+/** Tracks why eligibleCohorts is empty so the picker can render an
+ *  honest empty state instead of a silent "no options" dropdown. */
+const cohortEmptyReason = computed<string | null>(() => {
+  if (!selectedStudentId.value) return null
+  if (candidateIsExistingStudent.value) return null
+  if (applicantAppsLoading.value) return 'Loading applications…'
+  if (!applicantApplications.value) return null
+  if (eligiblePrograms.value.size === 0) {
+    const apps = applicantApplications.value
+    if (apps.length === 0) {
+      return 'No applications on file for this person.'
+    }
+    const hasAccepted = apps.some((a) => a.status === 'accepted')
+    if (!hasAccepted) {
+      return "No accepted applications yet. Decide on this applicant's submission first."
+    }
+    return "Applicant hasn't confirmed their spot yet. Confirm the spot response first, then enroll."
+  }
+  if (eligibleCohorts.value.length === 0) {
+    return 'No active cohort matches this applicant\'s accepted program.'
+  }
+  return null
+})
 
 const canSubmit = computed(
   () => selectedStudentId.value && selectedCohortId.value && !submitting.value,
@@ -91,6 +162,32 @@ const mentorOptions = computed<{ value: string; label: string }[]>(() => {
       label: `${e.name} · ${e.load} ${studentWord(e.load)}`,
     })),
   ]
+})
+
+/** Fetch the selected applicant's own applications whenever the
+ *  student picker changes. Powers the cohort filter; clears any
+ *  prior selection so a stale Dynamerge cohort doesn't carry over
+ *  when staff switches to a StepUp-accepted applicant. */
+watch(selectedStudentId, async (uid) => {
+  selectedCohortId.value = ''
+  applicantApplications.value = null
+  if (!uid) return
+  const candidate = candidates.value.find((u) => u.uid === uid)
+  // Existing students don't go through the application gate (second-
+  // cohort enrollment), so skip the fetch entirely.
+  if (candidate?.role === 'student') {
+    applicantApplications.value = []
+    return
+  }
+  applicantAppsLoading.value = true
+  try {
+    applicantApplications.value = await DatabaseService.getUserApplications(uid)
+  } catch (err) {
+    console.warn('[EnrollStudent] applicant applications load failed', err)
+    applicantApplications.value = []
+  } finally {
+    applicantAppsLoading.value = false
+  }
 })
 
 /** Fetch the cohort's active enrollments whenever the selected cohort
@@ -203,18 +300,8 @@ onMounted(load)
 
         <UiCard v-else class="p-6 md:p-10 bg-surface">
           <div class="flex flex-col gap-5">
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
-              <UiSelect
-                v-model="selectedCohortId"
-                placeholder="Select a cohort…"
-                :options="cohorts.map((c) => ({
-                  value: c.id ?? '',
-                  label: `${c.name || c.courseSlug} (${c.program.replace('_', ' ')}, ${c.status})`,
-                }))"
-              />
-            </div>
-
+            <!-- Pick the student first so the cohort picker can
+                 filter to programs they're actually eligible for. -->
             <div class="flex flex-col gap-2">
               <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Student</label>
               <UiSelect
@@ -227,6 +314,30 @@ onMounted(load)
               />
               <p class="text-xs text-ink/50">
                 Showing applicants and existing students.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-semibold text-ink/70 uppercase tracking-wide">Cohort</label>
+              <UiSelect
+                v-model="selectedCohortId"
+                placeholder="Select a cohort…"
+                :disabled="!!cohortEmptyReason"
+                :options="eligibleCohorts.map((c) => ({
+                  value: c.id ?? '',
+                  label: `${c.name || c.courseSlug} (${c.program.replace('_', ' ')}, ${c.status})`,
+                }))"
+              />
+              <!-- Honest empty state when the cohort list filters to
+                   nothing. Tells staff exactly what to do next
+                   (decide the application, wait for confirmation,
+                   add a matching cohort) instead of leaving a silent
+                   empty dropdown. -->
+              <p v-if="cohortEmptyReason" class="text-xs text-amber-700 m-0">
+                {{ cohortEmptyReason }}
+              </p>
+              <p v-else-if="selectedStudentId && !candidateIsExistingStudent" class="text-xs text-ink/50 m-0">
+                Filtered to programs this applicant has confirmed.
               </p>
             </div>
 

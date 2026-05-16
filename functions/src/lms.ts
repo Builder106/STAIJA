@@ -86,6 +86,74 @@ export const enrollStudent = onCall<EnrollInput>(
     }
     const student = studentSnap.data() as { email?: string; displayName?: string; role?: string }
 
+    // Cohort/application program-match + spot-response guard.
+    //
+    // Two bugs the lack of this guard let through:
+    //   1. Staff could pair a Dynamerge-accepted applicant with a
+    //      StepUp cohort — the system happily enrolled them and the
+    //      LMS rendered the wrong program's course content.
+    //   2. Staff could enroll someone whose `spotResponse` was still
+    //      undefined / 'declined' / 'deferred', i.e. before (or
+    //      against) the applicant's own confirmation.
+    //
+    // We only enforce this for first-time enrollments (role still
+    // 'applicant'). An existing student adding a second cohort goes
+    // through a different workflow and shouldn't need a fresh
+    // application — handled by the role-flip skip at the bottom of
+    // this block.
+    if (student.role === 'applicant') {
+      const appsSnap = await db
+        .collection('applications')
+        .where('userId', '==', studentId)
+        .where('program', '==', cohort.program)
+        .where('status', '==', 'accepted')
+        .get()
+      if (appsSnap.empty) {
+        // Either no application for this program at all, or there's
+        // one but staff hasn't accepted it yet. Surface the distinct
+        // case so staff knows whether to go back to the queue or to
+        // pick a different cohort.
+        const anyAppSnap = await db
+          .collection('applications')
+          .where('userId', '==', studentId)
+          .where('program', '==', cohort.program)
+          .limit(1)
+          .get()
+        if (anyAppSnap.empty) {
+          throw new HttpsError(
+            'failed-precondition',
+            `This applicant has no application for ${programLabel(cohort.program)}. Pick a cohort whose program matches an accepted application.`,
+          )
+        }
+        throw new HttpsError(
+          'failed-precondition',
+          `This applicant's ${programLabel(cohort.program)} application isn't accepted yet. Decide on the application first.`,
+        )
+      }
+      const confirmedApp = appsSnap.docs.find(
+        (d) => (d.data() as { spotResponse?: string }).spotResponse === 'accepted',
+      )
+      if (!confirmedApp) {
+        // There's an accepted application but the applicant hasn't
+        // confirmed (or has declined / deferred). Surface which
+        // state we're in so staff can either chase the applicant or
+        // wait for re-offer.
+        const responses = appsSnap.docs.map(
+          (d) => (d.data() as { spotResponse?: string }).spotResponse ?? 'awaiting',
+        )
+        const reason =
+          responses.every((r) => r === 'declined')
+            ? `applicant declined the spot`
+            : responses.every((r) => r === 'deferred')
+            ? `applicant deferred to next cycle`
+            : `applicant hasn't confirmed the spot yet`
+        throw new HttpsError(
+          'failed-precondition',
+          `Can't enroll — ${reason}. Confirm the spot response first.`,
+        )
+      }
+    }
+
     // Role transition. Until now, enrolling an applicant didn't change
     // their role — they stayed `applicant` even after landing in a
     // cohort, which meant their dashboard kept showing the post-apply
