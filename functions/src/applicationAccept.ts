@@ -88,7 +88,7 @@ export const respondToOffer = onCall<RespondInput>(
     if (!snap.exists) {
       throw new HttpsError('not-found', 'Application not found.')
     }
-    const data = snap.data() as { userId?: string; status?: string }
+    const data = snap.data() as { userId?: string; status?: string; program?: string }
     if (data.userId !== req.auth.uid) {
       throw new HttpsError(
         'permission-denied',
@@ -123,9 +123,115 @@ export const respondToOffer = onCall<RespondInput>(
     }
 
     await ref.update(patch)
+
+    // Decline rollback. If staff had already enrolled the applicant
+    // (which the new enrollStudent guards prevent for fresh enrolls,
+    // but the rule layer still lets through for admins overriding,
+    // and pre-existing enrollments from before the guard shipped are
+    // out there), unwind the enrollment so the LMS doesn't keep
+    // serving course content to someone who said no.
+    //
+    // Scope:
+    //   - Only enrollments whose cohort.program matches the declined
+    //     application's program get withdrawn. A student in *another*
+    //     program's cohort isn't affected by this decline.
+    //   - Role flips back to 'applicant' only when no other active
+    //     enrollments remain. A multi-program student keeps role='student'.
+    //
+    // Best-effort: errors are logged, not thrown. The applicant's
+    // decline already landed (the patch above committed) — failing
+    // the call would leave the user thinking the decline didn't go
+    // through. The state we care about (UI + permission gate) is
+    // role + enrollment.status; both can be re-reconciled by an
+    // admin script if this branch errors out.
+    if (input.response === 'declined' && data.program) {
+      try {
+        await withdrawEnrollmentsForProgram({
+          db,
+          studentId: req.auth.uid,
+          program: data.program,
+        })
+      } catch (err) {
+        console.error(
+          '[respondToOffer] decline-rollback failed',
+          err instanceof Error ? err.message : String(err),
+          { applicationId: input.applicationId, program: data.program },
+        )
+      }
+    }
+
     return { ok: true, response: input.response, spotRespondedAt }
   },
 )
+
+/**
+ * Withdraw every active enrollment the student holds in cohorts of
+ * the given program, mirror the change on mentor_assignments, then
+ * revert the user's role to 'applicant' if no active enrollments
+ * remain in any program.
+ *
+ * Pulled out of respondToOffer so the same path can be reused if we
+ * ever add a staff-side "withdraw this student" admin action.
+ *
+ * Idempotent — running it twice on a clean state is a no-op (no
+ * active enrollments → nothing to flip; role already 'applicant' →
+ * skipped).
+ */
+async function withdrawEnrollmentsForProgram(opts: {
+  db: admin.firestore.Firestore
+  studentId: string
+  program: string
+}): Promise<void> {
+  const { db, studentId, program } = opts
+  const enrollSnap = await db
+    .collection('enrollments')
+    .where('studentId', '==', studentId)
+    .where('program', '==', program)
+    .where('status', '==', 'active')
+    .get()
+
+  const now = new Date()
+  for (const doc of enrollSnap.docs) {
+    await doc.ref.update({
+      status: 'withdrawn',
+      withdrawnAt: now,
+      withdrawnReason: 'applicant_declined',
+      updatedAt: now,
+    })
+    // Mirror onto mentor_assignments so the mentor's "your students"
+    // list stops showing this row.
+    const assignmentRef = db.collection('mentor_assignments').doc(doc.id)
+    const assignmentSnap = await assignmentRef.get()
+    if (assignmentSnap.exists) {
+      await assignmentRef.update({
+        status: 'ended',
+        endedAt: now,
+        notes: 'Auto-withdrawn: applicant declined the offer.',
+      })
+    }
+  }
+
+  // Revert role only if zero active enrollments remain across all
+  // programs. A student enrolled in both StepUp and Dynamerge who
+  // declines just one keeps role='student'.
+  const remainingSnap = await db
+    .collection('enrollments')
+    .where('studentId', '==', studentId)
+    .where('status', '==', 'active')
+    .limit(1)
+    .get()
+  if (!remainingSnap.empty) return
+
+  const userRef = db.collection('users').doc(studentId)
+  const userSnap = await userRef.get()
+  if (!userSnap.exists) return
+  const role = (userSnap.data() as { role?: string }).role
+  if (role !== 'student') return
+  await userRef.update({
+    role: 'applicant',
+    updatedAt: now,
+  })
+}
 
 /**
  * reOfferToDeferredApplicant — staff-initiated reset of a deferred

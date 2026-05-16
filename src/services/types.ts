@@ -424,6 +424,11 @@ export interface Enrollment {
   status: 'active' | 'completed' | 'withdrawn'
   enrolledAt: Date
   completedAt?: Date
+  /** Set when status flips to 'withdrawn'. respondToOffer writes this
+   *  with `withdrawnReason: 'applicant_declined'` when an applicant
+   *  declines the offer after staff has already enrolled them. */
+  withdrawnAt?: Date
+  withdrawnReason?: 'applicant_declined' | 'staff_manual'
 }
 
 // Per-lesson, per-enrollment state. Doc id is
