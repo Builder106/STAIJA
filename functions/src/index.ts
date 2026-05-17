@@ -69,14 +69,6 @@ export { finalizeApplicationFiles } from './applicationFinalize'
 // See applicationAccept.ts.
 export { respondToOffer, reOfferToDeferredApplicant } from './applicationAccept'
 
-// TEMPORARY ONE-OFF — sweeps the pre-guards-shipped broken state where
-// staff enrolled an applicant into a wrong-program cohort and the
-// applicant then declined. The new decline-rollback in respondToOffer
-// covers every new decline going forward; this callable exists only
-// for rows that pre-date that fix. DELETE this export + the file
-// after the cleanup run lands.
-export { withdrawApplicantCleanup } from './withdrawApplicantCleanup'
-
 // Mentor onboarding via single-use invite tokens. Staff/admin mints a
 // token; the vetted contact opens /invite/<token> and gets role=mentor
 // on consume. See mentorInvites.ts.
