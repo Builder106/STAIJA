@@ -56,3 +56,5 @@ test-results/
 tools/screenshot-lms/out/
 tools/screenshot-lms/.auth/
 tools/screenshot-lms/.state/
+
+guide.md
