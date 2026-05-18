@@ -72,12 +72,18 @@ const routes: RouteRecordRaw[] = [
   { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/apply/Status.vue'), meta: { title: 'Application Status — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/:id/edit', name: 'edit-application', component: () => import('../views/applicant/EditApplication.vue'), meta: { title: 'Edit Application — STAIJA', requiresAuth: true, permissions: ['edit_own_applications'] } },
 
-  // Student routes
-  { path: '/student', name: 'student-dashboard', component: () => import('../views/student/StudentDashboard.vue'), meta: { title: 'My Program — STAIJA', requiresAuth: true, permissions: ['access_student_portal'] } },
-  { path: '/student/program', name: 'student-program', component: () => import('../views/student/StudentProgramContent.vue'), meta: { title: 'Program Content — STAIJA', requiresAuth: true, permissions: ['view_program_content'] } },
-  { path: '/student/assignments', name: 'student-assignments', component: () => import('../views/student/Assignments.vue'), meta: { title: 'Assignments — STAIJA', requiresAuth: true, permissions: ['participate_in_programs'] } },
-  { path: '/student/mentor', name: 'student-mentor', component: () => import('../views/student/MentorSupport.vue'), meta: { title: 'Mentor Support — STAIJA', requiresAuth: true, permissions: ['access_mentor_support'] } },
-  { path: '/student/progress', name: 'student-progress', component: () => import('../views/student/Progress.vue'), meta: { title: 'My Progress — STAIJA', requiresAuth: true, permissions: ['access_student_portal'] } },
+  // Legacy /student/* tree retired in favour of /learn/*. The original
+  // pages were 100% mock-data shells ("Dr. Sarah Johnson", 67 study
+  // hours, December 2024 events) that misled anyone who landed on
+  // them — see the file deletions in the same commit. Redirects
+  // catch stale bookmarks; postLoginRedirect.ts already sends
+  // students straight to /learn. Drop these entries once the
+  // bookmark window is gone (~one cycle of cohort emails).
+  { path: '/student', redirect: '/learn' },
+  { path: '/student/program', redirect: '/learn' },
+  { path: '/student/assignments', redirect: '/learn' },
+  { path: '/student/mentor', redirect: '/learn/sessions' },
+  { path: '/student/progress', redirect: '/learn' },
   
   // Staff/Admin routes.
   //

@@ -28,7 +28,11 @@ export function postLoginRoute(role: UserRole | null | undefined): RouteLocation
   // order matters; we want admin → /admin, not admin → /staff.
   if (PermissionService.isAdminRole(role)) return { path: '/admin' }
   if (PermissionService.isStaffRole(role)) return { path: '/staff' }
-  if (PermissionService.isStudentRole(role)) return { name: 'student-dashboard' }
+  // Students land in the LMS directly. The legacy /student/* dashboard
+  // and its sibling mock-data pages were retired in favour of /learn
+  // (real cohort + course + progress data) — see the matching route
+  // redirects in router/index.ts.
+  if (PermissionService.isStudentRole(role)) return { path: '/learn' }
   if (PermissionService.isAlumniRole(role)) return { name: 'alumni-home' }
   if (PermissionService.isMentorRole(role)) return { name: 'mentor-dashboard' }
   if (PermissionService.hasPermission(role, 'view_own_applications')) {
