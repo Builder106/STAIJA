@@ -272,6 +272,32 @@ const sortedApplications = computed(() =>
 
 const hasApplications = computed(() => applications.value.length > 0)
 
+/** Two-program system. When this grows, the apply-button gating below
+ *  becomes "show if there's any program the user hasn't applied to" —
+ *  the array drives the math. */
+const ALL_PROGRAMS: Application['program'][] = ['stepup_scholars', 'dynamerge']
+
+/** Program the user could still apply to. Returns the first program in
+ *  ALL_PROGRAMS that doesn't have ANY existing application (draft,
+ *  submitted, decided, declined — anything counts as "covered" because
+ *  the user can resume drafts and can't re-apply once a decision is in).
+ *  When all programs are covered, returns null and the "Apply to…"
+ *  button hides entirely. */
+const remainingProgram = computed<Application['program'] | null>(() => {
+  const covered = new Set(applications.value.map((a) => a.program))
+  return ALL_PROGRAMS.find((p) => !covered.has(p)) ?? null
+})
+
+/** Hyphenated slug for the /apply/:program route (the apply collection
+ *  stores `stepup_scholars`, the route uses `stepup-scholars`). */
+const remainingProgramSlug = computed(() =>
+  remainingProgram.value === 'stepup_scholars'
+    ? 'stepup-scholars'
+    : remainingProgram.value === 'dynamerge'
+    ? 'dynamerge'
+    : '',
+)
+
 /** Map the `applications` collection's underscored program key to the
  *  hyphenated draft slug. The two collections were authored against
  *  slightly different naming conventions; this is the shim. */
@@ -721,9 +747,18 @@ onBeforeUnmount(() => {
       <template v-else>
         <div class="flex items-center justify-between gap-4 mb-6">
           <Eyebrow class="text-brand-violet">Your applications</Eyebrow>
-          <UiButton variant="secondary" :to="'/applicant/applications/new'">
+          <!-- Apply-to-the-other-program button. Hidden once the
+               applicant has covered every program (two-program system,
+               so this means they're done applying). When shown,
+               points at the polished /apply wizard, not the retired
+               NewApplication form. -->
+          <UiButton
+            v-if="remainingProgram"
+            variant="secondary"
+            :to="`/apply/${remainingProgramSlug}`"
+          >
             <Icon icon="lucide:plus" width="16" class="mr-1.5" />
-            New application
+            Apply to {{ programLabel(remainingProgram) }}
           </UiButton>
         </div>
 

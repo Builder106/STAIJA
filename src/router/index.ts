@@ -68,7 +68,14 @@ const routes: RouteRecordRaw[] = [
   // Applicant routes
   { path: '/applicant', name: 'applicant-dashboard', component: () => import('../views/applicant/ApplicantDashboard.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications', name: 'applicant-applications', component: () => import('../views/applicant/ApplicantApplications.vue'), meta: { title: 'My Applications — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
-  { path: '/applicant/applications/new', name: 'new-application', component: () => import('../views/applicant/NewApplication.vue'), meta: { title: 'New Application — STAIJA', requiresAuth: true, permissions: ['apply_to_programs'] } },
+  // Legacy NewApplication.vue retired in favour of the polished
+  // /apply/:program wizard that every public CTA already routes to.
+  // The two surfaces wrote to the same `applications` collection but
+  // had different validation, file-staging, and draft-sync behaviour
+  // — keeping both drifted UX between dashboard entries and home/
+  // program-page entries. Bookmarks land on /programs so the user
+  // picks which program to apply to, then takes the wizard path.
+  { path: '/applicant/applications/new', redirect: '/programs' },
   { path: '/applicant/applications/:id', name: 'view-application', component: () => import('../views/apply/Status.vue'), meta: { title: 'Application Status — STAIJA', requiresAuth: true, permissions: ['view_own_applications'] } },
   { path: '/applicant/applications/:id/edit', name: 'edit-application', component: () => import('../views/applicant/EditApplication.vue'), meta: { title: 'Edit Application — STAIJA', requiresAuth: true, permissions: ['edit_own_applications'] } },
 

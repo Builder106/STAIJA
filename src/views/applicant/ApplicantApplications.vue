@@ -6,8 +6,15 @@
         <p class="subtitle">Track and manage your STAIJA program applications</p>
       </div>
       <div class="header-actions">
-        <button @click="navigateTo('/applicant/applications/new')" class="btn-primary">
-          New Application
+        <!-- Hidden once the user has covered every program. Points
+             at the polished /apply wizard, not the retired
+             NewApplication form. -->
+        <button
+          v-if="remainingProgram"
+          @click="navigateTo(`/apply/${remainingProgramSlug}`)"
+          class="btn-primary"
+        >
+          Apply to {{ remainingProgramLabel }}
         </button>
       </div>
     </header>
@@ -75,10 +82,19 @@
           No applications match your current filters. Try adjusting your search criteria.
         </p>
         <p v-else>
-          You haven't created any applications yet. Start your first application to get started!
+          You haven't created any applications yet. Pick a program to get started.
         </p>
-        <button @click="navigateTo('/applicant/applications/new')" class="btn-primary">
-          Create First Application
+        <!-- Filters-applied view doesn't need a Create button — empty
+             rows are an artefact of the filter, not the absence of
+             work. Filters-cleared zero-state sends the user to /programs
+             so they choose which to apply to, then the program page's
+             Apply CTA hands off to the wizard. -->
+        <button
+          v-if="!hasFilters"
+          @click="navigateTo('/programs')"
+          class="btn-primary"
+        >
+          Browse programs
         </button>
       </div>
 
@@ -196,6 +212,29 @@ const searchQuery = ref('')
 const statusFilter = ref('')
 const programFilter = ref('')
 const sortBy = ref('createdAt')
+
+// Apply-to-another gating. Two-program system: hide the apply button
+// once the user has any application (draft or decided) covering every
+// program. Mirrors ApplicantDashboard's logic.
+const ALL_PROGRAMS: Application['program'][] = ['stepup_scholars', 'dynamerge']
+const remainingProgram = computed<Application['program'] | null>(() => {
+  const covered = new Set(applications.value.map((a) => a.program))
+  return ALL_PROGRAMS.find((p) => !covered.has(p)) ?? null
+})
+const remainingProgramSlug = computed(() =>
+  remainingProgram.value === 'stepup_scholars'
+    ? 'stepup-scholars'
+    : remainingProgram.value === 'dynamerge'
+    ? 'dynamerge'
+    : '',
+)
+const remainingProgramLabel = computed(() =>
+  remainingProgram.value === 'stepup_scholars'
+    ? 'StepUp Scholars'
+    : remainingProgram.value === 'dynamerge'
+    ? 'Dynamerge'
+    : '',
+)
 
 // Computed properties
 const filteredApplications = computed(() => {
