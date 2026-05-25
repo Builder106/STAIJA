@@ -9,7 +9,7 @@ const { createClient } = contentful
 
 async function main() {
   const env = await createClient({
-    accessToken: process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN!,
+    accessToken: process.env.CONTENTFUL_MANAGEMENT_TOKEN!,
   })
     .getSpace(process.env.VITE_CONTENTFUL_SPACE_ID!)
     .then((s) => s.getEnvironment(process.env.VITE_CONTENTFUL_ENV_ID!))
@@ -31,7 +31,7 @@ async function main() {
   await new Promise((r) => setTimeout(r, 8_000))
 
   const space = await createClient({
-    accessToken: process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN!,
+    accessToken: process.env.CONTENTFUL_MANAGEMENT_TOKEN!,
   }).getSpace(process.env.VITE_CONTENTFUL_SPACE_ID!)
   const hooks = await space.getWebhooks()
   for (const hook of hooks.items) {

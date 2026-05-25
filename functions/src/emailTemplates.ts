@@ -14,6 +14,22 @@
  *   - CTA buttons include a VML block for Outlook rounded corners.
  *   - System font stack only — web fonts are unreliable in email clients.
  *   - Brand tokens must stay in sync with src/style.css @theme block.
+ *
+ * TODO(staging-isolation): every absolute URL in this file and in
+ * newsletterTemplates.ts is hardcoded to https://staija.org. When a
+ * staging Function send is allowlisted through, the resulting email's
+ * links yank the recipient out of the staging environment back into
+ * prod (e.g. /applicant/applications/<id> resolves against prod
+ * Firestore, not staija-staging). Replace the literals with a server-
+ * side APP_URL param so staging mail links to staging.staija.org.
+ *
+ *   import { defineString } from 'firebase-functions/params'
+ *   const APP_URL = defineString('APP_URL', { default: 'https://staija.org' })
+ *   // then: `${APP_URL.value()}/applicant/applications/${id}`
+ *
+ * Set per-project via `firebase functions:config:set app.url=... --project <id>`.
+ * Deferred — does not block the current staging bootstrap because the
+ * allowlist guardrail keeps staging emails restricted to teammates.
  */
 
 // --- Brand tokens -------------------------------------------------------
@@ -32,6 +48,53 @@ export const MONO = "'Courier New', Courier, monospace"
 
 // --- Shared Mailgun sender ---------------------------------------------
 
+// Mailgun's free plan only allows one sending domain, so staging shares
+// mg.staija.org with prod. Without isolation, a staging bug or a prod
+// Firestore export landing in staija-staging could send real-looking
+// STAIJA email to real applicants. Until staging gets its own Mailgun
+// domain, gate non-prod sends behind an allowlist — staging can still
+// exercise the full template/Functions code path, but only deliver to
+// addresses we control.
+//
+// Add teammate / QA addresses here as needed. Keep small. Entries are
+// matched after Gmail-alias canonicalization (dots, +tags, and the
+// googlemail.com domain all collapse to the same inbox), so a single
+// "name@gmail.com" entry covers "n.a.m.e+staging@googlemail.com" etc.
+const PROD_FIREBASE_PROJECT = 'staija'
+const STAGING_EMAIL_ALLOWLIST_RAW = [
+   'vaughanolayimika@gmail.com',
+  'vaughanolayinka@gmail.com',
+]
+
+// Gmail ignores dots in the local part, treats "+suffix" as an alias,
+// and aliases googlemail.com → gmail.com. Canonicalize before set
+// lookup so adding one Gmail address covers every variant of it.
+// Non-Gmail addresses pass through with only lowercase normalization —
+// other providers' plus/dot semantics aren't universal and we don't
+// want to over-match.
+function canonicalizeEmail(email: string): string {
+  const lower = email.trim().toLowerCase()
+  const atIdx = lower.lastIndexOf('@')
+  if (atIdx === -1) return lower
+  let local = lower.slice(0, atIdx)
+  let domain = lower.slice(atIdx + 1)
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    const plusIdx = local.indexOf('+')
+    if (plusIdx !== -1) local = local.slice(0, plusIdx)
+    local = local.replace(/\./g, '')
+    domain = 'gmail.com'
+  }
+  return `${local}@${domain}`
+}
+
+const STAGING_EMAIL_ALLOWLIST = new Set<string>(
+  STAGING_EMAIL_ALLOWLIST_RAW.map(canonicalizeEmail),
+)
+
+function isNonProdEnv(): boolean {
+  return process.env.GCLOUD_PROJECT !== PROD_FIREBASE_PROJECT
+}
+
 export interface MailgunSendParams {
   apiKey: string
   domain: string
@@ -42,6 +105,15 @@ export interface MailgunSendParams {
 }
 
 export async function sendMailgun(params: MailgunSendParams): Promise<void> {
+  if (isNonProdEnv() && !STAGING_EMAIL_ALLOWLIST.has(canonicalizeEmail(params.to))) {
+    console.log('[email] non-prod send blocked: recipient not on STAGING_EMAIL_ALLOWLIST', {
+      project: process.env.GCLOUD_PROJECT,
+      to: params.to,
+      subject: params.subject,
+    })
+    return
+  }
+
   const auth = Buffer.from(`api:${params.apiKey}`).toString('base64')
   const form = new URLSearchParams()
   form.set('from', 'STAIJA <hello@staija.org>')

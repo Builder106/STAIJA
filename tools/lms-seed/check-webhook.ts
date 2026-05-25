@@ -13,7 +13,7 @@ const { createClient } = contentful
 
 async function main() {
   const space = await createClient({
-    accessToken: process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN!,
+    accessToken: process.env.CONTENTFUL_MANAGEMENT_TOKEN!,
   }).getSpace(process.env.VITE_CONTENTFUL_SPACE_ID!)
 
   const hooks = await space.getWebhooks()

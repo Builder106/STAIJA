@@ -22,7 +22,7 @@
  *
  * Prerequisites:
  *   - VITE_CONTENTFUL_SPACE_ID, VITE_CONTENTFUL_ENV_ID, and
- *     VITE_CONTENTFUL_MANAGEMENT_TOKEN set in .env (the same vars the
+ *     CONTENTFUL_MANAGEMENT_TOKEN set in .env (the same vars the
  *     admin UI uses).
  *   - The contentfulWebhook function deployed and registered with the
  *     Contentful space; otherwise entries will exist in Contentful but
@@ -58,7 +58,7 @@ const { createClient } = contentful
 
 const SPACE_ID = process.env.VITE_CONTENTFUL_SPACE_ID
 const ENV_ID = process.env.VITE_CONTENTFUL_ENV_ID
-const MANAGEMENT_TOKEN = process.env.VITE_CONTENTFUL_MANAGEMENT_TOKEN
+const MANAGEMENT_TOKEN = process.env.CONTENTFUL_MANAGEMENT_TOKEN
 
 const LOCALE = 'en-US'
 const DEMO_PREFIX = 'demo-'
@@ -344,7 +344,7 @@ function clean<T extends Record<string, unknown>>(obj: T): Partial<T> {
 async function getEnv(): Promise<Environment> {
   if (!SPACE_ID || !ENV_ID || !MANAGEMENT_TOKEN) {
     throw new Error(
-      'Missing Contentful env vars. Set VITE_CONTENTFUL_SPACE_ID, VITE_CONTENTFUL_ENV_ID, and VITE_CONTENTFUL_MANAGEMENT_TOKEN in .env.',
+      'Missing Contentful env vars. Set VITE_CONTENTFUL_SPACE_ID, VITE_CONTENTFUL_ENV_ID, and CONTENTFUL_MANAGEMENT_TOKEN in .env.',
     )
   }
   const client = createClient({ accessToken: MANAGEMENT_TOKEN })
