@@ -26,23 +26,27 @@ const app = initializeApp(firebaseConfig)
 // Initialize App Check (browser only — App Check has no Node equivalent and
 // would crash SSR or test runs). Uses reCAPTCHA Enterprise.
 //
-// On localhost, App Check is forced into debug mode: on the first load,
-// Firebase prints a fresh debug token to the console. Copy it once and
-// register it in Firebase Console → App Check → Apps → ⋮ → Manage debug
-// tokens. To pin a specific token (so it survives reloads without
-// re-registering), set VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env.
+// On debug-allowed environments (localhost, staging.staija.org), App Check
+// is forced into debug mode: on the first load, Firebase prints a fresh
+// debug token to the console. Copy it once and register it in Firebase
+// Console → App Check → Apps → ⋮ → Manage debug tokens. To pin a specific
+// token (so it survives reloads without re-registering), set
+// VITE_FIREBASE_APPCHECK_DEBUG_TOKEN in .env / Vercel scope.
 //
 // We gate this on hostname rather than import.meta.env.DEV because the
 // build flag can be wrong (e.g. NODE_ENV misconfigured on the host),
-// which would silently ship debug-mode App Check to production.
-const isLocalhost =
+// which would silently ship debug-mode App Check to production. Adding a
+// hostname here is an explicit allowlist; staija.org (prod) is not in
+// the list, so prod always uses real reCAPTCHA Enterprise verification.
+const isDebugAppCheckEnv =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1')
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === 'staging.staija.org')
 
 let appCheck: AppCheck | null = null
 if (typeof window !== 'undefined') {
-  if (isLocalhost) {
+  if (isDebugAppCheckEnv) {
     const pinnedToken = import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN as string | undefined
     ;(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = pinnedToken ?? true
   }
@@ -52,7 +56,7 @@ if (typeof window !== 'undefined') {
       provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
       isTokenAutoRefreshEnabled: true,
     })
-  } else if (isLocalhost) {
+  } else if (isDebugAppCheckEnv) {
     console.warn('[firebase] VITE_RECAPTCHA_ENTERPRISE_SITE_KEY not set — App Check skipped')
   }
 }
