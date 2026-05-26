@@ -51,6 +51,9 @@ function programLabel(p?: ApplicationDocForReminder['program']): string {
 
 export const sendReferenceReminders = onSchedule(
   {
+    // See applicationDraftsCron.ts for rationale — Scheduler can't
+    // create jobs in africa-south1 for this project.
+    region: 'europe-west1',
     schedule: 'every day 09:00',
     timeZone: 'Africa/Lagos',
     secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],

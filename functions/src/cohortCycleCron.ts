@@ -67,6 +67,9 @@ function toMs(value: admin.firestore.Timestamp | Date | undefined): number | nul
 
 export const reOfferDeferredOnCohortStart = onSchedule(
   {
+    // See applicationDraftsCron.ts for rationale — Scheduler can't
+    // create jobs in africa-south1 for this project.
+    region: 'europe-west1',
     schedule: 'every day 04:30',
     timeZone: 'Africa/Lagos',
     memory: '512MiB',

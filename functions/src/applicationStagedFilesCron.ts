@@ -50,6 +50,9 @@ interface DraftLike {
 
 export const reapApplicationStagedFiles = onSchedule(
   {
+    // See applicationDraftsCron.ts for rationale — Scheduler can't
+    // create jobs in africa-south1 for this project.
+    region: 'europe-west1',
     schedule: 'every day 04:00',
     timeZone: 'Africa/Lagos',
     memory: '512MiB',

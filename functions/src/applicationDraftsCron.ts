@@ -31,6 +31,12 @@ const BATCH_SIZE = 300
 
 export const reapApplicationDraftTombstones = onSchedule(
   {
+    // Scheduler API rejects africa-south1 for this project (likely a
+    // legacy App Engine region lock predating Scheduler-AppEngine
+    // decoupling). Override the global region for this cron only;
+    // function still calls Firestore in africa-south1 cross-region —
+    // negligible latency cost for a daily reap.
+    region: 'europe-west1',
     schedule: 'every day 03:00',
     timeZone: 'Africa/Lagos',
   },
