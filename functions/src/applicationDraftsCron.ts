@@ -36,7 +36,7 @@ export const reapApplicationDraftTombstones = onSchedule(
     // decoupling). Override the global region for this cron only;
     // function still calls Firestore in africa-south1 cross-region —
     // negligible latency cost for a daily reap.
-    region: 'europe-west1',
+    region: 'me-central1',
     schedule: 'every day 03:00',
     timeZone: 'Africa/Lagos',
   },
