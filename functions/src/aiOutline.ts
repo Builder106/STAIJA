@@ -304,7 +304,6 @@ async function writeOutline(
 export const outlineCourse = onCall<OutlineInput>(
   {
     secrets: [GROQ_API_KEY, CONTENTFUL_MANAGEMENT_TOKEN, CONTENTFUL_SPACE_ID],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,

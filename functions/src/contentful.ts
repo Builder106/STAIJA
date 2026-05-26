@@ -48,7 +48,6 @@ export const contentfulWebhook = onRequest(
   {
     cors: false,
     secrets: [CONTENTFUL_WEBHOOK_SECRET],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 60,
     // Webhook callers (Contentful) can't sign GCP IAM tokens, so the

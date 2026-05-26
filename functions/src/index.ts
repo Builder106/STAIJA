@@ -14,8 +14,18 @@
  */
 
 import * as admin from 'firebase-admin'
+import { setGlobalOptions } from 'firebase-functions/v2'
 
 admin.initializeApp()
+
+// Co-locate Functions with Firestore (already in africa-south1) and the
+// bulk of our user base (Nigeria / West Africa). Eliminates the
+// cross-region trigger hop that was firing the deploy-time warning on
+// onApplicationStatusChange, inviteReferencesOnSubmit, onUserCreated.
+// Individual function definitions used to set `region: 'us-central1'`
+// explicitly; those declarations have been removed so this global is
+// the single source of truth.
+setGlobalOptions({ region: 'africa-south1' })
 
 export { contentfulWebhook } from './contentful'
 export { onApplicationStatusChange, retryApplicationEmail } from './email'

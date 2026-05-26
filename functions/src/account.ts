@@ -31,7 +31,6 @@ const SELF_DELETABLE_ROLES = new Set(['applicant', 'student', 'alumni', 'mentor'
 export const deleteAccount = onCall<Record<string, never>>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,

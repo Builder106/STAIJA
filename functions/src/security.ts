@@ -13,7 +13,6 @@ import * as admin from 'firebase-admin'
 
 export const signOutEverywhere = onCall<Record<string, never>>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

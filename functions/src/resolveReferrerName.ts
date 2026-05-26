@@ -32,7 +32,6 @@ const UID_RE = /^[A-Za-z0-9]{20,40}$/
 
 export const resolveReferrerName = onRequest(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 15,
   },

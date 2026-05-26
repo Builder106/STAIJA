@@ -33,7 +33,6 @@ export const reapApplicationDraftTombstones = onSchedule(
   {
     schedule: 'every day 03:00',
     timeZone: 'Africa/Lagos',
-    region: 'us-central1',
   },
   async () => {
     const db = admin.firestore()

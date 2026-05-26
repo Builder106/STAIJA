@@ -30,7 +30,6 @@ interface EnrichedUser {
 
 export const adminListUsers = onCall<Record<string, never>, Promise<{ users: EnrichedUser[] }>>(
   {
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 60,
     enforceAppCheck: true,

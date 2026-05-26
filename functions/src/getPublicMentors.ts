@@ -33,7 +33,6 @@ export interface PublicMentor {
 
 export const getPublicMentors = onRequest(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
   },

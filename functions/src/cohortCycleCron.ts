@@ -69,7 +69,6 @@ export const reOfferDeferredOnCohortStart = onSchedule(
   {
     schedule: 'every day 04:30',
     timeZone: 'Africa/Lagos',
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 300,
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],

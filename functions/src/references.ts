@@ -109,7 +109,6 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
   {
     document: 'applications/{applicationId}',
     secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
   },
   async (event) => {
     const before = event.data?.before.data() as ApplicationDoc | undefined
@@ -188,7 +187,6 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
 export const validateReferenceToken = onCall<{ token: string }>(
   {
     secrets: [REFERENCE_TOKEN_SECRET],
-    region: 'us-central1',
     cors: true,
     enforceAppCheck: true,
   },
@@ -236,7 +234,6 @@ const ALLOWED_ORIGINS = [
 export const submitReferenceLetter = onRequest(
   {
     secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 90,
     cors: false, // we set CORS manually so we can whitelist origins

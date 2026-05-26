@@ -60,7 +60,6 @@ const MAX_NOTE_LENGTH = 1000
 
 export const respondToOffer = onCall<RespondInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -276,7 +275,6 @@ async function callerRole(uid: string): Promise<string | null> {
 export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

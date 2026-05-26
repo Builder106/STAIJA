@@ -99,7 +99,6 @@ export const onApplicationStatusChange = onDocumentWritten(
   {
     document: 'applications/{applicationId}',
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN, STAFF_NOTIFY_EMAIL],
-    region: 'us-central1',
   },
   async (event) => {
     const before = event.data?.before.data() as ApplicationDoc | undefined
@@ -184,7 +183,6 @@ export const onApplicationStatusChange = onDocumentWritten(
 export const retryApplicationEmail = onCall<{ applicationId?: string }>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     enforceAppCheck: true,
   },
   async (request) => {

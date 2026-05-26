@@ -21,7 +21,6 @@ interface ScheduleSessionInput {
 
 export const scheduleSession = onCall<ScheduleSessionInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -119,7 +118,6 @@ interface RsvpSessionInput {
 
 export const rsvpSession = onCall<RsvpSessionInput>(
   {
-    region: 'us-central1',
     memory: '128MiB',
     timeoutSeconds: 15,
     enforceAppCheck: true,

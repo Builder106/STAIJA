@@ -21,7 +21,6 @@ const MAILGUN_LIST_ADDRESS = defineSecret('MAILGUN_LIST_ADDRESS')
 export const setNewsletterSubscription = onCall<{ subscribed: boolean }>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_LIST_ADDRESS],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

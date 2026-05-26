@@ -100,7 +100,6 @@ async function callerRole(uid: string): Promise<string | null> {
 
 export const createMentorInvite = onCall<CreateInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -177,7 +176,6 @@ export const createMentorInvite = onCall<CreateInput>(
 
 export const revokeMentorInvite = onCall<RevokeInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -219,7 +217,6 @@ export const revokeMentorInvite = onCall<RevokeInput>(
 
 export const consumeMentorInvite = onCall<ConsumeInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

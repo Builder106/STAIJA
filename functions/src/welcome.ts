@@ -28,7 +28,6 @@ export const onUserCreated = onDocumentCreated(
   {
     document: 'users/{uid}',
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
   },
   async (event) => {
     const data = event.data?.data() as UserDoc | undefined

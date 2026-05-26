@@ -158,7 +158,6 @@ function buildEmail(opts: {
 export const sendInterestSegmentEmail = onCall<RequestPayload>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_LIST_ADDRESS],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 540,
     enforceAppCheck: true,

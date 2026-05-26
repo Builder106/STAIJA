@@ -25,7 +25,6 @@ interface FileEntry {
 
 export const exportUserData = onCall<Record<string, never>>(
   {
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,

@@ -52,7 +52,6 @@ export const reapApplicationStagedFiles = onSchedule(
   {
     schedule: 'every day 04:00',
     timeZone: 'Africa/Lagos',
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 540,
   },

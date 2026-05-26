@@ -300,7 +300,6 @@ function validate(req: unknown): AdminRequest {
 export const lmsContentAdmin = onCall<AdminInput>(
   {
     secrets: [CONTENTFUL_MANAGEMENT_TOKEN, CONTENTFUL_SPACE_ID],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 60,
     enforceAppCheck: true,

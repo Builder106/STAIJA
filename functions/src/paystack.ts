@@ -74,7 +74,6 @@ export const paystackWebhook = onRequest(
   {
     cors: false,
     secrets: [PAYSTACK_SECRET_KEY],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 60,
     // Need raw body for HMAC verification.
@@ -200,7 +199,6 @@ export const paystackWebhook = onRequest(
 export const cancelSubscription = onCall<{ subscriptionCode: string }>(
   {
     secrets: [PAYSTACK_SECRET_KEY],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

@@ -54,7 +54,6 @@ export const sendReferenceReminders = onSchedule(
     schedule: 'every day 09:00',
     timeZone: 'Africa/Lagos',
     secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
   },
   async () => {
     const db = admin.firestore()

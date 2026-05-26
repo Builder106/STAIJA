@@ -56,7 +56,6 @@ function L<T>(value: T): { [LOCALE]: T } {
 export const lmsAssetUpload = onCall<AssetUploadInput>(
   {
     secrets: [CONTENTFUL_MANAGEMENT_TOKEN, CONTENTFUL_SPACE_ID],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,

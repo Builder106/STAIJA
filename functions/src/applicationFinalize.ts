@@ -107,7 +107,6 @@ function finalPathFor(
 
 export const finalizeApplicationFiles = onCall<FinalizeInput>(
   {
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,

@@ -125,7 +125,6 @@ Constraints:
 export const lessonMediaAssist = onCall<LessonMediaInput>(
   {
     secrets: [GROQ_API_KEY],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 60,
     enforceAppCheck: true,

@@ -105,7 +105,6 @@ function clientIp(req: { ip?: string; headers: Record<string, unknown> }): strin
 export const subscribeNewsletter = onRequest(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_LIST_ADDRESS],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
   },

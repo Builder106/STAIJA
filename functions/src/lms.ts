@@ -49,7 +49,6 @@ interface EnrollInput {
 export const enrollStudent = onCall<EnrollInput>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 60,
     enforceAppCheck: true,
@@ -286,7 +285,6 @@ interface CompleteLessonInput {
 
 export const completeLesson = onCall<CompleteLessonInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -394,7 +392,6 @@ interface SubmitAssignmentInput {
 
 export const submitAssignment = onCall<SubmitAssignmentInput>(
   {
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,
@@ -481,7 +478,6 @@ interface GradeSubmissionInput {
 export const gradeSubmission = onCall<GradeSubmissionInput>(
   {
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
-    region: 'us-central1',
     memory: '256MiB',
     timeoutSeconds: 30,
     enforceAppCheck: true,

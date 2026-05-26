@@ -56,7 +56,6 @@ async function callerRole(uid: string): Promise<string | null> {
 
 export const graduateCohort = onCall<GraduateInput>(
   {
-    region: 'us-central1',
     memory: '512MiB',
     timeoutSeconds: 120,
     enforceAppCheck: true,
