@@ -35,8 +35,6 @@ const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const success = ref(false)
 
-const REFERENCE_UPLOAD_ENDPOINT_ENV = 'VITE_REFERENCE_UPLOAD_ENDPOINT'
-
 async function load() {
   loading.value = true
   tokenError.value = null
@@ -70,10 +68,7 @@ async function handleSubmit() {
   submitting.value = true
   submitError.value = null
 
-  // Endpoint is the deployed `submitReferenceLetter` HTTP function.
-  // Set VITE_REFERENCE_UPLOAD_ENDPOINT in .env once deployed.
-  const endpoint = (import.meta.env[REFERENCE_UPLOAD_ENDPOINT_ENV] as string | undefined)
-    ?? getAppConfig().newsletterEndpoint?.replace('subscribeNewsletter', 'submitReferenceLetter')
+  const endpoint = getAppConfig().referenceUploadEndpoint
 
   if (!endpoint) {
     submitError.value = 'Upload endpoint not configured. Email hello@staija.org with the letter attached.'

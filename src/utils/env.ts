@@ -31,6 +31,10 @@ export interface AppConfig {
    *  Used by /stay-connected to personalise the hero when a visitor
    *  arrives via `?ref=u-<uid>`. Unset → generic hero copy. */
   referrerNameEndpoint?: string
+  /** Public URL of the deployed `submitReferenceLetter` Cloud Function.
+   *  Used by /refs/<token> to upload reference letters. Unset → the
+   *  upload form shows "endpoint not configured, email us instead". */
+  referenceUploadEndpoint?: string
 }
 
 // Required environment variables
@@ -107,6 +111,7 @@ export function getAppConfig(): AppConfig {
     newsletterEndpoint: import.meta.env.VITE_NEWSLETTER_ENDPOINT,
     publicMentorsEndpoint: import.meta.env.VITE_PUBLIC_MENTORS_ENDPOINT,
     referrerNameEndpoint: import.meta.env.VITE_REFERRER_NAME_ENDPOINT,
+    referenceUploadEndpoint: import.meta.env.VITE_REFERENCE_UPLOAD_ENDPOINT,
   }
 }
 
