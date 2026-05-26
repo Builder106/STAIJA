@@ -4,6 +4,8 @@
  *
  * Accepts:
  *   - The two production hostnames (`staija.org`, `www.staija.org`)
+ *   - The staging hostname (`staging.staija.org`) — calls from the
+ *     staging SPA need to round-trip against staging Cloud Functions
  *   - The two local dev ports we ship in this repo (5190 + 5173)
  *   - Any Vercel preview deployment under `*.vercel.app` — branch
  *     previews like `staija-git-feature-x-staija.vercel.app` should
@@ -19,6 +21,7 @@
 const EXACT_ALLOWED = new Set<string>([
   'https://staija.org',
   'https://www.staija.org',
+  'https://staging.staija.org',
   'http://localhost:5190',
   'http://localhost:5173',
 ])

@@ -228,6 +228,7 @@ export const validateReferenceToken = onCall<{ token: string }>(
 const ALLOWED_ORIGINS = [
   'https://staija.org',
   'https://www.staija.org',
+  'https://staging.staija.org',
   'http://localhost:5190',
   'http://localhost:5173',
 ]
