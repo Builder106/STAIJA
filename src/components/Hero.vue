@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Motion } from 'https://esm.sh/motion-v@1.7.1'
-// Use ESM import for lottie-web to keep compatibility across bundlers
-// If local dependency exists, this can be changed to: import lottie from 'lottie-web'
-import lottie from 'https://esm.sh/lottie-web@5.12.2'
-// Import the hero Lottie animation JSON
-// Vite supports JSON imports; TS will infer type as any
+import { Motion } from 'motion-v'
+// Hero Lottie data — JSON import keeps the data colocated, but the
+// `lottie-web` runtime (~50 KB gzipped) is lazy-loaded inside
+// onMounted below so it lands in its own chunk and doesn't block the
+// home route's first paint. The hero-animation__canvas container has
+// a fixed 260 px height (see <style scoped>) so reserving it during
+// the lazy load doesn't shift layout.
 import heroAnimation from '../assets/hero.json'
 
-const props = defineProps<{ 
+const props = defineProps<{
   title: string
   subtitle?: string
   ctaText?: string
@@ -20,16 +21,19 @@ const props = defineProps<{
 
 const lottieContainer = ref<HTMLDivElement | null>(null)
 
-onMounted(() => {
-  if (lottieContainer.value) {
-    lottie.loadAnimation({
-      container: lottieContainer.value,
-      renderer: 'svg',
-      loop: false,
-      autoplay: true,
-      animationData: heroAnimation as unknown as Record<string, unknown>
-    })
-  }
+onMounted(async () => {
+  if (!lottieContainer.value) return
+  const { default: lottie } = await import('lottie-web')
+  // Re-check the ref — the component may have unmounted while we
+  // awaited the lottie chunk (fast route changes on the home page).
+  if (!lottieContainer.value) return
+  lottie.loadAnimation({
+    container: lottieContainer.value,
+    renderer: 'svg',
+    loop: false,
+    autoplay: true,
+    animationData: heroAnimation as unknown as Record<string, unknown>,
+  })
 })
 </script>
 
