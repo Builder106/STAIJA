@@ -1,53 +1,28 @@
 /**
- * Avatar service. Generates SVG/data-URI avatars deterministically from
- * a seed (typically the user's uid or email).
+ * Avatar URL helpers. URL-only — `resolveAvatarSrc` and friends return
+ * paths to pre-rasterized PNG thumbnails served from `public/avatars/`,
+ * not inline SVG. Consumers that need the URL surface (SiteHeader, the
+ * mentor showcase, profile pages, etc.) should import from here.
  *
- * Two ways to use:
- *   - `avatarSvg(seed)`           → raw `<svg>...</svg>` string
- *   - `avatarDataUri(seed)`       → `data:image/svg+xml;...` for `<img src>`
+ * SVG rendering (the inline avatar generator, used by the paused
+ * layered-avatar pipeline) lives in `./svg.ts` and is imported only by
+ * code that actually rasterises avatars at runtime. Splitting the two
+ * keeps the 20 MB `./parts` source library out of the main bundle: it
+ * only loads when someone reaches a route that uses SVG rendering.
  *
- * Avatars are content-addressed by seed: the same seed always returns
- * the same result, so a memoization cache keyed on seed is safe and
- * cheap. Cache lives in module memory; if it ever gets large, the LRU
- * cap below will evict.
+ * Before this split, SiteHeader's `import { resolveAvatarSrc }` pulled
+ * `PORTRAITS` (via the old `PORTRAIT_SLOT_COUNT = PORTRAITS.length`
+ * derivation) into the eagerly-loaded chunk, dragging mobile FCP to
+ * 8 s+ on West African mobile networks.
  */
 
-import { createAvatar } from '@dicebear/core'
-import { staijaStyle } from './style'
-import { PORTRAITS } from './parts'
-
-// Module-level cache. Seed → result. The realistic upper bound is
-// "number of distinct users you've ever rendered an avatar for" — for
-// a single browser session that's small. Cap at 500 to keep the worst
-// case bounded if something goes pathological.
-const SVG_CACHE = new Map<string, string>()
-const DATA_URI_CACHE = new Map<string, string>()
-const CACHE_CAP = 500
-
-function cached<V>(map: Map<string, V>, key: string, compute: () => V): V {
-  const hit = map.get(key)
-  if (hit !== undefined) return hit
-  if (map.size >= CACHE_CAP) {
-    // Drop the oldest entry. Insertion order is iteration order in JS Maps.
-    const oldest = map.keys().next().value
-    if (oldest !== undefined) map.delete(oldest)
-  }
-  const value = compute()
-  map.set(key, value)
-  return value
-}
-
-export function avatarSvg(seed: string): string {
-  return cached(SVG_CACHE, seed, () =>
-    createAvatar(staijaStyle, { seed }).toString(),
-  )
-}
-
-export function avatarDataUri(seed: string): string {
-  return cached(DATA_URI_CACHE, seed, () =>
-    createAvatar(staijaStyle, { seed }).toDataUri(),
-  )
-}
+/**
+ * Number of portrait slots in the library. Stable: matches the prompt
+ * order in `tools/avatars/prompts.ts`. Hardcoded here so this module
+ * can compile without importing `./parts` (which contains 20 MB of
+ * inlined SVG data). Update when the portrait library grows.
+ */
+export const PORTRAIT_SLOT_COUNT = 10
 
 /**
  * Convenience helper — given a user-ish object (anything with a uid
@@ -57,62 +32,6 @@ export function avatarDataUri(seed: string): string {
 export function avatarSeedFor(user: { uid?: string; email?: string | null }): string {
   return user.uid ?? user.email ?? 'staija-default'
 }
-
-/**
- * Number of portrait slots in the library. Stable: matches the prompt
- * order in `tools/avatars/prompts.ts`.
- */
-export const PORTRAIT_SLOT_COUNT = PORTRAITS.length
-
-/**
- * Render a specific portrait slot wrapped in the same SVG envelope
- * the seeded path produces. Used by the avatar preview route to pin
- * to a known portrait without hunting for a seed that maps to it via
- * Dicebear's PRNG.
- *
- * Slot indices match `tools/avatars/prompts.ts` — e.g. 1 is the
- * afro-medium portrait used as the Phase 1 test slot.
- */
-// Slot results are stable (the library is module-frozen) and each
-// data URI is several MB. Caching here is essential: without it, the
-// AvatarPicker re-encodes 10 large SVGs on every render — enough to
-// crash a Chrome tab on modest hardware.
-const SLOT_SVG_CACHE = new Map<number, string>()
-const SLOT_DATA_URI_CACHE = new Map<number, string>()
-
-export function avatarSvgForSlot(slot: number): string {
-  const cached = SLOT_SVG_CACHE.get(slot)
-  if (cached !== undefined) return cached
-  const portrait = PORTRAITS[slot]
-  if (portrait === undefined) {
-    throw new Error(
-      `avatarSvgForSlot: slot ${slot} is out of range (0–${PORTRAITS.length - 1})`,
-    )
-  }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" shape-rendering="auto">${portrait}</svg>`
-  SLOT_SVG_CACHE.set(slot, svg)
-  return svg
-}
-
-export function avatarDataUriForSlot(slot: number): string {
-  const cached = SLOT_DATA_URI_CACHE.get(slot)
-  if (cached !== undefined) return cached
-  const svg = avatarSvgForSlot(slot)
-  const uri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
-  SLOT_DATA_URI_CACHE.set(slot, uri)
-  return uri
-}
-
-/**
- * The universal default slot — every user without a custom selection
- * lands on this portrait. Picked deliberately rather than hashed from
- * the seed: the brand wants a consistent "you signed up, here's our
- * default scientist" look for new accounts, not 10 random looks.
- *
- * Currently slot 6 = portrait-twa-glasses (per the slot mapping in
- * tools/avatars/prompts.ts).
- */
-const DEFAULT_PORTRAIT_SLOT = 6
 
 /**
  * URL of the static-rasterized thumbnail for a given slot. Output
@@ -131,6 +50,17 @@ export function avatarThumbForSlot(slot: number): string {
   }
   return `/avatars/portrait-${slot}.png`
 }
+
+/**
+ * The universal default slot — every user without a custom selection
+ * lands on this portrait. Picked deliberately rather than hashed from
+ * the seed: the brand wants a consistent "you signed up, here's our
+ * default scientist" look for new accounts, not 10 random looks.
+ *
+ * Currently slot 6 = portrait-twa-glasses (per the slot mapping in
+ * tools/avatars/prompts.ts).
+ */
+const DEFAULT_PORTRAIT_SLOT = 6
 
 /**
  * URL of the universal-default thumbnail. The `seed` parameter is
