@@ -25,7 +25,7 @@ function emitVersionFile(buildId: string): PluginOption {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   loadEnv(mode, process.cwd(), '')
 
   // Vercel exposes the commit SHA as VERCEL_GIT_COMMIT_SHA at build
@@ -35,7 +35,23 @@ export default defineConfig(({ mode }) => {
     process.env.VERCEL_GIT_COMMIT_SHA ?? `dev-${Date.now().toString(36)}`
 
   return {
-    plugins: [vue(), tailwindcss(), emitVersionFile(buildId)],
+    plugins: [
+      vue(),
+      tailwindcss(),
+      emitVersionFile(buildId),
+      // Bundle visualizer — open the generated dist/stats.html after a
+      // build to see what's actually in each chunk. Skip in CI/Vercel
+      // builds to avoid bloating the output directory.
+      ...(process.env.ANALYZE === '1'
+        ? [(await import('rollup-plugin-visualizer')).visualizer({
+            filename: 'dist/stats.html',
+            open: false,
+            gzipSize: true,
+            brotliSize: true,
+            template: 'treemap',
+          })]
+        : []),
+    ],
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
       __BUILD_ID__: JSON.stringify(buildId),
@@ -48,6 +64,19 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: true,
+      // manualChunks for Firebase / Tiptap / etc was removed after it
+      // shipped a build to staging that crashed on init with a
+      // "Cannot access 'X' before initialization" TDZ error — Rollup's
+      // chunked output had a circular static dep between two of the
+      // generated vendor chunks. Letting Vite/Rollup pick chunk
+      // boundaries automatically avoids the manual mistake; the
+      // tradeoff is one larger vendor bundle vs. a parallel-loadable
+      // split. We can revisit a safer split (e.g. only carve off
+      // tiptap, which has the best loaded-by-one-route profile) once
+      // the chunk graph is auditable, but until then prod's working
+      // single-bundle layout is the baseline. The bundle visualizer
+      // (ANALYZE=1 npm run build → dist/stats.html) is still useful
+      // for spotting accidental imports.
       rollupOptions: {
         output: {
           // Opaque hash-only filenames for route + component chunks.

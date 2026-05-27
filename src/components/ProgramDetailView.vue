@@ -178,7 +178,7 @@ function toggleFaq(i: number) {
     <div class="relative min-h-svh flex items-center bg-ink-static overflow-hidden">
       <div class="absolute inset-0 z-0">
         <Parallax :speed="-0.25" :distance="120" class="absolute inset-0">
-          <img :src="program.heroImg" :alt="program.name" class="w-full h-full object-cover opacity-40 scale-110" />
+          <img :src="program.heroImg" :alt="program.name" width="1280" height="720" class="w-full h-full object-cover opacity-40 scale-110" />
         </Parallax>
         <div class="absolute inset-0 wash-violet-6 mix-blend-screen" />
         <div class="absolute inset-0 bg-gradient-to-t from-ink-static via-ink-static/60 to-transparent" />
@@ -274,7 +274,7 @@ function toggleFaq(i: number) {
             :transition="{ duration: 0.5, delay: i * 0.1 }"
           >
             <div class="aspect-[4/3] rounded-2xl overflow-hidden">
-              <img :src="feature.img" :alt="feature.title" class="w-full h-full object-cover" loading="lazy" />
+              <img :src="feature.img" :alt="feature.title" width="600" height="400" class="w-full h-full object-cover" loading="lazy" />
             </div>
             <div>
               <Heading :level="3" class="!text-xl mb-2">{{ feature.title }}</Heading>
@@ -373,7 +373,7 @@ function toggleFaq(i: number) {
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <UiCard v-for="mentor in program.mentors" :key="mentor.name" class="p-4 flex flex-col items-center text-center gap-4">
             <div class="w-24 h-24 rounded-full overflow-hidden mb-2">
-              <img :src="mentor.img" :alt="mentor.name" class="w-full h-full object-cover" loading="lazy" />
+              <img :src="mentor.img" :alt="mentor.name" width="300" height="300" class="w-full h-full object-cover" loading="lazy" />
             </div>
             <div>
               <h4 class="font-semibold text-ink text-lg m-0">{{ mentor.name }}</h4>

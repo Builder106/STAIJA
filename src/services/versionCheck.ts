@@ -76,6 +76,17 @@ export function startVersionWatcher(): void {
   if (BUILD_ID.startsWith('dev-')) return
   if (typeof window === 'undefined') return
 
+  // Skip on hostnames gated by Vercel SSO Deployment Protection. The
+  // initial HTML load passes because the browser carries the SSO
+  // cookie, but a same-origin fetch() from inside the SPA fires
+  // without that cookie context and gets 401'd — visible as repeated
+  // "GET /version.txt 401" lines in the DevTools console for as long
+  // as the tab is open. The watcher serves no purpose on staging /
+  // preview deploys anyway (those are reloaded manually during smoke
+  // tests, not by long-lived end-user tabs), so just bail.
+  const host = window.location.hostname
+  if (host === 'staging.staija.org' || host.endsWith('.vercel.app')) return
+
   // Most common trigger: user returns to the tab after some time
   // away. visibilitychange fires for both "tab activated" and "tab
   // deactivated"; we only care about the activation side.

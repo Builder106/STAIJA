@@ -311,6 +311,17 @@ service cloud.firestore {
       allow create: if hasRole('admin') || hasRole('staff');
     }
 
+    // First-admin bootstrap sentinel. Written exactly once per project
+    // by the `bootstrapAdmin` callable (Admin SDK, bypasses these rules)
+    // when the first admin is minted. Subsequent client reads let any
+    // signed-in user check whether bootstrap has already happened — a
+    // future hidden `/bootstrap` route could render an empty state
+    // based on this. Direct client writes are blocked entirely.
+    match /meta/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // Mentor↔student assignments. Created by staff/admin (no client-side
     // assignment UI yet — set up in Firestore directly or via a future admin
     // tool). Mentors see only their own pairings. Students could conceivably

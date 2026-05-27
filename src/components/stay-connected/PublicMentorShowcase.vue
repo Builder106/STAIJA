@@ -85,6 +85,8 @@ onMounted(async () => {
         <img
           :src="avatarFor(m)"
           :alt="m.displayName"
+          width="56"
+          height="56"
           class="w-14 h-14 rounded-full object-cover border-2 hairline-ink !border-brand-violet/30 shrink-0"
           referrerpolicy="no-referrer"
           loading="lazy"

@@ -123,6 +123,8 @@ function onUrlInput(e: Event) {
         <img
           :src="modelValue"
           :alt="ariaLabel || 'Image preview'"
+          width="600"
+          height="400"
           class="w-full h-full object-cover"
           loading="lazy"
         />

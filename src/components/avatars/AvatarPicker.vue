@@ -105,7 +105,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               aria-label="Use the seeded default avatar"
               @click="selectSlot(null)"
             >
-              <img :src="seededSrc" alt="" class="picker-cell__img" />
+              <img :src="seededSrc" alt="" width="72" height="72" class="picker-cell__img" />
               <span class="picker-cell__label">Default</span>
             </button>
 
@@ -119,7 +119,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               :aria-label="`Avatar option ${entry.slot + 1}`"
               @click="selectSlot(entry.slot)"
             >
-              <img :src="entry.src" alt="" class="picker-cell__img" />
+              <img :src="entry.src" alt="" width="72" height="72" class="picker-cell__img" />
               <span class="picker-cell__label">{{ entry.slot + 1 }}</span>
             </button>
           </div>

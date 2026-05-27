@@ -39,6 +39,12 @@ export { sendReferenceReminders } from './referenceReminders'
 export { reapApplicationDraftTombstones } from './applicationDraftsCron'
 export { reapApplicationStagedFiles } from './applicationStagedFilesCron'
 export { deleteAccount } from './account'
+
+// First-admin bootstrap for a fresh Firebase project. Callable; refuses
+// after the first successful run (sentinel doc + defensive admins-exist
+// check). Replaces the previous "edit users/{uid}.role manually in the
+// Firebase Console" operator step. See bootstrapAdmin.ts.
+export { bootstrapAdmin } from './bootstrapAdmin'
 export { adminListUsers } from './adminUsers'
 export { signOutEverywhere } from './security'
 export { exportUserData } from './dataExport'
