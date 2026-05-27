@@ -116,6 +116,7 @@ export const contentfulWebhook = onRequest(
         topic === 'ContentManagement.Entry.archive'
       ) {
         await docRef.delete()
+        console.log('[contentfulWebhook] processed', { topic, entryId, contentTypeId, action: 'removed' })
         res.status(200).send(`Removed ${collection}/${entryId}`)
         return
       }
@@ -140,6 +141,7 @@ export const contentfulWebhook = onRequest(
           },
           { merge: true },
         )
+        console.log('[contentfulWebhook] processed', { topic, entryId, contentTypeId, action: 'mirrored' })
         res.status(200).send(`Mirrored ${collection}/${entryId}`)
         return
       }
