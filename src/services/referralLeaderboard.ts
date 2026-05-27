@@ -28,7 +28,7 @@ import {
   where,
   Timestamp,
 } from 'firebase/firestore'
-import { getDb } from '../config/firebase'
+import { db } from '../config/firebase'
 
 export interface ReferralLeaderboardRow {
   /** Stored doc id — `u-<uid>` for signed-in referrers, `a-<short>`
@@ -57,7 +57,6 @@ export interface ReferralLeaderboardRow {
 export async function fetchReferralLeaderboard(
   topN = 25,
 ): Promise<ReferralLeaderboardRow[]> {
-  const db = await getDb()
   const statsQuery = query(
     collection(db, 'referralStats'),
     orderBy('signupCount', 'desc'),

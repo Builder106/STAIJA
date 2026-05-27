@@ -1,44 +1,44 @@
 import { describe, it, expect } from 'vitest'
-import { postLoginRoute } from '../../src/services/postLoginRedirect'
+import { postLoginRouteName } from '../../src/services/postLoginRedirect'
 import type { UserRole } from '../../src/services/types'
 
-describe('postLoginRoute', () => {
+describe('postLoginRouteName', () => {
   it('returns home for null', () => {
-    expect(postLoginRoute(null)).toEqual({ name: 'home' })
+    expect(postLoginRouteName(null)).toBe('home')
   })
 
   it('returns home for undefined', () => {
-    expect(postLoginRoute(undefined)).toEqual({ name: 'home' })
+    expect(postLoginRouteName(undefined)).toBe('home')
   })
 
-  it('routes admin to /admin', () => {
-    expect(postLoginRoute('admin')).toEqual({ path: '/admin' })
+  it('routes admin to admin', () => {
+    expect(postLoginRouteName('admin')).toBe('admin')
   })
 
-  it('routes staff to /staff', () => {
-    expect(postLoginRoute('staff')).toEqual({ path: '/staff' })
+  it('routes staff to admin', () => {
+    expect(postLoginRouteName('staff')).toBe('admin')
   })
 
-  it('routes student to /learn', () => {
-    expect(postLoginRoute('student')).toEqual({ path: '/learn' })
+  it('routes student to student-dashboard', () => {
+    expect(postLoginRouteName('student')).toBe('student-dashboard')
   })
 
   it('routes alumni to alumni-home', () => {
-    expect(postLoginRoute('alumni')).toEqual({ name: 'alumni-home' })
+    expect(postLoginRouteName('alumni')).toBe('alumni-home')
   })
 
   it('routes mentor to mentor-dashboard', () => {
-    expect(postLoginRoute('mentor')).toEqual({ name: 'mentor-dashboard' })
+    expect(postLoginRouteName('mentor')).toBe('mentor-dashboard')
   })
 
   it('routes applicant to applicant-dashboard', () => {
-    expect(postLoginRoute('applicant')).toEqual({ name: 'applicant-dashboard' })
+    expect(postLoginRouteName('applicant')).toBe('applicant-dashboard')
   })
 
   it('covers every UserRole without falling through to home', () => {
     const roles: UserRole[] = ['admin', 'staff', 'student', 'alumni', 'mentor', 'applicant']
     for (const role of roles) {
-      expect(postLoginRoute(role)).not.toEqual({ name: 'home' })
+      expect(postLoginRouteName(role)).not.toBe('home')
     }
   })
 })

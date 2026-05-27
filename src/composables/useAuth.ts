@@ -1,13 +1,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { onAuthStateChanged, signOut as fbSignOut, type User } from 'firebase/auth'
-import { auth } from '../config/firebase'
-// AuthService and DatabaseService are dynamically imported below.
-// Pulling them eagerly would drag the firestore SDK chunk into main
-// on every page load (both services have top-level `firebase/firestore`
-// imports). useAuth is wired into SiteHeader, which renders on every
-// route, so the eager pull-through would defeat the lazy-load split.
-// We do the work with the bare `auth` object + lazy imports for the
-// profile fetch path that's already async.
+import type { User } from 'firebase/auth'
+import { AuthService } from '../services/auth'
+import { DatabaseService } from '../services/database'
 import type { UserProfile } from '../services/types'
 
 const user = ref<User | null>(null)
@@ -20,11 +14,10 @@ let unsubscribe: (() => void) | null = null
 function startListening() {
   if (unsubscribe) return
 
-  unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+  unsubscribe = AuthService.onAuthStateChanged(async (firebaseUser) => {
     user.value = firebaseUser
     if (firebaseUser) {
       try {
-        const { DatabaseService } = await import('../services/database')
         userProfile.value = await DatabaseService.getUserProfile(firebaseUser.uid)
       } catch {
         userProfile.value = null
@@ -65,12 +58,11 @@ export function useAuth() {
 
   async function refreshProfile() {
     if (!user.value) return
-    const { DatabaseService } = await import('../services/database')
     userProfile.value = await DatabaseService.getUserProfile(user.value.uid)
   }
 
   async function signOut() {
-    await fbSignOut(auth)
+    await AuthService.signOut()
   }
 
   return {

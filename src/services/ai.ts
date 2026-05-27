@@ -3,7 +3,7 @@
  */
 
 import { httpsCallable } from 'firebase/functions'
-import { getFns } from '../config/firebase.ts'
+import { functions } from '../config/firebase.ts'
 
 export interface OutlineCoursePayload {
   topic: string
@@ -23,14 +23,10 @@ export interface OutlineCourseResult {
   assignmentCount: number
 }
 
-export const outlineCourse = async (data: OutlineCoursePayload) => {
-  const functions = await getFns()
-  const result = await httpsCallable<OutlineCoursePayload, OutlineCourseResult>(
-    functions,
-    'outlineCourse',
-  )(data)
-  return result.data
-}
+export const outlineCourse = (data: OutlineCoursePayload) =>
+  httpsCallable<OutlineCoursePayload, OutlineCourseResult>(functions, 'outlineCourse')(data).then(
+    (r) => r.data,
+  )
 
 export interface LessonMediaPayload {
   title: string
@@ -47,11 +43,7 @@ export interface LessonMediaResult {
   keyConcepts: string[]
 }
 
-export const lessonMediaAssist = async (data: LessonMediaPayload) => {
-  const functions = await getFns()
-  const result = await httpsCallable<LessonMediaPayload, LessonMediaResult>(
-    functions,
-    'lessonMediaAssist',
-  )(data)
-  return result.data
-}
+export const lessonMediaAssist = (data: LessonMediaPayload) =>
+  httpsCallable<LessonMediaPayload, LessonMediaResult>(functions, 'lessonMediaAssist')(data).then(
+    (r) => r.data,
+  )

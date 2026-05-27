@@ -29,7 +29,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
-import { getDb } from '../config/firebase'
+import { db } from '../config/firebase'
 import { resolveAvatarSrc } from '../services/avatar'
 import { useAuth } from '../composables/useAuth'
 import type { UserProfile } from '../services/types'
@@ -59,7 +59,6 @@ async function load() {
     return
   }
   try {
-    const db = await getDb()
     const snap = await getDoc(doc(db, 'users', uid.value))
     if (!snap.exists()) {
       errorKind.value = 'not-found'

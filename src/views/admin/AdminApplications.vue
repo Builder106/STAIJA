@@ -27,7 +27,7 @@ import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
-import { getFns } from '../../config/firebase'
+import { functions } from '../../config/firebase'
 import { useAdminBase } from '../../composables/useAdminBase'
 
 const router = useRouter()
@@ -309,7 +309,6 @@ async function reOfferDeferred(applicationId: string) {
   if (reOfferingIds.value.has(applicationId)) return
   reOfferingIds.value = new Set([...reOfferingIds.value, applicationId])
   try {
-    const functions = await getFns()
     const fn = httpsCallable<
       { applicationId: string },
       { ok: true; changed: boolean }
@@ -356,7 +355,6 @@ async function bulkReOffer() {
         app.status === 'accepted' &&
         app.spotResponse === 'deferred',
     )
-    const functions = await getFns()
     const fn = httpsCallable<
       { applicationId: string },
       { ok: true; changed: boolean }

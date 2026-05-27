@@ -31,7 +31,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { deleteObject, ref as storageRef } from 'firebase/storage'
-import { getDb, getStorageBucket } from '../config/firebase'
+import { db, storage } from '../config/firebase'
 
 export type DraftProgramSlug = 'stepup-scholars' | 'dynamerge'
 
@@ -105,7 +105,6 @@ export async function getDraft(
   program: DraftProgramSlug,
 ): Promise<ApplicationDraftDoc | null> {
   try {
-    const db = await getDb()
     const ref = doc(db, 'applicationDrafts', draftId(userId, program))
     const snap = await getDoc(ref)
     if (!snap.exists()) return null
@@ -124,7 +123,6 @@ export async function saveDraft(
   payload: Record<string, unknown>,
 ): Promise<boolean> {
   try {
-    const db = await getDb()
     const ref = doc(db, 'applicationDrafts', draftId(userId, program))
     await setDoc(
       ref,
@@ -169,7 +167,6 @@ export async function deleteDraft(
   program: DraftProgramSlug,
 ): Promise<void> {
   try {
-    const db = await getDb()
     // Best-effort: wipe any staged uploads the applicant pre-uploaded
     // for this draft before tombstoning the doc. The orphan cron sweeps
     // anything we miss, so failures here are non-fatal. We fire all
@@ -177,7 +174,6 @@ export async function deleteDraft(
     // the cron picks up stragglers either way.
     const stagedPaths = collectStagedPaths(await readPayload(userId, program))
     if (stagedPaths.length > 0) {
-      const storage = await getStorageBucket()
       await Promise.allSettled(
         stagedPaths.map((path) =>
           deleteObject(storageRef(storage, path)).catch((err) => {
@@ -212,7 +208,6 @@ async function readPayload(
   program: DraftProgramSlug,
 ): Promise<Record<string, unknown>> {
   try {
-    const db = await getDb()
     const snap = await getDoc(doc(db, 'applicationDrafts', draftId(userId, program)))
     if (!snap.exists()) return {}
     const payload = (snap.data() as ApplicationDraftDoc).payload
@@ -245,7 +240,6 @@ function collectStagedPaths(payload: Record<string, unknown>): string[] {
  *  freshly-installed device even before the user touches the wizard. */
 export async function listUserDrafts(userId: string): Promise<ApplicationDraftDoc[]> {
   try {
-    const db = await getDb()
     const q = query(
       collection(db, 'applicationDrafts'),
       where('userId', '==', userId),
@@ -272,30 +266,17 @@ export function watchDraftDoc(
   program: DraftProgramSlug,
   onChange: (draft: ApplicationDraftDoc | null) => void,
 ): Unsubscribe {
-  // Sync signature with async getDb(): hold a cancellation flag and a
-  // late-binding unsubscribe so callers can clean up at unmount even if
-  // the firestore SDK chunk hasn't finished loading yet.
-  let actualUnsub: Unsubscribe | null = null
-  let cancelled = false
-  ;(async () => {
-    const db = await getDb()
-    if (cancelled) return
-    const ref = doc(db, 'applicationDrafts', draftId(userId, program))
-    actualUnsub = onSnapshot(
-      ref,
-      (snap) => {
-        onChange(snap.exists() ? (snap.data() as ApplicationDraftDoc) : null)
-      },
-      (err) => {
-        console.warn('[applicationDrafts] watchDraftDoc stream error', err)
-        onChange(null)
-      },
-    )
-  })()
-  return () => {
-    cancelled = true
-    actualUnsub?.()
-  }
+  const ref = doc(db, 'applicationDrafts', draftId(userId, program))
+  return onSnapshot(
+    ref,
+    (snap) => {
+      onChange(snap.exists() ? (snap.data() as ApplicationDraftDoc) : null)
+    },
+    (err) => {
+      console.warn('[applicationDrafts] watchDraftDoc stream error', err)
+      onChange(null)
+    },
+  )
 }
 
 /**
@@ -319,28 +300,18 @@ export function watchUserDrafts(
   userId: string,
   onChange: (drafts: ApplicationDraftDoc[]) => void,
 ): Unsubscribe {
-  let actualUnsub: Unsubscribe | null = null
-  let cancelled = false
-  ;(async () => {
-    const db = await getDb()
-    if (cancelled) return
-    const q = query(
-      collection(db, 'applicationDrafts'),
-      where('userId', '==', userId),
-    )
-    actualUnsub = onSnapshot(
-      q,
-      (snap) => {
-        onChange(snap.docs.map((d) => d.data() as ApplicationDraftDoc))
-      },
-      (err) => {
-        console.warn('[applicationDrafts] watchUserDrafts stream error', err)
-        onChange([])
-      },
-    )
-  })()
-  return () => {
-    cancelled = true
-    actualUnsub?.()
-  }
+  const q = query(
+    collection(db, 'applicationDrafts'),
+    where('userId', '==', userId),
+  )
+  return onSnapshot(
+    q,
+    (snap) => {
+      onChange(snap.docs.map((d) => d.data() as ApplicationDraftDoc))
+    },
+    (err) => {
+      console.warn('[applicationDrafts] watchUserDrafts stream error', err)
+      onChange([])
+    },
+  )
 }

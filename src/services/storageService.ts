@@ -5,12 +5,11 @@ import {
   deleteObject,
   listAll
 } from 'firebase/storage'
-import { getStorageBucket } from '../config/firebase.ts'
+import { storage } from '../config/firebase.ts'
 
 export class StorageService {
   static async uploadFile(file: File, path: string): Promise<string> {
     try {
-      const storage = await getStorageBucket()
       const storageRef = ref(storage, path)
       const snapshot = await uploadBytes(storageRef, file)
       return await getDownloadURL(snapshot.ref)
@@ -22,7 +21,6 @@ export class StorageService {
 
   static async deleteFile(path: string): Promise<void> {
     try {
-      const storage = await getStorageBucket()
       const storageRef = ref(storage, path)
       await deleteObject(storageRef)
     } catch (error) {
@@ -33,7 +31,6 @@ export class StorageService {
 
   static async getFileURL(path: string): Promise<string> {
     try {
-      const storage = await getStorageBucket()
       const storageRef = ref(storage, path)
       return await getDownloadURL(storageRef)
     } catch (error) {
@@ -44,7 +41,6 @@ export class StorageService {
 
   static async listFiles(path: string): Promise<string[]> {
     try {
-      const storage = await getStorageBucket()
       const storageRef = ref(storage, path)
       const result = await listAll(storageRef)
       return result.items.map(item => item.fullPath)

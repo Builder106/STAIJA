@@ -12,7 +12,7 @@
 
 import { httpsCallable } from 'firebase/functions'
 import { ref as storageRef, uploadBytes } from 'firebase/storage'
-import { getFns, getStorageBucket, auth } from '../config/firebase.ts'
+import { functions, storage, auth } from '../config/firebase.ts'
 import { getAppConfig } from '../utils/env.ts'
 import type { Document } from '@contentful/rich-text-types'
 
@@ -107,7 +107,6 @@ type AdminRequest =
 async function callAdmin<T>(request: AdminRequest): Promise<T> {
   const cfg = getAppConfig()
   const envId = cfg.contentful?.environmentId
-  const functions = await getFns()
   const fn = httpsCallable<{ env?: string; request: AdminRequest }, T>(
     functions,
     'lmsContentAdmin',
@@ -395,14 +394,12 @@ export async function uploadAsset(file: File, title?: string): Promise<UploadAss
 
   // Stage in Storage. Firebase Auth covers the upload; storage.rules
   // gates the path to staff/admin role + a size cap.
-  const storage = await getStorageBucket()
   const ref = storageRef(storage, stagingPath)
   await uploadBytes(ref, file, {
     contentType: file.type || 'application/octet-stream',
   })
 
   // Ask the function to copy it into Contentful.
-  const functions = await getFns()
   const call = httpsCallable<AssetUploadInput, UploadAssetResult>(functions, 'lmsAssetUpload')
   const result = await call({
     storagePath: stagingPath,

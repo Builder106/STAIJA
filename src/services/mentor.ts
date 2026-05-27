@@ -17,7 +17,7 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import { getDb } from '../config/firebase.ts'
+import { db } from '../config/firebase.ts'
 import type { MentorAssignment, MentorFeedback, UserProfile } from './types'
 
 export type AssignedStudent = MentorAssignment & {
@@ -26,7 +26,6 @@ export type AssignedStudent = MentorAssignment & {
 
 export class MentorService {
   static async getAssignedStudents(mentorId: string): Promise<AssignedStudent[]> {
-    const db = await getDb()
     const q = query(
       collection(db, 'mentor_assignments'),
       where('mentorId', '==', mentorId),
@@ -59,7 +58,6 @@ export class MentorService {
     mentorId: string,
     studentId: string,
   ): Promise<MentorAssignment | null> {
-    const db = await getDb()
     const q = query(
       collection(db, 'mentor_assignments'),
       where('mentorId', '==', mentorId),
@@ -80,7 +78,6 @@ export class MentorService {
     mentorId: string,
     studentId: string,
   ): Promise<MentorFeedback[]> {
-    const db = await getDb()
     const q = query(
       collection(db, 'mentor_feedback'),
       where('mentorId', '==', mentorId),
@@ -103,7 +100,6 @@ export class MentorService {
   }): Promise<string> {
     const trimmed = input.content.trim()
     if (!trimmed) throw new Error('Feedback content is required.')
-    const db = await getDb()
     const docRef = await addDoc(collection(db, 'mentor_feedback'), {
       mentorId: input.mentorId,
       studentId: input.studentId,

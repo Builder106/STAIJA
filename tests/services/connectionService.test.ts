@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('../../src/config/firebase.ts', () => ({
+  db: {},
   auth: {},
-  getDb: vi.fn(async () => ({})),
-  getStorageBucket: vi.fn(async () => ({})),
-  getPublicStorageBucket: vi.fn(async () => ({})),
-  getFns: vi.fn(async () => ({})),
+  storage: {},
 }))
 
 const mockAddDoc = vi.fn()

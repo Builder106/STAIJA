@@ -19,7 +19,7 @@ import {
   type AuditLog,
 } from '../../services/firebase'
 import { collection, getDocs, orderBy, query, limit as fsLimit } from 'firebase/firestore'
-import { auth, getDb, getFns } from '../../config/firebase'
+import { auth, db, functions } from '../../config/firebase'
 import { useAuth } from '../../composables/useAuth'
 import type { MentorInvite } from '../../services/types'
 
@@ -101,7 +101,6 @@ async function submitInvite() {
   inviteSubmitting.value = true
   inviteError.value = null
   try {
-    const functions = await getFns()
     const fn = httpsCallable<
       { note?: string; email?: string; expiresInDays?: number; count?: number },
       { invites: Array<{ token: string; url: string; expiresAt: number }> }
@@ -178,7 +177,6 @@ function inviteStatus(invite: MentorInvite): InviteRow['status'] {
 async function loadMentorInvites() {
   mentorInvitesLoading.value = true
   try {
-    const db = await getDb()
     const q = query(
       collection(db, 'mentorInvites'),
       orderBy('createdAt', 'desc'),
@@ -203,7 +201,6 @@ async function revokeInvite(token: string) {
   if (revokingTokens.value.has(token)) return
   revokingTokens.value = new Set([...revokingTokens.value, token])
   try {
-    const functions = await getFns()
     const fn = httpsCallable<
       { token: string },
       { ok: true; changed: boolean }
@@ -278,7 +275,6 @@ async function loadUsers() {
   loading.value = true
   loadError.value = null
   try {
-    const functions = await getFns()
     const callable = httpsCallable<Record<string, never>, { users: EnrichedUser[] }>(
       functions,
       'adminListUsers',

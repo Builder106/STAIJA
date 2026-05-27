@@ -11,7 +11,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
-import { getFns, getAppCheckToken } from '../../config/firebase'
+import { functions, getAppCheckToken } from '../../config/firebase'
 import { getAppConfig } from '../../utils/env'
 
 interface ReferenceContext {
@@ -39,7 +39,6 @@ async function load() {
   loading.value = true
   tokenError.value = null
   try {
-    const functions = await getFns()
     const callable = httpsCallable<{ token: string }, ReferenceContext>(
       functions,
       'validateReferenceToken',

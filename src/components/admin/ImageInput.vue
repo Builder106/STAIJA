@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { getPublicStorageBucket } from '../../config/firebase'
+import { publicStorage } from '../../config/firebase'
 
 const props = defineProps<{
   modelValue: string
@@ -60,7 +60,6 @@ async function handleFile(file: File) {
     // unauthenticated to the world. publicStorage points at the no-cost
     // multi-region bucket; falls back to the default bucket if
     // VITE_FIREBASE_PUBLIC_BUCKET isn't set in the environment.
-    const publicStorage = await getPublicStorageBucket()
     const r = storageRef(publicStorage, path)
     await uploadBytes(r, file)
     const url = await getDownloadURL(r)

@@ -24,7 +24,7 @@ import {
   type ProgramMentor,
 } from '../../services/firebase'
 import { ProgramService } from '../../services/programService'
-import { getFns } from '../../config/firebase'
+import { functions } from '../../config/firebase'
 
 interface ProgramDraft {
   pitch: string
@@ -107,7 +107,6 @@ async function previewAnnouncement(p: Program) {
   announcementState[p.id] = 'previewing'
   announcementMessage[p.id] = null
   try {
-    const functions = await getFns()
     const fn = httpsCallable<
       { interestTag: string; templateName: string; dryRun: true },
       SendInterestSegmentResult
@@ -150,7 +149,6 @@ async function sendAnnouncement(p: Program) {
   announcementState[p.id] = 'sending'
   announcementMessage[p.id] = null
   try {
-    const functions = await getFns()
     const fn = httpsCallable<
       {
         interestTag: string
