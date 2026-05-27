@@ -74,7 +74,7 @@ const ADVISORS: string[] = []
             <UiCard class="overflow-hidden bg-surface group">
               <div class="aspect-square relative overflow-hidden border-b hairline-ink">
                 <div class="absolute inset-0 wash-violet-6 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity z-10" />
-                <img :src="member.img" :alt="member.name" class="w-full h-full object-cover" loading="lazy" />
+                <img :src="member.img" :alt="member.name" width="400" height="400" class="w-full h-full object-cover" loading="lazy" />
               </div>
               <div class="p-6">
                 <h4 class="font-display text-xl font-semibold mb-1 group-hover:text-brand-violet transition-colors m-0">{{ member.name }}</h4>

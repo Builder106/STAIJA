@@ -155,6 +155,8 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
                 <img
                   :src="avatarSrc"
                   :alt="displayName ?? 'Avatar'"
+                  width="32"
+                  height="32"
                   class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-violet/30 shrink-0"
                 />
                 <span class="hidden xl:inline">{{ displayName || 'Dashboard' }}</span>

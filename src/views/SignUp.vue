@@ -159,6 +159,8 @@ async function onGoogle() {
             <img
               src="https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
               alt="Student with laptop"
+              width="1080"
+              height="1440"
               class="w-full h-full object-cover"
             />
           </div>

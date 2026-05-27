@@ -39,6 +39,8 @@ defineProps<{
           v-if="heroImg"
           :src="heroImg"
           :alt="name"
+          width="1280"
+          height="720"
           class="w-full h-full object-cover opacity-40"
         />
         <div v-else class="w-full h-full bg-ink/80" />

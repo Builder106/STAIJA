@@ -108,7 +108,7 @@ onMounted(load)
         >
           <div class="absolute inset-0 wash-violet-6 mix-blend-multiply z-10 pointer-events-none" />
           <Parallax :speed="-0.2" :distance="100" class="absolute inset-0">
-            <img :src="post.hero" :alt="post.title" class="w-full h-full object-cover scale-110" />
+            <img :src="post.hero" :alt="post.title" width="1280" height="720" class="w-full h-full object-cover scale-110" />
           </Parallax>
         </Motion>
       </Container>
