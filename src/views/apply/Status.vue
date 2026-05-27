@@ -11,7 +11,7 @@ import Eyebrow from '../../components/ui/Eyebrow.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import { DatabaseService } from '../../services/database'
-import { functions } from '../../config/firebase'
+import { getFns } from '../../config/firebase'
 import type { Application } from '../../services/types'
 
 const route = useRoute()
@@ -173,6 +173,7 @@ async function submitResponse(response: SpotResponse) {
   responding.value = true
   respondError.value = null
   try {
+    const functions = await getFns()
     const fn = httpsCallable<
       { applicationId: string; response: SpotResponse; note?: string },
       { ok: true; response: SpotResponse; spotRespondedAt: number }

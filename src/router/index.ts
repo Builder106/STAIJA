@@ -1,7 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { auth } from '../config/firebase.ts'
-import { DatabaseService, PermissionService, type Permission } from '../services/firebase.ts'
+// PermissionService is pure (only depends on `./types`) so it can be
+// imported eagerly. DatabaseService is dynamically imported inside the
+// auth guard below — pulling it eagerly would drag the firestore SDK
+// into the main bundle on every page load (database.ts has top-level
+// `firebase/firestore` imports), defeating the lazy split.
+import { PermissionService } from '../services/permissions'
+import type { Permission } from '../services/types'
 import { postLoginRoute } from '../services/postLoginRedirect'
 import type { UserRole } from '../services/types'
 import { donationsEnabled } from '../config/features.ts'
@@ -311,6 +317,7 @@ router.beforeEach(async (to, _from, next) => {
     if (user.uid === _cachedUid) {
       userRole = _cachedRole
     } else {
+      const { DatabaseService } = await import('../services/database')
       const profile = await DatabaseService.getUserProfile(user.uid)
       userRole = profile?.role ?? null
       _cachedUid = user.uid

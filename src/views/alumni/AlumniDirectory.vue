@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { db } from '../../config/firebase'
+import { getDb } from '../../config/firebase'
 import { collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { AuthService } from '../../services/firebase'
 import ConnectionButton from '../../components/alumni/ConnectionButton.vue'
@@ -119,6 +119,7 @@ const loadProfiles = async () => {
   try {
     // In a real app with many users, we'd paginate and filter server-side (Algolia/Typesense recommended)
     // For Phase 3B MVP, client-side filtering of "alumni" role users is acceptable
+    const db = await getDb()
     const q = query(collection(db, 'users'), where('role', 'in', ['alumni', 'admin']), limit(50))
     const snap = await getDocs(q)
     // directoryHidden=true is an opt-out from this directory. Filtering

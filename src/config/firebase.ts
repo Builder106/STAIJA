@@ -1,26 +1,25 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { initializeFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
-import { getFunctions } from 'firebase/functions'
-import { getAnalytics } from 'firebase/analytics'
-import { getPerformance } from 'firebase/performance'
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
   getToken,
   type AppCheck,
 } from 'firebase/app-check'
+// Type-only imports don't trigger SDK runtime load — they're erased at
+// compile time. The runtime imports happen inside the async getters
+// below, so the firestore / storage / functions SDKs (~310 KB gzipped
+// combined) only ship in chunks that the browser doesn't fetch until
+// a consumer actually calls one of them. Mobile applicants landing on
+// the home page never download these chunks.
+import type { Firestore } from 'firebase/firestore'
+import type { FirebaseStorage } from 'firebase/storage'
+import type { Functions } from 'firebase/functions'
 
 import { getFirebaseConfig } from '../utils/env.ts'
 
-// Get Firebase configuration from environment variables
 const firebaseConfig = getFirebaseConfig()
 
-// Log environment info in development
-// logEnvironmentInfo()
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig)
 
 // Initialize App Check (browser only — App Check has no Node equivalent and
@@ -75,43 +74,85 @@ export async function getAppCheckToken(): Promise<string | null> {
   }
 }
 
-// Initialize Firebase services
+// Auth is eagerly initialized — main.ts gates app mount on
+// onAuthStateChanged, so the auth SDK must be available before first
+// render. The firebase/auth chunk (~150 KB gzipped) is unavoidable on
+// initial page load.
 export const auth = getAuth(app)
-// initializeFirestore (not getFirestore) so we can pass transport options.
-// experimentalAutoDetectLongPolling probes the default WebChannel streaming
-// transport at startup, and on failure transparently falls back to plain
-// HTTP long polling.
+
+// Lazy Firestore. initializeFirestore (not getFirestore) so we can pass
+// transport options. experimentalAutoDetectLongPolling probes the default
+// WebChannel streaming transport at startup, and on failure transparently
+// falls back to plain HTTP long polling.
 //
-// Why: Firestore's default transport is a streaming "Listen/channel" URL
-// with a very specific query-string signature (VER=8, TYPE=xmlhttp, etc).
-// Safari content blockers, school WiFi captive portals, corporate proxies,
-// and some mobile carriers in our recruiting regions all flag that as
-// suspicious traffic and 4xx it — manifesting as the cryptic
-//   "Fetch API cannot load ... due to access control checks"
-// console error and silent data hangs. The long-polling fallback looks
-// like ordinary HTTPS requests and gets through everywhere.
-//
+// Why long-polling fallback: Firestore's default transport is a streaming
+// "Listen/channel" URL with a very specific query-string signature
+// (VER=8, TYPE=xmlhttp, etc). Safari content blockers, school WiFi
+// captive portals, corporate proxies, and some mobile carriers in our
+// recruiting regions all flag that as suspicious traffic and 4xx it —
+// manifesting as the cryptic "Fetch API cannot load ... due to access
+// control checks" console error and silent data hangs. The long-polling
+// fallback looks like ordinary HTTPS requests and gets through everywhere.
 // "Auto-detect" (vs. forceLongPolling) preserves WebChannel for users
 // whose networks allow it — those get the lower-latency transport — and
 // only degrades for the ones that need it.
-export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-})
-// Default bucket — used for application uploads (transcripts, IDs,
-// reference letters). Lives in the project's data region (africa-south1)
-// since those are private files served only to the applicant + staff.
-export const storage = getStorage(app)
+let _db: Firestore | null = null
+export async function getDb(): Promise<Firestore> {
+  if (_db) return _db
+  const { initializeFirestore } = await import('firebase/firestore')
+  _db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  })
+  return _db
+}
+
+// Lazy Storage. Default bucket — used for application uploads
+// (transcripts, IDs, reference letters). Lives in the project's data
+// region (africa-south1) since those are private files served only to
+// the applicant + staff.
+let _storage: FirebaseStorage | null = null
+export async function getStorageBucket(): Promise<FirebaseStorage> {
+  if (_storage) return _storage
+  const { getStorage } = await import('firebase/storage')
+  _storage = getStorage(app)
+  return _storage
+}
+
 // Public bucket — used for program editor assets (hero, mentor, feature
 // images) which need a no-cost-tier-eligible region. If
 // VITE_FIREBASE_PUBLIC_BUCKET is unset we fall back to the default bucket
 // so the app keeps working without it.
 const publicBucket = import.meta.env.VITE_FIREBASE_PUBLIC_BUCKET as string | undefined
-export const publicStorage = publicBucket
-  ? getStorage(app, `gs://${publicBucket}`)
-  : storage
-export const functions = getFunctions(app)
+let _publicStorage: FirebaseStorage | null = null
+export async function getPublicStorageBucket(): Promise<FirebaseStorage> {
+  if (_publicStorage) return _publicStorage
+  if (!publicBucket) {
+    _publicStorage = await getStorageBucket()
+    return _publicStorage
+  }
+  const { getStorage } = await import('firebase/storage')
+  _publicStorage = getStorage(app, `gs://${publicBucket}`)
+  return _publicStorage
+}
 
-// Initialize analytics and performance monitoring (only in production)
+// Lazy Functions. The SDK is ~30 KB gzipped — small relative to firestore
+// but adds up when combined with storage. Both load only on routes that
+// actually call a Cloud Function (most routes don't).
+let _functions: Functions | null = null
+export async function getFns(): Promise<Functions> {
+  if (_functions) return _functions
+  const { getFunctions } = await import('firebase/functions')
+  _functions = getFunctions(app)
+  return _functions
+}
+
+// Initialize analytics and performance monitoring (only in production).
+// These remain eager because they wire up SDK-side observability that
+// needs to start on first paint to capture early metrics — and they're
+// small (~30 KB gzipped combined).
+import { getAnalytics } from 'firebase/analytics'
+import { getPerformance } from 'firebase/performance'
+
 let analytics: any = null
 let performance: any = null
 

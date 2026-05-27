@@ -7,7 +7,7 @@ import {
   addDoc,
   limit
 } from 'firebase/firestore'
-import { db } from '../config/firebase.ts'
+import { getDb } from '../config/firebase.ts'
 import type { AuditLog, UserRole, Permission } from './types'
 
 export class AuditService {
@@ -31,7 +31,7 @@ export class AuditService {
         userAgent: ''
       }
 
-      await addDoc(collection(db, 'audit_logs'), auditLog)
+      await addDoc(collection(await getDb(), 'audit_logs'), auditLog)
     } catch (error) {
       console.error('Failed to log role change:', error)
     }
@@ -53,7 +53,7 @@ export class AuditService {
         timestamp: new Date()
       }
 
-      await addDoc(collection(db, 'audit_logs'), auditLog)
+      await addDoc(collection(await getDb(), 'audit_logs'), auditLog)
     } catch (error) {
       console.error('Failed to log permission check:', error)
     }
@@ -62,7 +62,7 @@ export class AuditService {
   static async getAuditLogs(userId?: string, logLimit: number = 50): Promise<AuditLog[]> {
     try {
       let q = query(
-        collection(db, 'audit_logs'),
+        collection(await getDb(), 'audit_logs'),
         orderBy('timestamp', 'desc'),
         limit(logLimit)
       )

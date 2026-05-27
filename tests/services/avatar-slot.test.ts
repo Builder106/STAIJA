@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import {
-  avatarDataUriForSlot,
-  avatarSvgForSlot,
-  PORTRAIT_SLOT_COUNT,
-} from '../../src/services/avatar'
+import { avatarDataUriForSlot, avatarSvgForSlot } from '../../src/services/avatar/svg'
+import { PORTRAIT_SLOT_COUNT } from '../../src/services/avatar'
 
 describe('avatarSvgForSlot', () => {
   it('returns an SVG string with the avatar viewBox', () => {

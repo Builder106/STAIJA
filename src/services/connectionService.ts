@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.ts'
+import { getDb } from '../config/firebase.ts'
 import { 
   collection, 
   addDoc, 
@@ -30,21 +30,27 @@ export interface Connection {
 }
 
 export class ConnectionService {
-  private static requestsRef = collection(db, 'connection_requests')
-  private static connectionsRef = collection(db, 'connections')
+  private static async refs() {
+    const db = await getDb()
+    return {
+      requests: collection(db, 'connection_requests'),
+      connections: collection(db, 'connections'),
+    }
+  }
 
   static async sendRequest(fromUid: string, toUid: string): Promise<string> {
     if (fromUid === toUid) throw new Error('Cannot connect with yourself')
+    const { requests, connections } = await this.refs()
 
     // Check for existing connection
     const users = [fromUid, toUid].sort()
-    const connQuery = query(this.connectionsRef, where('users', '==', users))
+    const connQuery = query(connections, where('users', '==', users))
     const connSnap = await getDocs(connQuery)
     if (!connSnap.empty) throw new Error('Connection already exists')
 
     // Check for existing pending request (either direction)
     const pendingQuery = query(
-      this.requestsRef,
+      requests,
       and(
         where('status', '==', 'pending'),
         or(
@@ -57,7 +63,7 @@ export class ConnectionService {
     if (!pendingSnap.empty) throw new Error('Pending request already exists')
 
     // Create request
-    const docRef = await addDoc(this.requestsRef, {
+    const docRef = await addDoc(requests, {
       fromUid,
       toUid,
       status: 'pending',
@@ -68,12 +74,13 @@ export class ConnectionService {
   }
 
   static async respondToRequest(requestId: string, status: 'accepted' | 'declined'): Promise<void> {
-    const reqRef = doc(this.requestsRef, requestId)
+    const { requests, connections } = await this.refs()
+    const reqRef = doc(requests, requestId)
     const reqSnap = await getDoc(reqRef)
-    
+
     if (!reqSnap.exists()) throw new Error('Request not found')
     const data = reqSnap.data() as ConnectionRequest
-    
+
     if (data.status !== 'pending') throw new Error('Request is not pending')
 
     await updateDoc(reqRef, {
@@ -83,7 +90,7 @@ export class ConnectionService {
 
     if (status === 'accepted') {
       const users = [data.fromUid, data.toUid].sort()
-      await addDoc(this.connectionsRef, {
+      await addDoc(connections, {
         users,
         createdAt: serverTimestamp()
       })
@@ -91,9 +98,10 @@ export class ConnectionService {
   }
 
   static async getPendingRequests(uid: string): Promise<ConnectionRequest[]> {
+    const { requests } = await this.refs()
     const q = query(
-      this.requestsRef, 
-      where('toUid', '==', uid), 
+      requests,
+      where('toUid', '==', uid),
       where('status', '==', 'pending')
     )
     const snap = await getDocs(q)
@@ -101,8 +109,9 @@ export class ConnectionService {
   }
 
   static async getConnections(uid: string): Promise<Connection[]> {
+    const { connections } = await this.refs()
     const q = query(
-      this.connectionsRef, 
+      connections,
       where('users', 'array-contains', uid)
     )
     const snap = await getDocs(q)
@@ -110,22 +119,23 @@ export class ConnectionService {
   }
 
   static async getConnectionStatus(uid1: string, uid2: string): Promise<'connected' | 'pending_sent' | 'pending_received' | 'none'> {
+    const { requests, connections } = await this.refs()
     const users = [uid1, uid2].sort()
-    const connQuery = query(this.connectionsRef, where('users', '==', users))
+    const connQuery = query(connections, where('users', '==', users))
     if (!(await getDocs(connQuery)).empty) return 'connected'
 
     const sentQuery = query(
-      this.requestsRef, 
-      where('fromUid', '==', uid1), 
-      where('toUid', '==', uid2), 
+      requests,
+      where('fromUid', '==', uid1),
+      where('toUid', '==', uid2),
       where('status', '==', 'pending')
     )
     if (!(await getDocs(sentQuery)).empty) return 'pending_sent'
 
     const receivedQuery = query(
-      this.requestsRef, 
-      where('fromUid', '==', uid2), 
-      where('toUid', '==', uid1), 
+      requests,
+      where('fromUid', '==', uid2),
+      where('toUid', '==', uid1),
       where('status', '==', 'pending')
     )
     if (!(await getDocs(receivedQuery)).empty) return 'pending_received'

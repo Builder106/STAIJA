@@ -32,7 +32,7 @@
 import { ref, onMounted } from 'vue'
 import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
 import { AuthService } from '../../services/firebase'
-import { db } from '../../config/firebase'
+import { getDb } from '../../config/firebase'
 
 type Story = { id?: string; title: string; content: string; author: string; createdAt?: any }
 
@@ -43,6 +43,7 @@ const saving = ref(false)
 const message = ref('')
 
 const load = async () => {
+  const db = await getDb()
   const snap = await getDocs(collection(db, 'alumni_stories'))
   stories.value = snap.docs.map(d => ({ id: d.id, ...(d.data() as Story) }))
 }
@@ -52,6 +53,7 @@ const submitStory = async () => {
   message.value = ''
   const user = AuthService.getCurrentUser()
   if (!user) return
+  const db = await getDb()
   await addDoc(collection(db, 'alumni_stories'), {
     title: draft.value.title,
     content: draft.value.content,

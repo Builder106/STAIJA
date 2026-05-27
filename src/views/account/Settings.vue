@@ -25,7 +25,7 @@ import {
   loadLottieForSlot,
 } from '../../services/avatar/lotties'
 import { useAuth } from '../../composables/useAuth'
-import { functions } from '../../config/firebase'
+import { getFns } from '../../config/firebase'
 import { AuthService } from '../../services/auth'
 import { DatabaseService } from '../../services/database'
 import { StorageService } from '../../services/storageService'
@@ -463,6 +463,7 @@ async function signOutEverywhere() {
   signingOutEverywhere.value = true
   signOutMessage.value = null
   try {
+    const functions = await getFns()
     const callable = httpsCallable<Record<string, never>, { ok: boolean }>(
       functions,
       'signOutEverywhere',
@@ -515,6 +516,7 @@ async function exportData() {
   exporting.value = true
   exportError.value = null
   try {
+    const functions = await getFns()
     const callable = httpsCallable<Record<string, never>, Record<string, unknown>>(
       functions,
       'exportUserData',
@@ -554,6 +556,7 @@ async function handleDelete() {
   deleting.value = true
   deleteError.value = null
   try {
+    const functions = await getFns()
     const callable = httpsCallable<Record<string, never>, { ok: boolean }>(functions, 'deleteAccount')
     await callable({})
     await signOut()

@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.ts'
+import { getDb } from '../config/firebase.ts'
 import { 
   collection, 
   addDoc, 
@@ -25,10 +25,14 @@ export interface AppNotification {
 }
 
 export class NotificationService {
-  private static notifsRef = collection(db, 'notifications')
+  private static async notifsRef() {
+    const db = await getDb()
+    return collection(db, 'notifications')
+  }
 
   static async createNotification(notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>): Promise<string> {
-    const docRef = await addDoc(this.notifsRef, {
+    const ref = await this.notifsRef()
+    const docRef = await addDoc(ref, {
       ...notification,
       read: false,
       createdAt: serverTimestamp()
@@ -37,8 +41,9 @@ export class NotificationService {
   }
 
   static async getUnreadNotifications(uid: string): Promise<AppNotification[]> {
+    const ref = await this.notifsRef()
     const q = query(
-      this.notifsRef,
+      ref,
       where('uid', '==', uid),
       where('read', '==', false),
       orderBy('createdAt', 'desc')
@@ -48,8 +53,9 @@ export class NotificationService {
   }
 
   static async getAllNotifications(uid: string, limitCount = 20): Promise<AppNotification[]> {
+    const ref = await this.notifsRef()
     const q = query(
-      this.notifsRef,
+      ref,
       where('uid', '==', uid),
       orderBy('createdAt', 'desc'),
       limit(limitCount)
@@ -59,7 +65,8 @@ export class NotificationService {
   }
 
   static async markAsRead(notificationId: string): Promise<void> {
-    const ref = doc(this.notifsRef, notificationId)
+    const collRef = await this.notifsRef()
+    const ref = doc(collRef, notificationId)
     await updateDoc(ref, { read: true })
   }
 

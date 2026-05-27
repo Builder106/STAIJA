@@ -4,9 +4,10 @@ import type { Application } from '../../src/services/types'
 
 vi.mock('../../src/config/firebase.ts', () => ({
   auth: {},
-  db: {},
-  storage: {},
-  publicStorage: {},
+  getDb: vi.fn(async () => ({})),
+  getStorageBucket: vi.fn(async () => ({})),
+  getPublicStorageBucket: vi.fn(async () => ({})),
+  getFns: vi.fn(async () => ({})),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -96,7 +97,7 @@ describe('Status.vue — statusInfo computed', () => {
     ['submitted', 'Under review'],
     ['under_review', 'In active review'],
     ['accepted', 'Accepted'],
-    ['rejected', 'Decision made'],
+    ['rejected', 'Not selected'],
     ['draft', 'Draft'],
   ] as const)('status "%s" renders label "%s"', async (status, expectedLabel) => {
     const wrapper = await mountWithApp({ status })
@@ -113,9 +114,9 @@ describe('Status.vue — statusInfo computed', () => {
     expect(wrapper.text()).toContain("You're in")
   })
 
-  it('rejected status prompts applicant to check inbox', async () => {
+  it('rejected status points applicant to the full note on-page', async () => {
     const wrapper = await mountWithApp({ status: 'rejected' })
-    expect(wrapper.text()).toContain('Check your inbox')
+    expect(wrapper.text()).toContain('full note from the team is below')
   })
 
   it('draft status shows resume-application button', async () => {

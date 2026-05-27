@@ -12,7 +12,7 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import RichText from '../../components/learn/RichText.vue'
 import { useAuth } from '../../composables/useAuth'
-import { storage } from '../../config/firebase'
+import { getStorageBucket } from '../../config/firebase'
 import {
   CourseService,
   EnrollmentService,
@@ -123,6 +123,7 @@ async function handleSubmit() {
     if (file.value) {
       const safeName = file.value.name.replace(/[^A-Za-z0-9_.-]/g, '_')
       const path = `submissions/${user.value.uid}/${enrollmentId}/${Date.now()}-${safeName}`
+      const storage = await getStorageBucket()
       const r = storageRef(storage, path)
       await uploadBytes(r, file.value)
       fileUrl = await getDownloadURL(r)

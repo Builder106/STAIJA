@@ -15,15 +15,12 @@ import {
   serverTimestamp
 } from 'firebase/firestore'
 import type { Query as FsQuery, CollectionReference, DocumentData } from 'firebase/firestore'
-import { db } from '../config/firebase.ts'
+import { getDb } from '../config/firebase.ts'
 import type { UserProfile, ContentItem, Application, Program, ProgramHistorySnapshot } from './types'
 
 export class DatabaseService {
   static async getUserProfile(uid: string): Promise<UserProfile | null> {
-    if (!db) {
-      console.warn('Firestore not available')
-      return null
-    }
+    const db = await getDb()
     // First-call permission-denied on initial page load is almost always
     // an App Check / auth token warmup race — onAuthStateChanged fires
     // immediately with the cached user, but our reCAPTCHA Enterprise
@@ -60,6 +57,7 @@ export class DatabaseService {
   // round-trip is fine. Revisit if user counts ever exceed ~1000.
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
+      const db = await getDb()
       const snap = await getDocs(collection(db, 'users'))
       return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserProfile))
     } catch (error) {
@@ -70,6 +68,7 @@ export class DatabaseService {
 
   static async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
     try {
+      const db = await getDb()
       const docRef = doc(db, 'users', uid)
       await updateDoc(docRef, {
         ...updates,
@@ -83,6 +82,7 @@ export class DatabaseService {
 
   static async getContentItems(type?: string, status?: string): Promise<ContentItem[]> {
     try {
+      const db = await getDb()
       let q: FsQuery<DocumentData> | CollectionReference<DocumentData> = collection(db, 'content')
       
       if (type) {
@@ -111,6 +111,7 @@ export class DatabaseService {
 
   static async createContentItem(item: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      const db = await getDb()
       const docRef = await addDoc(collection(db, 'content'), {
         ...item,
         createdAt: new Date(),
@@ -125,6 +126,7 @@ export class DatabaseService {
 
   static async updateContentItem(id: string, updates: Partial<ContentItem>): Promise<void> {
     try {
+      const db = await getDb()
       const docRef = doc(db, 'content', id)
       await updateDoc(docRef, {
         ...updates,
@@ -138,6 +140,7 @@ export class DatabaseService {
 
   static async deleteContentItem(id: string): Promise<void> {
     try {
+      const db = await getDb()
       const docRef = doc(db, 'content', id)
       await deleteDoc(docRef)
     } catch (error) {
@@ -147,19 +150,29 @@ export class DatabaseService {
   }
 
   static onContentChanges(callback: (items: ContentItem[]) => void): () => void {
-    const q = query(collection(db, 'content'), orderBy('createdAt', 'desc'))
-    
-    return onSnapshot(q, (querySnapshot) => {
-      const items: ContentItem[] = []
-      querySnapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...doc.data() } as ContentItem)
+    let actualUnsub: (() => void) | null = null
+    let cancelled = false
+    ;(async () => {
+      const db = await getDb()
+      if (cancelled) return
+      const q = query(collection(db, 'content'), orderBy('createdAt', 'desc'))
+      actualUnsub = onSnapshot(q, (querySnapshot) => {
+        const items: ContentItem[] = []
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as ContentItem)
+        })
+        callback(items)
       })
-      callback(items)
-    })
+    })()
+    return () => {
+      cancelled = true
+      actualUnsub?.()
+    }
   }
 
   static async getUserApplications(userId: string): Promise<Application[]> {
     try {
+      const db = await getDb()
       const q = query(
         collection(db, 'applications'),
         where('userId', '==', userId),
@@ -179,6 +192,7 @@ export class DatabaseService {
 
   static async getApplication(applicationId: string): Promise<Application | null> {
     try {
+      const db = await getDb()
       const docRef = doc(db, 'applications', applicationId)
       const docSnap = await getDoc(docRef)
       
@@ -194,6 +208,7 @@ export class DatabaseService {
 
   static async createApplication(application: Omit<Application, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      const db = await getDb()
       const docRef = await addDoc(collection(db, 'applications'), {
         ...application,
         createdAt: new Date(),
@@ -208,6 +223,7 @@ export class DatabaseService {
 
   static async updateApplication(applicationId: string, updates: Partial<Application>): Promise<void> {
     try {
+      const db = await getDb()
       const docRef = doc(db, 'applications', applicationId)
       await updateDoc(docRef, {
         ...updates,
@@ -221,6 +237,7 @@ export class DatabaseService {
 
   static async getAllApplications(status?: string): Promise<Application[]> {
     try {
+      const db = await getDb()
       let q = query(collection(db, 'applications'), orderBy('createdAt', 'desc'))
       
       if (status) {
@@ -241,6 +258,7 @@ export class DatabaseService {
 
   static async getProgram(slug: string): Promise<Program | null> {
     try {
+      const db = await getDb()
       const q = query(collection(db, 'programs'), where('slug', '==', slug), limit(1))
       const snapshot = await getDocs(q)
       
@@ -256,6 +274,7 @@ export class DatabaseService {
 
   static async getAllPrograms(): Promise<Program[]> {
     try {
+      const db = await getDb()
       const q = query(collection(db, 'programs'), orderBy('createdAt', 'desc'))
       const snapshot = await getDocs(q)
       
@@ -268,13 +287,14 @@ export class DatabaseService {
 
   static async createProgram(program: Omit<Program, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      const db = await getDb()
       const now = new Date()
       const programData = {
         ...program,
         createdAt: now,
         updatedAt: now
       }
-      
+
       const docRef = await addDoc(collection(db, 'programs'), programData)
       return docRef.id
     } catch (error) {
@@ -285,6 +305,7 @@ export class DatabaseService {
 
   static async updateProgram(id: string, updates: Partial<Program>): Promise<void> {
     try {
+      const db = await getDb()
       const updateData = {
         ...updates,
         updatedAt: new Date()
@@ -307,6 +328,7 @@ export class DatabaseService {
     savedBy: string,
   ): Promise<void> {
     try {
+      const db = await getDb()
       const programRef = doc(db, 'programs', id)
       const current = await getDoc(programRef)
       const batch = writeBatch(db)
@@ -335,6 +357,7 @@ export class DatabaseService {
 
   static async getProgramHistory(id: string, max = 20): Promise<ProgramHistorySnapshot[]> {
     try {
+      const db = await getDb()
       const q = query(
         collection(db, 'programs', id, 'history'),
         orderBy('savedAt', 'desc'),
@@ -350,6 +373,7 @@ export class DatabaseService {
 
   static async deleteProgram(id: string): Promise<void> {
     try {
+      const db = await getDb()
       await deleteDoc(doc(db, 'programs', id))
     } catch (error) {
       console.error('Delete program error:', error)
@@ -359,8 +383,9 @@ export class DatabaseService {
 
   static async getActivePrograms(): Promise<Program[]> {
     try {
+      const db = await getDb()
       const q = query(
-        collection(db, 'programs'), 
+        collection(db, 'programs'),
         where('status', '==', 'active'),
         orderBy('createdAt', 'desc')
       )

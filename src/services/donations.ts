@@ -23,7 +23,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, auth, functions } from '../config/firebase'
+import { getDb, auth, getFns } from '../config/firebase'
 import { getAppConfig } from '../utils/env'
 import { trackDonateComplete } from './analytics'
 
@@ -209,6 +209,7 @@ export async function getMyDonations(maxResults = 50): Promise<Donation[]> {
   const user = auth.currentUser
   if (!user) return []
 
+  const db = await getDb()
   const col = collection(db, 'donations')
   const results: Donation[] = []
 
@@ -245,6 +246,7 @@ export function formatNaira(amountKobo: number): string {
  * (2) calls Paystack's disable API, (3) mirrors the new status.
  */
 export async function cancelMyDonation(subscriptionCode: string): Promise<void> {
+  const functions = await getFns()
   const callable = httpsCallable<{ subscriptionCode: string }, { ok: boolean }>(
     functions,
     'cancelSubscription',

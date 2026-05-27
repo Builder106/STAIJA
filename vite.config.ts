@@ -84,10 +84,31 @@ export default defineConfig(async ({ mode }) => {
           // catch-all firebase entry.
           manualChunks(id: string) {
             if (id.includes('node_modules')) {
-              if (id.includes('@firebase/firestore')) return 'firebase-firestore'
-              if (id.includes('@firebase/storage')) return 'firebase-storage'
-              if (id.includes('@firebase/functions')) return 'firebase-functions'
-              if (id.includes('@firebase/auth')) return 'firebase-auth'
+              // Shared Firebase utility packages used by every SDK.
+              // Pin them to firebase-core (which initial-page-load
+              // already needs for auth + app-check). Without this
+              // explicit assignment, Vite's auto-chunker hoists them
+              // into whichever lazy chunk has the most callers
+              // (typically firestore) — which then forces firebase-core
+              // to statically import the firestore chunk on every page,
+              // defeating the lazy split.
+              if (
+                id.includes('@firebase/util') ||
+                id.includes('@firebase/component') ||
+                id.includes('@firebase/logger')
+              ) return 'firebase-core'
+              // Match BOTH the umbrella wrappers (node_modules/firebase/
+              // firestore/dist/index.mjs, which does `export * from
+              // '@firebase/firestore'`) AND the underlying @firebase/
+              // implementation packages. Without the umbrella match,
+              // the wrapper falls through to the firebase-core catch-
+              // all below, then re-exports every Firestore symbol —
+              // forcing firebase-core to statically import the
+              // firestore chunk on first page load.
+              if (id.includes('@firebase/firestore') || id.includes('firebase/firestore')) return 'firebase-firestore'
+              if (id.includes('@firebase/storage') || id.includes('firebase/storage')) return 'firebase-storage'
+              if (id.includes('@firebase/functions') || id.includes('firebase/functions')) return 'firebase-functions'
+              if (id.includes('@firebase/auth') || id.includes('firebase/auth')) return 'firebase-auth'
               if (id.includes('@firebase/app-check') || id.includes('@firebase/app')) return 'firebase-core'
               if (id.includes('@firebase/analytics') || id.includes('@firebase/performance')) return 'firebase-misc'
               if (id.includes('firebase/')) return 'firebase-core'

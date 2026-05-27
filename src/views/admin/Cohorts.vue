@@ -13,7 +13,7 @@ import UiSelect from '../../components/ui/UiSelect.vue'
 import { useAuth } from '../../composables/useAuth'
 import { CohortService, EnrollmentService, toMillis } from '../../services/learn'
 import { Timestamp } from 'firebase/firestore'
-import { functions } from '../../config/firebase'
+import { getFns } from '../../config/firebase'
 import type { Cohort } from '../../services/types'
 
 const { user } = useAuth()
@@ -99,6 +99,7 @@ async function confirmGraduate() {
   graduating.value = true
   graduateError.value = null
   try {
+    const functions = await getFns()
     const fn = httpsCallable<
       { cohortId: string },
       { ok: true; cohortId: string; enrollmentsCompleted: number; rolesFlipped: number }

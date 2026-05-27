@@ -27,7 +27,7 @@ import Heading from '../components/ui/Heading.vue'
 import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiCard from '../components/ui/UiCard.vue'
-import { db } from '../config/firebase'
+import { getDb } from '../config/firebase'
 import { resolveAvatarSrc } from '../services/avatar'
 import type { UserProfile } from '../services/types'
 
@@ -40,6 +40,7 @@ async function load() {
   loading.value = true
   error.value = null
   try {
+    const db = await getDb()
     const q = query(
       collection(db, 'users'),
       where('role', '==', 'mentor'),
@@ -53,6 +54,7 @@ async function load() {
     // fetch and sort client-side. Better than showing an empty
     // page on a missing-index error.
     try {
+      const db = await getDb()
       const snap = await getDocs(query(collection(db, 'users'), where('role', '==', 'mentor')))
       mentors.value = snap.docs
         .map((d) => d.data() as UserProfile)

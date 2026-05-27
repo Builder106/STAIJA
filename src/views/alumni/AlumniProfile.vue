@@ -90,7 +90,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { AuthService, StorageService, type UserProfile } from '../../services/firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../../config/firebase'
+import { getDb } from '../../config/firebase'
 import AnimatedAvatar from '../../components/avatars/AnimatedAvatar.vue'
 import { resolveAvatarSrc } from '../../services/avatar'
 
@@ -138,8 +138,9 @@ const isError = ref(false)
 const load = async () => {
   const user = AuthService.getCurrentUser()
   if (!user) return
-  
+
   try {
+    const db = await getDb()
     const snap = await getDoc(doc(db, 'users', user.uid))
     if (!snap.exists()) return
     
@@ -209,6 +210,7 @@ const save = async () => {
   if (!user) return
 
   try {
+    const db = await getDb()
     const userRef = doc(db, 'users', user.uid)
     const currentData = (await getDoc(userRef)).data()
     

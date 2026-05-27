@@ -28,7 +28,7 @@ import Body from '../components/ui/Body.vue'
 import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import UiButton from '../components/ui/UiButton.vue'
-import { db, functions } from '../config/firebase'
+import { getDb, getFns } from '../config/firebase'
 import { useAuth } from '../composables/useAuth'
 import type { MentorInvite } from '../services/types'
 
@@ -66,6 +66,7 @@ async function loadInvite() {
     return
   }
   try {
+    const db = await getDb()
     const snap = await getDoc(doc(db, 'mentorInvites', token.value))
     if (!snap.exists()) {
       loadError.value = "This invitation link is invalid or has been revoked."
@@ -121,6 +122,7 @@ async function acceptInvite() {
   accepting.value = true
   acceptError.value = null
   try {
+    const functions = await getFns()
     const fn = httpsCallable<
       { token: string; bio?: string; availability?: string },
       { ok: true; changed: boolean }

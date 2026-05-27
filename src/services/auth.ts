@@ -16,7 +16,7 @@ import {
 } from 'firebase/auth'
 import type { User, UserCredential } from 'firebase/auth'
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
-import { auth, db } from '../config/firebase.ts'
+import { auth, getDb } from '../config/firebase.ts'
 import type {
   UserProfile,
   UserRole,
@@ -235,11 +235,13 @@ export class AuthService {
       updatedAt: new Date()
     }
 
+    const db = await getDb()
     await setDoc(doc(db, 'users', user.uid), userProfile)
   }
 
   private static async ensureUserProfile(user: User): Promise<UserRole | null> {
     if (!user) return null
+    const db = await getDb()
     const ref = doc(db, 'users', user.uid)
     const existing = await getDoc(ref)
 

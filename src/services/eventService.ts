@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.ts'
+import { getDb } from '../config/firebase.ts'
 import { 
   collection, 
   addDoc, 
@@ -47,11 +47,18 @@ export interface EventRegistration {
 }
 
 export class EventService {
-  private static eventsRef = collection(db, 'events')
-  private static registrationsRef = collection(db, 'event_registrations')
+  private static async refs() {
+    const db = await getDb()
+    return {
+      db,
+      events: collection(db, 'events'),
+      registrations: collection(db, 'event_registrations'),
+    }
+  }
 
   static async createEvent(eventData: Omit<AppEvent, 'id' | 'createdAt' | 'updatedAt' | 'registeredCount' | 'waitlistCount'>): Promise<string> {
-    const docRef = await addDoc(this.eventsRef, {
+    const { events } = await this.refs()
+    const docRef = await addDoc(events, {
       ...eventData,
       registeredCount: 0,
       waitlistCount: 0,
@@ -62,7 +69,8 @@ export class EventService {
   }
 
   static async updateEvent(eventId: string, updates: Partial<AppEvent>): Promise<void> {
-    const docRef = doc(this.eventsRef, eventId)
+    const { events } = await this.refs()
+    const docRef = doc(events, eventId)
     await updateDoc(docRef, {
       ...updates,
       updatedAt: serverTimestamp()
@@ -70,39 +78,42 @@ export class EventService {
   }
 
   static async getEvents(filters: { publishedOnly?: boolean, tags?: string[] } = {}): Promise<AppEvent[]> {
+    const { events } = await this.refs()
     const constraints: QueryConstraint[] = [orderBy('start', 'asc')]
-    
+
     if (filters.publishedOnly) {
       constraints.unshift(where('published', '==', true))
     }
-    
+
     if (filters.tags && filters.tags.length > 0) {
       constraints.push(where('tags', 'array-contains-any', filters.tags))
     }
 
-    const q = query(this.eventsRef, ...constraints)
+    const q = query(events, ...constraints)
     const snap = await getDocs(q)
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as AppEvent))
   }
 
   static async getEvent(eventId: string): Promise<AppEvent | null> {
-    const docRef = doc(this.eventsRef, eventId)
+    const { events } = await this.refs()
+    const docRef = doc(events, eventId)
     const snap = await getDoc(docRef)
     if (!snap.exists()) return null
     return { id: snap.id, ...snap.data() } as AppEvent
   }
 
   static async registerForEvent(eventId: string, uid: string): Promise<string> {
+    const { db, events, registrations } = await this.refs()
     return await runTransaction(db, async (transaction) => {
-      const eventRef = doc(this.eventsRef, eventId)
+      const eventRef = doc(events, eventId)
       const eventSnap = await transaction.get(eventRef)
-      
+
       if (!eventSnap.exists()) throw new Error('Event not found')
       const event = eventSnap.data() as AppEvent
 
       // Check existing registration
       const regQuery = query(
-        this.registrationsRef,
+        registrations,
         where('eventId', '==', eventId),
         where('uid', '==', uid),
         where('status', 'in', ['registered', 'waitlisted'])
@@ -119,7 +130,7 @@ export class EventService {
         transaction.update(eventRef, { waitlistCount: event.waitlistCount + 1 })
       }
 
-      const newRegRef = doc(this.registrationsRef)
+      const newRegRef = doc(registrations)
       transaction.set(newRegRef, {
         eventId,
         uid,
@@ -132,26 +143,23 @@ export class EventService {
   }
 
   static async cancelRegistration(eventId: string, uid: string): Promise<void> {
+    const { db, events, registrations } = await this.refs()
     await runTransaction(db, async (transaction) => {
       const q = query(
-        this.registrationsRef, 
-        where('eventId', '==', eventId), 
+        registrations,
+        where('eventId', '==', eventId),
         where('uid', '==', uid),
         where('status', 'in', ['registered', 'waitlisted'])
       )
       const snap = await getDocs(q)
       if (snap.empty) throw new Error('Registration not found')
-      
+
       const regDoc = snap.docs[0]
       const regData = regDoc.data() as EventRegistration
-      
-      const eventRef = doc(this.eventsRef, eventId)
-      // Optimistically get event for counters (though we don't strictly need read-lock if we use increment, but we need values for logic if we were promoting)
-      // For now just decrement.
-      
-      // Note: Firestore transactions require reads before writes.
+
+      const eventRef = doc(events, eventId)
       const eventSnap = await transaction.get(eventRef)
-      if (!eventSnap.exists()) throw new Error('Event not found') // Should exist
+      if (!eventSnap.exists()) throw new Error('Event not found')
       const event = eventSnap.data() as AppEvent
 
       if (regData.status === 'registered') {
@@ -168,8 +176,9 @@ export class EventService {
   }
 
   static async getUserRegistration(eventId: string, uid: string): Promise<EventRegistration | null> {
+    const { registrations } = await this.refs()
     const q = query(
-      this.registrationsRef,
+      registrations,
       where('eventId', '==', eventId),
       where('uid', '==', uid),
       where('status', 'in', ['registered', 'waitlisted'])

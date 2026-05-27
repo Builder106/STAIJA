@@ -13,7 +13,7 @@ import UiCard from '../../components/ui/UiCard.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import AudioRecorder from '../../components/ui/AudioRecorder.vue'
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../../config/firebase'
+import { getFns } from '../../config/firebase'
 import { useAuth } from '../../composables/useAuth'
 import { useAutoSave } from '../../composables/useAutoSave'
 import { DatabaseService } from '../../services/database'
@@ -942,6 +942,7 @@ async function handleSubmit() {
     }
 
     if (Object.keys(stagedPaths).length > 0) {
+      const functions = await getFns()
       const finalize = httpsCallable<
         { applicationId: string; program: DraftProgramSlug; stagedPaths: Record<string, string> },
         { finalized: Record<string, string> }

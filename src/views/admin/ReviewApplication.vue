@@ -32,7 +32,7 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import { DatabaseService, AuthService, type Application } from '../../services/firebase'
 import { StorageService } from '../../services/storageService'
-import { functions } from '../../config/firebase'
+import { getFns } from '../../config/firebase'
 import { resolveAvatarSrc } from '../../services/avatar'
 import { useAdminBase } from '../../composables/useAdminBase'
 
@@ -237,6 +237,7 @@ async function retryEmail() {
   retrying.value = true
   retryMessage.value = ''
   try {
+    const functions = await getFns()
     const fn = httpsCallable<
       { applicationId: string },
       { ok: boolean; kind: string; to: string }
