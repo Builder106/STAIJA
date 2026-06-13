@@ -7,6 +7,16 @@ vi.mock('../../src/config/firebase.ts', () => ({
   db: {},
   storage: {},
   publicStorage: {},
+  functions: {},
+}))
+
+// The spot-response handshake calls the `respondToOffer` callable. Mock the
+// callable factory so we can assert the args without touching Firebase.
+// (Names must start with `mock` for vitest to allow them in a hoisted factory.)
+const mockRespondCallable = vi.fn()
+const mockHttpsCallable = vi.fn(() => mockRespondCallable)
+vi.mock('firebase/functions', () => ({
+  httpsCallable: (...args: unknown[]) => mockHttpsCallable(...args),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -96,7 +106,9 @@ describe('Status.vue — statusInfo computed', () => {
     ['submitted', 'Under review'],
     ['under_review', 'In active review'],
     ['accepted', 'Accepted'],
-    ['rejected', 'Decision made'],
+    // Reworked in 55268fa: the ambiguous "Decision made" became the plain
+    // "Not selected" so the chip reads the same as the dashboard.
+    ['rejected', 'Not selected'],
     ['draft', 'Draft'],
   ] as const)('status "%s" renders label "%s"', async (status, expectedLabel) => {
     const wrapper = await mountWithApp({ status })
@@ -113,9 +125,12 @@ describe('Status.vue — statusInfo computed', () => {
     expect(wrapper.text()).toContain("You're in")
   })
 
-  it('rejected status prompts applicant to check inbox', async () => {
+  it('rejected status states the outcome plainly, not "check your inbox"', async () => {
     const wrapper = await mountWithApp({ status: 'rejected' })
-    expect(wrapper.text()).toContain('Check your inbox')
+    // Decision now lives in-app (email is unreliable); the hero no longer
+    // punts to the inbox the way the legacy copy did.
+    expect(wrapper.text()).toContain('Not selected this cycle.')
+    expect(wrapper.text()).not.toContain('Check your inbox')
   })
 
   it('draft status shows resume-application button', async () => {
@@ -202,5 +217,117 @@ describe('Status.vue — loading / error / not-found states', () => {
     const wrapper = mount(StatusView)
     await flushPromises()
     expect(wrapper.text()).toContain('Something went wrong')
+  })
+})
+
+describe('Status.vue — decision card + spot-response handshake', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRespondCallable.mockResolvedValue({ data: { ok: true } })
+  })
+
+  // Click the first clickable element (mocked UiButton renders <a>; plain
+  // template buttons render <button>) whose text contains `label`.
+  async function clickByText(wrapper: ReturnType<typeof mount>, label: string) {
+    const el = wrapper.findAll('a, button').find((e) => e.text().includes(label))
+    if (!el) throw new Error(`No clickable element with text "${label}"`)
+    await el.trigger('click')
+    await flushPromises()
+  }
+
+  it('rejected app surfaces the team feedback note in the decision card', async () => {
+    const wrapper = await mountWithApp({
+      status: 'rejected',
+      feedback: 'Strong essay; limited spots this cycle.',
+    })
+    expect(wrapper.text()).toContain('Not selected this cycle.')
+    expect(wrapper.text()).toContain('Note from the team')
+    expect(wrapper.text()).toContain('Strong essay; limited spots this cycle.')
+  })
+
+  it('accepted app with no response shows accept / defer / decline CTAs', async () => {
+    const wrapper = await mountWithApp({ status: 'accepted' })
+    expect(wrapper.text()).toContain('You got in.')
+    expect(wrapper.text()).toContain('Accept your spot')
+    expect(wrapper.text()).toContain('Defer to next cycle')
+    expect(wrapper.text()).toContain('Decline the offer')
+  })
+
+  it.each([
+    ['accepted', 'Spot accepted'],
+    ['declined', 'Spot declined'],
+    ['deferred', 'Deferred to next cycle'],
+  ] as const)('accepted app with spotResponse=%s shows the confirmed state "%s"', async (response, heading) => {
+    const wrapper = await mountWithApp({
+      status: 'accepted',
+      spotResponse: response,
+      spotRespondedAt: Date.now(),
+    })
+    expect(wrapper.text()).toContain(heading)
+    // Once a response is recorded the pre-response CTAs are gone.
+    expect(wrapper.text()).not.toContain('Accept your spot')
+  })
+
+  it('surfaces the saved response note in the confirmed state', async () => {
+    const wrapper = await mountWithApp({
+      status: 'accepted',
+      spotResponse: 'declined',
+      spotRespondedAt: Date.now(),
+      spotResponseNote: 'Joining a startup instead.',
+    })
+    expect(wrapper.text()).toContain('Joining a startup instead.')
+  })
+
+  it('accepting the offer calls respondToOffer and flips to the confirmed state', async () => {
+    mockGetApplication
+      .mockResolvedValueOnce(makeApp({ status: 'accepted' }))
+      .mockResolvedValueOnce(
+        makeApp({ status: 'accepted', spotResponse: 'accepted', spotRespondedAt: Date.now() }),
+      )
+    const wrapper = mount(StatusView)
+    await flushPromises()
+
+    await clickByText(wrapper, 'Accept your spot')
+
+    expect(mockHttpsCallable).toHaveBeenCalledWith(expect.anything(), 'respondToOffer')
+    expect(mockRespondCallable).toHaveBeenCalledWith(
+      expect.objectContaining({ applicationId: 'app-abc', response: 'accepted' }),
+    )
+    expect(wrapper.text()).toContain('Spot accepted')
+  })
+
+  it('declining expands a confirmation panel and submits the note', async () => {
+    mockGetApplication
+      .mockResolvedValueOnce(makeApp({ status: 'accepted' }))
+      .mockResolvedValueOnce(
+        makeApp({
+          status: 'accepted',
+          spotResponse: 'declined',
+          spotRespondedAt: Date.now(),
+          spotResponseNote: 'Took another offer',
+        }),
+      )
+    const wrapper = mount(StatusView)
+    await flushPromises()
+
+    await clickByText(wrapper, 'Decline the offer')
+    expect(wrapper.text()).toContain("Decline this cycle's offer?")
+
+    await wrapper.find('textarea').setValue('Took another offer')
+    await clickByText(wrapper, 'Confirm decline')
+
+    expect(mockRespondCallable).toHaveBeenCalledWith(
+      expect.objectContaining({ response: 'declined', note: 'Took another offer' }),
+    )
+    expect(wrapper.text()).toContain('Spot declined')
+  })
+
+  it('surfaces a respond error when the callable rejects', async () => {
+    mockRespondCallable.mockRejectedValueOnce(new Error('offline'))
+    const wrapper = await mountWithApp({ status: 'accepted' })
+    await clickByText(wrapper, 'Accept your spot')
+    expect(wrapper.text()).toContain('offline')
+    // Still showing the CTA so the applicant can retry.
+    expect(wrapper.text()).toContain('Accept your spot')
   })
 })
