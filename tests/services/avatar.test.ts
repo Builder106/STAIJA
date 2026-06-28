@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { avatarSvg, avatarDataUri, avatarSeedFor } from '../../src/services/avatar'
+import { avatarSvg, avatarDataUri } from '../../src/services/avatar/svg'
+import { avatarSeedFor } from '../../src/services/avatar'
 
 describe('avatarSeedFor', () => {
   it('prefers uid over email', () => {
