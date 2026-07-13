@@ -21,13 +21,12 @@ import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
 import { createHmac, timingSafeEqual, randomBytes } from 'crypto'
 import Busboy from 'busboy'
-import { sendMailgun, referenceInviteEmail, referenceLetterReceivedEmail } from './emailTemplates'
+import { APP_URL, sendMailgun, referenceInviteEmail, referenceLetterReceivedEmail } from './emailTemplates'
 
 const REFERENCE_TOKEN_SECRET = defineSecret('REFERENCE_TOKEN_SECRET')
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
 
-const PUBLIC_BASE_URL = 'https://staija.org'
 const TOKEN_TTL_DAYS = 90
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024 // 5MB — references letters often PDFs
 
@@ -147,7 +146,7 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
       }
 
       const token = mintToken(applicationId, i, tokenSecret)
-      const url = `${PUBLIC_BASE_URL}/refs/${token}`
+      const url = `${APP_URL.value()}/refs/${token}`
 
       const { html, text } = referenceInviteEmail({
         refName: r.name ?? 'there',

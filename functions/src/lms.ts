@@ -11,12 +11,10 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
-import { sendMailgun, enrollmentEmail, submissionGradedEmail } from './emailTemplates'
+import { APP_URL, sendMailgun, enrollmentEmail, submissionGradedEmail } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
-
-const PUBLIC_BASE_URL = 'https://staija.org'
 
 // --- Helpers ----------------------------------------------------------
 
@@ -256,7 +254,7 @@ export const enrollStudent = onCall<EnrollInput>(
         const { html, text } = enrollmentEmail({
           firstName,
           programLabel: programLabel(cohort.program),
-          courseUrl: `${PUBLIC_BASE_URL}/learn/course/${cohort.courseSlug}`,
+          courseUrl: `${APP_URL.value()}/learn/course/${cohort.courseSlug}`,
         })
         await sendMailgun({
           apiKey: MAILGUN_API_KEY.value(),
@@ -556,7 +554,7 @@ export const gradeSubmission = onCall<GradeSubmissionInput>(
           assignmentSlug: submission.assignmentSlug,
           grade: typeof grade === 'number' ? grade : undefined,
           mentorComment: mentorComment ?? '',
-          submissionUrl: `${PUBLIC_BASE_URL}/learn/submissions/${submissionId}`,
+          submissionUrl: `${APP_URL.value()}/learn/submissions/${submissionId}`,
         })
         await sendMailgun({
           apiKey: MAILGUN_API_KEY.value(),

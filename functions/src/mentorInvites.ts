@@ -26,8 +26,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
 import * as crypto from 'crypto'
-
-const PUBLIC_BASE_URL = 'https://staija.org'
+import { APP_URL } from './emailTemplates'
 
 const DEFAULT_EXPIRY_DAYS = 30
 const MAX_EXPIRY_DAYS = 180
@@ -166,7 +165,7 @@ export const createMentorInvite = onCall<CreateInput>(
       if (trimmedNote) doc.note = trimmedNote
       if (restrictEmail) doc.email = restrictEmail
       batch.set(db.collection('mentorInvites').doc(token), doc)
-      invites.push({ token, url: `${PUBLIC_BASE_URL}/invite/${token}`, expiresAt })
+      invites.push({ token, url: `${APP_URL.value()}/invite/${token}`, expiresAt })
     }
 
     await batch.commit()

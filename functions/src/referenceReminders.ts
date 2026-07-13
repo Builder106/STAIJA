@@ -17,7 +17,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { defineSecret } from 'firebase-functions/params'
 import * as admin from 'firebase-admin'
-import { sendMailgun, referenceReminderEmail } from './emailTemplates'
+import { APP_URL, sendMailgun, referenceReminderEmail } from './emailTemplates'
 import { mintToken } from './references'
 
 const REFERENCE_TOKEN_SECRET = defineSecret('REFERENCE_TOKEN_SECRET')
@@ -25,7 +25,6 @@ const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
 const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
 
 const REMINDER_AGE_DAYS = 14
-const PUBLIC_BASE_URL = 'https://staija.org'
 
 interface ApplicationRef {
   name?: string
@@ -96,7 +95,7 @@ export const sendReferenceReminders = onSchedule(
         if (!r.email) continue
 
         const token = mintToken(doc.id, i, tokenSecret)
-        const url = `${PUBLIC_BASE_URL}/refs/${token}`
+        const url = `${APP_URL.value()}/refs/${token}`
 
         const { html, text } = referenceReminderEmail({
           refName: r.name ?? 'there',
