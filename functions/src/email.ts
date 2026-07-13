@@ -5,8 +5,15 @@
  *   written. Sends:
  *     - "We got your application" when status flips to `submitted`
  *     - "Your application was accepted" when status flips to `accepted`
- *     - "Your application status update" when status flips to `declined`
- *       or `waitlisted` (kept neutral; rejection wording is the staff's job)
+ *     - "An update on your application" when status flips to `rejected`
+ *       (kept neutral; rejection wording is the staff's job)
+ *
+ *   `status` only ever moves through `draft | submitted | under_review |
+ *   accepted | rejected` — see `ApplicationDoc` in applicantEmail.ts.
+ *   Once accepted, an applicant's accept/decline/defer choice writes to
+ *   the separate `spotResponse` field instead (applicationAccept.ts's
+ *   `respondToOffer`), which this trigger doesn't act on and which
+ *   sends no email of its own.
  *
  * - `retryApplicationEmail` is a callable for staff/admin to re-send the
  *   applicant-facing email when the original send failed (Mailgun outage,
