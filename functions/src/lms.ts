@@ -254,7 +254,7 @@ export const enrollStudent = onCall<EnrollInput>(
         const { html, text } = enrollmentEmail({
           firstName,
           programLabel: programLabel(cohort.program),
-          courseUrl: `${APP_URL.value()}/learn/course/${cohort.courseSlug}`,
+          courseUrl: `${APP_URL}/learn/course/${cohort.courseSlug}`,
         })
         await sendMailgun({
           apiKey: MAILGUN_API_KEY.value(),
@@ -554,7 +554,7 @@ export const gradeSubmission = onCall<GradeSubmissionInput>(
           assignmentSlug: submission.assignmentSlug,
           grade: typeof grade === 'number' ? grade : undefined,
           mentorComment: mentorComment ?? '',
-          submissionUrl: `${APP_URL.value()}/learn/submissions/${submissionId}`,
+          submissionUrl: `${APP_URL}/learn/submissions/${submissionId}`,
         })
         await sendMailgun({
           apiKey: MAILGUN_API_KEY.value(),

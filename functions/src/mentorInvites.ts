@@ -165,7 +165,7 @@ export const createMentorInvite = onCall<CreateInput>(
       if (trimmedNote) doc.note = trimmedNote
       if (restrictEmail) doc.email = restrictEmail
       batch.set(db.collection('mentorInvites').doc(token), doc)
-      invites.push({ token, url: `${APP_URL.value()}/invite/${token}`, expiresAt })
+      invites.push({ token, url: `${APP_URL}/invite/${token}`, expiresAt })
     }
 
     await batch.commit()

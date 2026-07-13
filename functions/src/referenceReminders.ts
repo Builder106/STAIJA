@@ -95,7 +95,7 @@ export const sendReferenceReminders = onSchedule(
         if (!r.email) continue
 
         const token = mintToken(doc.id, i, tokenSecret)
-        const url = `${APP_URL.value()}/refs/${token}`
+        const url = `${APP_URL}/refs/${token}`
 
         const { html, text } = referenceReminderEmail({
           refName: r.name ?? 'there',

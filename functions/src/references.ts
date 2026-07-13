@@ -146,7 +146,7 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
       }
 
       const token = mintToken(applicationId, i, tokenSecret)
-      const url = `${APP_URL.value()}/refs/${token}`
+      const url = `${APP_URL}/refs/${token}`
 
       const { html, text } = referenceInviteEmail({
         refName: r.name ?? 'there',

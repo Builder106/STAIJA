@@ -25,13 +25,13 @@
  * see functions/.env.staija-staging.
  */
 
-import { defineString } from 'firebase-functions/params'
-
-// Resolved at deploy time from functions/.env.<projectId> (falls back to
-// prod when no override file exists). Call .value() inside function
-// bodies only — reading it at module load time runs before params are
-// resolved during Firebase's trigger-discovery pass.
-export const APP_URL = defineString('APP_URL', { default: 'https://staija.org' })
+// Firebase's CLI loads functions/.env.<projectId> into process.env before
+// the function runs, regardless of whether the code declares a matching
+// `defineString` param. Reading it directly here (instead of importing
+// firebase-functions/params) keeps this file free of firebase-functions
+// imports, which applicantEmail.ts and its root-level vitest suite rely
+// on to load without a functions-specific test setup.
+export const APP_URL = process.env.APP_URL ?? 'https://staija.org'
 
 // --- Brand tokens -------------------------------------------------------
 // Exported so sibling template modules (e.g. newsletterTemplates.ts) can
@@ -234,7 +234,7 @@ export function layout(body: string): string {
             <td style="padding:20px 40px 0;" align="center">
               <p style="margin:0;font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.6;">
                 STAIJA &nbsp;·&nbsp;
-                <a href="${APP_URL.value()}" style="color:${MUTED};text-decoration:underline;">staija.org</a>
+                <a href="${APP_URL}" style="color:${MUTED};text-decoration:underline;">staija.org</a>
                 &nbsp;·&nbsp;
                 <a href="mailto:hello@staija.org" style="color:${MUTED};text-decoration:underline;">hello@staija.org</a>
               </p>
@@ -323,7 +323,7 @@ export function applicationRejectedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, programLabel, applicationId } = params
-  const dashboardUrl = `${APP_URL.value()}/applicant/applications`
+  const dashboardUrl = `${APP_URL}/applicant/applications`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -359,7 +359,7 @@ export function spotReOfferedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, programLabel, applicationId } = params
-  const dashboardUrl = `${APP_URL.value()}/applicant/applications/${applicationId}`
+  const dashboardUrl = `${APP_URL}/applicant/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -439,7 +439,7 @@ export function referenceLetterReceivedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, refName, programLabel, applicationId } = params
-  const statusUrl = `${APP_URL.value()}/applicant/applications/${applicationId}`
+  const statusUrl = `${APP_URL}/applicant/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -470,7 +470,7 @@ export function welcomeEmail(params: {
   firstName: string
 }): { html: string; text: string } {
   const { firstName } = params
-  const programsUrl = `${APP_URL.value()}/programs`
+  const programsUrl = `${APP_URL}/programs`
 
   const html = layout(`
     ${eyebrow('Welcome')}
@@ -644,7 +644,7 @@ export function newApplicationStaffNotificationEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { applicantName, applicantEmail, programLabel, applicationId } = params
-  const reviewUrl = `${APP_URL.value()}/admin/applications/${applicationId}`
+  const reviewUrl = `${APP_URL}/admin/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(`${programLabel} · New application`)}
