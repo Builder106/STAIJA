@@ -32,6 +32,7 @@
  */
 
 import {
+  APP_URL,
   VIOLET,
   MUTED,
   button,
@@ -87,7 +88,7 @@ export function notifyMeWelcomeEmail(params: {
     }
   })()
 
-  const ctaUrl = 'https://staija.org/stay-connected'
+  const ctaUrl = `${APP_URL.value()}/stay-connected`
 
   const subject = `You're on the STAIJA list.`
 
@@ -176,7 +177,7 @@ export function mentorIntroEmail(params: {
 
   const cta = inviteUrl
     ? button('Accept your mentor invite', inviteUrl)
-    : button('Read about mentoring', 'https://staija.org/stay-connected')
+    : button('Read about mentoring', `${APP_URL.value()}/stay-connected`)
 
   const followupLine = inviteUrl
     ? `The invite link above is yours — opening it signs you in and turns on your mentor profile.`
@@ -206,7 +207,7 @@ export function mentorIntroEmail(params: {
     ``,
     followupLine,
     ``,
-    inviteUrl ? `Accept invite: ${inviteUrl}` : `Learn more: https://staija.org/stay-connected`,
+    inviteUrl ? `Accept invite: ${inviteUrl}` : `Learn more: ${APP_URL.value()}/stay-connected`,
     ``,
     `Reply with questions or scheduling constraints — we'll match them before sending an invite.`,
     ``,

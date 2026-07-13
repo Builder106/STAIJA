@@ -15,22 +15,23 @@
  *   - System font stack only — web fonts are unreliable in email clients.
  *   - Brand tokens must stay in sync with src/style.css @theme block.
  *
- * TODO(staging-isolation): every absolute URL in this file and in
- * newsletterTemplates.ts is hardcoded to https://staija.org. When a
- * staging Function send is allowlisted through, the resulting email's
- * links yank the recipient out of the staging environment back into
- * prod (e.g. /applicant/applications/<id> resolves against prod
- * Firestore, not staija-staging). Replace the literals with a server-
- * side APP_URL param so staging mail links to staging.staija.org.
- *
- *   import { defineString } from 'firebase-functions/params'
- *   const APP_URL = defineString('APP_URL', { default: 'https://staija.org' })
- *   // then: `${APP_URL.value()}/applicant/applications/${id}`
- *
- * Set per-project via `firebase functions:config:set app.url=... --project <id>`.
- * Deferred — does not block the current staging bootstrap because the
- * allowlist guardrail keeps staging emails restricted to teammates.
+ * Navigational links (dashboard/status/programs URLs) route through
+ * the APP_URL param below so staging mail points at staging.staija.org
+ * instead of yanking the recipient into prod Firestore. The logo <img>
+ * in layout() stays pinned to https://staija.org on purpose: it's a
+ * static asset fetch, and staging.staija.org sits behind Vercel SSO,
+ * which would break image loading for anyone without a session.
+ * APP_URL is set per-project via functions/.env.<projectId> files —
+ * see functions/.env.staija-staging.
  */
+
+import { defineString } from 'firebase-functions/params'
+
+// Resolved at deploy time from functions/.env.<projectId> (falls back to
+// prod when no override file exists). Call .value() inside function
+// bodies only — reading it at module load time runs before params are
+// resolved during Firebase's trigger-discovery pass.
+export const APP_URL = defineString('APP_URL', { default: 'https://staija.org' })
 
 // --- Brand tokens -------------------------------------------------------
 // Exported so sibling template modules (e.g. newsletterTemplates.ts) can
@@ -233,7 +234,7 @@ export function layout(body: string): string {
             <td style="padding:20px 40px 0;" align="center">
               <p style="margin:0;font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.6;">
                 STAIJA &nbsp;·&nbsp;
-                <a href="https://staija.org" style="color:${MUTED};text-decoration:underline;">staija.org</a>
+                <a href="${APP_URL.value()}" style="color:${MUTED};text-decoration:underline;">staija.org</a>
                 &nbsp;·&nbsp;
                 <a href="mailto:hello@staija.org" style="color:${MUTED};text-decoration:underline;">hello@staija.org</a>
               </p>
@@ -322,7 +323,7 @@ export function applicationRejectedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, programLabel, applicationId } = params
-  const dashboardUrl = 'https://staija.org/applicant/applications'
+  const dashboardUrl = `${APP_URL.value()}/applicant/applications`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -358,7 +359,7 @@ export function spotReOfferedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, programLabel, applicationId } = params
-  const dashboardUrl = `https://staija.org/applicant/applications/${applicationId}`
+  const dashboardUrl = `${APP_URL.value()}/applicant/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -438,7 +439,7 @@ export function referenceLetterReceivedEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { firstName, refName, programLabel, applicationId } = params
-  const statusUrl = `https://staija.org/applicant/applications/${applicationId}`
+  const statusUrl = `${APP_URL.value()}/applicant/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(programLabel)}
@@ -469,7 +470,7 @@ export function welcomeEmail(params: {
   firstName: string
 }): { html: string; text: string } {
   const { firstName } = params
-  const programsUrl = 'https://staija.org/programs'
+  const programsUrl = `${APP_URL.value()}/programs`
 
   const html = layout(`
     ${eyebrow('Welcome')}
@@ -643,7 +644,7 @@ export function newApplicationStaffNotificationEmail(params: {
   applicationId: string
 }): { html: string; text: string } {
   const { applicantName, applicantEmail, programLabel, applicationId } = params
-  const reviewUrl = `https://staija.org/admin/applications/${applicationId}`
+  const reviewUrl = `${APP_URL.value()}/admin/applications/${applicationId}`
 
   const html = layout(`
     ${eyebrow(`${programLabel} · New application`)}
