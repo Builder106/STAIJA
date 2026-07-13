@@ -60,3 +60,6 @@ tools/screenshot-lms/.auth/
 tools/screenshot-lms/.state/
 
 guide.md
+
+# Recovered VS Code Copilot Chat history — local reference only, never commit.
+.chat-archive/
