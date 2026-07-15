@@ -10,7 +10,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { APP_URL, sendMailgun, enrollmentEmail, submissionGradedEmail } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -19,7 +19,7 @@ const MAILGUN_DOMAIN = defineSecret('MAILGUN_DOMAIN')
 // --- Helpers ----------------------------------------------------------
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 
@@ -65,7 +65,7 @@ export const enrollStudent = onCall<EnrollInput>(
       throw new HttpsError('invalid-argument', 'studentId and cohortId are required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const cohortSnap = await db.collection('cohorts').doc(cohortId).get()
     if (!cohortSnap.exists) {
       throw new HttpsError('not-found', `Cohort ${cohortId} not found.`)
@@ -163,7 +163,7 @@ export const enrollStudent = onCall<EnrollInput>(
     if (student.role === 'applicant') {
       await studentRef.update({
         role: 'student',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       })
     }
 
@@ -202,7 +202,7 @@ export const enrollStudent = onCall<EnrollInput>(
 
     const enrollmentId = `${studentId}_${cohortId}`
     const enrollmentRef = db.collection('enrollments').doc(enrollmentId)
-    const now = admin.firestore.FieldValue.serverTimestamp()
+    const now = FieldValue.serverTimestamp()
 
     await enrollmentRef.set(
       {
@@ -296,7 +296,7 @@ export const completeLesson = onCall<CompleteLessonInput>(
       throw new HttpsError('invalid-argument', 'enrollmentId and lessonSlug are required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const enrollmentSnap = await db.collection('enrollments').doc(enrollmentId).get()
     if (!enrollmentSnap.exists) {
       throw new HttpsError('not-found', 'Enrollment not found.')
@@ -313,7 +313,7 @@ export const completeLesson = onCall<CompleteLessonInput>(
 
     const progressId = `${enrollmentId}_${lessonSlug}`
     const progressRef = db.collection('lesson_progress').doc(progressId)
-    const now = admin.firestore.FieldValue.serverTimestamp()
+    const now = FieldValue.serverTimestamp()
     await progressRef.set(
       {
         enrollmentId,
@@ -410,7 +410,7 @@ export const submitAssignment = onCall<SubmitAssignmentInput>(
       )
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const enrollmentSnap = await db.collection('enrollments').doc(enrollmentId).get()
     if (!enrollmentSnap.exists) {
       throw new HttpsError('not-found', 'Enrollment not found.')
@@ -441,7 +441,7 @@ export const submitAssignment = onCall<SubmitAssignmentInput>(
       fileUrl: fileUrl ?? null,
       fileName: fileName ?? null,
       linkUrl: linkUrl ?? null,
-      submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+      submittedAt: FieldValue.serverTimestamp(),
       status: 'submitted',
     })
 
@@ -454,7 +454,7 @@ export const submitAssignment = onCall<SubmitAssignmentInput>(
         message: 'A student just submitted an assignment.',
         data: { submissionId: submissionRef.id, enrollmentId, assignmentSlug },
         read: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       })
     } catch (err) {
       console.error('[submitAssignment] mentor notification failed', err)
@@ -497,7 +497,7 @@ export const gradeSubmission = onCall<GradeSubmissionInput>(
       throw new HttpsError('invalid-argument', 'status must be returned or graded.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const submissionRef = db.collection('assignment_submissions').doc(submissionId)
     const submissionSnap = await submissionRef.get()
     if (!submissionSnap.exists) {
@@ -519,7 +519,7 @@ export const gradeSubmission = onCall<GradeSubmissionInput>(
 
     const update: Record<string, unknown> = {
       status,
-      gradedAt: admin.firestore.FieldValue.serverTimestamp(),
+      gradedAt: FieldValue.serverTimestamp(),
       gradedBy: request.auth.uid,
     }
     if (typeof grade === 'number') update.grade = grade
@@ -536,7 +536,7 @@ export const gradeSubmission = onCall<GradeSubmissionInput>(
         message: mentorComment ?? '',
         data: { submissionId, assignmentSlug: submission.assignmentSlug },
         read: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       })
     } catch (err) {
       console.error('[gradeSubmission] notification failed', err)

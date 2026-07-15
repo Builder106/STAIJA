@@ -16,7 +16,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import Groq from 'groq-sdk'
 import { z } from 'zod'
 
@@ -54,7 +54,7 @@ const LessonMediaSchema = z.object({
 type LessonMedia = z.infer<typeof LessonMediaSchema>
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 

@@ -12,7 +12,8 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
+import { UserRecord, getAuth } from 'firebase-admin/auth'
 
 interface EnrichedUser {
   uid: string
@@ -38,7 +39,7 @@ export const adminListUsers = onCall<Record<string, never>, Promise<{ users: Enr
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
-    const db = admin.firestore()
+    const db = getFirestore()
     const callerSnap = await db.collection('users').doc(request.auth.uid).get()
     const callerRole = callerSnap.data()?.role
     if (callerRole !== 'staff' && callerRole !== 'admin') {
@@ -98,11 +99,11 @@ export const adminListUsers = onCall<Record<string, never>, Promise<{ users: Enr
   },
 )
 
-async function listAllAuthUsers(): Promise<admin.auth.UserRecord[]> {
-  const all: admin.auth.UserRecord[] = []
+async function listAllAuthUsers(): Promise<UserRecord[]> {
+  const all: UserRecord[] = []
   let pageToken: string | undefined
   do {
-    const page = await admin.auth().listUsers(1000, pageToken)
+    const page = await getAuth().listUsers(1000, pageToken)
     all.push(...page.users)
     pageToken = page.pageToken
   } while (pageToken)

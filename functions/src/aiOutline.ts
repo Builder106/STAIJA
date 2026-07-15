@@ -14,7 +14,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import Groq from 'groq-sdk'
 import * as contentful from 'contentful-management'
 import { z } from 'zod'
@@ -85,7 +85,7 @@ type Outline = z.infer<typeof OutlineSchema>
 // ---------- Helpers ----------
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 

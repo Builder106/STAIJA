@@ -24,7 +24,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, Firestore, getFirestore } from 'firebase-admin/firestore'
 import { sendMailgun, spotReOfferedEmail } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -81,7 +81,7 @@ export const respondToOffer = onCall<RespondInput>(
     const trimmedNote =
       typeof input.note === 'string' ? input.note.trim().slice(0, MAX_NOTE_LENGTH) : ''
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const ref = db.collection('applications').doc(input.applicationId)
     const snap = await ref.get()
     if (!snap.exists) {
@@ -118,7 +118,7 @@ export const respondToOffer = onCall<RespondInput>(
       // Accept is one-click — clear any stale note from a previous
       // decline / defer so the staff queue doesn't show a misleading
       // "they had a reason last time" note next to a fresh accept.
-      patch.spotResponseNote = admin.firestore.FieldValue.delete()
+      patch.spotResponseNote = FieldValue.delete()
     }
 
     await ref.update(patch)
@@ -177,7 +177,7 @@ export const respondToOffer = onCall<RespondInput>(
  * skipped).
  */
 async function withdrawEnrollmentsForProgram(opts: {
-  db: admin.firestore.Firestore
+  db: Firestore
   studentId: string
   program: string
 }): Promise<void> {
@@ -268,7 +268,7 @@ interface ReOfferResult {
 }
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 
@@ -293,7 +293,7 @@ export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
       throw new HttpsError('invalid-argument', 'applicationId required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const ref = db.collection('applications').doc(applicationId)
     const snap = await ref.get()
     if (!snap.exists) {
@@ -330,9 +330,9 @@ export const reOfferToDeferredApplicant = onCall<ReOfferInput>(
     }
 
     await ref.update({
-      spotResponse: admin.firestore.FieldValue.delete(),
-      spotRespondedAt: admin.firestore.FieldValue.delete(),
-      spotResponseNote: admin.firestore.FieldValue.delete(),
+      spotResponse: FieldValue.delete(),
+      spotRespondedAt: FieldValue.delete(),
+      spotResponseNote: FieldValue.delete(),
       updatedAt: new Date(),
     })
 

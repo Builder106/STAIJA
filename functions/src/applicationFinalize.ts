@@ -35,7 +35,8 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 
 const STAGING_PREFIX = 'applicationStaging'
 
@@ -134,7 +135,7 @@ export const finalizeApplicationFiles = onCall<FinalizeInput>(
     // Storage work. A compromised client could pass a stranger's
     // applicationId and ask us to copy their own staging into the
     // stranger's folder — we deny.
-    const db = admin.firestore()
+    const db = getFirestore()
     const appRef = db.collection('applications').doc(input.applicationId)
     const appSnap = await appRef.get()
     if (!appSnap.exists) {
@@ -148,7 +149,7 @@ export const finalizeApplicationFiles = onCall<FinalizeInput>(
       )
     }
 
-    const bucket = admin.storage().bucket()
+    const bucket = getStorage().bucket()
     const expectedPrefix = `${STAGING_PREFIX}/${uid}/${input.program}/`
     const finalized: Record<string, string> = {}
     const documentsPatch: Record<string, string> = {}

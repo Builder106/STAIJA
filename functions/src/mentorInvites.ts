@@ -24,7 +24,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { UpdateData, getFirestore } from 'firebase-admin/firestore'
 import * as crypto from 'crypto'
 import { APP_URL } from './emailTemplates'
 
@@ -93,7 +93,7 @@ interface ConsumeResult {
 }
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 
@@ -134,7 +134,7 @@ export const createMentorInvite = onCall<CreateInput>(
         ? Math.max(1, Math.min(MAX_EXPIRY_DAYS, Math.floor(input.expiresInDays)))
         : DEFAULT_EXPIRY_DAYS
 
-    const db = admin.firestore()
+    const db = getFirestore()
     // Denormalise the issuer's display name once for the whole batch —
     // every invite gets the same createdByName so the /invite landing
     // can show "Yinka Vaughan invited you" without an extra user-doc
@@ -191,7 +191,7 @@ export const revokeMentorInvite = onCall<RevokeInput>(
     if (!token || typeof token !== 'string') {
       throw new HttpsError('invalid-argument', 'token required.')
     }
-    const db = admin.firestore()
+    const db = getFirestore()
     const ref = db.collection('mentorInvites').doc(token)
     const snap = await ref.get()
     if (!snap.exists) {
@@ -229,7 +229,7 @@ export const consumeMentorInvite = onCall<ConsumeInput>(
       throw new HttpsError('invalid-argument', 'token required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const ref = db.collection('mentorInvites').doc(token)
     const snap = await ref.get()
     if (!snap.exists) {
@@ -312,7 +312,7 @@ export const consumeMentorInvite = onCall<ConsumeInput>(
         consumedBy: req.auth!.uid,
         consumedAt: now,
       })
-      const userPatch: admin.firestore.UpdateData<Record<string, unknown>> = {
+      const userPatch: UpdateData<Record<string, unknown>> = {
         role: 'mentor',
         updatedAt: new Date(),
       }

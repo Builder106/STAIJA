@@ -34,7 +34,7 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { sendMailgun, newApplicationStaffNotificationEmail } from './emailTemplates'
 import {
   buildApplicantEmail,
@@ -61,7 +61,7 @@ async function sendApplicantEmail(opts: {
   apiKey: string
   domain: string
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const db = admin.firestore()
+  const db = getFirestore()
   const ref = db.collection('applications').doc(opts.applicationId)
   try {
     await sendMailgun({
@@ -76,7 +76,7 @@ async function sendApplicantEmail(opts: {
     // a successful retry. FieldValue.delete() removes the key entirely
     // rather than leaving a `null` behind.
     await ref.update({
-      lastEmailFailure: admin.firestore.FieldValue.delete(),
+      lastEmailFailure: FieldValue.delete(),
     })
     return { ok: true }
   } catch (err) {
@@ -94,7 +94,7 @@ async function sendApplicantEmail(opts: {
       lastEmailFailure: {
         kind: opts.kind,
         to: opts.to,
-        attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        attemptedAt: FieldValue.serverTimestamp(),
         error: message.slice(0, 500), // cap error string for storage sanity
       },
     })
@@ -197,7 +197,7 @@ export const retryApplicationEmail = onCall<{ applicationId?: string }>(
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
     const callerUid = request.auth.uid
-    const db = admin.firestore()
+    const db = getFirestore()
     const callerSnap = await db.collection('users').doc(callerUid).get()
     const callerRole = (callerSnap.data() as { role?: string } | undefined)?.role
     if (callerRole !== 'admin' && callerRole !== 'staff') {

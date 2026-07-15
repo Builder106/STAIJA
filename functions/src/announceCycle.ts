@@ -28,7 +28,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { sendMailgun } from './emailTemplates'
 import {
   nextCycleOpenedEmail,
@@ -167,7 +167,7 @@ export const sendInterestSegmentEmail = onCall<RequestPayload>(
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
     const callerUid = request.auth.uid
-    const db = admin.firestore()
+    const db = getFirestore()
     const callerSnap = await db.collection('users').doc(callerUid).get()
     const callerRole = (callerSnap.data() as { role?: string } | undefined)?.role
     if (callerRole !== 'admin' && callerRole !== 'staff') {
@@ -272,7 +272,7 @@ export const sendInterestSegmentEmail = onCall<RequestPayload>(
         failed,
         failureSample: failures,
         sentBy: callerUid,
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        sentAt: FieldValue.serverTimestamp(),
       })
     } catch (err) {
       console.warn(
@@ -301,7 +301,7 @@ export const sendInterestSegmentEmail = onCall<RequestPayload>(
           await programDoc.ref.set(
             {
               lastAnnouncedAt: {
-                [tmpl]: admin.firestore.FieldValue.serverTimestamp(),
+                [tmpl]: FieldValue.serverTimestamp(),
               },
             },
             { merge: true },

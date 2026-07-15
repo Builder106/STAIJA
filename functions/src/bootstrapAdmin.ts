@@ -42,7 +42,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 
 const STAFF_DOMAIN = '@staija.org'
 
@@ -77,7 +77,7 @@ export const bootstrapAdmin = onCall<Record<string, never>>(
       )
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const sentinelRef = db.collection('meta').doc('bootstrap')
     const userRef = db.collection('users').doc(request.auth.uid)
     const adminsQuery = db.collection('users').where('role', '==', 'admin').limit(1)
@@ -121,7 +121,7 @@ export const bootstrapAdmin = onCall<Record<string, never>>(
       // 4. Elevate.
       txn.update(userRef, {
         role: 'admin',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       })
 
       // 5. Set the sentinel so subsequent bootstrap calls fail at (1)
@@ -130,7 +130,7 @@ export const bootstrapAdmin = onCall<Record<string, never>>(
       txn.set(sentinelRef, {
         bootstrappedBy: request.auth!.uid,
         bootstrappedEmail: email,
-        bootstrappedAt: admin.firestore.FieldValue.serverTimestamp(),
+        bootstrappedAt: FieldValue.serverTimestamp(),
         previousRole,
       })
 
@@ -145,7 +145,7 @@ export const bootstrapAdmin = onCall<Record<string, never>>(
         newRole: 'admin',
         changedBy: request.auth!.uid,
         reason: 'bootstrap_admin: first admin for project',
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        timestamp: FieldValue.serverTimestamp(),
         ipAddress: '',
         userAgent: '',
       })

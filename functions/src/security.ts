@@ -9,7 +9,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getAuth } from 'firebase-admin/auth'
 
 export const signOutEverywhere = onCall<Record<string, never>>(
   {
@@ -21,7 +21,7 @@ export const signOutEverywhere = onCall<Record<string, never>>(
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
-    await admin.auth().revokeRefreshTokens(request.auth.uid)
+    await getAuth().revokeRefreshTokens(request.auth.uid)
     return { ok: true }
   },
 )

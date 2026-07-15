@@ -23,7 +23,7 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import { isAllowedOrigin } from './cors'
 
 // Firebase Auth uids are 28-character alphanumeric strings. Anything
@@ -61,7 +61,7 @@ export const resolveReferrerName = onRequest(
     }
 
     try {
-      const snap = await admin.firestore().collection('users').doc(uid).get()
+      const snap = await getFirestore().collection('users').doc(uid).get()
       if (!snap.exists) {
         res.status(404).json({ error: 'Not found.' })
         return

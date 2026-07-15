@@ -24,7 +24,7 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 
 const REAP_AGE_DAYS = 30
 const BATCH_SIZE = 300
@@ -41,7 +41,7 @@ export const reapApplicationDraftTombstones = onSchedule(
     timeZone: 'Africa/Lagos',
   },
   async () => {
-    const db = admin.firestore()
+    const db = getFirestore()
     const cutoffMs = Date.now() - REAP_AGE_DAYS * 24 * 60 * 60 * 1000
 
     // deletedAt is a client-side ms epoch (see services/applicationDrafts.ts).

@@ -10,7 +10,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 
 const CONTENTFUL_WEBHOOK_SECRET = defineSecret('CONTENTFUL_WEBHOOK_SECRET')
 
@@ -105,7 +105,7 @@ export const contentfulWebhook = onRequest(
       return
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const entryId = payload.sys.id
     const docRef = db.collection(collection).doc(entryId)
 
@@ -136,7 +136,7 @@ export const contentfulWebhook = onRequest(
               contentType: contentTypeId,
               createdAt: payload.sys.createdAt ?? null,
               updatedAt: payload.sys.updatedAt ?? null,
-              mirroredAt: admin.firestore.FieldValue.serverTimestamp(),
+              mirroredAt: FieldValue.serverTimestamp(),
             },
           },
           { merge: true },

@@ -26,7 +26,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { isAllowedOrigin } from './cors'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -262,11 +262,11 @@ export const subscribeNewsletter = onRequest(
       // already on the list at this point).
       if (referrerId && !isExistingMember) {
         try {
-          const ref = admin.firestore().collection('referralStats').doc(referrerId)
+          const ref = getFirestore().collection('referralStats').doc(referrerId)
           await ref.set(
             {
-              signupCount: admin.firestore.FieldValue.increment(1),
-              lastSignupAt: admin.firestore.FieldValue.serverTimestamp(),
+              signupCount: FieldValue.increment(1),
+              lastSignupAt: FieldValue.serverTimestamp(),
             },
             { merge: true },
           )

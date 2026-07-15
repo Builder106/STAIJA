@@ -18,7 +18,9 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
+import { getAppCheck } from 'firebase-admin/app-check'
 import { createHmac, timingSafeEqual, randomBytes } from 'crypto'
 import Busboy from 'busboy'
 import { APP_URL, sendMailgun, referenceInviteEmail, referenceLetterReceivedEmail } from './emailTemplates'
@@ -174,9 +176,9 @@ export const inviteReferencesOnSubmit = onDocumentWritten(
       }
     }
 
-    await admin.firestore().collection('applications').doc(applicationId).update({
+    await getFirestore().collection('applications').doc(applicationId).update({
       references: updatedRefs,
-      referencesInvitedAt: admin.firestore.FieldValue.serverTimestamp(),
+      referencesInvitedAt: FieldValue.serverTimestamp(),
     })
   },
 )
@@ -195,8 +197,7 @@ export const validateReferenceToken = onCall<{ token: string }>(
     const payload = verifyToken(token, REFERENCE_TOKEN_SECRET.value())
     if (!payload) throw new HttpsError('permission-denied', 'This link is invalid or expired.')
 
-    const snap = await admin
-      .firestore()
+    const snap = await getFirestore()
       .collection('applications')
       .doc(payload.applicationId)
       .get()
@@ -263,7 +264,7 @@ export const submitReferenceLetter = onRequest(
       return
     }
     try {
-      await admin.appCheck().verifyToken(appCheckToken)
+      await getAppCheck().verifyToken(appCheckToken)
     } catch {
       res.status(401).json({ error: 'Invalid App Check token.' })
       return
@@ -333,7 +334,7 @@ export const submitReferenceLetter = onRequest(
     const storagePath = `references/${payload.applicationId}/${payload.refIndex}-${safeName}`
 
     try {
-      const bucket = admin.storage().bucket()
+      const bucket = getStorage().bucket()
       const fileObj = bucket.file(storagePath)
       await fileObj.save(fileBuffer, {
         contentType: fileMime,
@@ -348,8 +349,7 @@ export const submitReferenceLetter = onRequest(
       })
 
       // Mark the reference as received on the application doc.
-      const docRef = admin
-        .firestore()
+      const docRef = getFirestore()
         .collection('applications')
         .doc(payload.applicationId)
 
@@ -358,7 +358,7 @@ export const submitReferenceLetter = onRequest(
       let referenceName: string | undefined
       let programLabelForEmail: string | undefined
 
-      await admin.firestore().runTransaction(async (tx) => {
+      await getFirestore().runTransaction(async (tx) => {
         const snap = await tx.get(docRef)
         const app = snap.data() as ApplicationDoc | undefined
         if (!app?.references) return
@@ -374,7 +374,7 @@ export const submitReferenceLetter = onRequest(
         }
         tx.update(docRef, {
           references: refs,
-          [`referencesReceivedAt.${payload.refIndex}`]: admin.firestore.FieldValue.serverTimestamp(),
+          [`referencesReceivedAt.${payload.refIndex}`]: FieldValue.serverTimestamp(),
         })
       })
 

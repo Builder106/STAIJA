@@ -36,7 +36,8 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 
 const STAGING_PREFIX = 'applicationStaging'
 const REAP_AGE_DAYS = 30
@@ -59,8 +60,8 @@ export const reapApplicationStagedFiles = onSchedule(
     timeoutSeconds: 540,
   },
   async () => {
-    const db = admin.firestore()
-    const bucket = admin.storage().bucket()
+    const db = getFirestore()
+    const bucket = getStorage().bucket()
     const cutoffMs = Date.now() - REAP_AGE_DAYS * 24 * 60 * 60 * 1000
 
     const snap = await db.collection('applicationDrafts').get()

@@ -14,7 +14,8 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 
 interface FileEntry {
   path: string
@@ -34,8 +35,8 @@ export const exportUserData = onCall<Record<string, never>>(
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
     const uid = request.auth.uid
-    const db = admin.firestore()
-    const bucket = admin.storage().bucket()
+    const db = getFirestore()
+    const bucket = getStorage().bucket()
 
     const [profileSnap, applicationsSnap, donationsSnap, eventRegSnap, notificationsSnap, alumniStoriesSnap, auditSnap] =
       await Promise.all([

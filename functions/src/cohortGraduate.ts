@@ -28,7 +28,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 
 interface GraduateInput {
   cohortId: string
@@ -50,7 +50,7 @@ interface GraduateResult {
 }
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 
@@ -72,7 +72,7 @@ export const graduateCohort = onCall<GraduateInput>(
       throw new HttpsError('invalid-argument', 'cohortId required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const cohortRef = db.collection('cohorts').doc(cohortId)
     const cohortSnap = await cohortRef.get()
     if (!cohortSnap.exists) {
@@ -123,7 +123,7 @@ export const graduateCohort = onCall<GraduateInput>(
       studentSnaps.map((s) => [s.id, ((s.data()?.role as string | undefined) ?? null)]),
     )
 
-    const now = admin.firestore.FieldValue.serverTimestamp()
+    const now = FieldValue.serverTimestamp()
     const batch = db.batch()
 
     // Complete the enrollment rows.

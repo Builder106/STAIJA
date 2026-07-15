@@ -14,7 +14,7 @@
 
 import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 const PAYSTACK_SECRET_KEY = defineSecret('PAYSTACK_SECRET_KEY')
@@ -102,7 +102,7 @@ export const paystackWebhook = onRequest(
       return
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const donationRef = db.collection('donations').doc(data.reference)
 
     try {
@@ -126,8 +126,8 @@ export const paystackWebhook = onRequest(
               paystackCustomerCode: data.customer?.customer_code ?? null,
               paystackSubscriptionCode: data.subscription?.subscription_code ?? null,
               paystackPlanCode: data.plan?.plan_code ?? null,
-              paidAt: data.paid_at ? new Date(data.paid_at) : admin.firestore.FieldValue.serverTimestamp(),
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              paidAt: data.paid_at ? new Date(data.paid_at) : FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
             },
             { merge: true },
           )
@@ -143,7 +143,7 @@ export const paystackWebhook = onRequest(
               amountKobo: data.amount,
               currency: data.currency || 'NGN',
               donorEmail: data.customer?.email ?? '',
-              failedAt: admin.firestore.FieldValue.serverTimestamp(),
+              failedAt: FieldValue.serverTimestamp(),
             },
             { merge: true },
           )
@@ -167,7 +167,7 @@ export const paystackWebhook = onRequest(
           matches.forEach((doc) => {
             batch.update(doc.ref, {
               subscriptionStatus: event === 'subscription.create' ? 'active' : 'cancelled',
-              subscriptionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              subscriptionUpdatedAt: FieldValue.serverTimestamp(),
             })
           })
           await batch.commit()
@@ -212,7 +212,7 @@ export const cancelSubscription = onCall<{ subscriptionCode: string }>(
       throw new HttpsError('invalid-argument', 'subscriptionCode is required.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const matches = await db
       .collection('donations')
       .where('paystackSubscriptionCode', '==', subCode)
@@ -268,7 +268,7 @@ export const cancelSubscription = onCall<{ subscriptionCode: string }>(
     // Mirror the cancellation locally — the webhook will also fire eventually.
     await matches.docs[0].ref.update({
       subscriptionStatus: 'cancelled',
-      subscriptionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      subscriptionUpdatedAt: FieldValue.serverTimestamp(),
     })
 
     return { ok: true }

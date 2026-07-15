@@ -26,7 +26,7 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { sendMailgun, spotReOfferedEmail } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -42,7 +42,7 @@ function programLabel(program: string): string {
 
 interface CohortShape {
   program?: string
-  startDate?: admin.firestore.Timestamp | Date
+  startDate?: Timestamp | Date
   status?: string
   deferredsAutoReOffered?: boolean
 }
@@ -56,11 +56,11 @@ interface DeferredApplicationShape {
 /** Coerce Firestore Timestamp / Date into ms epoch. The Cohort
  *  schema stores startDate as a Timestamp; we normalise once so the
  *  arithmetic below is straightforward. */
-function toMs(value: admin.firestore.Timestamp | Date | undefined): number | null {
+function toMs(value: Timestamp | Date | undefined): number | null {
   if (!value) return null
   if (value instanceof Date) return value.getTime()
   if (typeof (value as { toMillis?: () => number }).toMillis === 'function') {
-    return (value as admin.firestore.Timestamp).toMillis()
+    return (value as Timestamp).toMillis()
   }
   return null
 }
@@ -77,7 +77,7 @@ export const reOfferDeferredOnCohortStart = onSchedule(
     secrets: [MAILGUN_API_KEY, MAILGUN_DOMAIN],
   },
   async () => {
-    const db = admin.firestore()
+    const db = getFirestore()
     const now = Date.now()
     const windowEndMs = now + TRIGGER_WINDOW_DAYS * 24 * 60 * 60 * 1000
 
@@ -132,9 +132,9 @@ export const reOfferDeferredOnCohortStart = onSchedule(
           // three CTAs on their next visit — same shape the manual
           // reOfferToDeferredApplicant callable produces.
           await appDoc.ref.update({
-            spotResponse: admin.firestore.FieldValue.delete(),
-            spotRespondedAt: admin.firestore.FieldValue.delete(),
-            spotResponseNote: admin.firestore.FieldValue.delete(),
+            spotResponse: FieldValue.delete(),
+            spotRespondedAt: FieldValue.delete(),
+            spotResponseNote: FieldValue.delete(),
             updatedAt: new Date(),
           })
 

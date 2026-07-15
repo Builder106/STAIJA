@@ -7,7 +7,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore'
 
 interface ScheduleSessionInput {
   cohortId: string
@@ -29,7 +29,7 @@ export const scheduleSession = onCall<ScheduleSessionInput>(
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
-    const db = admin.firestore()
+    const db = getFirestore()
     const callerSnap = await db.collection('users').doc(request.auth.uid).get()
     const callerRole = callerSnap.data()?.role as string | undefined
     if (callerRole !== 'mentor' && callerRole !== 'staff' && callerRole !== 'admin') {
@@ -70,13 +70,13 @@ export const scheduleSession = onCall<ScheduleSessionInput>(
       courseSlug: cohort.courseSlug,
       title,
       description: description ?? '',
-      startsAt: admin.firestore.Timestamp.fromMillis(startMs),
-      endsAt: admin.firestore.Timestamp.fromMillis(endMs),
+      startsAt: Timestamp.fromMillis(startMs),
+      endsAt: Timestamp.fromMillis(endMs),
       meetingUrl,
       meetingProvider,
       hostUid: request.auth.uid,
       status: 'scheduled',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
       createdBy: request.auth.uid,
     })
 
@@ -99,7 +99,7 @@ export const scheduleSession = onCall<ScheduleSessionInput>(
           message: `Your cohort just got a new live session.`,
           data: { sessionId: ref.id, cohortId },
           read: false,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
         })
       }
       if (!enrollments.empty) await batch.commit()
@@ -134,7 +134,7 @@ export const rsvpSession = onCall<RsvpSessionInput>(
       throw new HttpsError('invalid-argument', 'rsvped must be yes / no / maybe.')
     }
 
-    const db = admin.firestore()
+    const db = getFirestore()
     const sessionSnap = await db.collection('live_sessions').doc(sessionId).get()
     if (!sessionSnap.exists) {
       throw new HttpsError('not-found', 'Session not found.')
@@ -154,7 +154,7 @@ export const rsvpSession = onCall<RsvpSessionInput>(
         sessionId,
         studentId: request.auth.uid,
         rsvped,
-        respondedAt: admin.firestore.FieldValue.serverTimestamp(),
+        respondedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
     )

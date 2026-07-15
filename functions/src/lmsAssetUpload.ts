@@ -17,7 +17,8 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 import * as contentful from 'contentful-management'
 
 const CONTENTFUL_MANAGEMENT_TOKEN = defineSecret('CONTENTFUL_MANAGEMENT_TOKEN')
@@ -45,7 +46,7 @@ interface AssetUploadResult {
 }
 
 async function callerRole(uid: string): Promise<string | null> {
-  const snap = await admin.firestore().collection('users').doc(uid).get()
+  const snap = await getFirestore().collection('users').doc(uid).get()
   return (snap.data()?.role as string | undefined) ?? null
 }
 
@@ -89,7 +90,7 @@ export const lmsAssetUpload = onCall<AssetUploadInput>(
       )
     }
 
-    const bucket = admin.storage().bucket()
+    const bucket = getStorage().bucket()
     const stagingFile = bucket.file(input.storagePath)
     const [exists] = await stagingFile.exists()
     if (!exists) {

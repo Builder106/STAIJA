@@ -19,7 +19,7 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import { isAllowedOrigin } from './cors'
 
 export interface PublicMentor {
@@ -55,7 +55,7 @@ export const getPublicMentors = onRequest(
     }
 
     try {
-      const db = admin.firestore()
+      const db = getFirestore()
       const snap = await db
         .collection('users')
         .where('role', '==', 'mentor')

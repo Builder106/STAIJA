@@ -16,7 +16,7 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { APP_URL, sendMailgun, referenceReminderEmail } from './emailTemplates'
 import { mintToken } from './references'
 
@@ -58,8 +58,8 @@ export const sendReferenceReminders = onSchedule(
     secrets: [REFERENCE_TOKEN_SECRET, MAILGUN_API_KEY, MAILGUN_DOMAIN],
   },
   async () => {
-    const db = admin.firestore()
-    const cutoff = admin.firestore.Timestamp.fromDate(
+    const db = getFirestore()
+    const cutoff = Timestamp.fromDate(
       new Date(Date.now() - REMINDER_AGE_DAYS * 24 * 60 * 60 * 1000),
     )
 
@@ -116,7 +116,7 @@ export const sendReferenceReminders = onSchedule(
             html,
           })
           await doc.ref.update({
-            [`referenceReminderSentAt.${i}`]: admin.firestore.FieldValue.serverTimestamp(),
+            [`referenceReminderSentAt.${i}`]: FieldValue.serverTimestamp(),
           })
           sent += 1
         } catch (err) {
