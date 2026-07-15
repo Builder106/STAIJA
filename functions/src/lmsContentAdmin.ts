@@ -16,7 +16,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
 import { getFirestore } from 'firebase-admin/firestore'
 import * as contentful from 'contentful-management'
-import type { Environment, Entry } from 'contentful-management'
+import type { PlainClientAPI, EntryProps } from 'contentful-management'
 
 const CONTENTFUL_MANAGEMENT_TOKEN = defineSecret('CONTENTFUL_MANAGEMENT_TOKEN')
 const CONTENTFUL_SPACE_ID = defineSecret('CONTENTFUL_SPACE_ID')
@@ -179,7 +179,7 @@ function shapeFields(payload: LmsCreateOrUpdatePayload): Record<string, unknown>
   }
 }
 
-function summarize(entry: Entry): EntrySummary {
+function summarize(entry: EntryProps): EntrySummary {
   const fields: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(entry.fields ?? {})) {
     fields[k] = (v as Record<string, unknown>)?.[LOCALE]
@@ -200,60 +200,62 @@ function summarize(entry: Entry): EntrySummary {
 
 // ---------- Dispatch ----------
 
-async function dispatch(env: Environment, request: AdminRequest): Promise<unknown> {
+async function dispatch(client: PlainClientAPI, request: AdminRequest): Promise<unknown> {
   switch (request.action) {
     case 'list': {
-      const params: Record<string, string | number> = {
+      const query: Record<string, string | number> = {
         content_type: request.type,
         limit: Math.min(request.limit ?? 100, 1000),
         skip: request.skip ?? 0,
         order: '-sys.updatedAt',
       }
-      if (request.query) params.query = request.query
+      if (request.query) query.query = request.query
       if (request.ids && request.ids.length > 0) {
-        params['sys.id[in]'] = request.ids.join(',')
+        query['sys.id[in]'] = request.ids.join(',')
       }
       if (request.fieldEquals) {
-        params[`fields.${request.fieldEquals.name}`] = request.fieldEquals.value
+        query[`fields.${request.fieldEquals.name}`] = request.fieldEquals.value
       }
-      const result = await env.getEntries(params)
+      const result = await client.entry.getMany({ query })
       return result.items.map(summarize)
     }
     case 'get': {
-      const entry = await env.getEntry(request.id)
+      const entry = await client.entry.get({ entryId: request.id })
       return summarize(entry)
     }
     case 'create': {
-      const entry = await env.createEntry(request.payload.type, {
-        fields: shapeFields(request.payload),
-      })
+      const entry = await client.entry.create(
+        { contentTypeId: request.payload.type },
+        { fields: shapeFields(request.payload) },
+      )
       return summarize(entry)
     }
     case 'update': {
-      const entry = await env.getEntry(request.id)
+      const entry = await client.entry.get({ entryId: request.id })
       const incoming = shapeFields(request.payload)
       for (const [k, v] of Object.entries(incoming)) {
         if (v === undefined) continue
         ;(entry.fields as Record<string, unknown>)[k] = v
       }
-      const updated = await entry.update()
+      const updated = await client.entry.update({ entryId: request.id }, entry)
       return summarize(updated)
     }
     case 'publish': {
-      const entry = await env.getEntry(request.id)
-      const published = await entry.publish()
+      const entry = await client.entry.get({ entryId: request.id })
+      const published = await client.entry.publish({ entryId: request.id }, entry)
       return summarize(published)
     }
     case 'unpublish': {
-      const entry = await env.getEntry(request.id)
-      const unpublished = await entry.unpublish()
+      const entry = await client.entry.get({ entryId: request.id })
+      const unpublished = await client.entry.unpublish({ entryId: request.id }, entry)
       return summarize(unpublished)
     }
     case 'delete': {
-      const entry = await env.getEntry(request.id)
-      if (entry.sys.publishedVersion) await entry.unpublish()
-      const fresh = await env.getEntry(request.id)
-      await fresh.delete()
+      const entry = await client.entry.get({ entryId: request.id })
+      if (entry.sys.publishedVersion) {
+        await client.entry.unpublish({ entryId: request.id }, entry)
+      }
+      await client.entry.delete({ entryId: request.id })
       return { ok: true }
     }
   }
@@ -314,14 +316,18 @@ export const lmsContentAdmin = onCall<AdminInput>(
     const request = validate(data.request)
     const envId = data.env || 'master'
 
-    const client = contentful.createClient({
-      accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value(),
-    })
-    const space = await client.getSpace(CONTENTFUL_SPACE_ID.value())
-    const env = await space.getEnvironment(envId)
+    const client = contentful.createClient(
+      { accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value() },
+      {
+        defaults: {
+          spaceId: CONTENTFUL_SPACE_ID.value(),
+          environmentId: envId,
+        },
+      },
+    )
 
     try {
-      return await dispatch(env, request)
+      return await dispatch(client, request)
     } catch (err) {
       // Contentful management errors usually carry a useful name +
       // message; surface those instead of leaking the SDK's raw error.

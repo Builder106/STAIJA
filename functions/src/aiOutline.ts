@@ -226,7 +226,7 @@ Required JSON shape:
 // ---------- Contentful entry creation ----------
 
 async function writeOutline(
-  env: contentful.Environment,
+  client: contentful.PlainClientAPI,
   outline: Outline,
   params: OutlineInput,
 ): Promise<string> {
@@ -242,15 +242,18 @@ async function writeOutline(
     for (let li = 0; li < mod.lessons.length; li++) {
       const lesson = mod.lessons[li]
       const lessonSlug = `${moduleSlugBase}-l${li + 1}-${slugify(lesson.title)}`.slice(0, 64)
-      const lessonEntry = await env.createEntry('lesson', {
-        fields: {
-          slug: L(lessonSlug),
-          title: L(lesson.title),
-          body: L(richTextDoc(lesson.bodyParagraphs)),
-          estimatedMinutes: L(lesson.estimatedMinutes),
-          completionCriteria: L('viewed'),
+      const lessonEntry = await client.entry.create(
+        { contentTypeId: 'lesson' },
+        {
+          fields: {
+            slug: L(lessonSlug),
+            title: L(lesson.title),
+            body: L(richTextDoc(lesson.bodyParagraphs)),
+            estimatedMinutes: L(lesson.estimatedMinutes),
+            completionCriteria: L('viewed'),
+          },
         },
-      })
+      )
       lessonIds.push(lessonEntry.sys.id)
     }
 
@@ -258,43 +261,52 @@ async function writeOutline(
     if (mod.assignment) {
       const a = mod.assignment
       const assignSlug = `${moduleSlugBase}-a-${slugify(a.title)}`.slice(0, 64)
-      const assignEntry = await env.createEntry('assignmentSpec', {
-        fields: {
-          slug: L(assignSlug),
-          title: L(a.title),
-          instructions: L(richTextDoc(a.instructionParagraphs)),
-          submissionType: L(a.submissionType),
-          dueOffsetDays: L(a.dueOffsetDays),
+      const assignEntry = await client.entry.create(
+        { contentTypeId: 'assignmentSpec' },
+        {
+          fields: {
+            slug: L(assignSlug),
+            title: L(a.title),
+            instructions: L(richTextDoc(a.instructionParagraphs)),
+            submissionType: L(a.submissionType),
+            dueOffsetDays: L(a.dueOffsetDays),
+          },
         },
-      })
+      )
       assignmentIds.push(assignEntry.sys.id)
     }
 
-    const moduleEntry = await env.createEntry('module', {
-      fields: {
-        slug: L(moduleSlugBase),
-        title: L(mod.title),
-        summary: L(mod.summary),
-        unlockRule: L('sequential'),
-        lessons: L(lessonIds.map(entryLink)),
-        assignments: L(assignmentIds.length ? assignmentIds.map(entryLink) : undefined),
+    const moduleEntry = await client.entry.create(
+      { contentTypeId: 'module' },
+      {
+        fields: {
+          slug: L(moduleSlugBase),
+          title: L(mod.title),
+          summary: L(mod.summary),
+          unlockRule: L('sequential'),
+          lessons: L(lessonIds.map(entryLink)),
+          assignments: L(assignmentIds.length ? assignmentIds.map(entryLink) : undefined),
+        },
       },
-    })
+    )
     moduleIds.push(moduleEntry.sys.id)
   }
 
-  const courseEntry = await env.createEntry('course', {
-    fields: {
-      slug: L(slugBase),
-      title: L(outline.course.title),
-      program: L(params.program),
-      summary: L(outline.course.summary),
-      track: L(outline.course.track),
-      version: L(version),
-      published: L(false),
-      modules: L(moduleIds.map(entryLink)),
+  const courseEntry = await client.entry.create(
+    { contentTypeId: 'course' },
+    {
+      fields: {
+        slug: L(slugBase),
+        title: L(outline.course.title),
+        program: L(params.program),
+        summary: L(outline.course.summary),
+        track: L(outline.course.track),
+        version: L(version),
+        published: L(false),
+        modules: L(moduleIds.map(entryLink)),
+      },
     },
-  })
+  )
 
   return courseEntry.sys.id
 }
@@ -333,10 +345,16 @@ export const outlineCourse = onCall<OutlineInput>(
     const outline = await callGroq(groq, input)
 
     // 2. Create draft entries in Contentful.
-    const cmaClient = contentful.createClient({ accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value() })
-    const space = await cmaClient.getSpace(CONTENTFUL_SPACE_ID.value())
-    const env = await space.getEnvironment(input.env ?? 'master')
-    const courseId = await writeOutline(env, outline, input)
+    const cmaClient = contentful.createClient(
+      { accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value() },
+      {
+        defaults: {
+          spaceId: CONTENTFUL_SPACE_ID.value(),
+          environmentId: input.env ?? 'master',
+        },
+      },
+    )
+    const courseId = await writeOutline(cmaClient, outline, input)
 
     return {
       courseId,

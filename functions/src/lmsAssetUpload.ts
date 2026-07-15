@@ -98,32 +98,44 @@ export const lmsAssetUpload = onCall<AssetUploadInput>(
     }
     const [buffer] = await stagingFile.download()
 
-    const client = contentful.createClient({
-      accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value(),
-    })
-    const space = await client.getSpace(CONTENTFUL_SPACE_ID.value())
-    const env = await space.getEnvironment(input.env || 'master')
-
-    // createAssetFromFiles wraps the upload + asset-creation steps: it
-    // POSTs the buffer to Contentful's uploads endpoint and returns an
-    // unprocessed asset linked to that upload.
-    const draft = await env.createAssetFromFiles({
-      fields: {
-        title: L(input.title?.trim() || input.fileName),
-        // The SDK types mark description as required; we don't surface
-        // a separate description field in the LMS UI, so mirror the
-        // title here and let editors refine in Contentful's web app if
-        // they want a richer alt-text caption.
-        description: L(input.title?.trim() || ''),
-        file: L({
-          contentType: input.contentType,
-          fileName: input.fileName,
-          file: buffer,
-        }),
+    const client = contentful.createClient(
+      { accessToken: CONTENTFUL_MANAGEMENT_TOKEN.value() },
+      {
+        defaults: {
+          spaceId: CONTENTFUL_SPACE_ID.value(),
+          environmentId: input.env || 'master',
+        },
       },
+    )
+
+    // createFromFiles wraps the upload + asset-creation steps: it POSTs
+    // the buffer to Contentful's uploads endpoint and returns an
+    // unprocessed asset linked to that upload.
+    const draft = await client.asset.createFromFiles(
+      {},
+      {
+        fields: {
+          title: L(input.title?.trim() || input.fileName),
+          // The SDK types mark description as required; we don't surface
+          // a separate description field in the LMS UI, so mirror the
+          // title here and let editors refine in Contentful's web app if
+          // they want a richer alt-text caption.
+          description: L(input.title?.trim() || ''),
+          file: L({
+            contentType: input.contentType,
+            fileName: input.fileName,
+            // Node's Buffer works fine here at runtime — the SDK's HTTP
+            // layer accepts it like any Uint8Array-backed payload — but
+            // it doesn't structurally match the stricter ArrayBuffer type.
+            file: buffer as unknown as ArrayBuffer,
+          }),
+        },
+      },
+    )
+    const processed = await client.asset.processForLocale({}, draft, LOCALE, {
+      processingCheckWait: 2000,
     })
-    const processed = await draft.processForLocale(LOCALE, { processingCheckWait: 2000 })
-    const published = await processed.publish()
+    const published = await client.asset.publish({ assetId: processed.sys.id }, processed)
 
     // Best-effort cleanup. If this throws (e.g. permissions race) we
     // still want the function to succeed — the asset is already live.
