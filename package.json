@@ -31,7 +31,7 @@
    "dependencies": {
       "@contentful/rich-text-html-renderer": "^17.2.2",
       "@contentful/rich-text-types": "^17.2.7",
-      "@dicebear/core": "^10.3.0",
+      "@dicebear/core": "^9.4.2",
       "@iconify/vue": "5.0.1",
       "@tiptap/extension-link": "^3.27.4",
       "@tiptap/extension-placeholder": "^3.27.4",
@@ -67,7 +67,7 @@
       "svgo": "^4.0.2",
       "tailwindcss": "^4.3.2",
       "tsx": "^4.23.1",
-      "typescript": "~7.0.2",
+      "typescript": "~6.0.3",
       "vite": "^8.1.4",
       "vitest": "^4.1.10",
       "vue-tsc": "^3.3.7"
