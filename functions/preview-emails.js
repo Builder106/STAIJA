@@ -10,15 +10,24 @@ const fs = require('fs')
 const path = require('path')
 const { execSync } = require('child_process')
 
-// Inline the logo as a base64 data URI so it renders from file:// in the browser.
-// The production template uses the hosted URL (https://staija.org/STAIJA.png);
-// this substitution is preview-only.
-const logoPath = path.join(__dirname, '..', 'public', 'STAIJA.png')
-const logoB64 = fs.readFileSync(logoPath).toString('base64')
-const logoDataUri = `data:image/png;base64,${logoB64}`
+// Inline hosted images as base64 data URIs so they render from file:// in
+// the browser — and so previews stay accurate for assets (like the Uli
+// divider) that haven't shipped to staija.org yet. The production
+// templates keep the hosted URLs; this substitution is preview-only.
+const LOCAL_ASSETS = {
+  'https://staija.org/staija-64.png': path.join(__dirname, '..', 'public', 'staija-64.png'),
+  'https://staija.org/email/uli-divider-v1.png': path.join(__dirname, '..', 'public', 'email', 'uli-divider-v1.png'),
+  'https://staija.org/email/masthead-violet-v1.png': path.join(__dirname, '..', 'public', 'email', 'masthead-violet-v1.png'),
+  'https://staija.org/email/masthead-sky-v1.png': path.join(__dirname, '..', 'public', 'email', 'masthead-sky-v1.png'),
+  'https://staija.org/email/masthead-gold-v1.png': path.join(__dirname, '..', 'public', 'email', 'masthead-gold-v1.png'),
+}
 
-function injectLocalLogo(html) {
-  return html.replace('src="https://staija.org/STAIJA.png"', `src="${logoDataUri}"`)
+function injectLocalAssets(html) {
+  for (const [url, filePath] of Object.entries(LOCAL_ASSETS)) {
+    const b64 = fs.readFileSync(filePath).toString('base64')
+    html = html.replaceAll(`src="${url}"`, `src="data:image/png;base64,${b64}"`)
+  }
+  return html
 }
 
 const {
@@ -118,7 +127,7 @@ const templates = [
 
 for (const tpl of templates) {
   const filePath = path.join(outDir, tpl.file)
-  fs.writeFileSync(filePath, injectLocalLogo(tpl.content), 'utf8')
+  fs.writeFileSync(filePath, injectLocalAssets(tpl.content), 'utf8')
   console.log(`  ✓ ${tpl.label} → email-previews/${tpl.file}`)
   try {
     execSync(`open "${filePath}"`)

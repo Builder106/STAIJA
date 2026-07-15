@@ -9,11 +9,20 @@
  *   - Table-based outer layout for Outlook desktop compat; div-based inner
  *     content is fine for Gmail, Apple Mail, and Outlook.com.
  *   - All styles are inline — no external stylesheet, no <style> in <head>.
- *   - Header uses solid brand violet (#8B55FF). CSS gradients are skipped
- *     because Outlook ignores them.
+ *   - The header carries the brand violet→sky gradient as a "weave band":
+ *     a row of solid-colour cells sampled along the ramp, widths varied
+ *     like aso-oke warp stripes. Outlook ignores CSS gradients, so the
+ *     stepped band is both the fallback and the aesthetic.
+ *   - Below the weave sits an ink (#0E1217) header band with the wordmark,
+ *     echoing the site hero's white-on-colour treatment.
  *   - CTA buttons include a VML block for Outlook rounded corners.
  *   - System font stack only — web fonts are unreliable in email clients.
+ *     Headings use the heavy sans stack (closest cousin of IBM Plex Sans);
+ *     eyebrows and data fields use mono, matching the site's --font-mono role.
  *   - Brand tokens must stay in sync with src/style.css @theme block.
+ *   - The divider's Uli-inspired motif is a hosted PNG under
+ *     https://staija.org/email/ — asset filenames are versioned (-v1) and
+ *     never overwritten, because sent email lives in inboxes forever.
  *
  * Navigational links (dashboard/status/programs URLs) route through
  * the APP_URL param below so staging mail points at staging.staija.org
@@ -39,13 +48,25 @@ export const APP_URL = process.env.APP_URL ?? 'https://staija.org'
 // here means updating src/style.css @theme block too.
 
 export const VIOLET = '#8B55FF'
+export const VIOLET_DEEP = '#6B3FE0' // violet darkened for text on light backgrounds
+export const SKY = '#5EDBE7'
+export const SKY_DEEP = '#0E7490'   // sky darkened for text/links on light backgrounds
+export const GOLD = '#F0B429'       // hero-illustration gold — acceptance accent
+export const GOLD_DEEP = '#A16207'  // gold darkened for text on light backgrounds
 export const INK = '#0E1217'
 export const PAPER = '#F1F5F9'  // slate-100 — keeps in sync with --color-paper in src/style.css
 export const OUTER_BG = '#E2E8F0'  // slate-200 — slightly darker than paper for outer background
-export const MUTED = '#9C9087'
+export const MUTED = '#64748B'  // slate-500 — cool muted matching the site's slate system
 export const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-export const SERIF = "Georgia, 'Times New Roman', serif"
 export const MONO = "'Courier New', Courier, monospace"
+
+// Masthead variants: designed header graphics (gradient field, aso-oke
+// weave texture, science line-art, IBM Plex wordmark) hosted under
+// https://staija.org/email/. Rendered at 1200×240, displayed at 600×120.
+// Generated from a parametric SVG — see JOURNAL.md 2026-07-15. The accent
+// follows the recipient's journey: gold for acceptance, sky for
+// referee-facing mail, violet for everything else.
+export type MastheadVariant = 'violet' | 'sky' | 'gold'
 
 // --- Shared Mailgun sender ---------------------------------------------
 
@@ -142,43 +163,69 @@ export async function sendMailgun(params: MailgunSendParams): Promise<void> {
 // against the same primitives. refBox stays private because it's
 // application-specific (references an applicationId).
 
-export function button(label: string, url: string): string {
+export function button(
+  label: string,
+  url: string,
+  opts: { bg?: string; fg?: string } = {},
+): string {
+  const bg = opts.bg ?? VIOLET
+  const fg = opts.fg ?? '#ffffff'
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;">
         <tr>
           <td>
             <!--[if mso]>
             <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
               href="${url}" style="height:44px;v-text-anchor:middle;width:200px;"
-              arcsize="23%" strokecolor="${VIOLET}" fillcolor="${VIOLET}">
+              arcsize="23%" strokecolor="${bg}" fillcolor="${bg}">
               <w:anchorlock/>
-              <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:600;">${label}</center>
+              <center style="color:${fg};font-family:sans-serif;font-size:14px;font-weight:600;">${label}</center>
             </v:roundrect>
             <![endif]-->
             <!--[if !mso]><!-->
-            <a href="${url}" style="background-color:${VIOLET};border-radius:10px;color:#ffffff;display:inline-block;font-family:${SANS};font-size:14px;font-weight:600;line-height:1;padding:13px 24px;text-decoration:none;">${label}</a>
+            <a href="${url}" style="background-color:${bg};border-radius:10px;color:${fg};display:inline-block;font-family:${SANS};font-size:14px;font-weight:600;line-height:1;padding:13px 24px;text-decoration:none;">${label}</a>
             <!--<![endif]-->
           </td>
         </tr>
       </table>`
 }
 
-function refBox(applicationId: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${PAPER};border-radius:10px;margin:0 0 32px;width:100%;">
+// Specimen label: the reference box styled like a herbarium tag / lab
+// sample card — accent left border, dotted ledger rules, mono fields.
+function refBox(
+  applicationId: string,
+  opts: { program?: string; status?: string; accent?: string; statusColor?: string } = {},
+): string {
+  const accent = opts.accent ?? VIOLET
+  const field = (key: string, value: string) => `<tr>
+          <td style="padding:9px 12px 8px 0;border-bottom:1px dotted #CBD5E1;width:110px;vertical-align:baseline;">
+            <span style="font-family:${MONO};font-size:11px;font-weight:700;color:${MUTED};letter-spacing:0.1em;">${key}</span>
+          </td>
+          <td style="padding:9px 0 8px;border-bottom:1px dotted #CBD5E1;vertical-align:baseline;">
+            <span style="font-family:${MONO};font-size:14px;color:${INK};font-weight:600;">${value}</span>
+          </td>
+        </tr>`
+  const rows = [
+    ...(opts.program ? [field('PROGRAM', opts.program)] : []),
+    field('REF NO', applicationId),
+    ...(opts.status
+      ? [field('STATUS', `<span style="color:${opts.statusColor ?? VIOLET_DEEP};">${opts.status}</span>`)]
+      : []),
+  ].join('')
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${PAPER};border-left:3px solid ${accent};border-radius:0 10px 10px 0;margin:0 0 32px;width:100%;">
         <tr>
-          <td style="padding:16px 20px;">
-            <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Reference number</p>
-            <p style="margin:5px 0 0;font-family:${MONO};font-size:14px;color:${INK};font-weight:600;">${applicationId}</p>
+          <td style="padding:12px 20px 13px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">${rows}</table>
           </td>
         </tr>
       </table>`
 }
 
 export function eyebrow(text: string): string {
-  return `<p style="margin:0 0 16px;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.08em;text-transform:uppercase;">${text}</p>`
+  return `<p style="margin:0 0 14px;font-family:${MONO};font-size:12px;font-weight:700;color:${MUTED};letter-spacing:0.12em;text-transform:uppercase;">${text}</p>`
 }
 
 export function heading(text: string): string {
-  return `<h1 style="margin:0 0 28px;font-family:${SERIF};font-size:27px;font-weight:700;color:${INK};line-height:1.2;">${text}</h1>`
+  return `<h1 style="margin:0 0 24px;font-family:${SANS};font-size:26px;font-weight:800;color:${INK};line-height:1.25;letter-spacing:-0.4px;">${text}</h1>`
 }
 
 export function p(text: string, styles = ''): string {
@@ -186,10 +233,23 @@ export function p(text: string, styles = ''): string {
 }
 
 export function divider(): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;width:100%;"><tr><td style="border-top:1px solid #EDE9E1;font-size:0;line-height:0;">&nbsp;</td></tr></table>`
+  // Uli-inspired line motif between hairline rules. If the image is
+  // blocked, the flanking rules still read as a divider. The margin-top
+  // on the inner divs vertically centres the rules against the 20px
+  // motif; Outlook renders them slightly high, which is acceptable.
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 24px;width:100%;">
+        <tr>
+          <td style="font-size:0;line-height:0;"><div style="border-top:1px solid #E2E8F0;margin-top:10px;font-size:0;line-height:0;">&nbsp;</div></td>
+          <td width="144" align="center" style="padding:0 12px;font-size:0;line-height:0;">
+            <img src="https://staija.org/email/uli-divider-v1.png" width="120" height="20" alt="" style="display:block;border:0;" />
+          </td>
+          <td style="font-size:0;line-height:0;"><div style="border-top:1px solid #E2E8F0;margin-top:10px;font-size:0;line-height:0;">&nbsp;</div></td>
+        </tr>
+      </table>`
 }
 
-export function layout(body: string): string {
+export function layout(body: string, opts: { masthead?: MastheadVariant } = {}): string {
+  const masthead = opts.masthead ?? 'violet'
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -206,32 +266,28 @@ export function layout(body: string): string {
       <td align="center" style="padding:40px 16px 52px;">
         <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- Accent bar -->
+          <!-- Designed masthead. The td's ink bgcolor is the blocked-image
+               fallback: clients that suppress images show an ink band with
+               the white STAIJA alt text instead of a blank gap. -->
           <tr>
-            <td bgcolor="${VIOLET}" style="background-color:${VIOLET};border-radius:14px 14px 0 0;font-size:0;line-height:0;height:5px;">&nbsp;</td>
+            <td bgcolor="${INK}" style="background-color:${INK};border-radius:14px 14px 0 0;font-size:0;line-height:0;">
+              <img src="https://staija.org/email/masthead-${masthead}-v1.png" width="600" height="120" alt="STAIJA" style="display:block;border:0;width:100%;height:auto;color:#ffffff;font-family:${SANS};font-size:20px;font-weight:700;line-height:120px;text-align:left;" />
+            </td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 14px 14px;padding:36px 40px 44px;">
-              <!-- Wordmark -->
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 36px;">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="https://staija.org/staija-64.png" width="32" height="32" alt="" style="display:block;border:0;" />
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <span style="font-family:${SERIF};font-size:17px;font-weight:700;color:${INK};letter-spacing:-0.2px;">STAIJA</span>
-                  </td>
-                </tr>
-              </table>
+            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 14px 14px;padding:28px 40px 44px;">
               ${body}
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:20px 40px 0;" align="center">
+            <td style="padding:22px 40px 0;" align="center">
+              <p style="margin:0 0 6px;font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.6;">
+                Africa's next <em style="font-style:italic;color:${SKY_DEEP};">scientist-leaders</em> start here.
+              </p>
               <p style="margin:0;font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.6;">
                 STAIJA &nbsp;·&nbsp;
                 <a href="${APP_URL}" style="color:${MUTED};text-decoration:underline;">staija.org</a>
@@ -264,7 +320,7 @@ export function applicationReceivedEmail(params: {
     ${p(`Hi ${firstName},`)}
     ${p(`We've received your application to ${programLabel}.`)}
     ${p(`A reviewer will go through it within five business days. If we need anything from you in the meantime, we'll reach out directly.`, 'margin-bottom:32px;')}
-    ${refBox(applicationId)}
+    ${refBox(applicationId, { program: programLabel, status: 'RECEIVED' })}
     ${p('— STAIJA', 'margin-bottom:0;')}
   `)
 
@@ -296,10 +352,10 @@ export function applicationAcceptedEmail(params: {
     ${p(`Hi ${firstName},`)}
     ${p(`Congratulations — your application to ${programLabel} has been accepted.`)}
     ${p(`A program coordinator will be in touch within 48 hours with everything you need to get started, including the orientation schedule and your scholar agreement.`, 'margin-bottom:32px;')}
-    ${refBox(applicationId)}
+    ${refBox(applicationId, { program: programLabel, status: 'ACCEPTED ✓', accent: GOLD, statusColor: GOLD_DEEP })}
     ${p('Welcome.', 'margin-bottom:4px;')}
     ${p('— STAIJA', 'margin-bottom:0;')}
-  `)
+  `, { masthead: 'gold' })
 
   const text = [
     `Hi ${firstName},`,
@@ -331,7 +387,7 @@ export function applicationRejectedEmail(params: {
     ${p(`Hi ${firstName},`)}
     ${p(`There's an update on your ${programLabel} application. Sign in to your account to read the full message from the team.`, 'margin-bottom:0;')}
     ${button('View update', dashboardUrl)}
-    ${refBox(applicationId)}
+    ${refBox(applicationId, { program: programLabel })}
     ${p('Thank you for the time you put into your application.', 'margin-bottom:4px;')}
     ${p('— STAIJA', 'margin-bottom:0;')}
   `)
@@ -368,7 +424,7 @@ export function spotReOfferedEmail(params: {
     ${p(`Last cycle you deferred your ${programLabel} acceptance — that cycle's open now. Your spot is waiting if you'd like it.`)}
     ${p(`Sign in to confirm, decline, or defer again. The team will start placing applicants in cohorts within a few days, so a quick response helps us plan.`, 'margin-bottom:0;')}
     ${button('Respond to your offer', dashboardUrl)}
-    ${refBox(applicationId)}
+    ${refBox(applicationId, { program: programLabel, status: 'OFFER REOPENED' })}
     ${p('— STAIJA', 'margin-bottom:0;')}
   `)
 
@@ -407,12 +463,12 @@ export function referenceInviteEmail(params: {
     ${p(`Hi ${refName},`)}
     ${p(`${applicantName} is applying to ${programLabel} at STAIJA and has listed you as ${relationshipPhrase}${institutionPhrase}.`)}
     ${p(`If you're willing to write a recommendation, you can upload your letter using the button below. The link is personal to you and stays open for 90 days.`, 'margin-bottom:0;')}
-    ${button('Upload your letter', uploadUrl)}
+    ${button('Upload your letter', uploadUrl, { bg: SKY, fg: INK })}
     ${divider()}
     ${p(`There's no required format. A short, specific letter about what you've seen them do carries more weight than a long one.`, `font-size:13px;color:${MUTED};margin-bottom:8px;`)}
-    ${p(`Questions? Write to us at <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`Questions? Write to us at <a href="mailto:contact@staija.org" style="color:${SKY_DEEP};text-decoration:none;">contact@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
-  `)
+  `, { masthead: 'sky' })
 
   const text = [
     `Hi ${refName},`,
@@ -447,7 +503,7 @@ export function referenceLetterReceivedEmail(params: {
     ${p(`Hi ${firstName},`)}
     ${p(`${refName} uploaded their reference letter for your ${programLabel} application. One more box checked.`, 'margin-bottom:0;')}
     ${button('View application status', statusUrl)}
-    ${refBox(applicationId)}
+    ${refBox(applicationId, { program: programLabel, status: 'LETTER RECEIVED' })}
     ${p('— STAIJA', 'margin-bottom:0;')}
   `)
 
@@ -654,9 +710,9 @@ export function newApplicationStaffNotificationEmail(params: {
     <table role="presentation" cellpadding="0" cellspacing="0" style="background-color:${PAPER};border-radius:10px;margin:0 0 32px;width:100%;">
       <tr>
         <td style="padding:16px 20px;">
-          <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Applicant</p>
+          <p style="margin:0;font-family:${MONO};font-size:10px;font-weight:700;color:${MUTED};letter-spacing:0.1em;">APPLICANT</p>
           <p style="margin:4px 0 12px;font-family:${SANS};font-size:14px;color:${INK};font-weight:600;">${applicantName} &nbsp;·&nbsp; <a href="mailto:${applicantEmail}" style="color:${INK};text-decoration:none;font-weight:500;">${applicantEmail}</a></p>
-          <p style="margin:0;font-family:${SANS};font-size:11px;font-weight:600;color:${MUTED};letter-spacing:0.07em;text-transform:uppercase;">Application ID</p>
+          <p style="margin:0;font-family:${MONO};font-size:10px;font-weight:700;color:${MUTED};letter-spacing:0.1em;">APPLICATION ID</p>
           <p style="margin:4px 0 0;font-family:${MONO};font-size:13px;color:${INK};font-weight:600;">${applicationId}</p>
         </td>
       </tr>
@@ -698,11 +754,11 @@ export function referenceReminderEmail(params: {
     ${p(`Hi ${refName},`)}
     ${p(`A couple of weeks ago we wrote to let you know that ${applicantName} listed you as ${relationshipPhrase}${institutionPhrase} for their ${programLabel} application. We haven't seen your letter come in yet.`)}
     ${p(`If you're still planning to write one, here's the upload link again. Same as before — personal to you, no required format.`, 'margin-bottom:0;')}
-    ${button('Upload your letter', uploadUrl)}
+    ${button('Upload your letter', uploadUrl, { bg: SKY, fg: INK })}
     ${divider()}
-    ${p(`If you'd rather not write the letter, no need to reply — we'll stop reminding after this. Or write back to <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a> and we'll let ${applicantName} know.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`If you'd rather not write the letter, no need to reply — we'll stop reminding after this. Or write back to <a href="mailto:contact@staija.org" style="color:${SKY_DEEP};text-decoration:none;">contact@staija.org</a> and we'll let ${applicantName} know.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
-  `)
+  `, { masthead: 'sky' })
 
   const text = [
     `Hi ${refName},`,
