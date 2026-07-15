@@ -175,8 +175,8 @@ watch(studentId, loadData)
           You don't have an active mentor assignment for this student, so this
           feedback page isn't available to you. If you think this is a
           mistake, email
-          <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">
-            hello@staija.org
+          <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">
+            contact@staija.org
           </a>.
         </Body>
       </div>

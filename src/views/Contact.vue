@@ -106,13 +106,13 @@ function handleSubmit(e: Event) {
             <div>
               <Heading :level="3" class="mb-6">Contact Information</Heading>
               <div class="flex flex-col gap-6">
-                <a href="mailto:hello@staija.org" class="flex items-start gap-4 p-4 rounded-xl hover:bg-surface border border-transparent hover:border-ink/10 transition-all group">
+                <a href="mailto:contact@staija.org" class="flex items-start gap-4 p-4 rounded-xl hover:bg-surface border border-transparent hover:border-ink/10 transition-all group">
                   <div class="w-10 h-10 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center shrink-0 mt-1">
                     <Icon icon="lucide:mail" width="20" />
                   </div>
                   <div>
                     <h4 class="font-semibold text-ink mb-1 group-hover:text-brand-violet transition-colors m-0">Email Us</h4>
-                    <p class="text-sm text-ink/60 m-0">hello@staija.org</p>
+                    <p class="text-sm text-ink/60 m-0">contact@staija.org</p>
                     <p class="text-xs text-ink/40 mt-1 m-0">We aim to respond within 24 hours.</p>
                   </div>
                 </a>

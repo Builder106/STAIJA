@@ -20,7 +20,9 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
-import * as admin from 'firebase-admin'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
+import { getAuth } from 'firebase-admin/auth'
+import { getStorage } from 'firebase-admin/storage'
 import { sendMailgun, accountDeletedEmail } from './emailTemplates'
 
 const MAILGUN_API_KEY = defineSecret('MAILGUN_API_KEY')
@@ -40,8 +42,8 @@ export const deleteAccount = onCall<Record<string, never>>(
       throw new HttpsError('unauthenticated', 'You must be signed in.')
     }
     const uid = request.auth.uid
-    const db = admin.firestore()
-    const storage = admin.storage().bucket()
+    const db = getFirestore()
+    const storage = getStorage().bucket()
 
     // Look up the user profile so we know their role and email before we
     // start tearing things down. If the doc is missing we still allow the
@@ -55,7 +57,7 @@ export const deleteAccount = onCall<Record<string, never>>(
     if (role && !SELF_DELETABLE_ROLES.has(role)) {
       throw new HttpsError(
         'permission-denied',
-        'Staff and admin accounts must be deleted by another admin. Contact hello@staija.org.',
+        'Staff and admin accounts must be deleted by another admin. Contact contact@staija.org.',
       )
     }
 
@@ -122,9 +124,9 @@ export const deleteAccount = onCall<Record<string, never>>(
       const batch = db.batch()
       for (const doc of snap.docs) {
         batch.update(doc.ref, {
-          donorUid: admin.firestore.FieldValue.delete(),
+          donorUid: FieldValue.delete(),
           donorName: '(deleted user)',
-          donorEmail: admin.firestore.FieldValue.delete(),
+          donorEmail: FieldValue.delete(),
         })
       }
       if (!snap.empty) await batch.commit()
@@ -137,7 +139,7 @@ export const deleteAccount = onCall<Record<string, never>>(
 
     // 7. Auth user — last, because once this is gone the user can't retry.
     await safe('auth user', async () => {
-      await admin.auth().deleteUser(uid)
+      await getAuth().deleteUser(uid)
     })
 
     // 8. Confirmation email. Best-effort.

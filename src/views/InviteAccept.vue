@@ -139,7 +139,7 @@ async function acceptInvite() {
     acceptError.value =
       err instanceof Error
         ? err.message
-        : "We couldn't accept this invitation. Try again, or email hello@staija.org."
+        : "We couldn't accept this invitation. Try again, or email contact@staija.org."
   } finally {
     accepting.value = false
   }
@@ -226,7 +226,7 @@ onMounted(loadInvite)
           <Heading :level="2" class="!text-2xl">This invitation has already been used.</Heading>
           <Body class="text-ink/70">
             If you think this is a mistake, email
-            <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">hello@staija.org</a>.
+            <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">contact@staija.org</a>.
           </Body>
         </template>
 
@@ -236,7 +236,7 @@ onMounted(loadInvite)
           <Heading :level="2" class="!text-2xl">This invitation has expired.</Heading>
           <Body class="text-ink/70">
             The link expired on {{ formatDate(invite.expiresAt) }}. Email the team for a fresh one:
-            <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">hello@staija.org</a>.
+            <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">contact@staija.org</a>.
           </Body>
         </template>
 

@@ -71,7 +71,7 @@ async function handleSubmit() {
   const endpoint = getAppConfig().referenceUploadEndpoint
 
   if (!endpoint) {
-    submitError.value = 'Upload endpoint not configured. Email hello@staija.org with the letter attached.'
+    submitError.value = 'Upload endpoint not configured. Email contact@staija.org with the letter attached.'
     submitting.value = false
     return
   }
@@ -139,7 +139,7 @@ onMounted(load)
             </div>
             <Heading :level="3">Link not usable</Heading>
             <Body class="text-ink/70 m-0">{{ tokenError }}</Body>
-            <UiButton variant="secondary" href="mailto:hello@staija.org">
+            <UiButton variant="secondary" href="mailto:contact@staija.org">
               Email STAIJA
             </UiButton>
           </div>

@@ -1063,7 +1063,7 @@ async function handleDelete() {
           <template v-if="!canSelfDelete">
             <Body class="text-ink/70 text-sm">
               Staff and admin accounts must be deleted by another admin. Email
-              <a href="mailto:hello@staija.org" class="text-brand-violet underline">hello@staija.org</a>
+              <a href="mailto:contact@staija.org" class="text-brand-violet underline">contact@staija.org</a>
               and we'll handle it.
             </Body>
           </template>

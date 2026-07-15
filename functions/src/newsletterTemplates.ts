@@ -99,7 +99,7 @@ export function notifyMeWelcomeEmail(params: {
     ${p(`If your plans change — different program, different timing, or you'd rather not hear from us at all — you can update or unsubscribe from any of our emails.`, 'margin-bottom:0;')}
     ${button('Browse STAIJA', ctaUrl)}
     ${divider()}
-    ${p(`Questions? Reply to this email or write to <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`Questions? Reply to this email or write to <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
   `)
 
@@ -112,7 +112,7 @@ export function notifyMeWelcomeEmail(params: {
     ``,
     `Browse STAIJA: ${ctaUrl}`,
     ``,
-    `Questions? Reply to this email or write to hello@staija.org.`,
+    `Questions? Reply to this email or write to contact@staija.org.`,
     ``,
     `— STAIJA`,
   ].join('\n')

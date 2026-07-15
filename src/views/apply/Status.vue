@@ -389,8 +389,8 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
               </div>
               <p class="text-xs text-ink/50 m-0">
                 Need to change your response? Email
-                <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">
-                  hello@staija.org
+                <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">
+                  contact@staija.org
                 </a>.
               </p>
             </template>
@@ -596,7 +596,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
 
         <p class="text-xs text-ink/40 text-center">
           Need to update something? Email
-          <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">hello@staija.org</a>
+          <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">contact@staija.org</a>
           and quote this reference: <span class="font-mono">{{ route.params.id }}</span>.
         </p>
       </Container>

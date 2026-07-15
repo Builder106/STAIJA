@@ -117,7 +117,7 @@ export async function sendMailgun(params: MailgunSendParams): Promise<void> {
 
   const auth = Buffer.from(`api:${params.apiKey}`).toString('base64')
   const form = new URLSearchParams()
-  form.set('from', 'STAIJA <hello@staija.org>')
+  form.set('from', 'STAIJA <contact@staija.org>')
   form.set('to', params.to)
   form.set('subject', params.subject)
   form.set('text', params.text)
@@ -236,7 +236,7 @@ export function layout(body: string): string {
                 STAIJA &nbsp;·&nbsp;
                 <a href="${APP_URL}" style="color:${MUTED};text-decoration:underline;">staija.org</a>
                 &nbsp;·&nbsp;
-                <a href="mailto:hello@staija.org" style="color:${MUTED};text-decoration:underline;">hello@staija.org</a>
+                <a href="mailto:contact@staija.org" style="color:${MUTED};text-decoration:underline;">contact@staija.org</a>
               </p>
             </td>
           </tr>
@@ -410,7 +410,7 @@ export function referenceInviteEmail(params: {
     ${button('Upload your letter', uploadUrl)}
     ${divider()}
     ${p(`There's no required format. A short, specific letter about what you've seen them do carries more weight than a long one.`, `font-size:13px;color:${MUTED};margin-bottom:8px;`)}
-    ${p(`Questions? Write to us at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`Questions? Write to us at <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
   `)
 
@@ -424,7 +424,7 @@ export function referenceInviteEmail(params: {
     ``,
     `The link is personal to you and stays open for 90 days. There's no required format — a short, specific letter about what you've seen them do carries more weight than a long one.`,
     ``,
-    `If you have any questions, you can reach us at hello@staija.org.`,
+    `If you have any questions, you can reach us at contact@staija.org.`,
     ``,
     `— STAIJA`,
   ].join('\n')
@@ -480,7 +480,7 @@ export function welcomeEmail(params: {
     ${p(`When you're ready, take a look at our open programs. Applications run on a rolling basis, and the StepUp Scholars and Dynamerge tracks are both live right now.`, 'margin-bottom:0;')}
     ${button('Browse programs', programsUrl)}
     ${divider()}
-    ${p(`Questions? Write to us at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`Questions? Write to us at <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a>.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
   `)
 
@@ -493,7 +493,7 @@ export function welcomeEmail(params: {
     ``,
     `Browse programs: ${programsUrl}`,
     ``,
-    `Questions? Write to us at hello@staija.org.`,
+    `Questions? Write to us at contact@staija.org.`,
     ``,
     `— STAIJA`,
   ].join('\n')
@@ -617,7 +617,7 @@ export function accountDeletedEmail(params: {
     ${p(`Hi ${firstName},`)}
     ${p(`We've removed your STAIJA account and the personal data tied to it — your profile, applications, uploaded files, and any connections you'd made.`)}
     ${p(`Some records have been retained where required: donation receipts (with your name removed) for tax and accounting, and audit logs for compliance. Mentor feedback you wrote about students stays with the program.`)}
-    ${p(`If you didn't initiate this deletion, please write to us right away at <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a>.`, 'margin-bottom:0;')}
+    ${p(`If you didn't initiate this deletion, please write to us right away at <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a>.`, 'margin-bottom:0;')}
     ${divider()}
     ${p('— STAIJA', 'margin-top:0;margin-bottom:0;')}
   `)
@@ -629,7 +629,7 @@ export function accountDeletedEmail(params: {
     ``,
     `Some records have been retained where required: donation receipts (with your name removed) for tax and accounting, and audit logs for compliance. Mentor feedback you wrote about students stays with the program.`,
     ``,
-    `If you didn't initiate this deletion, please write to us right away at hello@staija.org.`,
+    `If you didn't initiate this deletion, please write to us right away at contact@staija.org.`,
     ``,
     `— STAIJA`,
   ].join('\n')
@@ -700,7 +700,7 @@ export function referenceReminderEmail(params: {
     ${p(`If you're still planning to write one, here's the upload link again. Same as before — personal to you, no required format.`, 'margin-bottom:0;')}
     ${button('Upload your letter', uploadUrl)}
     ${divider()}
-    ${p(`If you'd rather not write the letter, no need to reply — we'll stop reminding after this. Or write back to <a href="mailto:hello@staija.org" style="color:${VIOLET};text-decoration:none;">hello@staija.org</a> and we'll let ${applicantName} know.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
+    ${p(`If you'd rather not write the letter, no need to reply — we'll stop reminding after this. Or write back to <a href="mailto:contact@staija.org" style="color:${VIOLET};text-decoration:none;">contact@staija.org</a> and we'll let ${applicantName} know.`, `font-size:13px;color:${MUTED};margin-bottom:0;`)}
     ${p('— STAIJA', 'margin-top:24px;margin-bottom:0;')}
   `)
 
@@ -712,7 +712,7 @@ export function referenceReminderEmail(params: {
     `If you're still planning to write one, here's the upload link again — same as before, personal to you:`,
     uploadUrl,
     ``,
-    `If you'd rather not, no need to reply — we'll stop reminding after this. Or write back to hello@staija.org and we'll let ${applicantName} know.`,
+    `If you'd rather not, no need to reply — we'll stop reminding after this. Or write back to contact@staija.org and we'll let ${applicantName} know.`,
     ``,
     `— STAIJA`,
   ].join('\n')

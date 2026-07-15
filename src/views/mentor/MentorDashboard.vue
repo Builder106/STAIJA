@@ -133,8 +133,8 @@ onMounted(loadData)
         </Body>
         <p class="text-sm text-ink/60 m-0">
           Think this is wrong? Email
-          <a href="mailto:hello@staija.org" class="text-brand-violet hover:underline">
-            hello@staija.org
+          <a href="mailto:contact@staija.org" class="text-brand-violet hover:underline">
+            contact@staija.org
           </a>
           and we'll sort it out.
         </p>
