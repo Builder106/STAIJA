@@ -35,7 +35,7 @@ const FALLBACKS: Record<string, ProgramView> = {
     ],
     heroImg: 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     features: [
-      { title: 'Real Research', desc: 'Access world-class labs and equipment. Design experiments and gather original data.', img: 'https://images.unsplash.com/photo-1758573467240-f944226c2026?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { title: 'Real Research', desc: 'Access world-class labs and equipment. Design experiments and gather original data.', img: 'https://images.unsplash.com/photo-1562789278-dac7af7fb5b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
       { title: 'Direct Mentorship', desc: 'Work 1:1 with postdoctoral researchers and industry scientists from top institutions.', img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
       { title: 'Lasting Community', desc: 'Join a tight-knit cohort of peers who will become your future collaborators.', img: 'https://images.unsplash.com/photo-1737529807163-1d8a3fb6c403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
     ],
@@ -52,9 +52,9 @@ const FALLBACKS: Record<string, ProgramView> = {
       'Able to commit 10 hours per week for 6 months',
     ],
     mentors: [
-      { name: 'Dr. Amina Yusuf', title: 'Postdoctoral Researcher', institution: 'MIT', img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { name: 'Prof. David Okafor', title: 'Principal Investigator', institution: 'University of Lagos', img: 'https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { name: 'Sarah Nwachukwu', title: 'PhD Candidate', institution: 'Stanford', img: 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Dr. Amina Yusuf', title: 'Postdoctoral Researcher', institution: 'MIT', img: 'https://images.unsplash.com/photo-1611432579699-484f7990b127?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Prof. David Okafor', title: 'Principal Investigator', institution: 'University of Lagos', img: 'https://images.unsplash.com/photo-1614023342667-6f060e9d1e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Sarah Nwachukwu', title: 'PhD Candidate', institution: 'Stanford', img: 'https://images.unsplash.com/photo-1618355776464-8666794d2520?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
     ],
   },
   'dynamerge': {
@@ -68,9 +68,9 @@ const FALLBACKS: Record<string, ProgramView> = {
     ],
     heroImg: 'https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     features: [
-      { title: 'Intensive Curriculum', desc: 'Four weeks of daily virtual workshops covering coding, data science, and leadership.', img: 'https://images.unsplash.com/photo-1758573467240-f944226c2026?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { title: 'Global Mentors', desc: 'Learn directly from industry experts at top tech companies and research institutes.', img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { title: 'Pan-African Network', desc: 'Build lasting relationships with peers across the continent.', img: 'https://images.unsplash.com/photo-1737529807163-1d8a3fb6c403?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { title: 'Intensive Curriculum', desc: 'Four weeks of daily virtual workshops covering coding, data science, and leadership.', img: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { title: 'Global Mentors', desc: 'Learn directly from industry experts at top tech companies and research institutes.', img: 'https://images.unsplash.com/photo-1766074903112-79661da9ab45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { title: 'Pan-African Network', desc: 'Build lasting relationships with peers across the continent.', img: 'https://images.unsplash.com/photo-1758270705518-b61b40527e76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
     ],
     timeline: [
       { date: 'Week 1', desc: 'Foundations: Introduction to programming and data analysis.' },
@@ -85,9 +85,9 @@ const FALLBACKS: Record<string, ProgramView> = {
       'Passionate about leveraging technology for impact',
     ],
     mentors: [
-      { name: 'Dr. Amina Yusuf', title: 'Postdoctoral Researcher', institution: 'MIT', img: 'https://images.unsplash.com/photo-1658252844173-ba5de80a3015?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { name: 'Prof. David Okafor', title: 'Principal Investigator', institution: 'University of Lagos', img: 'https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
-      { name: 'Sarah Nwachukwu', title: 'PhD Candidate', institution: 'Stanford', img: 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Dr. Amina Yusuf', title: 'Postdoctoral Researcher', institution: 'MIT', img: 'https://images.unsplash.com/photo-1611432579699-484f7990b127?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Prof. David Okafor', title: 'Principal Investigator', institution: 'University of Lagos', img: 'https://images.unsplash.com/photo-1614023342667-6f060e9d1e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
+      { name: 'Sarah Nwachukwu', title: 'PhD Candidate', institution: 'Stanford', img: 'https://images.unsplash.com/photo-1618355776464-8666794d2520?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' },
     ],
   },
 }
