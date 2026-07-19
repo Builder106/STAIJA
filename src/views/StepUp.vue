@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ProgramDetailView from '../components/ProgramDetailView.vue'
+import StepUpDetailView from '../components/programs/StepUpDetailView.vue'
 </script>
 
 <template>
-  <ProgramDetailView slug="stepup-scholars" />
+  <StepUpDetailView />
 </template>
