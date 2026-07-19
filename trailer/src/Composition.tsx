@@ -1,10 +1,10 @@
 import { Sequence, Audio, interpolate, staticFile } from "remotion";
-import { TheHook } from "./TheHook";
-import { Mission } from "./Mission";
-import { TheSolution } from "./TheSolution";
-import { MicroInteractions } from "./MicroInteractions";
-import { TheClimax } from "./TheClimax";
-import { Outro } from "./Outro";
+import { TheHook } from "./scenes/TheHook";
+import { Mission } from "./scenes/Mission";
+import { TheSolution } from "./scenes/TheSolution";
+import { MicroInteractions } from "./scenes/MicroInteractions";
+import { TheClimax } from "./scenes/TheClimax";
+import { Outro } from "./scenes/Outro";
 import "./index.css";
 
 export const MyComposition = () => {

@@ -1,7 +1,7 @@
 {
-  "name": "staija-trailer",
+  "name": "staija-ui-demo",
   "version": "1.0.0",
-  "description": "STAIJA Tier 3 marketing trailer (Remotion)",
+  "description": "STAIJA Tier 2 UI demo (Remotion)",
   "repository": {},
   "license": "UNLICENSED",
   "private": true,
@@ -25,7 +25,7 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
-    "render": "remotion render src/index.ts StaijaTrailer out/staija-trailer.mp4",
+    "render": "remotion render src/index.ts StaijaUIDemo out/staija-ui-demo.mp4",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },

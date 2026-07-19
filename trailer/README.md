@@ -1,54 +1,40 @@
-# Remotion video
+# STAIJA Tier 3 trailer
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+The concept-first marketing trailer: 36s, 1920×1080@30fps, composition id
+`StaijaTrailer`. Split out on 2026-07-19 from a combined project that used to
+also hold the Tier 2 UI demo, which now lives at `../ui-demo/`. Beat structure
+is in `STORYBOARD.md`.
 
-Welcome to your Remotion project!
-
-## Commands
-
-**Install Dependencies**
+## Build
 
 ```console
 npm i
 ```
 
-**Start Preview**
+## Preview and render
 
 ```console
 npm run dev
+npm run render
 ```
 
-**Render video**
+The render lands at `out/staija-trailer.mp4` (gitignored). The pre-split final
+render was backed up to `~/Documents/staija-tier3-trailer-BACKUP.mp4` before
+this project was split out.
 
-```console
-npx remotion render
-```
+## Assets
 
-**Upgrade Remotion**
+`public/staija_phone_0001–0060.png` (the device sway loop) has no scripted
+regen path — it's rendered by hand from `public/phone.blend`, so it stays
+tracked in git rather than gitignored. `public/staija_stepup.png` and
+`public/staija_dynamerge.png` are captured by `scratch/capture_programs.js`
+(Puppeteer; `npm i` inside `scratch/` first).
 
-```console
-npx remotion upgrade
-```
+See `STORYBOARD.md` for the "known unused assets" carried into
+`scratch/unused-assets/` during the split — nothing was deleted, just parked.
 
-## Docs
+## Music
 
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+`public/audio.mp3` is Kevin MacLeod's "Wholesome" (CC BY 4.0) — the credit
+line in `public/CREDITS.md` must ship with any publish. Raw download sits at
+`scratch/wholesome.mp3`.

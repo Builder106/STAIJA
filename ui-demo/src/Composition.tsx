@@ -1,9 +1,9 @@
 import { Audio, Sequence, interpolate, staticFile } from "remotion";
-import { BrowserScene } from "./BrowserScene";
-import { UITitle } from "./UITitle";
-import { UIMontage } from "./UIMontage";
-import { UIOutro } from "./UIOutro";
-import "../index.css";
+import { BrowserScene } from "./scenes/BrowserScene";
+import { UITitle } from "./scenes/UITitle";
+import { UIMontage } from "./scenes/UIMontage";
+import { UIOutro } from "./scenes/UIOutro";
+import "./index.css";
 
 // Scene layout (30 fps):
 //   0– 90  Title card
@@ -19,7 +19,7 @@ export const UIDemoComposition = () => {
     <>
       {/* Music bed: Kevin MacLeod — "Wholesome" (incompetech.com), CC BY 4.0 */}
       <Audio
-        src={staticFile("audio_ui.mp3")}
+        src={staticFile("audio.mp3")}
         volume={(f) =>
           interpolate(f, [0, 30, 1280, 1345], [0, 0.55, 0.55, 0], {
             extrapolateLeft: "clamp",
