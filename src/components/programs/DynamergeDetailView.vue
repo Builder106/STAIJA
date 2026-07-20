@@ -134,22 +134,22 @@ const FAQS = [
             {{ program.pitch }}
           </Motion>
 
-          <!-- Fast facts as mono chips — the sprint version of StepUp's
-               specimen ledger. -->
+          <!-- Fast facts as a plain mono strip, matching the "Daily ·
+               Virtual · Team-based" line further down this same page —
+               no boxes, just typography carrying the rhythm. -->
           <Motion
-            class="flex flex-wrap gap-3"
+            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono text-xs uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.15 }"
           >
-            <span
-              v-for="stat in program.stats"
-              :key="stat.label"
-              class="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-2 font-mono text-xs uppercase tracking-[0.14em] text-white"
-            >
-              <Icon :icon="stat.icon" width="14" aria-hidden="true" />
-              {{ stat.value }}
-            </span>
+            <template v-for="(stat, i) in program.stats" :key="stat.label">
+              <span class="inline-flex items-center gap-2">
+                <Icon :icon="stat.icon" width="14" aria-hidden="true" class="text-white/60" />
+                {{ stat.value }}
+              </span>
+              <span v-if="i < program.stats.length - 1" class="px-3 text-white/30" aria-hidden="true">·</span>
+            </template>
           </Motion>
 
           <Motion
