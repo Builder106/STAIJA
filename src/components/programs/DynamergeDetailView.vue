@@ -60,8 +60,20 @@ const activeTrack = computed(() => TRACKS.find((t) => t.id === activeTrackId.val
 // ("resident of any African country"), not a claim about where students
 // have come from.
 const MARQUEE_COUNTRIES = [
-  'Nigeria', 'Ghana', 'Kenya', 'Egypt', 'South Africa', 'Senegal', 'Rwanda',
-  'Ethiopia', 'Morocco', 'Uganda', 'Tanzania', 'Cameroon', 'Botswana', 'Algeria',
+  { name: 'Nigeria', flag: '🇳🇬' },
+  { name: 'Ghana', flag: '🇬🇭' },
+  { name: 'Kenya', flag: '🇰🇪' },
+  { name: 'Egypt', flag: '🇪🇬' },
+  { name: 'South Africa', flag: '🇿🇦' },
+  { name: 'Senegal', flag: '🇸🇳' },
+  { name: 'Rwanda', flag: '🇷🇼' },
+  { name: 'Ethiopia', flag: '🇪🇹' },
+  { name: 'Morocco', flag: '🇲🇦' },
+  { name: 'Uganda', flag: '🇺🇬' },
+  { name: 'Tanzania', flag: '🇹🇿' },
+  { name: 'Cameroon', flag: '🇨🇲' },
+  { name: 'Botswana', flag: '🇧🇼' },
+  { name: 'Algeria', flag: '🇩🇿' },
 ]
 
 const FAQS = [
@@ -183,10 +195,10 @@ const FAQS = [
           <div v-for="clone in 2" :key="clone" class="flex shrink-0" :aria-hidden="clone === 2">
             <span
               v-for="country in MARQUEE_COUNTRIES"
-              :key="country"
+              :key="country.name"
               class="pl-8 font-mono text-xs uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
             >
-              {{ country }} <span class="text-white/40 pl-8" aria-hidden="true">·</span>
+              <span aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="text-white/40 pl-8" aria-hidden="true">·</span>
             </span>
           </div>
         </div>
