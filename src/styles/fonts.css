@@ -45,6 +45,22 @@
   line-gap-override: 0%;
 }
 
+/* Ojuju is a reverse-contrast African-designed variable face (Chisaokwu
+   Joboson, Udi Foundry, OFL) used narrowly as `--font-accent-african` —
+   wordmarks, hero numerals, stat callouts. Not a Google Fonts CDN font,
+   so there's no upstream next/font metrics to copy; these values are
+   derived directly from the font's own hhea/OS/2 tables (see
+   docs/TYPOGRAPHY-SYSTEM.md for the derivation) rather than lifted from
+   a next/font computation. */
+@font-face {
+  font-family: 'Ojuju Fallback';
+  src: local('Arial');
+  size-adjust: 117.8%;
+  ascent-override: 113%;
+  descent-override: 27.6%;
+  line-gap-override: 0%;
+}
+
 
 /* === Self-hosted web fonts (generated; see header) ================== */
 /* cyrillic-ext */
@@ -673,4 +689,29 @@
   font-display: swap;
   src: url(/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* === Ojuju (hand-built, not CDN-generated) ===========================
+   Static instances cut from the variable source with `fonttools
+   varLib.instancer` at wght=500/800, then subset to Latin + Latin
+   Extended-A/B + Latin Extended Additional (covers Pan-African Latin
+   diacritics) with `fonttools subset`, then compressed to woff2 with
+   `fonttools ttLib.woff2`. See docs/TYPOGRAPHY-SYSTEM.md for the full
+   pipeline and public/fonts/README.md for regeneration. Source:
+   https://github.com/google/fonts/tree/main/ofl/ojuju (OFL). */
+@font-face {
+  font-family: 'Ojuju';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/Ojuju-Medium500-subset.woff2) format('woff2');
+  unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
+}
+@font-face {
+  font-family: 'Ojuju';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(/fonts/Ojuju-ExtraBold800-subset.woff2) format('woff2');
+  unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
 }

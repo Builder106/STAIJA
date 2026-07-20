@@ -41,3 +41,25 @@ sed -E \
 - Stale woff2 files are removed accidentally.
 
 If a preload link in [`index.html`](../../index.html) 404s after regen, the file hash for IBM Plex Sans 700 latin has changed — find the new hash in the rewritten CSS and update the `<link rel="preload" href="...">` to match.
+
+## Ojuju (the two `Ojuju-*-subset.woff2` files)
+
+These didn't come from the Google Fonts CDN pipeline above — Ojuju is a variable font, so it needed `fonttools` (instancer + subset + woff2 compress), not a CSS-endpoint fetch. See [`docs/TYPOGRAPHY-SYSTEM.md`](../../docs/TYPOGRAPHY-SYSTEM.md) for why it was added and [`src/styles/fonts.css`](../../src/styles/fonts.css) for the `@font-face` blocks that reference them.
+
+Regeneration (run on `ampere-dev`, not this Mac — `pip install fonttools` materializes a `.venv`):
+
+```bash
+curl -sL -o 'Ojuju[wght].ttf' 'https://github.com/google/fonts/raw/main/ofl/ojuju/Ojuju%5Bwght%5D.ttf'
+fonttools varLib.instancer -o Ojuju-Medium500.ttf 'Ojuju[wght].ttf' wght=500
+fonttools varLib.instancer -o Ojuju-ExtraBold800.ttf 'Ojuju[wght].ttf' wght=800
+for f in Ojuju-Medium500 Ojuju-ExtraBold800; do
+  fonttools subset "$f.ttf" --output-file="$f-subset.ttf" \
+    --unicodes='U+0020-007E,U+00A0-024F,U+1E00-1EFF,U+2018,U+2019,U+201C,U+201D,U+2013,U+2014,U+2026' \
+    --layout-features='*' --glyph-names --symbol-cmap --legacy-cmap \
+    --notdef-glyph --notdef-outline --recommended-glyphs \
+    --name-IDs='*' --name-legacy --name-languages='*'
+  fonttools ttLib.woff2 compress -o "$f-subset.woff2" "$f-subset.ttf"
+done
+```
+
+Copy the two `*-subset.woff2` outputs into `public/fonts/`, keeping the same filenames (`src/styles/fonts.css` references them by name, not hash).

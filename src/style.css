@@ -70,6 +70,13 @@
    --font-display: 'IBM Plex Sans', 'IBM Plex Sans Fallback', system-ui, sans-serif;
    --font-sans: 'Inter', 'Inter Fallback', sans-serif;
    --font-mono: 'IBM Plex Mono', 'IBM Plex Mono Fallback', ui-monospace, monospace;
+   /* African-designed accent face (Ojuju, OFL) — reverse-contrast,
+      variable-weight, by Nigerian designer Chisaokwu Joboson. Scoped
+      narrowly to wordmarks, hero numerals, and stat callouts; never
+      body text or nav — see docs/TYPOGRAPHY-SYSTEM.md. Two static
+      instances shipped: 500 for eyebrow-weight accents, 800 for
+      display-weight ones. */
+   --font-accent-african: 'Ojuju', 'Ojuju Fallback', var(--font-display);
 
    --radius-xl: 12px;
    --radius-2xl: 16px;
