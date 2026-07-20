@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ProgramDetailView from '../components/ProgramDetailView.vue'
+import DynamergeDetailView from '../components/programs/DynamergeDetailView.vue'
 </script>
 
 <template>
-  <ProgramDetailView slug="dynamerge" />
+  <DynamergeDetailView />
 </template>

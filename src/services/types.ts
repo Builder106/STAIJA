@@ -251,10 +251,11 @@ export interface Application {
   updatedAt: Date
 }
 
-// Program describes everything the public /programs/:slug page shows AND
-// the operational fields (cohort dates, status) the admin tracks. The
-// shape mirrors what src/components/ProgramDetailView.vue renders so the
-// component can read it directly without an adapter layer.
+// Program describes everything the public /programs/:slug pages show AND
+// the operational fields (cohort dates, status) the admin tracks. Both
+// program layouts (src/components/programs/StepUpDetailView.vue,
+// DynamergeDetailView.vue) read this same shape directly, no adapter
+// layer, via toProgramView() in src/services/programContent.ts.
 export interface Program {
   id?: string
   slug: string

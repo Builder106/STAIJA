@@ -421,11 +421,14 @@ onMounted(loadPrograms)
 
 // --- Seed data --------------------------------------------------------
 //
-// Mirrors the FALLBACKS dict in src/components/ProgramDetailView.vue so
-// running this seed produces the same public pages users see today, just
-// driven by Firestore instead of hardcoded constants. The fallback in
-// ProgramDetailView stays as a safety net for unauthenticated transient
-// errors and for the migration window before this seed runs.
+// Mirrors PROGRAM_FALLBACKS in src/services/programContent.ts so running
+// this seed produces the same content the public pages fall back to
+// today, just driven by Firestore instead of hardcoded constants. That
+// fallback stays as a safety net for unauthenticated transient errors
+// and for the migration window before this seed runs. (StepUp and
+// Dynamerge render through separate layout components now — see
+// StepUpDetailView.vue / DynamergeDetailView.vue in src/components/programs/
+// — but both still read this same Program document shape.)
 
 type SeedTemplate = Omit<Program, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'updatedBy'>
 

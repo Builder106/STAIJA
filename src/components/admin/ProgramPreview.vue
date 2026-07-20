@@ -13,10 +13,17 @@ defineProps<{
 </script>
 
 <!--
-  Mini live preview of the public program hero. Mirrors the hero block in
-  src/components/ProgramDetailView.vue but with no animations and a
-  smaller scale so it fits inside the admin form. Updates as the editor
-  types because the props are reactive.
+  Mini live preview of the public program hero. No animations, smaller
+  scale, so it fits inside the admin form. Updates as the editor types
+  because the props are reactive.
+
+  Approximation, not a mirror: StepUp and Dynamerge now render through
+  separate layout components (src/components/programs/StepUpDetailView.vue,
+  DynamergeDetailView.vue) with genuinely different hero treatments —
+  StepUp keeps this dark-photo-plus-chips shape closely, but Dynamerge's
+  real hero is the full brand gradient with a status chip and country
+  marquee, which this preview does not reproduce. Good enough to sanity-
+  check copy and stat values; not a substitute for viewing the live page.
 
   Intentionally only shows the hero — features, timeline, eligibility,
   and mentors are all linear lists that the editor can already see in
