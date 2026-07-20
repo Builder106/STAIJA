@@ -104,11 +104,7 @@ const FAQS = [
         <div class="max-w-3xl flex flex-col gap-6">
           <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
             <div class="inline-flex items-center gap-2.5 rounded-full bg-ink-static/25 border border-white/25 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white">
-              <span v-if="isApplyOpen" class="relative flex h-2 w-2" aria-hidden="true">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-300" />
-              </span>
-              <template v-if="isApplyOpen">Applications are live</template>
+              <template v-if="isApplyOpen">Applications open now</template>
               <template v-else-if="closedReason === 'upcoming'">Applications open soon</template>
               <template v-else>Applications closed for this cycle</template>
             </div>
