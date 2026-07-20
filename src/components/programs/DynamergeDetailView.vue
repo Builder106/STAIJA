@@ -164,7 +164,12 @@ const FAQS = [
            (the real rule is "any African country"); duplicated track for
            a seamless loop, clone hidden from AT. Reduced-motion users
            get a static strip via the global animation kill-switch. -->
-      <div class="relative z-10 border-t border-white/15 bg-ink-static/25 py-3 marquee" role="group" aria-label="Open to students across Africa">
+      <div
+        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-3 marquee focus-ring-inverse"
+        role="group"
+        tabindex="0"
+        aria-label="Open to students across Africa, scrolling. Hover or focus to pause."
+      >
         <div class="marquee-track">
           <div v-for="clone in 2" :key="clone" class="flex shrink-0" :aria-hidden="clone === 2">
             <span
@@ -366,7 +371,6 @@ const FAQS = [
     <ProgramFaq :faqs="FAQS" />
 
     <ProgramCtaBanner
-      :program-name="program.name"
       :slug="SLUG"
       :is-apply-open="isApplyOpen"
       :closed-reason="closedReason"
@@ -388,6 +392,13 @@ const FAQS = [
   display: flex;
   width: max-content;
   animation: marquee-scroll 36s linear infinite;
+}
+
+/* WCAG 2.2.2 — hover or focus pauses the scroll so a reader can stop it
+   and take their time, without requiring OS-level reduced-motion. */
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
 }
 
 @keyframes marquee-scroll {

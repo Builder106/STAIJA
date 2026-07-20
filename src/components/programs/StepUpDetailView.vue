@@ -100,7 +100,7 @@ const FAQS = [
                 :to="`/apply/${SLUG}`"
                 @click="trackApplyClick({ program: 'stepup', source: 'program_hero' })"
               >
-                Apply to {{ program.name }}
+                Apply now
               </UiButton>
               <template v-else>
                 <UiButton
@@ -317,7 +317,6 @@ const FAQS = [
     <ProgramFaq :faqs="FAQS" />
 
     <ProgramCtaBanner
-      :program-name="program.name"
       :slug="SLUG"
       :is-apply-open="isApplyOpen"
       :closed-reason="closedReason"

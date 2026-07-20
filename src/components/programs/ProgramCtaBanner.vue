@@ -10,7 +10,6 @@ import type { ProgramSlug } from '../../services/programContent'
 // site nav/footer around them) is the shared STAIJA chrome that says
 // "same organization, one application funnel."
 const props = defineProps<{
-  programName: string
   slug: ProgramSlug
   isApplyOpen: boolean
   closedReason: 'upcoming' | 'closed'
@@ -38,7 +37,7 @@ function onApplyClick() {
           class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
           @click="onApplyClick"
         >
-          Apply to {{ programName }}
+          Apply now
         </UiButton>
         <UiButton
           v-else
