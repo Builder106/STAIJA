@@ -74,21 +74,20 @@ const FAQS = [
 
 <template>
   <div v-if="program" class="flex flex-col">
-    <!-- Hero — full-bleed brand gradient ("brand-mark territory", the
-         same surface language as the homepage hero) instead of StepUp's
-         dark photo. The register is a launch announcement, not a
-         journal cover — so the cover photo sits as texture inside the
-         gradient (mix-blend-overlay, low opacity, no parallax) rather
-         than being the dominant layer the way it is on StepUp. -->
-    <div class="relative flex flex-col justify-center bg-gradient-hero overflow-hidden min-h-[88svh]">
+    <!-- Hero — cover photo at real colour, no gradient tint over it. A
+         dark bottom-up scrim (same ink-static token StepUp's hero uses)
+         carries text legibility instead. Still no parallax: Dynamerge's
+         motion stays flatter than StepUp's by design. -->
+    <div class="relative flex flex-col justify-center overflow-hidden min-h-[88svh] bg-ink-static">
       <img
         :src="program.heroImg"
         :alt="program.name"
         width="1080" height="720"
-        class="absolute inset-0 z-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
+        class="absolute inset-0 z-0 w-full h-full object-cover"
         loading="eager"
         fetchpriority="high"
       />
+      <div class="absolute inset-0 z-0 bg-gradient-to-t from-ink-static via-ink-static/55 to-ink-static/15" />
       <Container class="relative z-10 py-24 grow flex flex-col justify-center">
         <div class="max-w-3xl flex flex-col gap-6">
           <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
