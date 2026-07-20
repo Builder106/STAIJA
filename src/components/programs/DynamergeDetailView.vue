@@ -77,8 +77,18 @@ const FAQS = [
     <!-- Hero — full-bleed brand gradient ("brand-mark territory", the
          same surface language as the homepage hero) instead of StepUp's
          dark photo. The register is a launch announcement, not a
-         journal cover. -->
+         journal cover — so the cover photo sits as texture inside the
+         gradient (mix-blend-overlay, low opacity, no parallax) rather
+         than being the dominant layer the way it is on StepUp. -->
     <div class="relative flex flex-col justify-center bg-gradient-hero overflow-hidden min-h-[88svh]">
+      <img
+        :src="program.heroImg"
+        :alt="program.name"
+        width="1080" height="720"
+        class="absolute inset-0 z-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
+        loading="eager"
+        fetchpriority="high"
+      />
       <Container class="relative z-10 py-24 grow flex flex-col justify-center">
         <div class="max-w-3xl flex flex-col gap-6">
           <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
