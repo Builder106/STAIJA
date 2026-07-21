@@ -147,17 +147,17 @@ const FAQS = [
                font-mono-african (STAIJA Tac Mono) instead of Plex Mono
                here only — see docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion
-            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-xs uppercase tracking-[0.14em] text-white/80"
+            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.15 }"
           >
             <template v-for="(stat, i) in program.stats" :key="stat.label">
               <span class="inline-flex items-center gap-2">
-                <Icon :icon="stat.icon" width="14" aria-hidden="true" class="text-white/60" />
+                <Icon :icon="stat.icon" width="20" aria-hidden="true" class="text-white/60" />
                 {{ stat.value }}
               </span>
-              <span v-if="i < program.stats.length - 1" class="inline-block w-px h-3 bg-white/25 mx-3" aria-hidden="true" />
+              <span v-if="i < program.stats.length - 1" class="inline-block w-px h-4 bg-white/25 mx-3" aria-hidden="true" />
             </template>
           </Motion>
 
