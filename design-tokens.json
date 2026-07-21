@@ -1,0 +1,126 @@
+{
+  "color": {
+    "paper": {
+      "$type": "color",
+      "$value": "#F1F5F9",
+      "$description": "Page surface, light mode. Slate-gray, not warm cream — chosen to sit in conversation with the violet→cyan brand gradient rather than fight it."
+    },
+    "paper-dark": {
+      "$type": "color",
+      "$value": "#0B0E12",
+      "$description": "Page surface, dark mode. Anchored on ink so brand violet keeps its presence against it."
+    },
+    "paper-static": {
+      "$type": "color",
+      "$value": "#F1F5F9",
+      "$description": "Non-themed paper — for surfaces intentionally light regardless of theme."
+    },
+    "ink": {
+      "$type": "color",
+      "$value": "#0E1217",
+      "$description": "Body text, light mode."
+    },
+    "ink-dark": {
+      "$type": "color",
+      "$value": "#F0F4F8",
+      "$description": "Body text, dark mode. Chosen for WCAG AA headroom: text-ink/50 hits ~5.0:1 vs. an earlier #E5EAF0 candidate at ~4.4:1 (AA-borderline)."
+    },
+    "ink-static": {
+      "$type": "color",
+      "$value": "#0E1217",
+      "$description": "Non-themed ink — for surfaces intentionally dark regardless of theme (e.g. footer, LocaleSwitcher popover)."
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#FFFFFF",
+      "$description": "Elevated card color, light mode. Replaces literal bg-white on neutral cards (not on gradient overlays or buttons that must stay literal white)."
+    },
+    "surface-dark": {
+      "$type": "color",
+      "$value": "#1A1F26",
+      "$description": "Elevated card color, dark mode — lighter than paper so cards read as raised."
+    },
+    "brand": {
+      "violet": {
+        "$type": "color",
+        "$value": "#8B55FF",
+        "$description": "Primary brand color. Left anchor of the hero/nav/footer gradient."
+      },
+      "sky": {
+        "$type": "color",
+        "$value": "#5EDBE7",
+        "$description": "Secondary brand color. Right anchor of the hero/nav/footer gradient."
+      },
+      "violet-deep": {
+        "$type": "color",
+        "$value": "#6B3FE0",
+        "$description": "Deeper violet anchor used only in the hero gradient for dimension."
+      },
+      "violet-hover": {
+        "$type": "color",
+        "$value": "#7A44EE",
+        "$description": "Scrollbar-thumb hover state."
+      }
+    }
+  },
+  "opacity": {
+    "wash-violet-6": { "$type": "opacity", "$value": 0.06 },
+    "wash-ink-6": { "$type": "opacity", "$value": 0.06 },
+    "hairline-ink": { "$type": "opacity", "$value": 0.08 },
+    "hairline-ink-dark": { "$type": "opacity", "$value": 0.18, "$description": "Dark-mode row-divider alpha — bumped from the light-mode 0.10 equivalent so dividers keep presence on dark surfaces." },
+    "placeholder-ink": { "$type": "opacity", "$value": 0.45 },
+    "selection-brand": { "$type": "opacity", "$value": 0.2 },
+    "selection-brand-dark": { "$type": "opacity", "$value": 0.35 },
+    "focus-ring-brand": { "$type": "opacity", "$value": 0.6 },
+    "focus-ring-inverse": { "$type": "opacity", "$value": 0.85 }
+  },
+  "typography": {
+    "font-display": {
+      "$type": "fontFamily",
+      "$value": ["IBM Plex Sans", "IBM Plex Sans Fallback", "system-ui", "sans-serif"],
+      "$description": "Headline face. Chosen for a research/scientific posture — quiet authority over editorial drama (replaced Playfair Display, which read as fashion-mag)."
+    },
+    "font-sans": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "Inter Fallback", "sans-serif"],
+      "$description": "Body face."
+    },
+    "font-mono": {
+      "$type": "fontFamily",
+      "$value": ["IBM Plex Mono", "IBM Plex Mono Fallback", "ui-monospace", "monospace"],
+      "$description": "Base mono face for data labels."
+    },
+    "font-accent-african": {
+      "$type": "fontFamily",
+      "$value": ["Madimi One", "Madimi One Fallback", "{typography.font-display}"],
+      "$description": "African-designed accent face (OFL, Taurai Valerie Mtake). Used for program wordmarks only (Dynamerge hero) — ships one weight (400), never body text or nav."
+    },
+    "font-accent-african-secondary": {
+      "$type": "fontFamily",
+      "$value": ["Ojuju", "Ojuju Fallback", "{typography.font-mono}"],
+      "$description": "African-designed secondary accent (OFL, Chisaokwu Joboson). Reads too heavy at hero scale (tried and pulled as wordmark face) — kept for short labels like eyebrows and stat callouts at wght=500."
+    },
+    "font-mono-african": {
+      "$type": "fontFamily",
+      "$value": ["STAIJA Tac Mono", "STAIJA Tac Mono Fallback", "{typography.font-mono}"],
+      "$description": "In-house African-designed monospace — a fontTools re-metricing of Tac One (Afrotype, OFL) onto a fixed-width grid with hand-fixed disambiguation glyphs (serifed capital I, dotted zero). Renamed per OFL §3 as a Modified Version. See docs/TYPOGRAPHY-SYSTEM.md."
+    }
+  },
+  "radius": {
+    "xl": { "$type": "dimension", "$value": "12px" },
+    "2xl": { "$type": "dimension", "$value": "16px" },
+    "full": { "$type": "dimension", "$value": "9999px" }
+  },
+  "gradient": {
+    "brand": {
+      "$type": "gradient",
+      "$value": "linear-gradient(90deg, {color.brand.violet} 0%, {color.brand.sky} 100%)",
+      "$description": "Used for the .bg-gradient-brand utility, hairline stripes, gradient borders, and gradient text."
+    },
+    "hero": {
+      "$type": "gradient",
+      "$value": "radial-gradient(60% 80% at 80% 30%, rgba(94, 219, 231, 0.55) 0%, transparent 60%), linear-gradient(135deg, {color.brand.violet-deep} 0%, {color.brand.violet} 45%, {color.brand.sky} 100%)",
+      "$description": "Full-bleed hero background — deliberate brand-mark territory, not an editorial surface. Do not propose replacing this with a flat/neutral hero without being asked."
+    }
+  }
+}
