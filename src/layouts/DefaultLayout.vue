@@ -5,7 +5,13 @@ import SiteFooter from '../components/SiteFooter.vue'
 </script>
 
 <template>
-  <div class="brand-surface min-h-screen flex flex-col bg-paper">
+  <!-- cursor-dot replaces the native arrow as the site-wide default.
+       Links/buttons still show pointer (see .brand-surface a/button in
+       style.css — a direct rule on the element always wins over an
+       inherited value, regardless of the ancestor's specificity), and
+       the other seven cursor-* utilities override this wherever they're
+       applied more specifically. -->
+  <div class="brand-surface min-h-screen flex flex-col bg-paper cursor-dot">
     <SiteHeader />
     <main class="flex-1 flex flex-col">
       <!-- No <Transition> wrapper here. We previously had:

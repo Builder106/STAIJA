@@ -212,7 +212,7 @@ const FAQS = [
            the earlier proximity-to-center rAF version, which animated
            constantly regardless of where the cursor was. -->
       <div
-        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse cursor-dot"
+        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse cursor-pin"
         role="group"
         tabindex="0"
         aria-label="Open to students across Africa, scrolling. Focus to pause."
@@ -454,7 +454,7 @@ const FAQS = [
   mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
   /* Purely decorative, scrolling text — selecting it as prose makes no
      sense, and without this the browser's default text-select cursor
-     (I-beam) shows instead of the custom one (.cursor-dot, applied via
+     (I-beam) shows instead of the custom one (.cursor-pin, applied via
      class in the template — see src/style.css for the shared brand
      cursor system). */
   user-select: none;
