@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from '../ui/Container.vue'
@@ -82,6 +82,43 @@ const FAQS = [
   { q: 'Do I have to know how to code already?', a: 'No. Week one starts at foundations — an introduction to programming and data analysis.' },
   { q: 'Can I apply to both programs?', a: 'Yes, but you can only participate in one program per calendar year if accepted to both.' },
 ]
+
+// Flag lift-on-proximity: each flag in the country marquee scales/lifts as
+// it crosses the strip's horizontal center, like a coverflow. Driven by a
+// rAF loop reading live getBoundingClientRect() positions rather than
+// tying into the CSS scroll animation directly, since the marquee's
+// translateX keyframe has no JS-observable "position" to hook into.
+// Mutates style directly instead of going through Vue reactivity —
+// this runs every frame, and reactive refs per-flag would be needless
+// overhead for a purely visual, non-stateful effect.
+const marqueeStageRef = ref<HTMLElement | null>(null)
+let flagLiftFrame: number | null = null
+
+function tickFlagLift() {
+  const stage = marqueeStageRef.value
+  if (!stage) return
+  const stageRect = stage.getBoundingClientRect()
+  const centerX = stageRect.left + stageRect.width / 2
+  stage.querySelectorAll<HTMLElement>('.marquee-flag').forEach((flag) => {
+    const flagRect = flag.getBoundingClientRect()
+    const flagCenter = flagRect.left + flagRect.width / 2
+    const distance = Math.abs(flagCenter - centerX)
+    const proximity = Math.max(0, 1 - distance / 160)
+    const scale = 1 + proximity * 0.14
+    const lift = proximity * 6
+    flag.style.transform = `translateY(${-lift}px) scale(${scale})`
+  })
+  flagLiftFrame = requestAnimationFrame(tickFlagLift)
+}
+
+onMounted(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  flagLiftFrame = requestAnimationFrame(tickFlagLift)
+})
+
+onUnmounted(() => {
+  if (flagLiftFrame !== null) cancelAnimationFrame(flagLiftFrame)
+})
 </script>
 
 <template>
@@ -197,9 +234,14 @@ const FAQS = [
       <!-- Country marquee — pinned to the hero's bottom edge. Decorative
            (the real rule is "any African country"); duplicated track for
            a seamless loop, clone hidden from AT. Reduced-motion users
-           get a static strip via the global animation kill-switch. -->
+           get a static strip via the global animation kill-switch (which
+           also short-circuits the flag-lift rAF loop below — see
+           startFlagLift). Flags scale/lift as they cross the strip's
+           center, a coverflow-style cue that something is passing
+           "through" rather than just sliding past. -->
       <div
-        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-3 marquee focus-ring-inverse"
+        ref="marqueeStageRef"
+        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse"
         role="group"
         tabindex="0"
         aria-label="Open to students across Africa, scrolling. Hover or focus to pause."
@@ -209,9 +251,9 @@ const FAQS = [
             <span
               v-for="country in MARQUEE_COUNTRIES"
               :key="country.name"
-              class="pl-8 font-mono-african text-xs uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
+              class="pl-10 font-mono-african text-base md:text-lg uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
             >
-              <span aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="inline-block w-px h-3 bg-white/25 ml-8" aria-hidden="true" />
+              <span class="marquee-flag inline-block" aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="inline-block w-px h-4 bg-white/25 ml-10" aria-hidden="true" />
             </span>
           </div>
         </div>
@@ -436,6 +478,11 @@ const FAQS = [
   display: flex;
   width: max-content;
   animation: marquee-scroll 36s linear infinite;
+}
+
+.marquee-flag {
+  will-change: transform;
+  transform-origin: center;
 }
 
 /* WCAG 2.2.2 — hover or focus pauses the scroll so a reader can stop it
