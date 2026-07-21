@@ -261,7 +261,7 @@ const FAQS = [
                 : 'bg-surface border hairline-ink'"
             >
               <div
-                class="font-mono-african text-[11px] uppercase tracking-[0.2em]"
+                class="font-mono-african text-lg uppercase tracking-[0.2em]"
                 :class="i === program.timeline.length - 1 ? 'text-white/80' : 'text-brand-violet'"
               >
                 {{ step.date }}
