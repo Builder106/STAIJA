@@ -34,7 +34,7 @@ function onApplyClick() {
         <UiButton
           v-if="isApplyOpen"
           :to="'/signup'"
-          class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
+          class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4 cursor-spark"
           @click="onApplyClick"
         >
           Apply now
@@ -42,7 +42,7 @@ function onApplyClick() {
         <UiButton
           v-else
           :to="`/stay-connected?from=${slug}&reason=${closedReason}`"
-          class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4"
+          class="!bg-transparent !text-white !border-2 !border-white hover:!bg-white hover:!text-brand-violet text-lg !px-8 !h-auto !py-4 cursor-spark"
         >
           {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
         </UiButton>

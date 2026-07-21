@@ -28,7 +28,7 @@ function toggleFaq(i: number) {
           class="overflow-hidden"
           @click="toggleFaq(i)"
         >
-          <div class="p-6 flex items-center justify-between font-semibold text-lg cursor-pointer">
+          <div class="p-6 flex items-center justify-between font-semibold text-lg cursor-crosshair">
             <span>{{ faq.q }}</span>
             <Icon
               icon="lucide:chevron-down"

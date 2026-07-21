@@ -192,7 +192,7 @@ onUnmounted(() => {
                font-mono-african (STAIJA Tac Mono) instead of Plex Mono
                here only — see docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion
-            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80"
+            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80 cursor-pennant"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.15 }"
@@ -245,7 +245,7 @@ onUnmounted(() => {
            "through" rather than just sliding past. -->
       <div
         ref="marqueeStageRef"
-        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse"
+        class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse cursor-dot"
         role="group"
         tabindex="0"
         aria-label="Open to students across Africa, scrolling. Focus to pause."
@@ -348,7 +348,7 @@ onUnmounted(() => {
               v-for="track in TRACKS"
               :key="track.id"
               type="button"
-              class="focus-ring-brand inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold border transition-colors cursor-pointer"
+              class="focus-ring-brand inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold border transition-colors cursor-ring"
               :class="activeTrackId === track.id
                 ? 'bg-gradient-brand text-white border-transparent'
                 : 'bg-transparent text-ink border-ink/10 hover:border-ink/25'"
@@ -392,7 +392,7 @@ onUnmounted(() => {
             <Eyebrow accent class="text-brand-violet mb-4 block">The network</Eyebrow>
             <Heading :level="2" class="mb-6">One continent. One cohort.</Heading>
             <Body large class="mb-6">{{ program.features[2]?.desc }}</Body>
-            <div class="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 px-4 py-2 font-mono-african text-xs uppercase tracking-[0.14em] text-brand-violet">
+            <div class="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 px-4 py-2 font-mono-african text-xs uppercase tracking-[0.14em] text-brand-violet cursor-pin">
               <Icon icon="lucide:globe-2" width="14" aria-hidden="true" />
               Open to every African country
             </div>
@@ -421,7 +421,11 @@ onUnmounted(() => {
           <Body class="max-w-sm">{{ program.features[1]?.desc }}</Body>
         </div>
 
-        <div class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
+        <!-- cursor-comet on the scroll track itself (hints "drag/scroll to
+             explore"); cursor-pin on the institution line specifically,
+             since that's the one piece of literal location data per
+             card — the more specific descendant rule wins on hover. -->
+        <div class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory cursor-comet">
           <UiCard
             v-for="mentor in program.mentors"
             :key="mentor.name"
@@ -431,7 +435,7 @@ onUnmounted(() => {
             <div class="min-w-0">
               <h4 class="font-semibold text-ink m-0 truncate">{{ mentor.name }}</h4>
               <p class="text-sm text-ink/60 m-0 truncate">{{ mentor.title }}</p>
-              <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0 truncate">{{ mentor.institution }}</p>
+              <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0 truncate cursor-pin">{{ mentor.institution }}</p>
             </div>
           </UiCard>
         </div>
@@ -481,6 +485,12 @@ onUnmounted(() => {
      rather than cutting off mid-glyph at the container edge. */
   -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
   mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  /* Purely decorative, scrolling text — selecting it as prose makes no
+     sense, and without this the browser's default text-select cursor
+     (I-beam) shows instead of the custom one (.cursor-dot, applied via
+     class in the template — see src/style.css for the shared brand
+     cursor system). */
+  user-select: none;
 }
 
 .marquee-track {

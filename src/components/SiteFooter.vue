@@ -82,7 +82,7 @@ async function handleNewsletter(e: Event) {
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-y-12 gap-x-8 lg:gap-x-12">
         <!-- Brand + tagline + social + newsletter -->
         <div class="col-span-2 lg:col-span-2 flex flex-col gap-6 max-w-md">
-          <RouterLink to="/" class="inline-flex items-center focus-ring-brand rounded-sm" aria-label="STAIJA — home">
+          <RouterLink to="/" class="inline-flex items-center focus-ring-brand rounded-sm cursor-badge" aria-label="STAIJA — home">
             <!-- See SiteHeader for the right-sizing rationale. staija-48
                  is the 1x footer variant; staija-96 covers 2x retina. -->
             <img

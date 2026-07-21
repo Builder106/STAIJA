@@ -124,7 +124,7 @@ const FAQS = [
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.6, delay: 0.35 }"
           >
-            <div class="w-full lg:w-80 border-l-4 border-brand-violet bg-white/[0.06] backdrop-blur-sm rounded-r-2xl p-6 font-mono-african">
+            <div class="w-full lg:w-80 border-l-4 border-brand-violet bg-white/[0.06] backdrop-blur-sm rounded-r-2xl p-6 font-mono-african cursor-pin">
               <div class="text-[11px] uppercase tracking-[0.2em] text-paper-static/50">Program record</div>
               <dl class="m-0 mt-2">
                 <div
