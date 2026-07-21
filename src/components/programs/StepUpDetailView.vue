@@ -65,7 +65,7 @@ const FAQS = [
         <div class="grid lg:grid-cols-[1fr_auto] gap-12 lg:gap-20 items-center">
           <div class="max-w-2xl flex flex-col gap-6 text-paper-static">
             <Motion :initial="{ opacity: 0, y: 14 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.55 }">
-              <Eyebrow class="text-brand-sky">Research incubator — {{ program.eligibility }}</Eyebrow>
+              <Eyebrow accent class="text-brand-sky">Research incubator — {{ program.eligibility }}</Eyebrow>
             </Motion>
 
             <Motion
@@ -124,7 +124,7 @@ const FAQS = [
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.6, delay: 0.35 }"
           >
-            <div class="w-full lg:w-80 border-l-4 border-brand-violet bg-white/[0.06] backdrop-blur-sm rounded-r-2xl p-6 font-mono">
+            <div class="w-full lg:w-80 border-l-4 border-brand-violet bg-white/[0.06] backdrop-blur-sm rounded-r-2xl p-6 font-mono-african">
               <div class="text-[11px] uppercase tracking-[0.2em] text-paper-static/50">Program record</div>
               <dl class="m-0 mt-2">
                 <div
@@ -149,7 +149,7 @@ const FAQS = [
     <Section class="bg-paper">
       <Container>
         <div class="max-w-5xl mx-auto">
-          <Eyebrow class="text-brand-violet mb-4 block">The work</Eyebrow>
+          <Eyebrow accent class="text-brand-violet mb-4 block">The work</Eyebrow>
           <Heading :level="2" class="mb-16 max-w-2xl">Six months of doing science, not hearing about it.</Heading>
 
           <div class="flex flex-col gap-16 md:gap-24">
@@ -166,7 +166,7 @@ const FAQS = [
                 <img :src="feature.img" :alt="feature.title" width="600" height="400" class="w-full h-full object-cover" loading="lazy" />
               </div>
               <div>
-                <div class="font-mono text-sm text-brand-violet mb-3">{{ String(i + 1).padStart(2, '0') }}</div>
+                <div class="font-mono-african text-sm text-brand-violet mb-3">{{ String(i + 1).padStart(2, '0') }}</div>
                 <Heading :level="3" class="mb-3">{{ feature.title }}</Heading>
                 <Body large>{{ feature.desc }}</Body>
               </div>
@@ -182,7 +182,7 @@ const FAQS = [
     <Section id="arc" class="bg-surface">
       <Container>
         <div class="max-w-4xl mx-auto">
-          <Eyebrow class="text-brand-violet mb-4 block">The arc</Eyebrow>
+          <Eyebrow accent class="text-brand-violet mb-4 block">The arc</Eyebrow>
           <Heading :level="2" class="mb-12">From first question to first paper.</Heading>
 
           <ol class="list-none p-0 m-0 grid grid-cols-[auto_28px_1fr] md:grid-cols-[180px_28px_1fr] gap-x-5 md:gap-x-8">
@@ -237,7 +237,7 @@ const FAQS = [
     <Section class="bg-paper border-y hairline-ink">
       <Container>
         <div class="max-w-4xl mx-auto">
-          <Eyebrow class="text-brand-violet mb-4 block">The record</Eyebrow>
+          <Eyebrow accent class="text-brand-violet mb-4 block">The record</Eyebrow>
           <Heading :level="2" class="mb-6">Work that leaves a paper trail.</Heading>
           <Body large class="max-w-2xl">
             Scholars close the program with a symposium presentation and a manuscript
@@ -256,7 +256,7 @@ const FAQS = [
             >
               <UiCard class="p-6 h-full !bg-surface">
                 <Icon :icon="area.icon" width="24" class="text-brand-violet mb-4" />
-                <div class="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60">2025 cohort</div>
+                <div class="font-mono-african text-[11px] uppercase tracking-[0.18em] text-ink/60">2025 cohort</div>
                 <div class="font-semibold text-ink mt-1">{{ area.name }}</div>
               </UiCard>
             </Motion>
@@ -272,7 +272,7 @@ const FAQS = [
     <Section class="bg-surface">
       <Container>
         <div class="max-w-4xl mx-auto">
-          <Eyebrow class="text-brand-violet mb-4 block">Mentorship</Eyebrow>
+          <Eyebrow accent class="text-brand-violet mb-4 block">Mentorship</Eyebrow>
           <Heading :level="2" class="mb-6">One scholar, one researcher.</Heading>
           <Body large class="max-w-2xl mb-12">
             Every scholar works 1:1 with a postdoctoral researcher or industry scientist,
@@ -285,7 +285,7 @@ const FAQS = [
               <div class="min-w-0">
                 <h4 class="font-semibold text-ink m-0 truncate">{{ mentor.name }}</h4>
                 <p class="text-sm text-ink/60 m-0">{{ mentor.title }}</p>
-                <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0">{{ mentor.institution }}</p>
+                <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0">{{ mentor.institution }}</p>
               </div>
             </UiCard>
           </div>

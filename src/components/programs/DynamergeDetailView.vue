@@ -183,7 +183,7 @@ const FAQS = [
               {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
             </UiButton>
             <UiButton variant="on-gradient-ghost" href="#sprint">See the four weeks</UiButton>
-            <span v-if="applyDeadline" class="font-mono text-xs uppercase tracking-[0.14em] text-white/80">
+            <span v-if="applyDeadline" class="font-mono-african text-xs uppercase tracking-[0.14em] text-white/80">
               Apply by {{ applyDeadline }}
             </span>
           </Motion>
@@ -228,10 +228,10 @@ const FAQS = [
          it back into a loop. -->
     <Section id="sprint" class="bg-paper">
       <Container>
-        <Eyebrow class="text-brand-violet mb-4 block">The sprint</Eyebrow>
+        <Eyebrow accent class="text-brand-violet mb-4 block">The sprint</Eyebrow>
         <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
           <Heading :level="2" class="max-w-xl">Four weeks. Zero filler.</Heading>
-          <div class="flex items-center font-mono text-xs uppercase tracking-[0.18em] text-ink/50">
+          <div class="flex items-center font-mono-african text-xs uppercase tracking-[0.18em] text-ink/50">
             <span>Daily</span>
             <span class="inline-block w-px h-3 bg-ink/20 mx-3" aria-hidden="true" />
             <span>Virtual</span>
@@ -261,7 +261,7 @@ const FAQS = [
                 : 'bg-surface border hairline-ink'"
             >
               <div
-                class="font-mono text-[11px] uppercase tracking-[0.2em]"
+                class="font-mono-african text-[11px] uppercase tracking-[0.2em]"
                 :class="i === program.timeline.length - 1 ? 'text-white/80' : 'text-brand-violet'"
               >
                 {{ step.date }}
@@ -282,7 +282,7 @@ const FAQS = [
     <Section class="bg-surface">
       <Container>
         <div class="max-w-4xl mx-auto">
-          <Eyebrow class="text-brand-violet mb-4 block">Week 2 onward</Eyebrow>
+          <Eyebrow accent class="text-brand-violet mb-4 block">Week 2 onward</Eyebrow>
           <Heading :level="2" class="mb-6">Pick your track.</Heading>
           <Body large class="max-w-2xl mb-10">
             After a shared foundations week, the cohort splits into specialized tracks.
@@ -334,10 +334,10 @@ const FAQS = [
       <Container>
         <div class="grid md:grid-cols-2 gap-10 md:gap-16 items-center max-w-5xl mx-auto">
           <div>
-            <Eyebrow class="text-brand-violet mb-4 block">The network</Eyebrow>
+            <Eyebrow accent class="text-brand-violet mb-4 block">The network</Eyebrow>
             <Heading :level="2" class="mb-6">One continent. One cohort.</Heading>
             <Body large class="mb-6">{{ program.features[2]?.desc }}</Body>
-            <div class="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.14em] text-brand-violet">
+            <div class="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 px-4 py-2 font-mono-african text-xs uppercase tracking-[0.14em] text-brand-violet">
               <Icon icon="lucide:globe-2" width="14" aria-hidden="true" />
               Open to every African country
             </div>
@@ -360,7 +360,7 @@ const FAQS = [
          StepUp's 1:1 roster. -->
     <Section class="bg-surface">
       <Container>
-        <Eyebrow class="text-brand-violet mb-4 block">Mentors</Eyebrow>
+        <Eyebrow accent class="text-brand-violet mb-4 block">Mentors</Eyebrow>
         <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
           <Heading :level="2" class="max-w-xl">Mentors dial in from everywhere.</Heading>
           <Body class="max-w-sm">{{ program.features[1]?.desc }}</Body>
@@ -376,7 +376,7 @@ const FAQS = [
             <div class="min-w-0">
               <h4 class="font-semibold text-ink m-0 truncate">{{ mentor.name }}</h4>
               <p class="text-sm text-ink/60 m-0 truncate">{{ mentor.title }}</p>
-              <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0 truncate">{{ mentor.institution }}</p>
+              <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0 truncate">{{ mentor.institution }}</p>
             </div>
           </UiCard>
         </div>
