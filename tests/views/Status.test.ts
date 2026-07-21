@@ -180,11 +180,11 @@ describe('Status.vue — reference status badges', () => {
     expect(wrapper.text()).toContain('Letter received')
   })
 
-  it('invited reference shows "Invite sent · awaiting"', async () => {
+  it('invited reference shows "Invite sent | awaiting"', async () => {
     const wrapper = await mountWithApp({
       references: [{ name: 'Prof. Lee', email: 'lee@uni.edu', institution: 'Yale', relationship: 'Mentor', status: 'invited' } as any],
     })
-    expect(wrapper.text()).toContain('Invite sent · awaiting')
+    expect(wrapper.text()).toContain('Invite sent | awaiting')
   })
 
   it('pending reference shows "Not yet invited"', async () => {
