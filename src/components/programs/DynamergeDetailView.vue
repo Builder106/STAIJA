@@ -90,7 +90,11 @@ const FAQS = [
          dark bottom-up scrim (same ink-static token StepUp's hero uses)
          carries text legibility instead. Still no parallax: Dynamerge's
          motion stays flatter than StepUp's by design. -->
-    <div class="relative flex flex-col justify-center overflow-hidden min-h-svh bg-ink-static">
+    <!-- min-height is 100svh minus the sticky header's own height (5rem:
+         py-5 + 40px logo), so header + hero together land exactly on one
+         screen and the marquee at the hero's bottom edge is visible
+         without scrolling on load. -->
+    <div class="relative flex flex-col justify-center overflow-hidden min-h-[calc(100svh-5rem)] bg-ink-static">
       <img
         :src="program.heroImg"
         :alt="program.name"
