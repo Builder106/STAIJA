@@ -59,21 +59,24 @@ const activeTrack = computed(() => TRACKS.find((t) => t.id === activeTrackId.val
 // Marquee sample — decorative reinforcement of the real eligibility rule
 // ("resident of any African country"), not a claim about where students
 // have come from.
+// c1/c2: two representative colors pulled from each country's own flag —
+// used for the hover gradient on its name in the marquee below, so the
+// accent is that country's identity rather than the fixed brand gradient.
 const MARQUEE_COUNTRIES = [
-  { name: 'Nigeria', flag: '🇳🇬' },
-  { name: 'Ghana', flag: '🇬🇭' },
-  { name: 'Kenya', flag: '🇰🇪' },
-  { name: 'Egypt', flag: '🇪🇬' },
-  { name: 'South Africa', flag: '🇿🇦' },
-  { name: 'Senegal', flag: '🇸🇳' },
-  { name: 'Rwanda', flag: '🇷🇼' },
-  { name: 'Ethiopia', flag: '🇪🇹' },
-  { name: 'Morocco', flag: '🇲🇦' },
-  { name: 'Uganda', flag: '🇺🇬' },
-  { name: 'Tanzania', flag: '🇹🇿' },
-  { name: 'Cameroon', flag: '🇨🇲' },
-  { name: 'Botswana', flag: '🇧🇼' },
-  { name: 'Algeria', flag: '🇩🇿' },
+  { name: 'Nigeria', flag: '🇳🇬', c1: '#008751', c2: '#FFFFFF' },
+  { name: 'Ghana', flag: '🇬🇭', c1: '#CE1126', c2: '#FCD116' },
+  { name: 'Kenya', flag: '🇰🇪', c1: '#BB0000', c2: '#006600' },
+  { name: 'Egypt', flag: '🇪🇬', c1: '#CE1126', c2: '#000000' },
+  { name: 'South Africa', flag: '🇿🇦', c1: '#007A4D', c2: '#FFB612' },
+  { name: 'Senegal', flag: '🇸🇳', c1: '#00853F', c2: '#FDEF42' },
+  { name: 'Rwanda', flag: '🇷🇼', c1: '#00A1DE', c2: '#FAD201' },
+  { name: 'Ethiopia', flag: '🇪🇹', c1: '#078930', c2: '#FCDD09' },
+  { name: 'Morocco', flag: '🇲🇦', c1: '#C1272D', c2: '#006233' },
+  { name: 'Uganda', flag: '🇺🇬', c1: '#FCDC04', c2: '#D90000' },
+  { name: 'Tanzania', flag: '🇹🇿', c1: '#1EB53A', c2: '#00A3DD' },
+  { name: 'Cameroon', flag: '🇨🇲', c1: '#007A5E', c2: '#FCD116' },
+  { name: 'Botswana', flag: '🇧🇼', c1: '#75AADB', c2: '#FFFFFF' },
+  { name: 'Algeria', flag: '🇩🇿', c1: '#006233', c2: '#D21034' },
 ]
 
 const FAQS = [
@@ -251,9 +254,14 @@ onUnmounted(() => {
             <span
               v-for="country in MARQUEE_COUNTRIES"
               :key="country.name"
-              class="pl-10 font-mono-african text-base md:text-lg uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
+              class="marquee-country pl-10 font-mono-african text-base md:text-lg uppercase tracking-[0.2em] whitespace-nowrap"
             >
-              <span class="marquee-flag inline-block" aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="inline-block w-px h-4 bg-white/25 ml-10" aria-hidden="true" />
+              <span class="marquee-flag inline-block" aria-hidden="true">{{ country.flag }}</span>
+              <span
+                class="marquee-name inline-block ml-2"
+                :style="{ '--c1': country.c1, '--c2': country.c2 }"
+              >{{ country.name }}</span>
+              <span class="inline-block w-px h-4 bg-white/25 ml-10" aria-hidden="true" />
             </span>
           </div>
         </div>
@@ -483,6 +491,26 @@ onUnmounted(() => {
 .marquee-flag {
   will-change: transform;
   transform-origin: center;
+}
+
+/* Hover gradient — each country's name tints toward its own flag colors
+   (--c1/--c2, set inline per span) instead of the fixed brand gradient,
+   so hovering reads as that country's identity, not a generic accent. */
+.marquee-name {
+  color: rgba(255, 255, 255, 0.8);
+  background-image: linear-gradient(90deg, var(--c1), var(--c2));
+  background-size: 100% 100%;
+  background-position: center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: color 200ms ease, -webkit-text-fill-color 200ms ease;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.8);
+}
+
+.marquee-country:hover .marquee-name,
+.marquee-country:focus-within .marquee-name {
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 /* WCAG 2.2.2 — focus pauses the scroll so a keyboard/AT user can stop it
