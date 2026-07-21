@@ -246,7 +246,7 @@ onMounted(load)
                 <p class="text-xs text-ink/50">
                   Max {{ spec.maxFileSizeMb ?? 10 }} MB
                   <template v-if="spec.acceptedFileTypes && spec.acceptedFileTypes.length">
-                    · accepts {{ spec.acceptedFileTypes.join(', ') }}
+                    | accepts {{ spec.acceptedFileTypes.join(', ') }}
                   </template>
                 </p>
                 <p v-if="file" class="text-xs text-ink/70">Selected: {{ file.name }}</p>

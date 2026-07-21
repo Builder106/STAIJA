@@ -153,13 +153,13 @@ const mentorOptions = computed<{ value: string; label: string }[]>(() => {
   const studentWord = (n: number) => (n === 1 ? 'student' : 'students')
   const autoPick = entries[0]
   const autoLabel = cohortEnrollmentsLoading.value
-    ? 'Auto · loading mentor loads…'
-    : `Auto · would pick ${autoPick.name} (${autoPick.load} ${studentWord(autoPick.load)})`
+    ? 'Auto | loading mentor loads…'
+    : `Auto | would pick ${autoPick.name} (${autoPick.load} ${studentWord(autoPick.load)})`
   return [
     { value: '', label: autoLabel },
     ...entries.map((e) => ({
       value: e.uid,
-      label: `${e.name} · ${e.load} ${studentWord(e.load)}`,
+      label: `${e.name} | ${e.load} ${studentWord(e.load)}`,
     })),
   ]
 })

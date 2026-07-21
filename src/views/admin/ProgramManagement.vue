@@ -436,7 +436,7 @@ const STEPUP_SEED: SeedTemplate = {
   name: 'StepUp Scholars',
   slug: 'stepup-scholars',
   pitch: 'A rigorous, Nigeria-based research incubator for high-school and gap-year students.',
-  eligibility: 'Ages 15–19 · Nigeria',
+  eligibility: 'Ages 15–19 | Nigeria',
   heroImg: 'https://images.unsplash.com/photo-1625082361965-1139be607018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
   stats: [
     { icon: 'lucide:users', label: 'Cohort size', value: '30 students' },
@@ -472,7 +472,7 @@ const DYNAMERGE_SEED: SeedTemplate = {
   name: 'Dynamerge',
   slug: 'dynamerge',
   pitch: 'A pan-African virtual summer bootcamp connecting ambitious students with global mentors.',
-  eligibility: 'Ages 15–20 · Pan-African',
+  eligibility: 'Ages 15–20 | Pan-African',
   heroImg: 'https://images.unsplash.com/photo-1620831468075-db24ca183258?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
   stats: [
     { icon: 'lucide:users', label: 'Eligibility', value: 'Pan-African' },
@@ -510,7 +510,7 @@ const DYNAMERGE_SEED: SeedTemplate = {
     <Container>
       <!-- Greeting -->
       <div class="flex flex-col gap-3 mb-12">
-        <Eyebrow class="text-brand-violet">Admin · Program settings</Eyebrow>
+        <Eyebrow class="text-brand-violet">Admin | Program settings</Eyebrow>
         <Heading :level="1">Programs</Heading>
         <Body class="text-ink/70 max-w-xl">
           Edit everything that shows on the public program page — pitch, hero
@@ -648,7 +648,7 @@ const DYNAMERGE_SEED: SeedTemplate = {
                   <input
                     v-model="drafts[p.id].eligibility"
                     type="text"
-                    placeholder="Ages 15–19 · Nigeria"
+                    placeholder="Ages 15–19 | Nigeria"
                     class="rounded-xl border hairline-ink bg-paper px-3 py-2 text-sm font-sans focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20"
                   />
                 </label>

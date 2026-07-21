@@ -50,7 +50,7 @@ function formatDate(d: Date): string {
 }
 
 function statusLabel(d: Donation): string {
-  if (d.status === 'success' && d.frequency === 'monthly') return 'Monthly · active'
+  if (d.status === 'success' && d.frequency === 'monthly') return 'Monthly | active'
   if (d.status === 'success') return 'Completed'
   if (d.status === 'failed') return 'Failed'
   if (d.status === 'cancelled') return 'Cancelled'
@@ -116,7 +116,7 @@ onMounted(load)
             <div class="flex flex-col flex-1 gap-1">
               <div class="font-display text-2xl font-semibold text-ink">{{ formatNaira(d.amountKobo) }}</div>
               <div class="text-sm text-ink/60">
-                {{ formatDate(d.createdAt) }} · ref <span class="font-mono text-xs">{{ d.ref }}</span>
+                {{ formatDate(d.createdAt) }} | ref <span class="font-mono text-xs">{{ d.ref }}</span>
               </div>
             </div>
             <span

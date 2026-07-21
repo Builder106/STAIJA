@@ -27,7 +27,7 @@ const FALLBACKS: Record<string, ProgramView> = {
   'stepup-scholars': {
     name: 'StepUp Scholars',
     pitch: 'A rigorous, Nigeria-based research incubator for high-school and gap-year students.',
-    eligibility: 'Ages 15–19 · Nigeria',
+    eligibility: 'Ages 15–19 | Nigeria',
     stats: [
       { icon: 'lucide:users', label: 'Cohort size', value: '30 students' },
       { icon: 'lucide:clock', label: 'Duration', value: '6 months' },
@@ -60,7 +60,7 @@ const FALLBACKS: Record<string, ProgramView> = {
   'dynamerge': {
     name: 'Dynamerge',
     pitch: 'A pan-African virtual summer bootcamp connecting ambitious students with global mentors.',
-    eligibility: 'Ages 15–20 · Pan-African',
+    eligibility: 'Ages 15–20 | Pan-African',
     stats: [
       { icon: 'lucide:users', label: 'Eligibility', value: 'Pan-African' },
       { icon: 'lucide:clock', label: 'Duration', value: '4 weeks' },

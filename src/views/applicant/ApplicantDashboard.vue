@@ -616,12 +616,12 @@ onBeforeUnmount(() => {
                   <Icon :icon="d.source === 'cloud' ? 'lucide:cloud' : 'lucide:cloud-off'" width="12" class="shrink-0" />
                   <span class="truncate">
                     {{ d.source === 'cloud'
-                      ? 'Draft · synced to your account'
-                      : 'Draft · couldn’t sync — only on this browser' }}
+                      ? 'Draft | synced to your account'
+                      : 'Draft | couldn’t sync — only on this browser' }}
                   </span>
                 </span>
                 <p class="text-sm text-ink/60 m-0">
-                  Saved {{ timeAgo(d.savedAt) }} · not submitted yet
+                  Saved {{ timeAgo(d.savedAt) }} | not submitted yet
                 </p>
               </div>
               <!-- Actions row. On mobile: spaced apart (Discard ←/
@@ -685,7 +685,7 @@ onBeforeUnmount(() => {
               </Body>
               <div class="flex items-center justify-between gap-4 pt-4 border-t hairline-ink">
                 <span class="text-xs font-semibold tracking-wide text-ink/55 uppercase">
-                  Ages 15–19 · Nigeria
+                  Ages 15–19 | Nigeria
                 </span>
                 <UiButton variant="primary" :to="'/apply/stepup-scholars'">
                   Apply
@@ -708,7 +708,7 @@ onBeforeUnmount(() => {
               </Body>
               <div class="flex items-center justify-between gap-4 pt-4 border-t hairline-ink">
                 <span class="text-xs font-semibold tracking-wide text-ink/55 uppercase">
-                  Ages 15–20 · Pan-African
+                  Ages 15–20 | Pan-African
                 </span>
                 <UiButton variant="primary" :to="'/apply/dynamerge'">
                   Apply

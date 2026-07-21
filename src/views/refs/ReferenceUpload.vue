@@ -164,7 +164,7 @@ onMounted(load)
               <div class="font-display text-2xl text-ink m-0">{{ context.applicantName }}</div>
               <div class="text-sm text-ink/60 mt-1">
                 Applying to {{ context.program }}
-                <template v-if="context.relationship"> · listed you as {{ context.relationship }}</template>
+                <template v-if="context.relationship"> | listed you as {{ context.relationship }}</template>
                 <template v-if="context.institution"> at {{ context.institution }}</template>.
               </div>
             </div>

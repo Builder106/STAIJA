@@ -1239,7 +1239,7 @@ onMounted(load)
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(m) }}
-                <span class="text-ink/40">· {{ entrySlug(m) }}</span>
+                <span class="text-ink/40">| {{ entrySlug(m) }}</span>
               </RouterLink>
             </div>
             <div v-if="orphans.lessons.length" class="flex flex-col gap-1">
@@ -1251,7 +1251,7 @@ onMounted(load)
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(l) }}
-                <span class="text-ink/40">· {{ entrySlug(l) }}</span>
+                <span class="text-ink/40">| {{ entrySlug(l) }}</span>
               </RouterLink>
             </div>
             <div v-if="orphans.assignments.length" class="flex flex-col gap-1">
@@ -1263,7 +1263,7 @@ onMounted(load)
                 class="text-ink/80 hover:text-brand-violet underline-offset-2 hover:underline"
               >
                 {{ entryTitle(a) }}
-                <span class="text-ink/40">· {{ entrySlug(a) }}</span>
+                <span class="text-ink/40">| {{ entrySlug(a) }}</span>
               </RouterLink>
             </div>
           </div>

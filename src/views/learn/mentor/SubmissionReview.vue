@@ -90,7 +90,7 @@ onMounted(load)
         </Heading>
         <p v-if="student" class="text-sm text-ink/60">
           From <strong class="text-ink">{{ student.displayName || student.email }}</strong>
-          <span v-if="submission"> · {{ fmtDate(submission.submittedAt) }}</span>
+          <span v-if="submission"> | {{ fmtDate(submission.submittedAt) }}</span>
         </p>
       </Container>
     </Section>

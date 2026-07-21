@@ -628,7 +628,7 @@ onMounted(() => {
                     >
                       View profile
                     </RouterLink>
-                    <span v-if="user.role === 'mentor'" class="text-ink/20 mx-2">·</span>
+                    <span v-if="user.role === 'mentor'" class="inline-block w-px h-3 bg-ink/20 mx-2" aria-hidden="true" />
                     <button
                       type="button"
                       class="text-xs font-medium text-brand-violet hover:underline disabled:text-ink/30 disabled:cursor-not-allowed disabled:no-underline"
@@ -637,7 +637,7 @@ onMounted(() => {
                     >
                       Change role
                     </button>
-                    <span class="text-ink/20 mx-2">·</span>
+                    <span class="inline-block w-px h-3 bg-ink/20 mx-2" aria-hidden="true" />
                     <button
                       type="button"
                       class="text-xs font-medium text-ink/70 hover:text-ink hover:underline"

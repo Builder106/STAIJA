@@ -348,7 +348,7 @@ onMounted(async () => {
             :viewport="{ once: true }"
             :transition="{ duration: 0.6, delay: 0.2 }"
           >
-            <Eyebrow class="text-brand-violet">{{ t('home.featured.eyebrow') }} · {{ featuredEyebrow }}</Eyebrow>
+            <Eyebrow class="text-brand-violet">{{ t('home.featured.eyebrow') }} | {{ featuredEyebrow }}</Eyebrow>
             <!-- Story title + dek come from CMS — they're translator-
                  owned at the Contentful layer (locale variants per
                  entry), not via i18n keys here. -->

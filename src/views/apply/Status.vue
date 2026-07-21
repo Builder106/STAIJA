@@ -243,7 +243,7 @@ const referenceList = computed<ReferenceWithStatus[]>(() => {
 
 function refStatusLabel(s: ReferenceWithStatus['status']) {
   if (s === 'received') return 'Letter received'
-  if (s === 'invited') return 'Invite sent · awaiting'
+  if (s === 'invited') return 'Invite sent | awaiting'
   return 'Not yet invited'
 }
 function refStatusClass(s: ReferenceWithStatus['status']) {
@@ -375,7 +375,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
               <div class="flex items-center gap-2 text-sm font-semibold" :class="responseConfirmedMeta.iconClass">
                 <Icon :icon="responseConfirmedMeta.icon" width="18" />
                 {{ responseConfirmedMeta.heading }}<span v-if="application.spotRespondedAt" class="font-normal text-ink/60">
-                  · {{ formatDate(new Date(application.spotRespondedAt)) }}
+                  | {{ formatDate(new Date(application.spotRespondedAt)) }}
                 </span>
               </div>
               <p class="text-sm text-ink/70 leading-relaxed m-0">
@@ -528,7 +528,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
             >
               <div>
                 <div class="text-sm font-semibold text-ink">{{ r.name || `Reference ${i + 1}` }}</div>
-                <div class="text-xs text-ink/60">{{ r.email }}{{ r.institution ? ` · ${r.institution}` : '' }}</div>
+                <div class="text-xs text-ink/60">{{ r.email }}{{ r.institution ? ` | ${r.institution}` : '' }}</div>
               </div>
               <span
                 class="self-start sm:self-auto inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border whitespace-nowrap"
@@ -565,7 +565,7 @@ function refStatusClass(s: ReferenceWithStatus['status']) {
               <dd class="text-ink m-0">
                 {{ application.personalInfo?.currentInstitution }}
                 <span v-if="application.personalInfo?.currentLevel" class="text-ink/60">
-                  · {{ application.personalInfo.currentLevel }}
+                  | {{ application.personalInfo.currentLevel }}
                 </span>
               </dd>
             </div>

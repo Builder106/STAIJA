@@ -43,7 +43,7 @@ function eyebrowFor(p: BlogPost): string {
   const day = d.getDate()
   const programLabel = p.program === 'stepup' ? 'StepUp' : p.program === 'dynamerge' ? 'Dynamerge' : ''
   const topicLabel = p.topic.charAt(0).toUpperCase() + p.topic.slice(1)
-  return [programLabel, topicLabel, `${month} ${day}`].filter(Boolean).join(' · ')
+  return [programLabel, topicLabel, `${month} ${day}`].filter(Boolean).join(' | ')
 }
 
 async function load() {

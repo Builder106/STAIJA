@@ -1324,7 +1324,7 @@ watch(
     <!-- Header band -->
     <Section class="!pt-12 !pb-8 wash-violet-6 border-b hairline-ink">
       <Container class="max-w-3xl">
-        <Eyebrow class="text-brand-violet mb-3 block">Apply · {{ program.scope }}</Eyebrow>
+        <Eyebrow class="text-brand-violet mb-3 block">Apply | {{ program.scope }}</Eyebrow>
         <Heading :level="1" class="mb-3">
           {{ program.name }}
         </Heading>
@@ -1646,7 +1646,7 @@ watch(
                     <Icon icon="lucide:sparkles" width="18" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <Heading :level="3" class="!text-lg mb-1">Show us something you've made <span class="text-ink/50 font-normal">· optional</span></Heading>
+                    <Heading :level="3" class="!text-lg mb-1">Show us something you've made <span class="text-ink/50 font-normal">| optional</span></Heading>
                     <Body class="text-ink/70 text-sm m-0">
                       A repo, a sketch, a track, a 60-second video of a
                       thing you built — anything that lets us see your
@@ -1661,14 +1661,14 @@ watch(
                   <input
                     v-model="showcaseUrl"
                     type="url"
-                    placeholder="https://github.com/…  ·  https://youtu.be/…  ·  https://behance.net/…"
+                    placeholder="https://github.com/…  |  https://youtu.be/…  |  https://behance.net/…"
                     class="border hairline-ink rounded-xl px-4 py-3 focus:outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet transition-all text-sm bg-surface"
                   />
                   <p class="text-xs text-ink/50 m-0">GitHub, YouTube (unlisted is fine), Behance, a blog post, an Instagram reel — whatever's easiest.</p>
                 </div>
 
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-ink/80">Or upload a file <span class="text-ink/50 font-normal">· up to 25 MB</span></label>
+                  <label class="text-sm font-semibold text-ink/80">Or upload a file <span class="text-ink/50 font-normal">| up to 25 MB</span></label>
                   <FileUpload
                     label="Image, short video, audio, or PDF"
                     accept="image/*,video/*,audio/*,application/pdf"
@@ -1685,7 +1685,7 @@ watch(
                 </div>
 
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-ink/80">One-line context <span class="text-ink/50 font-normal">· optional</span></label>
+                  <label class="text-sm font-semibold text-ink/80">One-line context <span class="text-ink/50 font-normal">| optional</span></label>
                   <input
                     v-model="showcaseNote"
                     type="text"
@@ -1713,7 +1713,7 @@ watch(
 
               <div class="border hairline-ink rounded-xl p-5 bg-paper/50 text-sm flex flex-col gap-3">
                 <div class="font-semibold text-ink">Program</div>
-                <div class="text-ink/70">{{ program.name }} · {{ program.scope }}</div>
+                <div class="text-ink/70">{{ program.name }} | {{ program.scope }}</div>
               </div>
 
               <div class="border hairline-ink rounded-xl p-5 bg-paper/50 text-sm flex flex-col gap-1">
@@ -1779,7 +1779,7 @@ watch(
               v-else-if="autoSave?.lastSavedAt"
               class="text-xs text-ink/50 hidden sm:inline"
             >
-              Draft saved · {{ savedAtLabel(autoSave.lastSavedAt) }}
+              Draft saved | {{ savedAtLabel(autoSave.lastSavedAt) }}
             </span>
             <UiButton
               v-if="currentStep?.id !== 'review'"

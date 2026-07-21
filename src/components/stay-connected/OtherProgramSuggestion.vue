@@ -37,13 +37,13 @@ const SUGGESTIONS: Record<string, Suggestion> = {
     slug: 'stepup-scholars',
     name: 'StepUp Scholars',
     pitch: 'A 6-month, in-person research incubator in Nigeria for ages 15–19.',
-    audience: 'Nigeria-based · ages 15–19',
+    audience: 'Nigeria-based | ages 15–19',
   },
   dynamerge: {
     slug: 'dynamerge',
     name: 'Dynamerge',
     pitch: 'A 4-week virtual summer bootcamp open to ages 15–20 across the continent.',
-    audience: 'Pan-African · ages 15–20 · fully virtual',
+    audience: 'Pan-African | ages 15–20 | fully virtual',
   },
 }
 

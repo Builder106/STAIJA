@@ -88,12 +88,12 @@ function statusBadgeFor(app: Application): { label: string; pill: string } {
     return { label: base?.label ?? app.status, pill: base?.pill ?? '' }
   }
   if (app.spotResponse === 'accepted') {
-    return { label: 'Accepted · Confirmed', pill: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    return { label: 'Accepted | Confirmed', pill: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
   }
   if (app.spotResponse === 'declined') {
-    return { label: 'Accepted · Declined', pill: 'bg-rose-50 text-rose-700 border-rose-200' }
+    return { label: 'Accepted | Declined', pill: 'bg-rose-50 text-rose-700 border-rose-200' }
   }
-  return { label: 'Accepted · Deferred', pill: 'bg-amber-50 text-amber-700 border-amber-200' }
+  return { label: 'Accepted | Deferred', pill: 'bg-amber-50 text-amber-700 border-amber-200' }
 }
 
 const PROGRAM_LABEL: Record<Application['program'], string> = {

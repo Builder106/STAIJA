@@ -179,7 +179,7 @@ export const PROGRAMS: Record<string, ProgramSchema> = {
     slug: 'stepup-scholars',
     name: 'StepUp Scholars',
     ageRange: 'Ages 15–19',
-    scope: 'Nigeria · in-person · 6 months',
+    scope: 'Nigeria | in-person | 6 months',
     programKey: 'stepup_scholars',
     eligibility: [
       { id: 'age', label: 'I am between 15 and 19 years old.', required: true },
@@ -202,7 +202,7 @@ export const PROGRAMS: Record<string, ProgramSchema> = {
     slug: 'dynamerge',
     name: 'Dynamerge',
     ageRange: 'Ages 15–20',
-    scope: 'Pan-African · virtual · 4 weeks',
+    scope: 'Pan-African | virtual | 4 weeks',
     programKey: 'dynamerge',
     eligibility: [
       { id: 'age', label: 'I am between 15 and 20 years old.', required: true },

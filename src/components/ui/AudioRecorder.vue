@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
     <div class="flex items-center gap-2 text-xs font-semibold text-ink/70">
       <Icon icon="lucide:mic" width="14" class="text-brand-violet" />
       <span class="uppercase tracking-wide">Audio response</span>
-      <span class="font-normal text-ink/50 normal-case">· optional · up to {{ maxSeconds }}s</span>
+      <span class="font-normal text-ink/50 normal-case">| optional | up to {{ maxSeconds }}s</span>
     </div>
     <p v-if="prompt" class="text-xs text-ink/65 m-0 leading-relaxed">{{ prompt }}</p>
 
@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
           {{ attachedAudio.fileName }}
         </span>
         <span class="text-xs text-ink/55">
-          <template v-if="attachedAudio.durationSec">{{ format(attachedAudio.durationSec) }} · </template>From your previous session
+          <template v-if="attachedAudio.durationSec">{{ format(attachedAudio.durationSec) }} | </template>From your previous session
         </span>
       </div>
       <div class="flex items-center gap-3 shrink-0">

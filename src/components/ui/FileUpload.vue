@@ -158,7 +158,7 @@ function clear() {
       <div class="flex flex-col flex-1 min-w-0">
         <span class="text-sm font-semibold text-ink truncate">{{ attachedFile.name }}</span>
         <span class="text-xs text-ink/55">
-          {{ formatBytes(attachedFile.sizeBytes) }} · From your previous session
+          {{ formatBytes(attachedFile.sizeBytes) }} | From your previous session
         </span>
       </div>
       <div class="flex items-center gap-3 shrink-0">
@@ -189,7 +189,7 @@ function clear() {
       <Icon icon="lucide:upload-cloud" width="24" class="text-ink/40" />
       <div class="flex flex-col">
         <span class="text-sm font-semibold text-ink">{{ compressing ? 'Compressing…' : 'Choose a file' }}</span>
-        <span class="text-xs text-ink/50">Up to {{ formatBytes(maxSizeBytes) }} · {{ accept }}</span>
+        <span class="text-xs text-ink/50">Up to {{ formatBytes(maxSizeBytes) }} | {{ accept }}</span>
       </div>
     </div>
 

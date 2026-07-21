@@ -271,7 +271,7 @@ async function handleDonateClick() {
             <span v-if="submitting">Opening checkout…</span>
             <span v-else>
               Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
-              <span v-if="currentAmountKobo() > 0" class="opacity-80">· {{ formatNaira(currentAmountKobo()) }}</span>
+              <span v-if="currentAmountKobo() > 0" class="opacity-80">| {{ formatNaira(currentAmountKobo()) }}</span>
             </span>
           </UiButton>
         </Magnetic>

@@ -80,8 +80,8 @@ export async function fetchReferralLeaderboard(
       id,
       identified: false, // flipped on join below for user rows
       displayName: isUserRow
-        ? `Member · ${uid?.slice(0, 6) ?? '?'}` // placeholder until the join resolves
-        : `Anonymous · ${id.slice(2)}`,
+        ? `Member | ${uid?.slice(0, 6) ?? '?'}` // placeholder until the join resolves
+        : `Anonymous | ${id.slice(2)}`,
       uid,
       signupCount: typeof data.signupCount === 'number' ? data.signupCount : 0,
       lastSignupAt: lastDate,
@@ -142,7 +142,7 @@ export async function fetchReferralLeaderboard(
     row.displayName =
       profile.displayName?.trim() ||
       profile.email?.trim() ||
-      `Member · ${row.uid.slice(0, 6)}`
+      `Member | ${row.uid.slice(0, 6)}`
   }
 
   return rows

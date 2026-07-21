@@ -286,7 +286,7 @@ onMounted(async () => {
           <Icon icon="lucide:arrow-left" width="12" /> All courses
         </RouterLink>
         <Eyebrow class="text-brand-violet mb-2 block">
-          Course<span v-if="isNew && route.query.from"> · duplicated draft</span>
+          Course<span v-if="isNew && route.query.from"> | duplicated draft</span>
         </Eyebrow>
         <Heading :level="1" class="mb-2">
           {{ isNew ? (route.query.from ? 'Duplicate course' : 'New course') : (form.title || 'Edit course') }}

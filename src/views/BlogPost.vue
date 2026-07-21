@@ -26,7 +26,7 @@ const eyebrow = computed(() => {
   const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const programLabel = post.value.program === 'stepup' ? 'StepUp' : post.value.program === 'dynamerge' ? 'Dynamerge' : ''
   const topicLabel = post.value.topic.charAt(0).toUpperCase() + post.value.topic.slice(1)
-  return [programLabel, topicLabel, date].filter(Boolean).join(' · ')
+  return [programLabel, topicLabel, date].filter(Boolean).join(' | ')
 })
 
 async function load() {

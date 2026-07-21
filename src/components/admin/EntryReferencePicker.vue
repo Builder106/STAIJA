@@ -82,7 +82,7 @@ function moveDown(idx: number) {
 function summarize(e: EntrySummary): string {
   const title = (e.fields.title as string) ?? '(untitled)'
   const slug = (e.fields.slug as string) ?? ''
-  return slug ? `${title} · ${slug}` : title
+  return slug ? `${title} | ${slug}` : title
 }
 
 onMounted(load)

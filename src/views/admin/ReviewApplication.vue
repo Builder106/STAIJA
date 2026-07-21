@@ -214,7 +214,7 @@ const documentRows = computed<DocumentRow[]>(() => {
   }
   if (docs.audio) {
     for (const [field, path] of Object.entries(docs.audio)) {
-      rows.push({ key: `audio:${field}`, label: `Audio answer · ${field}`, path })
+      rows.push({ key: `audio:${field}`, label: `Audio answer | ${field}`, path })
     }
   }
   return rows
@@ -712,7 +712,7 @@ onMounted(loadApplication)
                       </a>
                     </div>
                     <div class="text-xs text-ink/60 mt-1">
-                      {{ r.institution }}<span v-if="r.relationship"> · {{ r.relationship }}</span>
+                      {{ r.institution }}<span v-if="r.relationship"> | {{ r.relationship }}</span>
                     </div>
                   </li>
                 </ul>

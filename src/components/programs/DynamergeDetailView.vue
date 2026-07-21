@@ -139,9 +139,11 @@ const FAQS = [
             {{ program.pitch }}
           </Motion>
 
-          <!-- Fast facts as a plain mono strip, matching the "Daily ·
-               Virtual · Team-based" line further down this same page —
-               no boxes, just typography carrying the rhythm. -->
+          <!-- Fast facts as a plain mono strip, matching the "Daily |
+               Virtual | Team-based" line further down this same page —
+               no boxes, just typography carrying the rhythm. A thin
+               vertical rule divides items instead of a middle-dot
+               character — see CLAUDE.md "no dot-separator" rule. -->
           <Motion
             class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono text-xs uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
@@ -153,7 +155,7 @@ const FAQS = [
                 <Icon :icon="stat.icon" width="14" aria-hidden="true" class="text-white/60" />
                 {{ stat.value }}
               </span>
-              <span v-if="i < program.stats.length - 1" class="px-3 text-white/30" aria-hidden="true">·</span>
+              <span v-if="i < program.stats.length - 1" class="inline-block w-px h-3 bg-white/25 mx-3" aria-hidden="true" />
             </template>
           </Motion>
 
@@ -203,7 +205,7 @@ const FAQS = [
               :key="country.name"
               class="pl-8 font-mono text-xs uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
             >
-              <span aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="text-white/40 pl-8" aria-hidden="true">·</span>
+              <span aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="inline-block w-px h-3 bg-white/25 ml-8" aria-hidden="true" />
             </span>
           </div>
         </div>
@@ -227,7 +229,13 @@ const FAQS = [
         <Eyebrow class="text-brand-violet mb-4 block">The sprint</Eyebrow>
         <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
           <Heading :level="2" class="max-w-xl">Four weeks. Zero filler.</Heading>
-          <div class="font-mono text-xs uppercase tracking-[0.18em] text-ink/50">Daily · Virtual · Team-based</div>
+          <div class="flex items-center font-mono text-xs uppercase tracking-[0.18em] text-ink/50">
+            <span>Daily</span>
+            <span class="inline-block w-px h-3 bg-ink/20 mx-3" aria-hidden="true" />
+            <span>Virtual</span>
+            <span class="inline-block w-px h-3 bg-ink/20 mx-3" aria-hidden="true" />
+            <span>Team-based</span>
+          </div>
         </div>
         <Body large class="max-w-2xl mb-12">{{ program.features[0]?.desc }}</Body>
 
