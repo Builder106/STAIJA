@@ -106,10 +106,11 @@ function tickFlagLift() {
     const flagRect = flag.getBoundingClientRect()
     const flagCenter = flagRect.left + flagRect.width / 2
     const distance = Math.abs(flagCenter - centerX)
-    const proximity = Math.max(0, 1 - distance / 160)
-    const scale = 1 + proximity * 0.14
-    const lift = proximity * 6
+    const proximity = Math.max(0, 1 - distance / 220)
+    const scale = 1 + proximity * 0.6
+    const lift = proximity * 16
     flag.style.transform = `translateY(${-lift}px) scale(${scale})`
+    flag.style.filter = proximity > 0.05 ? `drop-shadow(0 ${2 + proximity * 4}px ${4 + proximity * 8}px rgba(0,0,0,${proximity * 0.45}))` : 'none'
   })
   flagLiftFrame = requestAnimationFrame(tickFlagLift)
 }
