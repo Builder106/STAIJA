@@ -19,7 +19,7 @@ withDefaults(defineProps<{
   -->
   <span
     class="uppercase tracking-[0.14em]"
-    :class="accent ? 'font-accent-african-secondary text-sm font-extrabold' : 'font-mono text-[11px] font-medium'"
+    :class="accent ? 'font-accent-african-secondary text-lg font-extrabold' : 'font-mono text-[11px] font-medium'"
   >
     <slot />
   </span>
