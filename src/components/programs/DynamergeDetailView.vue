@@ -205,7 +205,7 @@ const FAQS = [
             <span
               v-for="country in MARQUEE_COUNTRIES"
               :key="country.name"
-              class="pl-8 font-mono text-xs uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
+              class="pl-8 font-mono-african text-xs uppercase tracking-[0.2em] text-white/80 whitespace-nowrap"
             >
               <span aria-hidden="true">{{ country.flag }}</span> {{ country.name }} <span class="inline-block w-px h-3 bg-white/25 ml-8" aria-hidden="true" />
             </span>
@@ -422,6 +422,10 @@ const FAQS = [
    strip. */
 .marquee {
   overflow: hidden;
+  /* Edge fade instead of a hard clip -- flags/names dissolve in and out
+     rather than cutting off mid-glyph at the container edge. */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
 .marquee-track {
