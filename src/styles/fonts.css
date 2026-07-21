@@ -45,6 +45,20 @@
   line-gap-override: 0%;
 }
 
+/* Madimi One is an African-designed static-weight display face (Taurai
+   Valerie Mtake, OFL) used as `--font-accent-african` — the primary
+   accent, currently the Dynamerge program wordmark. Values derived
+   directly from the font's own hhea/OS/2 tables, same method as Ojuju
+   below. */
+@font-face {
+  font-family: 'Madimi One Fallback';
+  src: local('Arial');
+  size-adjust: 119.2%;
+  ascent-override: 101%;
+  descent-override: 31%;
+  line-gap-override: 0%;
+}
+
 /* Ojuju is a reverse-contrast African-designed variable face (Chisaokwu
    Joboson, Udi Foundry, OFL) used narrowly as `--font-accent-african` —
    wordmarks, hero numerals, stat callouts. Not a Google Fonts CDN font,
@@ -713,5 +727,19 @@
   font-weight: 800;
   font-display: swap;
   src: url(/fonts/Ojuju-ExtraBold800-subset.woff2) format('woff2');
+  unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
+}
+
+/* === Madimi One (hand-built, not CDN-generated) ======================
+   Single static weight (400) — no variable axis to instance. Subset to
+   Latin + Latin Extended-A/B + Latin Extended Additional with
+   `fonttools subset`, then compressed to woff2 with `fonttools
+   ttLib.woff2`. Source: https://github.com/google/fonts/tree/main/ofl/madimione (OFL). */
+@font-face {
+  font-family: 'Madimi One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/MadimiOne-Regular-subset.woff2) format('woff2');
   unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
 }

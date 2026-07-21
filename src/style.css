@@ -70,13 +70,23 @@
    --font-display: 'IBM Plex Sans', 'IBM Plex Sans Fallback', system-ui, sans-serif;
    --font-sans: 'Inter', 'Inter Fallback', sans-serif;
    --font-mono: 'IBM Plex Mono', 'IBM Plex Mono Fallback', ui-monospace, monospace;
-   /* African-designed accent face (Ojuju, OFL) — reverse-contrast,
-      variable-weight, by Nigerian designer Chisaokwu Joboson. Scoped
-      narrowly to wordmarks, hero numerals, and stat callouts; never
-      body text or nav — see docs/TYPOGRAPHY-SYSTEM.md. Two static
-      instances shipped: 500 for eyebrow-weight accents, 800 for
-      display-weight ones. */
-   --font-accent-african: 'Ojuju', 'Ojuju Fallback', var(--font-display);
+   /* African-designed accent faces — see docs/TYPOGRAPHY-SYSTEM.md.
+      Both scoped narrowly (currently: Dynamerge hero only), never body
+      text or nav.
+
+      Primary: Madimi One (OFL), by Zimbabwean designer Taurai Valerie
+      Mtake, Nguni-symbol-derived organic forms. Used for program
+      wordmarks — ships one weight (400), so no font-weight override
+      past normal.
+
+      Secondary: Ojuju (OFL), by Nigerian designer Chisaokwu Joboson,
+      reverse-contrast variable weight. Tried as the wordmark face
+      first and pulled — reads too heavy/strange at hero scale — but
+      kept for short non-header labels (eyebrows, stat callouts) where
+      its smaller static instance (wght=500) reads as a considered
+      accent rather than a headline. */
+   --font-accent-african: 'Madimi One', 'Madimi One Fallback', var(--font-display);
+   --font-accent-african-secondary: 'Ojuju', 'Ojuju Fallback', var(--font-mono);
 
    --radius-xl: 12px;
    --radius-2xl: 16px;

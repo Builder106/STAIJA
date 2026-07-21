@@ -102,16 +102,25 @@ const FAQS = [
       <div class="absolute inset-0 z-0 bg-gradient-to-t from-ink-static via-ink-static/55 to-ink-static/15" />
       <Container class="relative z-10 py-24 grow flex flex-col justify-center">
         <div class="max-w-3xl flex flex-col gap-6">
+          <!-- Ojuju (secondary African accent, wght=500) on this short
+               eyebrow label only — a non-header spot to test it now
+               that Madimi One (below) has the wordmark role. See
+               docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
-            <div class="inline-flex items-center gap-2.5 rounded-full bg-ink-static/25 border border-white/25 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white">
+            <div class="inline-flex items-center gap-2.5 rounded-full bg-ink-static/25 border border-white/25 px-4 py-1.5 font-accent-african-secondary text-xs uppercase tracking-[0.18em] text-white">
               <template v-if="isApplyOpen">Applications open now</template>
               <template v-else-if="closedReason === 'upcoming'">Applications open soon</template>
               <template v-else>Applications closed for this cycle</template>
             </div>
           </Motion>
 
+          <!-- Program wordmark uses Madimi One (African-designed, OFL —
+               see docs/TYPOGRAPHY-SYSTEM.md), the primary accent face.
+               Scoped to program.name only; body copy, stats, and the
+               marquee below stay on the existing Plex/mono system.
+               font-normal because Madimi One ships one weight (400). -->
           <Motion
-            class="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white"
+            class="font-accent-african text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-white"
             as="h1"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
