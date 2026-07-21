@@ -18,8 +18,8 @@ withDefaults(defineProps<{
     the rest of the typography toward technical austerity.
   -->
   <span
-    class="text-[11px] font-medium uppercase tracking-[0.14em]"
-    :class="accent ? 'font-accent-african-secondary' : 'font-mono'"
+    class="font-medium uppercase tracking-[0.14em]"
+    :class="accent ? 'font-accent-african-secondary text-sm' : 'font-mono text-[11px]'"
   >
     <slot />
   </span>
