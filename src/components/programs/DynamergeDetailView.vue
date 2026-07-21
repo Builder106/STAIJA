@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Motion } from 'motion-v'
 import { Icon } from '@iconify/vue'
 import Container from '../ui/Container.vue'
@@ -86,43 +86,6 @@ const FAQS = [
   { q: 'Can I apply to both programs?', a: 'Yes, but you can only participate in one program per calendar year if accepted to both.' },
 ]
 
-// Flag lift-on-proximity: each flag in the country marquee scales/lifts as
-// it crosses the strip's horizontal center, like a coverflow. Driven by a
-// rAF loop reading live getBoundingClientRect() positions rather than
-// tying into the CSS scroll animation directly, since the marquee's
-// translateX keyframe has no JS-observable "position" to hook into.
-// Mutates style directly instead of going through Vue reactivity —
-// this runs every frame, and reactive refs per-flag would be needless
-// overhead for a purely visual, non-stateful effect.
-const marqueeStageRef = ref<HTMLElement | null>(null)
-let flagLiftFrame: number | null = null
-
-function tickFlagLift() {
-  const stage = marqueeStageRef.value
-  if (!stage) return
-  const stageRect = stage.getBoundingClientRect()
-  const centerX = stageRect.left + stageRect.width / 2
-  stage.querySelectorAll<HTMLElement>('.marquee-flag').forEach((flag) => {
-    const flagRect = flag.getBoundingClientRect()
-    const flagCenter = flagRect.left + flagRect.width / 2
-    const distance = Math.abs(flagCenter - centerX)
-    const proximity = Math.max(0, 1 - distance / 220)
-    const scale = 1 + proximity * 0.6
-    const lift = proximity * 16
-    flag.style.transform = `translateY(${-lift}px) scale(${scale})`
-    flag.style.filter = proximity > 0.05 ? `drop-shadow(0 ${2 + proximity * 4}px ${4 + proximity * 8}px rgba(0,0,0,${proximity * 0.45}))` : 'none'
-  })
-  flagLiftFrame = requestAnimationFrame(tickFlagLift)
-}
-
-onMounted(() => {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  flagLiftFrame = requestAnimationFrame(tickFlagLift)
-})
-
-onUnmounted(() => {
-  if (flagLiftFrame !== null) cancelAnimationFrame(flagLiftFrame)
-})
 </script>
 
 <template>
@@ -192,13 +155,18 @@ onUnmounted(() => {
                font-mono-african (STAIJA Tac Mono) instead of Plex Mono
                here only — see docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion
-            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80 cursor-pennant"
+            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.15 }"
           >
             <template v-for="(stat, i) in program.stats" :key="stat.label">
-              <span class="inline-flex items-center gap-2">
+              <!-- cursor-pennant lives on the span itself (inline-flex,
+                   shrink-wraps to content) rather than the row above —
+                   the row is a block-level flex container spanning the
+                   full column width, so its hitbox would extend past the
+                   last stat into empty space. -->
+              <span class="inline-flex items-center gap-2 cursor-pennant">
                 <Icon :icon="stat.icon" width="20" aria-hidden="true" class="text-white/60" />
                 {{ stat.value }}
               </span>
@@ -238,13 +206,12 @@ onUnmounted(() => {
       <!-- Country marquee — pinned to the hero's bottom edge. Decorative
            (the real rule is "any African country"); duplicated track for
            a seamless loop, clone hidden from AT. Reduced-motion users
-           get a static strip via the global animation kill-switch (which
-           also short-circuits the flag-lift rAF loop below — see
-           startFlagLift). Flags scale/lift as they cross the strip's
-           center, a coverflow-style cue that something is passing
-           "through" rather than just sliding past. -->
+           get a static strip via the global animation kill-switch. Each
+           flag scales/lifts on hover (.marquee-flag:hover below) — a
+           coverflow-style cue, deliberately hover-triggered rather than
+           the earlier proximity-to-center rAF version, which animated
+           constantly regardless of where the cursor was. -->
       <div
-        ref="marqueeStageRef"
         class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse cursor-dot"
         role="group"
         tabindex="0"
@@ -499,9 +466,19 @@ onUnmounted(() => {
   animation: marquee-scroll 36s linear infinite;
 }
 
+/* Flag lift-on-hover — was previously a rAF loop that scaled/lifted
+   whichever flag was nearest the strip's horizontal center, regardless
+   of the cursor. Simpler and more predictable as a plain :hover: only
+   the flag actually under the pointer reacts. */
 .marquee-flag {
-  will-change: transform;
+  display: inline-block;
   transform-origin: center;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 220ms ease;
+}
+
+.marquee-flag:hover {
+  transform: translateY(-16px) scale(1.6);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
 }
 
 /* Hover gradient — each country's name tints toward its own flag colors
