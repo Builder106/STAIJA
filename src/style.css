@@ -87,6 +87,16 @@
       accent rather than a headline. */
    --font-accent-african: 'Madimi One', 'Madimi One Fallback', var(--font-display);
    --font-accent-african-secondary: 'Ojuju', 'Ojuju Fallback', var(--font-mono);
+   /* African-designed monospace face — a fonttools-built variant, not a
+      typeface anyone shipped as-is. No credible African-designed
+      monospace exists on Google Fonts today. Built by re-metricing Tac
+      One (Afrotype, OFL) onto a fixed-width grid and hand-fixing the
+      disambiguation glyphs a real code face needs (serifed capital I,
+      dotted zero) that a pure metrics hack can't get from width
+      changes alone. See docs/TYPOGRAPHY-SYSTEM.md for the full
+      derivation and OFL compliance notes. Renamed per OFL §3 — this is
+      a Modified Version and may not carry Tac One's name. */
+   --font-mono-african: 'STAIJA Tac Mono', 'STAIJA Tac Mono Fallback', var(--font-mono);
 
    --radius-xl: 12px;
    --radius-2xl: 16px;

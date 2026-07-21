@@ -143,9 +143,11 @@ const FAQS = [
                Virtual | Team-based" line further down this same page —
                no boxes, just typography carrying the rhythm. A thin
                vertical rule divides items instead of a middle-dot
-               character — see CLAUDE.md "no dot-separator" rule. -->
+               character — see CLAUDE.md "no dot-separator" rule.
+               font-mono-african (STAIJA Tac Mono) instead of Plex Mono
+               here only — see docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion
-            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono text-xs uppercase tracking-[0.14em] text-white/80"
+            class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-xs uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.15 }"

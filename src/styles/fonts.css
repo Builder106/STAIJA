@@ -59,6 +59,23 @@
   line-gap-override: 0%;
 }
 
+/* STAIJA Tac Mono is a fonttools-built Modified Version of Tac One
+   (Afrotype, OFL) — re-metriced onto a fixed-width grid and hand-fixed
+   for the disambiguation glyphs a real monospace face needs. Values
+   derived from Tac One's own hhea/OS/2 tables; the forced-mono target
+   advance (540/1000 em) stands in for xAvgCharWidth since re-metricing
+   changed the font's actual average glyph width from its shipped
+   value. See public/fonts/OFL-StaijaTacMono.txt for full license/
+   attribution and docs/TYPOGRAPHY-SYSTEM.md for the derivation. */
+@font-face {
+  font-family: 'STAIJA Tac Mono Fallback';
+  src: local('Menlo'), local('Consolas');
+  size-adjust: 122.3%;
+  ascent-override: 83%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+
 /* Ojuju is a reverse-contrast African-designed variable face (Chisaokwu
    Joboson, Udi Foundry, OFL) used narrowly as `--font-accent-african` —
    wordmarks, hero numerals, stat callouts. Not a Google Fonts CDN font,
@@ -741,5 +758,20 @@
   font-weight: 400;
   font-display: swap;
   src: url(/fonts/MadimiOne-Regular-subset.woff2) format('woff2');
+  unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
+}
+
+/* === STAIJA Tac Mono (fonttools-modified, not CDN-generated) =========
+   A Modified Version of Tac One (Afrotype, OFL) — see
+   public/fonts/OFL-StaijaTacMono.txt for the license/attribution this
+   file must ship with, and docs/TYPOGRAPHY-SYSTEM.md for how it was
+   built. Not "Tac One" — renamed per OFL §3, both in this @font-face
+   and in the font's own internal name table. */
+@font-face {
+  font-family: 'STAIJA Tac Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/StaijaTacMono-Regular-subset.woff2) format('woff2');
   unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
 }
