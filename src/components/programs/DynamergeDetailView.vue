@@ -90,7 +90,7 @@ const FAQS = [
          dark bottom-up scrim (same ink-static token StepUp's hero uses)
          carries text legibility instead. Still no parallax: Dynamerge's
          motion stays flatter than StepUp's by design. -->
-    <div class="relative flex flex-col justify-center overflow-hidden min-h-[88svh] bg-ink-static">
+    <div class="relative flex flex-col justify-center overflow-hidden min-h-svh bg-ink-static">
       <img
         :src="program.heroImg"
         :alt="program.name"
