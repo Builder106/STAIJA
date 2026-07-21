@@ -244,7 +244,7 @@ onUnmounted(() => {
         class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse"
         role="group"
         tabindex="0"
-        aria-label="Open to students across Africa, scrolling. Hover or focus to pause."
+        aria-label="Open to students across Africa, scrolling. Focus to pause."
       >
         <div class="marquee-track">
           <div v-for="clone in 2" :key="clone" class="flex shrink-0" :aria-hidden="clone === 2">
@@ -485,9 +485,10 @@ onUnmounted(() => {
   transform-origin: center;
 }
 
-/* WCAG 2.2.2 — hover or focus pauses the scroll so a reader can stop it
-   and take their time, without requiring OS-level reduced-motion. */
-.marquee:hover .marquee-track,
+/* WCAG 2.2.2 — focus pauses the scroll so a keyboard/AT user can stop it
+   and take their time, without requiring OS-level reduced-motion.
+   Deliberately keyboard-only, not :hover — a mouse just passing over the
+   strip on its way elsewhere shouldn't freeze it. */
 .marquee:focus-within .marquee-track {
   animation-play-state: paused;
 }
