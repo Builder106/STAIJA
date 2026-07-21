@@ -110,15 +110,8 @@ const FAQS = [
             </div>
           </Motion>
 
-          <!-- Program wordmark uses the Ojuju accent face (African-designed,
-               OFL — see docs/TYPOGRAPHY-SYSTEM.md) instead of the site's
-               Plex Sans display face. Scoped to the program name only —
-               body copy, stats, and the marquee below stay on the
-               existing Plex/mono system. font-extrabold matches the one
-               heavy static instance shipped (wght=800); Ojuju has no
-               600 to fall back on. -->
           <Motion
-            class="font-accent-african text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white"
+            class="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white"
             as="h1"
             :initial="{ opacity: 0, y: 10 }"
             :animate="{ opacity: 1, y: 0 }"
