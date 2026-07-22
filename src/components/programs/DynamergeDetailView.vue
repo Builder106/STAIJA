@@ -515,11 +515,14 @@ function onMarqueePointerRelease(e: PointerEvent) {
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
     /* The strip's cursor-pin (22x26px, hotspot near its bottom tip) sits
        right on top of the space the flag lifts/scales into, blocking
-       the animation it's meant to be pointing at. The lift + shadow is
-       already strong feedback on its own — hide the cursor for the
-       ~20px the flag occupies rather than adding a second, smaller
-       cursor variant that would still partially overlap. */
-    cursor: none;
+       the animation it's meant to be pointing at. cursor: none was
+       tried first and reverted — a cursor silently vanishing reads as
+       "something broke," not as intentional, on a page with no other
+       reason to expect that. --cursor-dot (defined once in style.css,
+       reused here — see docs/CURSOR-SYSTEM.md) is compact and
+       dead-center instead, so it stays visible without looming over
+       the lifted flag the way the larger, off-center pin did. */
+    cursor: var(--cursor-dot), pointer;
   }
 
   .marquee-country:hover .marquee-name {
