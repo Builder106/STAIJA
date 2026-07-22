@@ -26,8 +26,17 @@ const props = withDefaults(
 
 defineEmits<{ (e: 'click', payload: MouseEvent): void }>()
 
+// No cursor-pointer here: Tailwind's utility lives in the `utilities`
+// cascade layer, which comes after `base` in this file's
+// `@layer legacy, theme, base, components, utilities;` order — so it
+// would silently outrank .brand-surface a/button's --cursor-clickable
+// rule (also in @layer base) regardless of specificity, showing the
+// native OS pointer on every button instead of the custom cursor. This
+// component always renders as a real <button>/<a>/RouterLink (see
+// `tag` below), so the base rule already applies cursor: pointer as a
+// fallback anyway.
 const base =
-  'inline-flex items-center justify-center font-sans text-sm font-semibold cursor-pointer transition-[background-color,border-color,box-shadow,transform,opacity] disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center justify-center font-sans text-sm font-semibold transition-[background-color,border-color,box-shadow,transform,opacity] disabled:opacity-50 disabled:pointer-events-none'
 
 const variantClass = computed(() => {
   switch (props.variant) {
