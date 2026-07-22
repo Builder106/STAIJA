@@ -150,16 +150,20 @@
    background-color: rgba(240, 244, 248, 0.06);
 }
 
-/* --cursor-clickable is the one cursor built from fixed paper/ink tones
-   rather than the brand gradient (see @layer base, html custom
-   properties, for why the gradient was dropped here specifically). That
-   means it needs its own light/dark flip, same as any other paper/ink
-   consumer on this page — a white-halo-on-dark-glyph mark reads as a
-   light-mode object stamped on top of a dark surface otherwise. Same
-   swap the rest of this file already does: --color-paper's light value
-   becomes the halo, --color-ink's light value becomes the glyph. */
+/* --cursor-clickable is the one cursor built from a flat brand color
+   plus a fixed paper-colored halo, rather than the two-stop brand
+   gradient every other cursor uses (see @layer base, html custom
+   properties, for why the gradient was dropped here specifically). The
+   halo half of that pairing still needs its own light/dark flip, same
+   as any other paper/ink consumer on this page — a paper-colored halo
+   sized for the light background reads as a light-mode object stamped
+   on top of a dark surface otherwise. The glyph itself also switches
+   from --color-brand-violet to --color-brand-sky in dark mode — sky
+   sits at higher contrast against the darker paper than violet does,
+   the same reasoning that already governs which brand hue gets used
+   where elsewhere on this page. */
 [data-theme="dark"] {
-   --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2719%27%20height%3D%2722%27%20viewBox%3D%270%200%20448%20512%27%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%230B0E12%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%2726%27%20stroke-linejoin%3D%27round%27/%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%23F0F4F8%27/%3E%20%3C/svg%3E") 7 1;
+   --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2719%27%20height%3D%2722%27%20viewBox%3D%270%200%20448%20512%27%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%230B0E12%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%2726%27%20stroke-linejoin%3D%27round%27/%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%235EDBE7%27/%3E%20%3C/svg%3E") 7 1;
 }
 
 [data-theme="dark"] .gradient-blob {
@@ -422,28 +426,30 @@
         docs/CURSOR-SYSTEM.md. The real Font Awesome "hand-pointer"
         solid glyph (fa6-solid:hand-pointer — pulled from Iconify's API,
         same source @iconify/vue already draws from elsewhere on this
-        site, e.g. lucide:chevron-down), restyled as a white-halo + ink
-        two-tone rather than its native currentColor fill: the halo is
-        the same path drawn once behind with a thick white stroke, the
-        ink copy sits on top with no stroke, so the outline follows the
-        icon's real contours exactly instead of an approximated shape.
-        Earlier attempts: reusing lucide "pointer" (a two-finger
-        index-and-pinky gesture, not a single point, and reads as an
-        odd hand at cursor size); a hand-drawn three-rectangle
-        approximation of a pointing hand (worked, but wasn't an actual
-        published glyph); a closed diamond-and-crosshair outline (read
-        as a gem/badge icon sitting on the text it hovered); a thin
-        open-cornered bracket (too subtle to register as a cursor); a
-        ring-and-dot target mark (didn't read as "clickable" — a
-        bullseye borrows nothing from the pointing-hand convention
-        users already know). The brand gradient was dropped separately
-        — it's the same gradient used on the STAIJA logo mark, so a
-        gradient cursor hovering the logo visually merged into it.
-        White-halo-plus-ink stays legible over any background,
-        brand-colored or not, at the cost of needing its own
+        site, e.g. lucide:chevron-down), restyled in the brand palette:
+        the glyph fill is --color-brand-violet (not currentColor, not
+        the two-stop violet→sky gradient every other cursor uses — see
+        below for why), on a paper-colored halo for contrast. The halo
+        is the same path drawn once behind with a thick stroke, the
+        brand-colored copy sits on top with no stroke, so the outline
+        follows the icon's real contours exactly instead of an
+        approximated shape. The two-stop gradient specifically was
+        tried and dropped: it's the same gradient used on the STAIJA
+        logo mark, so a gradient cursor hovering the logo visually
+        merged into it. A single flat brand color reads as on-system
+        without that collision. Earlier attempts at the glyph itself:
+        reusing lucide "pointer" (a two-finger index-and-pinky gesture,
+        not a single point, and reads as an odd hand at cursor size); a
+        hand-drawn three-rectangle approximation of a pointing hand
+        (worked, but wasn't an actual published glyph); a closed
+        diamond-and-crosshair outline (read as a gem/badge icon sitting
+        on the text it hovered); a thin open-cornered bracket (too
+        subtle to register as a cursor); a ring-and-dot target mark
+        (didn't read as "clickable" — a bullseye borrows nothing from
+        the pointing-hand convention users already know). Needs its own
         [data-theme="dark"] override — see the note near that override
         for why. */
-      --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2719%27%20height%3D%2722%27%20viewBox%3D%270%200%20448%20512%27%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27white%27%20stroke%3D%27white%27%20stroke-width%3D%2726%27%20stroke-linejoin%3D%27round%27/%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%231B1B23%27/%3E%20%3C/svg%3E") 7 1;
+      --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2719%27%20height%3D%2722%27%20viewBox%3D%270%200%20448%20512%27%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27white%27%20stroke%3D%27white%27%20stroke-width%3D%2726%27%20stroke-linejoin%3D%27round%27/%3E%20%3Cpath%20d%3D%27M128%2040c0-22.1%2017.9-40%2040-40s40%2017.9%2040%2040v148.2c8.5-7.6%2019.7-12.2%2032-12.2c20.6%200%2038.2%2013%2045%2031.2c8.8-9.3%2021.2-15.2%2035-15.2c25.3%200%2046%2019.5%2047.9%2044.3c8.5-7.7%2019.8-12.3%2032.1-12.3c26.5%200%2048%2021.5%2048%2048v112c0%2070.7-57.3%20128-128%20128h-85.3c-5%200-9.9-.3-14.7-1c-55.3-5.6-106.2-34-140-79L8%20336c-13.3-17.7-9.7-42.7%208-56s42.7-9.7%2056%208l56%2074.7z%27%20fill%3D%27%238B55FF%27/%3E%20%3C/svg%3E") 7 1;
    }
 
    ::-webkit-scrollbar {
