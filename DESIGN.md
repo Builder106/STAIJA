@@ -23,7 +23,7 @@ Light/dark is driven by `[data-theme="dark"]` on `<html>`, not a class — this 
 | `font-display` | IBM Plex Sans | Headings only |
 | `font-sans` | Inter | Body |
 | `font-mono` | IBM Plex Mono | Data labels, slugs |
-| `font-accent-african` | Madimi One | Program wordmarks — Dynamerge hero only, one weight (400) |
+| `font-accent-african` | Madimi One | Program wordmarks (Dynamerge hero) and the homepage hero's lead word ("Africa's" in `home.hero.headline`) — one weight (400) |
 | `font-accent-african-secondary` | Ojuju | Short labels only (eyebrows, stat callouts) at wght=500 — too heavy at hero/headline scale |
 | `font-mono-african` | STAIJA Tac Mono | In-house re-metriced Tac One variant; treat as the house mono face wherever `font-mono` would otherwise go on African-program surfaces |
 
@@ -42,7 +42,7 @@ Program detail pages are split by content shape, not shared through one generic 
 
 ## Semantic color usage
 
-- `color.brand.violet` / `color.brand.sky`: brand gradient anchors only — nav, hero, footer, focus rings, hairline stripes. Not for arbitrary accents.
+- `color.brand.violet` / `color.brand.sky`: brand gradient anchors — nav, hero, footer, focus rings, hairline stripes, and `UiButton`'s `gradient` variant (the established primary-submit-CTA pattern: Donate, Sign Up, Sign In, Apply, Invite Accept). Not for arbitrary one-off accents outside these.
 - `color.ink` at reduced opacity (`opacity.wash-ink-6`, `opacity.hairline-ink`) for dividers and subtle washes — never a hardcoded gray literal.
 - Focus rings: `opacity.focus-ring-brand` (violet) on paper/light surfaces, `opacity.focus-ring-inverse` (white) on gradient/dark surfaces — pick by surface, not by component type.
 - Placeholders inside `.brand-surface` inputs/textareas: `color.ink` at `opacity.placeholder-ink` (45%), not the browser default gray, which reads near-invisible in dark mode.

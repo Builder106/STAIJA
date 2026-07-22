@@ -141,6 +141,9 @@ onMounted(async () => {
                    (part1 / accent / part2) wouldn't survive contact
                    with the language. -->
               <i18n-t keypath="home.hero.headline" tag="span">
+                <template #lead>
+                  <span class="font-accent-african africa-gradient-text">{{ t('home.hero.headlineLead') }}</span>
+                </template>
                 <template #accent>
                   <span class="italic text-brand-sky">{{ t('home.hero.headlineAccent') }}</span>
                 </template>
@@ -431,3 +434,30 @@ onMounted(async () => {
 
   </div>
 </template>
+
+<style scoped>
+/* Pan-African flag colors (red/gold/green — the palette shared by the
+   majority of the continent's flags, also used by the African Union
+   emblem), not the site's brand violet→sky gradient — this is the one
+   place on the homepage meant to read as a deliberate reference to
+   pan-African identity rather than the STAIJA brand mark itself. Same
+   gradient-clip-text technique as the Dynamerge marquee's country
+   names (DynamergeDetailView.vue) — see that file's .marquee-name and
+   forced-colors notes for why the fallback below is needed. */
+.africa-gradient-text {
+  background-image: linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A3D 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (forced-colors: active) {
+  .africa-gradient-text {
+    background-image: none;
+    -webkit-text-fill-color: CanvasText;
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+</style>

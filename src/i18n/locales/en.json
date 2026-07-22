@@ -27,7 +27,8 @@
    "home": {
       "hero": {
          "githubPill": "Open Source on GitHub",
-         "headline": "Africa's next {accent} start here.",
+         "headline": "{lead} next {accent} start here.",
+         "headlineLead": "Africa's",
          "headlineAccent": "scientist-leaders",
          "dek": "We nurture ambitious high-school and gap-year students through intensive research programs, mentorship, and a pan-African community of practice.",
          "ctaPrimary": "Apply to StepUp",
