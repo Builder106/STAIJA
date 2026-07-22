@@ -15,7 +15,6 @@ import UiChip from '../components/ui/UiChip.vue'
 import HeroLottie from '../components/HeroLottie.vue'
 import CountUp from '../components/motion/CountUp.vue'
 import Hairline from '../components/motion/Hairline.vue'
-import Magnetic from '../components/motion/Magnetic.vue'
 import { trackApplyClick } from '../services/analytics'
 import { getBlogPosts, getEvents, type BlogPost, type EventItem } from '../services/content'
 
@@ -151,20 +150,16 @@ onMounted(async () => {
               {{ t('home.hero.dek') }}
             </Body>
             <div class="flex flex-wrap gap-4">
-              <Magnetic>
-                <UiButton
-                  variant="on-gradient"
-                  :to="'/apply/stepup-scholars'"
-                  @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
-                >
-                  {{ t('home.hero.ctaPrimary') }}
-                </UiButton>
-              </Magnetic>
-              <Magnetic>
-                <UiButton variant="on-gradient-ghost" href="#programs">
-                  {{ t('home.hero.ctaSecondary') }}
-                </UiButton>
-              </Magnetic>
+              <UiButton
+                variant="on-gradient"
+                :to="'/apply/stepup-scholars'"
+                @click="trackApplyClick({ program: 'stepup', source: 'home_hero' })"
+              >
+                {{ t('home.hero.ctaPrimary') }}
+              </UiButton>
+              <UiButton variant="on-gradient-ghost" href="#programs">
+                {{ t('home.hero.ctaSecondary') }}
+              </UiButton>
             </div>
             <!-- Tertiary path for visitors who can't (or aren't ready
                  to) apply. One quiet line under the CTAs — discoverable
