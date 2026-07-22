@@ -154,12 +154,12 @@
    rather than the brand gradient (see @layer base, html custom
    properties, for why the gradient was dropped here specifically). That
    means it needs its own light/dark flip, same as any other paper/ink
-   consumer on this page — a white-halo-on-dark-ring mark reads as a
+   consumer on this page — a white-halo-on-dark-glyph mark reads as a
    light-mode object stamped on top of a dark surface otherwise. Same
    swap the rest of this file already does: --color-paper's light value
-   becomes the halo, --color-ink's light value becomes the ring/dot. */
+   becomes the halo, --color-ink's light value becomes the glyph. */
 [data-theme="dark"] {
-   --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2722%27%20height%3D%2722%27%20viewBox%3D%270%200%2022%2022%27%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%273.2%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27%23F0F4F8%27%20stroke-width%3D%271.4%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%272%27%20fill%3D%27%23F0F4F8%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%270.8%27/%3E%20%3C/svg%3E") 11 11;
+   --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2722%27%20height%3D%2722%27%20viewBox%3D%270%200%2024%2024%27%3E%20%3Cg%20fill%3D%27none%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%273.4%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M22%2014a8%208%200%200%201-8%208%27/%3E%3Cpath%20d%3D%27M18%2011v-1a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v0%27/%3E%3Cpath%20d%3D%27M14%2010V9a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v1%27/%3E%3Cpath%20d%3D%27M10%209.5V4a2%202%200%200%200-4%200v10%27/%3E%3Cpath%20d%3D%22M7%2015l-1.76-1.76a2%202%200%200%200-2.83%202.82l3.6%203.6C7.5%2021.14%209.2%2022%2012%2022h2a8%208%200%200%200%208-8V7a2%202%200%201%200-4%200v5%22/%3E%3C/g%3E%20%3Cg%20fill%3D%27none%27%20stroke%3D%27%23F0F4F8%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M22%2014a8%208%200%200%201-8%208%27/%3E%3Cpath%20d%3D%27M18%2011v-1a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v0%27/%3E%3Cpath%20d%3D%27M14%2010V9a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v1%27/%3E%3Cpath%20d%3D%27M10%209.5V4a2%202%200%200%200-4%200v10%27/%3E%3Cpath%20d%3D%22M7%2015l-1.76-1.76a2%202%200%200%200-2.83%202.82l3.6%203.6C7.5%2021.14%209.2%2022%2012%2022h2a8%208%200%200%200%208-8V7a2%202%200%201%200-4%200v5%22/%3E%3C/g%3E%20%3C/svg%3E") 8 4;
 }
 
 [data-theme="dark"] .gradient-blob {
@@ -419,17 +419,24 @@
         click targets like the FAQ row (via .cursor-clickable). One
         SVG, one custom property, so nothing can drift into a second,
         different "clickable" cursor by accident again — see
-        docs/CURSOR-SYSTEM.md. A ring-and-dot target mark, in a fixed
-        white-halo + ink two-tone rather than the brand gradient. Two
-        earlier versions were tried and rejected: a closed diamond
-        outline read as a gem/badge icon sitting on the text it hovered,
-        and a thin open-cornered bracket was too subtle to register as a
-        cursor at all. The brand gradient itself was also dropped here
-        specifically — it's the same gradient used on the STAIJA logo
-        mark, so a gradient cursor hovering the logo visually merged
-        into it. White-halo-plus-ink stays legible over any background,
-        brand-colored or not. */
-      --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2722%27%20height%3D%2722%27%20viewBox%3D%270%200%2022%2022%27%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%273.2%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27%231B1B23%27%20stroke-width%3D%271.4%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%272%27%20fill%3D%27%231B1B23%27%20stroke%3D%27white%27%20stroke-width%3D%270.8%27/%3E%20%3C/svg%3E") 11 11;
+        docs/CURSOR-SYSTEM.md. A stylized pointing-hand glyph (the
+        lucide "pointer" icon path — the same open-source icon set the
+        rest of the site already pulls from via @iconify/vue), in a
+        fixed white-halo + ink two-tone rather than the brand gradient.
+        Three earlier versions were tried and rejected: a closed diamond
+        outline read as a gem/badge icon sitting on the text it hovered;
+        a thin open-cornered bracket was too subtle to register as a
+        cursor at all; a ring-and-dot target mark was clear as a mark
+        but didn't actually communicate "clickable" — it reads as a
+        reticle/target, not as a link affordance, since it borrows
+        nothing from the pointing-hand convention every user already
+        knows. The brand gradient was dropped separately — it's the
+        same gradient used on the STAIJA logo mark, so a gradient
+        cursor hovering the logo visually merged into it. White-halo-
+        plus-ink stays legible over any background, brand-colored or
+        not, at the cost of needing its own [data-theme="dark"]
+        override — see the note near that override for why. */
+      --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2722%27%20height%3D%2722%27%20viewBox%3D%270%200%2024%2024%27%3E%20%3Cg%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%273.4%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M22%2014a8%208%200%200%201-8%208%27/%3E%3Cpath%20d%3D%27M18%2011v-1a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v0%27/%3E%3Cpath%20d%3D%27M14%2010V9a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v1%27/%3E%3Cpath%20d%3D%27M10%209.5V4a2%202%200%200%200-4%200v10%27/%3E%3Cpath%20d%3D%22M7%2015l-1.76-1.76a2%202%200%200%200-2.83%202.82l3.6%203.6C7.5%2021.14%209.2%2022%2012%2022h2a8%208%200%200%200%208-8V7a2%202%200%201%200-4%200v5%22/%3E%3C/g%3E%20%3Cg%20fill%3D%27none%27%20stroke%3D%27%231B1B23%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M22%2014a8%208%200%200%201-8%208%27/%3E%3Cpath%20d%3D%27M18%2011v-1a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v0%27/%3E%3Cpath%20d%3D%27M14%2010V9a2%202%200%200%200-2-2v0a2%202%200%200%200-2%202v1%27/%3E%3Cpath%20d%3D%27M10%209.5V4a2%202%200%200%200-4%200v10%27/%3E%3Cpath%20d%3D%22M7%2015l-1.76-1.76a2%202%200%200%200-2.83%202.82l3.6%203.6C7.5%2021.14%209.2%2022%2012%2022h2a8%208%200%200%200%208-8V7a2%202%200%201%200-4%200v5%22/%3E%3C/g%3E%20%3C/svg%3E") 8 4;
    }
 
    ::-webkit-scrollbar {
