@@ -86,6 +86,20 @@ const FAQS = [
   { q: 'Can I apply to both programs?', a: 'Yes, but you can only participate in one program per calendar year if accepted to both.' },
 ]
 
+// Touch has no :hover, so a coarse-pointer user otherwise has no way to
+// interact with or momentarily stop the marquee at all (:focus-visible
+// deliberately doesn't fire for a touch-focused element — see the CSS).
+// Pressing the strip pauses it; releasing, or the touch getting
+// cancelled/leaving the strip, resumes it. Ignores mouse/pen pointers —
+// those already get the hover-driven pause in CSS.
+const isTouchPaused = ref(false)
+function onMarqueePointerDown(e: PointerEvent) {
+  if (e.pointerType === 'touch') isTouchPaused.value = true
+}
+function onMarqueePointerRelease(e: PointerEvent) {
+  if (e.pointerType === 'touch') isTouchPaused.value = false
+}
+
 </script>
 
 <template>
@@ -213,9 +227,14 @@ const FAQS = [
            constantly regardless of where the cursor was. -->
       <div
         class="relative z-10 border-t border-white/15 bg-ink-static/25 py-4 marquee focus-ring-inverse cursor-pin"
+        :class="{ 'is-touch-paused': isTouchPaused }"
         role="group"
         tabindex="0"
-        aria-label="Open to students across Africa, scrolling. Focus to pause."
+        aria-label="Open to students across Africa, scrolling. Focus, or press and hold, to pause."
+        @pointerdown="onMarqueePointerDown"
+        @pointerup="onMarqueePointerRelease"
+        @pointercancel="onMarqueePointerRelease"
+        @pointerleave="onMarqueePointerRelease"
       >
         <div class="marquee-track">
           <div v-for="clone in 2" :key="clone" class="flex shrink-0" :aria-hidden="clone === 2">
@@ -466,24 +485,12 @@ const FAQS = [
   animation: marquee-scroll 36s linear infinite;
 }
 
-/* Flag lift-on-hover — was previously a rAF loop that scaled/lifted
-   whichever flag was nearest the strip's horizontal center, regardless
-   of the cursor. Simpler and more predictable as a plain :hover: only
-   the flag actually under the pointer reacts. */
 .marquee-flag {
   display: inline-block;
   transform-origin: center;
   transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 220ms ease;
 }
 
-.marquee-flag:hover {
-  transform: translateY(-16px) scale(1.6);
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
-}
-
-/* Hover gradient — each country's name tints toward its own flag colors
-   (--c1/--c2, set inline per span) instead of the fixed brand gradient,
-   so hovering reads as that country's identity, not a generic accent. */
 .marquee-name {
   color: rgba(255, 255, 255, 0.8);
   background-image: linear-gradient(90deg, var(--c1), var(--c2));
@@ -495,17 +502,72 @@ const FAQS = [
   -webkit-text-fill-color: rgba(255, 255, 255, 0.8);
 }
 
-.marquee-country:hover .marquee-name,
+/* Hover-driven effects (flag lift, name gradient) are scoped to
+   `(hover: hover) and (pointer: fine)` — real mouse/trackpad only.
+   Without this, iOS Safari's "sticky hover" bug can leave a tapped flag
+   stuck in its lifted state until the user taps elsewhere, since touch
+   browsers simulate :hover on tap but have no "pointer left" event to
+   clear it. Touch users get the press-to-pause handlers below instead
+   (see script: pointerdown/up on .marquee). */
+@media (hover: hover) and (pointer: fine) {
+  .marquee-flag:hover {
+    transform: translateY(-16px) scale(1.6);
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+  }
+
+  .marquee-country:hover .marquee-name {
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Pause only while the cursor is actually over a flag or name, not
+     anywhere in the strip. Without this, a flag/name hovered while the
+     strip keeps scrolling lifts for a frame, slides out from under the
+     cursor, un-hovers, and the *next* item entering that pixel repeats
+     it — a flicker cascading across the whole strip. :has() support is
+     assumed (Chrome/Safari/Firefox 2023+); browsers without it just
+     keep the pre-fix flicker rather than breaking anything. */
+  .marquee:has(.marquee-flag:hover) .marquee-track,
+  .marquee:has(.marquee-country:hover) .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
 .marquee-country:focus-within .marquee-name {
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
-/* WCAG 2.2.2 — focus pauses the scroll so a keyboard/AT user can stop it
-   and take their time, without requiring OS-level reduced-motion.
-   Deliberately keyboard-only, not :hover — a mouse just passing over the
-   strip on its way elsewhere shouldn't freeze it. */
-.marquee:focus-within .marquee-track {
+/* Gradient-clipped text is a known forced-colors (Windows High Contrast)
+   pitfall — `-webkit-text-fill-color: transparent` doesn't reliably get
+   forced back to a visible system color by every browser. Fall back to
+   plain, fully-opaque system text instead of risking invisible names. */
+@media (forced-colors: active) {
+  .marquee-name {
+    background-image: none;
+    -webkit-text-fill-color: CanvasText;
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
+/* WCAG 2.2.2 — focus pauses the scroll so a keyboard user can stop it and
+   take their time, without requiring OS-level reduced-motion. Deliberately
+   :focus-visible, not :focus-within — a touch tap on the strip focuses it
+   in most mobile browsers but (correctly) doesn't count as focus-visible,
+   so tapping doesn't silently freeze the strip with no visible reason.
+   Touch gets its own explicit press-to-pause instead (see script). */
+.marquee:focus-visible .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Touch: pressing the strip pauses it, releasing (or the touch leaving
+   the strip / getting cancelled) resumes it. Coarse-pointer devices have
+   no hover state at all, so without this a touch user has no way to
+   interact with or even momentarily stop the marquee — a press-and-hold
+   also matches what a finger physically resting on a scrolling strip
+   would expect to do. */
+.marquee.is-touch-paused .marquee-track {
   animation-play-state: paused;
 }
 
