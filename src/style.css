@@ -150,6 +150,18 @@
    background-color: rgba(240, 244, 248, 0.06);
 }
 
+/* --cursor-clickable is the one cursor built from fixed paper/ink tones
+   rather than the brand gradient (see @layer base, html custom
+   properties, for why the gradient was dropped here specifically). That
+   means it needs its own light/dark flip, same as any other paper/ink
+   consumer on this page — a white-halo-on-dark-ring mark reads as a
+   light-mode object stamped on top of a dark surface otherwise. Same
+   swap the rest of this file already does: --color-paper's light value
+   becomes the halo, --color-ink's light value becomes the ring/dot. */
+[data-theme="dark"] {
+   --cursor-clickable: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2722%27%20height%3D%2722%27%20viewBox%3D%270%200%2022%2022%27%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%273.2%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%277%27%20fill%3D%27none%27%20stroke%3D%27%23F0F4F8%27%20stroke-width%3D%271.4%27/%3E%20%3Ccircle%20cx%3D%2711%27%20cy%3D%2711%27%20r%3D%272%27%20fill%3D%27%23F0F4F8%27%20stroke%3D%27%230B0E12%27%20stroke-width%3D%270.8%27/%3E%20%3C/svg%3E") 11 11;
+}
+
 [data-theme="dark"] .gradient-blob {
    /* Soft white glow loses contrast on a dark surface — inverse it to a
      subtle dark glow that still reads as artwork-backing. */
