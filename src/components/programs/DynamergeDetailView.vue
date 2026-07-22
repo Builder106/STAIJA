@@ -329,7 +329,7 @@ function onMarqueePointerRelease(e: PointerEvent) {
               v-for="track in TRACKS"
               :key="track.id"
               type="button"
-              class="focus-ring-brand inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold border transition-colors cursor-ring"
+              class="focus-ring-brand inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold border transition-colors"
               :class="activeTrackId === track.id
                 ? 'bg-gradient-brand text-white border-transparent'
                 : 'bg-transparent text-ink border-ink/10 hover:border-ink/25'"

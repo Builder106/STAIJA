@@ -96,7 +96,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
   >
     <Container>
       <div class="flex items-center justify-between">
-        <RouterLink to="/" class="flex items-center gap-2 focus-ring-brand rounded-sm cursor-badge" aria-label="STAIJA — home">
+        <RouterLink to="/" class="flex items-center gap-2 focus-ring-brand rounded-sm" aria-label="STAIJA — home">
           <!-- Right-sized logo variants. The master 1563×1563 STAIJA.png is
                1.07 MB and was the single biggest bandwidth hit on cold
                loads. staija-40 / staija-80 are pre-rasterized via sips
