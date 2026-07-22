@@ -1,7 +1,23 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterView } from 'vue-router'
 import SiteHeader from '../components/SiteHeader.vue'
 import SiteFooter from '../components/SiteFooter.vue'
+
+// Click-feedback cursor (.cursor-click) while a mouse/pen button is held
+// down anywhere on the site — layered on top of the cursor-dot default.
+// Toggled via a class + pointer events rather than a plain :active CSS
+// selector: :active on this root div only matches while the pointer is
+// down *and* still over this exact element, which is unreliable the
+// moment a descendant's own :active/cursor rule takes over. Touch is
+// excluded — there's no visible cursor to swap on a touchscreen.
+const isClicking = ref(false)
+function onRootPointerDown(e: PointerEvent) {
+  if (e.pointerType !== 'touch') isClicking.value = true
+}
+function onRootPointerRelease(e: PointerEvent) {
+  if (e.pointerType !== 'touch') isClicking.value = false
+}
 </script>
 
 <template>
@@ -9,9 +25,16 @@ import SiteFooter from '../components/SiteFooter.vue'
        Links/buttons still show pointer (see .brand-surface a/button in
        style.css — a direct rule on the element always wins over an
        inherited value, regardless of the ancestor's specificity), and
-       the other seven cursor-* utilities override this wherever they're
-       applied more specifically. -->
-  <div class="brand-surface min-h-screen flex flex-col bg-paper cursor-dot">
+       the other cursor-* utilities override this wherever they're
+       applied more specifically. cursor-click, via is-clicking, wins
+       while a button is held (see style.css for the specificity note). -->
+  <div
+    class="brand-surface min-h-screen flex flex-col bg-paper cursor-dot"
+    :class="{ 'is-clicking': isClicking }"
+    @pointerdown="onRootPointerDown"
+    @pointerup="onRootPointerRelease"
+    @pointercancel="onRootPointerRelease"
+  >
     <SiteHeader />
     <main class="flex-1 flex flex-col">
       <!-- No <Transition> wrapper here. We previously had:
