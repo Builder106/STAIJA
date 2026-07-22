@@ -118,7 +118,7 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
             v-for="link in navLinks"
             :key="link.name"
             :to="link.href"
-            class="text-sm font-medium text-ink/80 hover:text-ink transition-colors focus-ring-brand rounded-sm"
+            class="relative py-1 text-sm font-medium text-ink/80 transition-colors hover:text-brand-violet focus-ring-brand rounded-sm after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-brand-violet after:transition-transform after:duration-200 hover:after:scale-x-100"
           >
             {{ link.name }}
           </RouterLink>
