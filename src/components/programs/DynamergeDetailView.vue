@@ -513,6 +513,13 @@ function onMarqueePointerRelease(e: PointerEvent) {
   .marquee-flag:hover {
     transform: translateY(-16px) scale(1.6);
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+    /* The strip's cursor-pin (22x26px, hotspot near its bottom tip) sits
+       right on top of the space the flag lifts/scales into, blocking
+       the animation it's meant to be pointing at. The lift + shadow is
+       already strong feedback on its own — hide the cursor for the
+       ~20px the flag occupies rather than adding a second, smaller
+       cursor variant that would still partially overlap. */
+    cursor: none;
   }
 
   .marquee-country:hover .marquee-name {
