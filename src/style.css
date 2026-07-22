@@ -357,17 +357,24 @@
    }
 
    /* Clickable default — any link/button without a more specific
-     cursor-* of its own (see src/style.css's cursor-* utilities in
-     @layer utilities) gets this gradient chevron instead of the native
-     pointer. Set here rather than as a standalone utility so the
-     existing @layer base < @layer utilities precedence keeps every
-     specific override (cursor-ring, cursor-spark, cursor-badge, ...)
-     winning exactly as before — adding this doesn't touch that
-     ordering. See docs/CURSOR-SYSTEM.md. */
+     cursor-* of its own gets this instead of the native pointer. A
+     rotated rounded-square outline (echoing geometric-pattern
+     vocabulary common to African textile/Adinkra symbol traditions,
+     not a Western "gem" reading) with a crosshair/reticle at its
+     center — a precision-instrument mark, tying to the "lab notebook"
+     scientific posture IBM Plex Mono/STAIJA Tac Mono already carry
+     elsewhere. First pass was a plain filled triangle/chevron and read
+     as generic, disconnected from the brand — this one is built from
+     the same two halves the rest of the identity already leans on:
+     African pattern language + scientific precision. Set here rather
+     than as a standalone utility so the existing @layer base < @layer
+     utilities precedence keeps every specific override (cursor-ring,
+     cursor-spark, cursor-badge, ...) winning exactly as before — adding
+     this doesn't touch that ordering. See docs/CURSOR-SYSTEM.md. */
    .brand-surface a {
       color: inherit;
       text-decoration: none;
-      cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%20%3Cstop%20offset%3D%270%27%20stop-color%3D%27%238B55FF%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%235EDBE7%27%2F%3E%20%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Cpath%20d%3D%27M6%203%20L15%2010%20L6%2017%20Z%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27white%27%20stroke-width%3D%271.2%27%20stroke-linejoin%3D%27round%27%2F%3E%20%3C%2Fsvg%3E") 15 10, pointer;
+      cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%20%3Cstop%20offset%3D%270%27%20stop-color%3D%27%238B55FF%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%235EDBE7%27%2F%3E%20%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Crect%20x%3D%275%27%20y%3D%275%27%20width%3D%2710%27%20height%3D%2710%27%20rx%3D%271.5%27%20transform%3D%27rotate%2845%2010%2010%29%27%20fill%3D%27none%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.8%27%2F%3E%20%3Cline%20x1%3D%2710%27%20y1%3D%277%27%20x2%3D%2710%27%20y2%3D%2713%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.3%27%20stroke-linecap%3D%27round%27%2F%3E%20%3Cline%20x1%3D%277%27%20y1%3D%2710%27%20x2%3D%2713%27%20y2%3D%2710%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.3%27%20stroke-linecap%3D%27round%27%2F%3E%20%3C%2Fsvg%3E") 10 10, pointer;
    }
 
    .brand-surface a:hover {
@@ -376,7 +383,7 @@
    }
 
    .brand-surface button {
-      cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%20%3Cstop%20offset%3D%270%27%20stop-color%3D%27%238B55FF%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%235EDBE7%27%2F%3E%20%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Cpath%20d%3D%27M6%203%20L15%2010%20L6%2017%20Z%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27white%27%20stroke-width%3D%271.2%27%20stroke-linejoin%3D%27round%27%2F%3E%20%3C%2Fsvg%3E") 15 10, pointer;
+      cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2720%27%20height%3D%2720%27%20viewBox%3D%270%200%2020%2020%27%3E%20%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%20%3Cstop%20offset%3D%270%27%20stop-color%3D%27%238B55FF%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%235EDBE7%27%2F%3E%20%3C%2FlinearGradient%3E%3C%2Fdefs%3E%20%3Crect%20x%3D%275%27%20y%3D%275%27%20width%3D%2710%27%20height%3D%2710%27%20rx%3D%271.5%27%20transform%3D%27rotate%2845%2010%2010%29%27%20fill%3D%27none%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.8%27%2F%3E%20%3Cline%20x1%3D%2710%27%20y1%3D%277%27%20x2%3D%2710%27%20y2%3D%2713%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.3%27%20stroke-linecap%3D%27round%27%2F%3E%20%3Cline%20x1%3D%277%27%20y1%3D%2710%27%20x2%3D%2713%27%20y2%3D%2710%27%20stroke%3D%27url%28%23g%29%27%20stroke-width%3D%271.3%27%20stroke-linecap%3D%27round%27%2F%3E%20%3C%2Fsvg%3E") 10 10, pointer;
    }
 
    .brand-surface button:disabled {
