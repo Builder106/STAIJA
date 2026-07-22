@@ -10,7 +10,6 @@ import Eyebrow from '../components/ui/Eyebrow.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import UiCard from '../components/ui/UiCard.vue'
 import ScrollReveal from '../components/motion/ScrollReveal.vue'
-import Magnetic from '../components/motion/Magnetic.vue'
 import { trackDonateStart } from '../services/analytics'
 import { donate as launchPaystack, formatNaira } from '../services/donations'
 import { auth } from '../config/firebase'
@@ -261,20 +260,18 @@ async function handleDonateClick() {
           </div>
         </div>
 
-        <Magnetic class="w-full max-w-[320px]">
-          <UiButton
-            variant="gradient"
-            class="w-full !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
-            :disabled="submitting"
-            @click="handleDonateClick"
-          >
-            <span v-if="submitting">Opening checkout…</span>
-            <span v-else>
-              Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
-              <span v-if="currentAmountKobo() > 0" class="opacity-80">| {{ formatNaira(currentAmountKobo()) }}</span>
-            </span>
-          </UiButton>
-        </Magnetic>
+        <UiButton
+          variant="gradient"
+          class="w-full max-w-[320px] !text-lg !h-14 !rounded-2xl shadow-xl shadow-brand-violet/20 font-bold"
+          :disabled="submitting"
+          @click="handleDonateClick"
+        >
+          <span v-if="submitting">Opening checkout…</span>
+          <span v-else>
+            Donate {{ frequency === 'monthly' ? 'Monthly' : 'Now' }}
+            <span v-if="currentAmountKobo() > 0" class="opacity-80">| {{ formatNaira(currentAmountKobo()) }}</span>
+          </span>
+        </UiButton>
 
         <div v-if="errorMessage" role="alert" class="mt-4 max-w-[400px] text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           {{ errorMessage }}
