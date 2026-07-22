@@ -175,12 +175,7 @@ function onMarqueePointerRelease(e: PointerEvent) {
             :transition="{ duration: 0.3, delay: 0.15 }"
           >
             <template v-for="(stat, i) in program.stats" :key="stat.label">
-              <!-- cursor-pennant lives on the span itself (inline-flex,
-                   shrink-wraps to content) rather than the row above —
-                   the row is a block-level flex container spanning the
-                   full column width, so its hitbox would extend past the
-                   last stat into empty space. -->
-              <span class="inline-flex items-center gap-2 cursor-pennant">
+              <span class="inline-flex items-center gap-2">
                 <Icon :icon="stat.icon" width="20" aria-hidden="true" class="text-white/60" />
                 {{ stat.value }}
               </span>
