@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { initializeFirestore } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
 import { getAnalytics } from 'firebase/analytics'
@@ -94,8 +94,17 @@ export const auth = getAuth(app)
 // "Auto-detect" (vs. forceLongPolling) preserves WebChannel for users
 // whose networks allow it — those get the lower-latency transport — and
 // only degrades for the ones that need it.
+//
+// persistentLocalCache backs reads with IndexedDB so a repeat visit in the
+// same browser can resolve a query like ProgramService.getProgram from
+// cache instantly (then revalidate against the server in the background),
+// instead of every page load paying the full App-Check-attestation +
+// transport-handshake + network round trip again from zero.
+// persistentMultipleTabManager lets that cache be shared safely across
+// multiple open tabs of the site instead of only the first tab opened.
 export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
 })
 // Default bucket — used for application uploads (transcripts, IDs,
 // reference letters). Lives in the project's data region (africa-south1)
