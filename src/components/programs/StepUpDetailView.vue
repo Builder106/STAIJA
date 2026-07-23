@@ -118,25 +118,27 @@ const FAQS = [
           </div>
 
           <!-- Specimen ledger — same visual language as the email refBox
-               (accent left border, dotted ledger rules, mono labels). -->
+               (hairline border, dotted ledger rules, mono labels). -->
           <Motion
             :initial="{ opacity: 0, y: 14 }"
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.6, delay: 0.35 }"
           >
-            <div class="w-full lg:w-80 border-l-4 border-brand-violet bg-white/[0.06] backdrop-blur-sm rounded-r-2xl p-6 font-mono-african cursor-pin">
-              <div class="text-[11px] uppercase tracking-[0.2em] text-paper-static/50">Program record</div>
+            <div class="w-full lg:w-80 border border-brand-violet/25 bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 font-mono-african cursor-pin">
+              <div class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-violet/80">
+                Program record
+              </div>
               <dl class="m-0 mt-2">
                 <div
                   v-for="stat in program.stats"
                   :key="stat.label"
                   class="flex items-baseline justify-between gap-6 py-3 border-b border-dotted border-paper-static/25 last:border-0"
                 >
-                  <dt class="text-[11px] uppercase tracking-[0.18em] text-paper-static/60">{{ stat.label }}</dt>
-                  <dd class="m-0 text-sm text-white">{{ stat.value }}</dd>
+                  <dt class="text-sm uppercase tracking-[0.14em] text-paper-static/60">{{ stat.label }}</dt>
+                  <dd class="m-0 text-lg text-white">{{ stat.value }}</dd>
                 </div>
               </dl>
-              <div class="mt-4 text-[10px] uppercase tracking-[0.2em] text-paper-static/40">Ref № stepup-scholars</div>
+              <div class="mt-4 text-xs uppercase tracking-[0.16em] text-paper-static/40">Ref № stepup-scholars</div>
             </div>
           </Motion>
         </div>
