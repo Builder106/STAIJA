@@ -61,6 +61,23 @@
         "$value": "#7A44EE",
         "$description": "Scrollbar-thumb hover state."
       }
+    },
+    "pan-african": {
+      "red": {
+        "$type": "color",
+        "$value": "#CE1126",
+        "$description": "Pan-African flag (Marcus Garvey/UNIA, 1920) red — not the African Union's red/gold/green, which an earlier pass used by mistake. Homepage hero only: 'Africa's' letter-group split and its hover-swap silhouette gradient."
+      },
+      "black": {
+        "$type": "color",
+        "$value": "#000000",
+        "$description": "Pan-African flag black. See pan-african.red."
+      },
+      "green": {
+        "$type": "color",
+        "$value": "#007A3D",
+        "$description": "Pan-African flag green. See pan-african.red."
+      }
     }
   },
   "opacity": {
@@ -99,6 +116,11 @@
       "$type": "fontFamily",
       "$value": ["Ojuju", "Ojuju Fallback", "{typography.font-mono}"],
       "$description": "African-designed secondary accent (OFL, Chisaokwu Joboson). Reads too heavy at hero scale (tried and pulled as wordmark face) — kept for short labels like eyebrows and stat callouts at wght=500."
+    },
+    "font-accent-african-tertiary": {
+      "$type": "fontFamily",
+      "$value": ["Agu Display", "Agu Display Fallback", "{typography.font-display}"],
+      "$description": "African-designed accent face (OFL, Seun Badejo). Single-word wordmark-scale accents only — currently the homepage hero's lead word ('Africa's'). Instanced at one static weight despite the source shipping a variable MORF axis; don't reach for it outside a standalone word at display size. Replaced Matemasie in this role after a live side-by-side of 8 African OFL faces."
     },
     "font-mono-african": {
       "$type": "fontFamily",

@@ -30,6 +30,13 @@ Light/dark is driven by `[data-theme="dark"]` on `<html>`, not a class — this 
 
 Full derivation and OFL compliance notes for the two African-designed faces live in `docs/TYPOGRAPHY-SYSTEM.md`.
 
+## Decorative hover-swap interactions
+
+The homepage hero's "Africa's" and "scientist-leaders" pop out on hover/focus and are replaced by a matching graphic (an Africa-continent silhouette masked from the public-domain BlankMap-Africa.svg; a row of lucide science icons) that pops in with a slight overshoot bounce. Two rules for reusing this pattern elsewhere:
+
+- **Gate to real hover devices**: wrap the trigger rules in `@media (hover: hover) and (pointer: fine)`. Touch browsers often fake `:hover` on the first tap without clearing it until the user taps elsewhere — for a `tabindex`-focusable decorative swap, that can pop text to `opacity: 0` and leave it stuck invisible. There's no touch equivalent worth building for a flourish like this, so touch devices should just render the plain static text.
+- **Size pop-in graphics in `em`, not `%`**, when absolutely positioning inside an inline text wrapper. The wrapper's height is `auto` (just the line-height of the text), and percentage heights resolve to `0` against an auto-height containing block — silently producing a zero-size, invisible element.
+
 ## Detail view architecture
 
 Program detail pages are split by content shape, not shared through one generic template: `StepUpDetailView` (sprint format) and `DynamergeDetailView` (research-journal format) are separate components. When adding a new program type, decide which shape it follows — don't force it into either existing view or resurrect a shared `ProgramDetailView`.
