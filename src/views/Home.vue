@@ -512,6 +512,16 @@ onMounted(async () => {
 .flag-line-1 { color: #000000; }
 .flag-line-2 { color: #007A3D; }
 
+/* Both hover/pop swaps below are gated to devices with real hover
+   (a mouse/trackpad), not just any :hover/:focus-visible match. Touch
+   browsers often fake :hover on the first tap and don't clear it until
+   the user taps elsewhere — combined with these words' tabindex, a tap
+   could pop the text to opacity:0 and leave it stuck invisible. Since
+   this is a decorative flourish with no touch equivalent worth
+   building, the simplest fix is to just never activate it on touch:
+   the words render as plain static text there. */
+@media (hover: hover) and (pointer: fine) {
+
 /* Hover/focus swap: "Africa's" pops out (scales up + fades) while the
    Africa continent silhouette (masked from the public-domain
    BlankMap-Africa.svg, see public/images/africa-mask.svg) pops in over
@@ -701,4 +711,6 @@ onMounted(async () => {
     opacity: 1;
   }
 }
+
+} /* @media (hover: hover) and (pointer: fine) */
 </style>
