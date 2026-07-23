@@ -23,6 +23,15 @@ export interface UseProgramResult {
   applicationStatus: Ref<ApplicationStatus>
   isApplyOpen: ComputedRef<boolean>
   closedReason: ComputedRef<'upcoming' | 'closed'>
+  /**
+   * True once the Firestore load has settled (doc found, doc missing, or
+   * fetch failed) — false during the brief window between mount and that
+   * resolution. `isApplyOpen` treats a still-unresolved `applicationStatus`
+   * the same as "open" (see its note above), so anything that renders the
+   * open/closed CTA or status chip should gate on this first to avoid a
+   * flash of "open" for a program that's actually upcoming/closed.
+   */
+  isStatusResolved: Ref<boolean>
 }
 
 // Shared Firestore-load + application-window logic for the program detail
@@ -35,6 +44,7 @@ export function useProgram(slug: ProgramSlug): UseProgramResult {
   const program = ref<ProgramView | null>(PROGRAM_FALLBACKS[slug] ?? null)
   const programDoc = ref<Program | null>(null)
   const applicationStatus = ref<ApplicationStatus>(null)
+  const isStatusResolved = ref(false)
 
   const isApplyOpen = computed(
     () => applicationStatus.value === null || applicationStatus.value === 'open',
@@ -57,10 +67,12 @@ export function useProgram(slug: ProgramSlug): UseProgramResult {
     } catch {
       // Network error / permission issue — keep the fallback in view
       // and the CTA in its default "open" stance.
+    } finally {
+      isStatusResolved.value = true
     }
   }
 
   onMounted(loadProgram)
 
-  return { program, programDoc, applicationStatus, isApplyOpen, closedReason }
+  return { program, programDoc, applicationStatus, isApplyOpen, closedReason, isStatusResolved }
 }

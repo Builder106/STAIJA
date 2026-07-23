@@ -41,17 +41,17 @@ const base =
 const variantClass = computed(() => {
   switch (props.variant) {
     case 'primary':
-      return 'focus-ring-brand bg-brand-violet text-white h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:bg-[#9768FF]'
+      return 'focus-ring-brand bg-brand-violet text-white min-h-11 h-auto px-6 py-2.5 rounded-xl hover:-translate-y-[1px] hover:bg-[#9768FF]'
     case 'secondary':
-      return 'focus-ring-brand bg-transparent text-ink border border-ink/10 h-11 px-6 rounded-xl hover:bg-ink/5'
+      return 'focus-ring-brand bg-transparent text-ink border border-ink/10 min-h-11 h-auto px-6 py-2.5 rounded-xl hover:bg-ink/5'
     case 'tertiary':
       return 'focus-ring-brand bg-transparent text-ink h-auto p-0 underline-offset-2 hover:underline'
     case 'gradient':
-      return 'focus-ring-brand bg-gradient-brand text-white h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:shadow-lg hover:shadow-brand-violet/20'
+      return 'focus-ring-brand bg-gradient-brand text-white min-h-11 h-auto px-6 py-2.5 rounded-xl hover:-translate-y-[1px] hover:shadow-lg hover:shadow-brand-violet/20'
     case 'on-gradient':
-      return 'focus-ring-inverse bg-white text-ink-static h-11 px-6 rounded-xl hover:-translate-y-[1px] hover:bg-white/90'
+      return 'focus-ring-inverse bg-white text-ink-static min-h-11 h-auto px-6 py-2.5 rounded-xl hover:-translate-y-[1px] hover:bg-white/90'
     case 'on-gradient-ghost':
-      return 'focus-ring-inverse bg-transparent text-white border border-white/40 h-11 px-6 rounded-xl hover:bg-white/10 hover:border-white/60'
+      return 'focus-ring-inverse bg-transparent text-white border border-white/40 min-h-11 h-auto px-6 py-2.5 rounded-xl hover:bg-white/10 hover:border-white/60'
   }
 })
 

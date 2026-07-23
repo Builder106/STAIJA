@@ -63,3 +63,15 @@ guide.md
 
 # Recovered VS Code Copilot Chat history — local reference only, never commit.
 .chat-archive/
+
+# Downloaded social media captures — scraped Instagram/Threads/LinkedIn
+# assets and the scripts/manifests that fetch them, for research reference
+# only, not for the public repo. Cookies used to fetch these also live in
+# download*.py in this folder — never commit those either. This also
+# covers social-media-context.md, which names real (in some cases minor)
+# individuals scraped from LinkedIn — never commit that either.
+tools/social/instagram-posts/
+tools/social/linkedin-posts/
+tools/social/threads-posts/
+tools/social/*.png
+tools/social/social-media-context.md

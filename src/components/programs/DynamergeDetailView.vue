@@ -8,7 +8,6 @@ import Heading from '../ui/Heading.vue'
 import Body from '../ui/Body.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import UiButton from '../ui/UiButton.vue'
-import UiCard from '../ui/UiCard.vue'
 import ProgramFaq from './ProgramFaq.vue'
 import ProgramCtaBanner from './ProgramCtaBanner.vue'
 import { trackApplyClick } from '../../services/analytics'
@@ -27,7 +26,7 @@ import { useProgram } from '../../composables/useProgram'
 // faster, snappier motion timing throughout.
 const SLUG = 'dynamerge' as const
 
-const { program, programDoc, applicationStatus, isApplyOpen, closedReason } = useProgram(SLUG)
+const { program, programDoc, applicationStatus, isApplyOpen, closedReason, isStatusResolved } = useProgram(SLUG)
 
 // Real deadline, only when a Firestore doc provides one — never invented.
 const applyDeadline = computed<string | null>(() => {
@@ -129,7 +128,10 @@ function onMarqueePointerRelease(e: PointerEvent) {
                that Madimi One (below) has the wordmark role. See
                docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.3 }">
-            <div class="inline-flex items-center gap-2.5 rounded-full bg-ink-static/25 border border-white/25 px-4 py-1.5 font-accent-african-secondary text-xs uppercase tracking-[0.18em] text-white">
+            <div
+              v-if="isStatusResolved"
+              class="inline-flex items-center gap-2.5 rounded-full bg-ink-static/25 border border-white/25 px-4 py-1.5 font-accent-african-secondary text-xs uppercase tracking-[0.18em] text-white"
+            >
               <template v-if="isApplyOpen">Applications open now</template>
               <template v-else-if="closedReason === 'upcoming'">Applications open soon</template>
               <template v-else>Applications closed for this cycle</template>
@@ -161,13 +163,12 @@ function onMarqueePointerRelease(e: PointerEvent) {
             {{ program.pitch }}
           </Motion>
 
-          <!-- Fast facts as a plain mono strip, matching the "Daily |
-               Virtual | Team-based" line further down this same page —
-               no boxes, just typography carrying the rhythm. A thin
-               vertical rule divides items instead of a middle-dot
-               character — see CLAUDE.md "no dot-separator" rule.
-               font-mono-african (STAIJA Tac Mono) instead of Plex Mono
-               here only — see docs/TYPOGRAPHY-SYSTEM.md. -->
+          <!-- Fast facts as a plain mono strip — no boxes, just typography
+               carrying the rhythm. A thin vertical rule divides items
+               instead of a middle-dot character — see CLAUDE.md
+               "no dot-separator" rule. font-mono-african (STAIJA Tac
+               Mono) instead of Plex Mono here only — see
+               docs/TYPOGRAPHY-SYSTEM.md. -->
           <Motion
             class="flex flex-wrap items-center gap-x-1 gap-y-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-white/80"
             :initial="{ opacity: 0, y: 10 }"
@@ -189,21 +190,23 @@ function onMarqueePointerRelease(e: PointerEvent) {
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.3, delay: 0.2 }"
           >
-            <UiButton
-              v-if="isApplyOpen"
-              variant="on-gradient"
-              :to="`/apply/${SLUG}`"
-              @click="trackApplyClick({ program: 'dynamerge', source: 'program_hero' })"
-            >
-              Apply now
-            </UiButton>
-            <UiButton
-              v-else
-              variant="on-gradient"
-              :to="`/stay-connected?from=${SLUG}&reason=${closedReason}`"
-            >
-              {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
-            </UiButton>
+            <template v-if="isStatusResolved">
+              <UiButton
+                v-if="isApplyOpen"
+                variant="on-gradient"
+                :to="`/apply/${SLUG}`"
+                @click="trackApplyClick({ program: 'dynamerge', source: 'program_hero' })"
+              >
+                Apply now
+              </UiButton>
+              <UiButton
+                v-else
+                variant="on-gradient"
+                :to="`/stay-connected?from=${SLUG}&reason=${closedReason}`"
+              >
+                {{ closedReason === 'upcoming' ? 'Get notified when applications open' : 'Stay connected for the next cycle' }}
+              </UiButton>
+            </template>
             <UiButton variant="on-gradient-ghost" href="#sprint">See the four weeks</UiButton>
             <span v-if="applyDeadline" class="font-mono-african text-xs uppercase tracking-[0.14em] text-white/80">
               Apply by {{ applyDeadline }}
@@ -255,26 +258,16 @@ function onMarqueePointerRelease(e: PointerEvent) {
          bootcamp reads left-to-right, like a schedule you can hold.
 
          Note on `features[i]`: unlike StepUp (which loops the full
-         features array generically), this page spends each of the 3
-         seeded features by fixed index — [0] here, [1] in the mentor
-         strip, [2] in "One continent, one cohort" below — so every
-         admin-editable feature has a home instead of a generic 3-card
-         grid repeating StepUp's layout. Trade-off: it assumes exactly 3
-         features. If that stops being true, this is the place to widen
-         it back into a loop. -->
+         features array generically), this page spends seeded features
+         by fixed index — [0] here, [2] in "One continent, one cohort"
+         below. features[1] is currently unused (it backed the mentor
+         strip, removed since STAIJA has no real public mentor data yet
+         — see PublicMentorShowcase.vue). If that section comes back,
+         wire it back in there. -->
     <Section id="sprint" class="bg-paper">
       <Container>
         <Eyebrow accent class="text-brand-violet mb-4 block">The sprint</Eyebrow>
-        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-          <Heading :level="2" class="max-w-xl">Four weeks. Zero filler.</Heading>
-          <div class="flex items-center font-mono-african text-xs uppercase tracking-[0.18em] text-ink/50">
-            <span>Daily</span>
-            <span class="inline-block w-px h-3 bg-ink/20 mx-3" aria-hidden="true" />
-            <span>Virtual</span>
-            <span class="inline-block w-px h-3 bg-ink/20 mx-3" aria-hidden="true" />
-            <span>Team-based</span>
-          </div>
-        </div>
+        <Heading :level="2" class="max-w-xl mb-6">Four weeks. Zero filler.</Heading>
         <Body large class="max-w-2xl mb-12">{{ program.features[0]?.desc }}</Body>
 
         <div class="hairline-gradient h-[2px] rounded-full mb-6" aria-hidden="true" />
@@ -347,17 +340,15 @@ function onMarqueePointerRelease(e: PointerEvent) {
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.25 }"
           >
-            <UiCard class="p-8 md:p-10 !bg-paper">
-              <div class="flex items-start gap-5">
-                <div class="w-12 h-12 rounded-xl bg-gradient-brand flex items-center justify-center shrink-0">
-                  <Icon :icon="activeTrack.icon" width="24" class="text-white" />
-                </div>
-                <div>
-                  <Heading :level="3" class="mb-2">{{ activeTrack.name }}</Heading>
-                  <Body large>{{ activeTrack.copy }}</Body>
-                </div>
+            <div class="pt-8 border-t hairline-ink flex items-start gap-5">
+              <div class="w-12 h-12 rounded-xl bg-gradient-brand flex items-center justify-center shrink-0">
+                <Icon :icon="activeTrack.icon" width="24" class="text-white" />
               </div>
-            </UiCard>
+              <div>
+                <Heading :level="3" class="mb-2">{{ activeTrack.name }}</Heading>
+                <Body large>{{ activeTrack.copy }}</Body>
+              </div>
+            </div>
           </Motion>
         </div>
       </Container>
@@ -373,8 +364,8 @@ function onMarqueePointerRelease(e: PointerEvent) {
             <Eyebrow accent class="text-brand-violet mb-4 block">The network</Eyebrow>
             <Heading :level="2" class="mb-6">One continent. One cohort.</Heading>
             <Body large class="mb-6">{{ program.features[2]?.desc }}</Body>
-            <div class="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 px-4 py-2 font-mono-african text-xs uppercase tracking-[0.14em] text-brand-violet cursor-pin">
-              <Icon icon="lucide:globe-2" width="14" aria-hidden="true" />
+            <div class="inline-flex items-center gap-2 font-mono-african text-base md:text-lg uppercase tracking-[0.14em] text-brand-violet cursor-pin">
+              <Icon icon="lucide:globe-2" width="20" aria-hidden="true" />
               Open to every African country
             </div>
           </div>
@@ -387,38 +378,6 @@ function onMarqueePointerRelease(e: PointerEvent) {
               loading="lazy"
             />
           </div>
-        </div>
-      </Container>
-    </Section>
-
-    <!-- Mentor strip — network-forward and lightweight: mentors dial in
-         from everywhere, so they present as a scrolling lineup, not
-         StepUp's 1:1 roster. -->
-    <Section class="bg-surface">
-      <Container>
-        <Eyebrow accent class="text-brand-violet mb-4 block">Mentors</Eyebrow>
-        <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
-          <Heading :level="2" class="max-w-xl">Mentors dial in from everywhere.</Heading>
-          <Body class="max-w-sm">{{ program.features[1]?.desc }}</Body>
-        </div>
-
-        <!-- cursor-comet on the scroll track itself (hints "drag/scroll to
-             explore"); cursor-pin on the institution line specifically,
-             since that's the one piece of literal location data per
-             card — the more specific descendant rule wins on hover. -->
-        <div class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory cursor-comet">
-          <UiCard
-            v-for="mentor in program.mentors"
-            :key="mentor.name"
-            class="p-5 min-w-[260px] snap-start shrink-0 flex items-center gap-4 !bg-paper"
-          >
-            <img :src="mentor.img" :alt="mentor.name" width="300" height="300" class="w-14 h-14 rounded-full object-cover shrink-0" loading="lazy" />
-            <div class="min-w-0">
-              <h4 class="font-semibold text-ink m-0 truncate">{{ mentor.name }}</h4>
-              <p class="text-sm text-ink/60 m-0 truncate">{{ mentor.title }}</p>
-              <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0 truncate cursor-pin">{{ mentor.institution }}</p>
-            </div>
-          </UiCard>
         </div>
       </Container>
     </Section>
@@ -456,6 +415,9 @@ function onMarqueePointerRelease(e: PointerEvent) {
 </template>
 
 <style scoped>
+/* design-system: DESIGN.md · detail-view: sprint register (see note vs.
+   StepUpDetailView above, in the <script> block). */
+
 /* Seamless loop: the track holds two identical copies of the country
    list, so translating exactly -50% lands back on frame one. The global
    prefers-reduced-motion rule in style.css freezes this to a static
