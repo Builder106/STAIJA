@@ -158,16 +158,42 @@ onMounted(async () => {
                    with the language. -->
               <i18n-t keypath="home.hero.headline" tag="span">
                 <template #lead>
-                  <span class="font-accent-african-tertiary">
-                    <span
-                      v-for="(line, i) in headlineLeadLines"
-                      :key="i"
-                      :class="`flag-line-${i}`"
-                    >{{ line }}</span>
+                  <!-- Only the first two letter-groups ("Afr"/"ica") swap
+                       for the Africa silhouette on hover — the third
+                       group (the possessive "'s") stays put as ordinary
+                       text next to it, so the swap reads as "Africa" →
+                       [map] while "'s" holds its place. -->
+                  <span class="font-accent-african-tertiary lead-hover-group" tabindex="0">
+                    <span class="lead-swap">
+                      <span class="lead-text">
+                        <span
+                          v-for="i in [0, 1]"
+                          :key="i"
+                          :class="`flag-line-${i}`"
+                        >{{ headlineLeadLines[i] }}</span>
+                      </span>
+                      <span
+                        class="africa-pop-in"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span class="flag-line-2">{{ headlineLeadLines[2] }}</span>
                   </span>
                 </template>
                 <template #accent>
-                  <span class="italic text-brand-sky">{{ t('home.hero.headlineAccent') }}</span>
+                  <!-- A single flask centered under a two-word phrase this
+                       long left most of the vacated width empty — swapped
+                       for a row of icons (same lucide set used elsewhere
+                       on this page, e.g. the GitHub pill above) spanning
+                       closer to the phrase's actual width. -->
+                  <span class="italic text-brand-sky accent-hover-group" tabindex="0">
+                    <span class="accent-text">{{ t('home.hero.headlineAccent') }}</span>
+                    <span class="science-pop-in" aria-hidden="true">
+                      <Icon icon="lucide:flask-conical" class="science-icon" style="transition-delay: 60ms" />
+                      <Icon icon="lucide:atom" class="science-icon" style="transition-delay: 140ms" />
+                      <Icon icon="lucide:lightbulb" class="science-icon" style="transition-delay: 220ms" />
+                    </span>
+                  </span>
                 </template>
               </i18n-t>
             </Heading>
@@ -486,12 +512,193 @@ onMounted(async () => {
 .flag-line-1 { color: #000000; }
 .flag-line-2 { color: #007A3D; }
 
+/* Hover/focus swap: "Africa's" pops out (scales up + fades) while the
+   Africa continent silhouette (masked from the public-domain
+   BlankMap-Africa.svg, see public/images/africa-mask.svg) pops in over
+   it, filled with the same pan-African gradient as the letters. The
+   silhouette's pop-in is delayed slightly behind the text's pop-out so
+   the swap reads as one leaving before the other arrives, not a
+   simultaneous crossfade. */
+.lead-hover-group {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  outline: none;
+}
+
+.lead-swap {
+  position: relative;
+  display: inline-flex;
+}
+
+.lead-text {
+  display: inline-flex;
+  transition: transform 220ms ease-in, opacity 220ms ease-in;
+}
+
+.lead-hover-group:hover .lead-text,
+.lead-hover-group:focus-visible .lead-text {
+  transform: scale(1.15);
+  opacity: 0;
+}
+
+.africa-pop-in {
+  position: absolute;
+  left: 50%;
+  /* Bottom-anchored (not vertically centered in the whole word) so the
+     silhouette sits on the same baseline as "Afr"/"ica" and "'s"
+     instead of floating above the line — centering against the full
+     lead-hover-group (which also contains "'s") pushed it up past the
+     cap-height into the GitHub pill above. */
+  bottom: 0.05em;
+  /* em-based, not %: the parent's height is auto (line-height of the
+     text it wraps), and percentage heights resolve to 0 against an
+     auto-height containing block — that silently produced a zero-size,
+     invisible element before this was switched to em units. */
+  width: 1.3em;
+  height: 1.3em;
+  transform: translate(-50%, 0) scale(0.4);
+  background: linear-gradient(
+    to bottom,
+    #CE1126 0%,
+    #CE1126 33.33%,
+    #000000 33.33%,
+    #000000 66.66%,
+    #007A3D 66.66%,
+    #007A3D 100%
+  );
+  -webkit-mask-image: url('/images/africa-mask.svg');
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url('/images/africa-mask.svg');
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease-out, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-delay: 0ms;
+}
+
+.lead-hover-group:hover .africa-pop-in,
+.lead-hover-group:focus-visible .africa-pop-in {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  transition-delay: 100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-text {
+    transition: opacity 150ms ease-in;
+  }
+  .lead-hover-group:hover .lead-text,
+  .lead-hover-group:focus-visible .lead-text {
+    transform: none;
+  }
+  .africa-pop-in {
+    transition: opacity 150ms ease-out;
+    transition-delay: 0ms;
+  }
+  .lead-hover-group:hover .africa-pop-in,
+  .lead-hover-group:focus-visible .africa-pop-in {
+    transform: translate(-50%, 0) scale(1);
+    transition-delay: 0ms;
+  }
+}
+
 @media (forced-colors: active) {
   .flag-line-0,
   .flag-line-1,
   .flag-line-2 {
     color: CanvasText;
     forced-color-adjust: none;
+  }
+  .africa-pop-in {
+    display: none;
+  }
+  .lead-hover-group:hover .lead-text,
+  .lead-hover-group:focus-visible .lead-text {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Same pop-out/pop-in pattern as "Africa's" above, applied to
+   "scientist-leaders": the whole word pops out and a row of 3 science
+   icons pops in over it, each with its own stagger delay (set inline
+   in the template) so they arrive left to right rather than all at
+   once. Only one nesting level is needed here (vs. "Africa's" two)
+   because the entire phrase swaps — there's no trailing fragment to
+   keep in place. */
+.accent-hover-group {
+  position: relative;
+  display: inline-flex;
+  outline: none;
+}
+
+.accent-text {
+  display: inline-flex;
+  transition: transform 220ms ease-in, opacity 220ms ease-in;
+}
+
+.accent-hover-group:hover .accent-text,
+.accent-hover-group:focus-visible .accent-text {
+  transform: scale(1.15);
+  opacity: 0;
+}
+
+.science-pop-in {
+  position: absolute;
+  left: 50%;
+  bottom: 0.05em;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5em;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.science-icon {
+  width: 1.15em;
+  height: 1.15em;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 250ms ease-out, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.accent-hover-group:hover .science-icon,
+.accent-hover-group:focus-visible .science-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accent-text {
+    transition: opacity 150ms ease-in;
+  }
+  .accent-hover-group:hover .accent-text,
+  .accent-hover-group:focus-visible .accent-text {
+    transform: none;
+  }
+  .science-icon {
+    transition: opacity 150ms ease-out;
+    transition-delay: 0ms !important;
+  }
+  .accent-hover-group:hover .science-icon,
+  .accent-hover-group:focus-visible .science-icon {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .science-icon {
+    display: none;
+  }
+  .accent-hover-group:hover .accent-text,
+  .accent-hover-group:focus-visible .accent-text {
+    transform: none;
+    opacity: 1;
   }
 }
 </style>
