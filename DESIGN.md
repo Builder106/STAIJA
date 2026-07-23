@@ -41,6 +41,8 @@ The homepage hero's "Africa's" and "scientist-leaders" pop out on hover/focus an
 
 Program detail pages are split by content shape, not shared through one generic template: `StepUpDetailView` (sprint format) and `DynamergeDetailView` (research-journal format) are separate components. When adding a new program type, decide which shape it follows — don't force it into either existing view or resurrect a shared `ProgramDetailView`.
 
+Every detail view's `<style scoped>` block opens with a one-line stamp recording its allegiance to this file, e.g. `/* design-system: DESIGN.md · detail-view: sprint register (see note vs. StepUpDetailView) */`. This is what lets an audit (or another contributor) tell at a glance whether a page is intentionally following the system rather than having drifted from it — add the stamp to any new detail view, and update it if the view's register changes.
+
 ## Rules (apply these without being asked)
 
 - **No live/status indicators.** No pulsing dots, "live" badges, or other real-time-status affordances. State the fact in plain text (e.g. "Applications open" as text, not a green ping dot next to it).
