@@ -92,6 +92,24 @@
   line-gap-override: 0%;
 }
 
+/* Agu Display is an African-designed serif display face (Seun Badejo,
+   Nigeria, OFL) used narrowly as `--font-accent-african-tertiary` —
+   single-word wordmark-scale accents only, currently the homepage
+   hero's lead word. Ships with a stylistic `MORF` variable axis;
+   instanced at its default (0) since a single static cut is all this
+   role ever needs. Replaced Matemasie in this role after a live
+   font-comparison review — see docs/TYPOGRAPHY-SYSTEM.md. Values
+   derived directly from the font's own hhea/OS/2 tables, same method
+   as Madimi/Ojuju above. */
+@font-face {
+  font-family: 'Agu Display Fallback';
+  src: local('Georgia'), local('Times New Roman');
+  size-adjust: 135%;
+  ascent-override: 119%;
+  descent-override: 31%;
+  line-gap-override: 0%;
+}
+
 
 /* === Self-hosted web fonts (generated; see header) ================== */
 /* cyrillic-ext */
@@ -758,6 +776,22 @@
   font-weight: 400;
   font-display: swap;
   src: url(/fonts/MadimiOne-Regular-subset.woff2) format('woff2');
+  unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
+}
+
+/* === Agu Display (hand-built, not CDN-generated) ======================
+   Variable font, instanced at MORF=0 (its default) with `fonttools
+   varLib.instancer` since this role only ever needs one static cut.
+   Subset to Latin + Latin Extended-A/B + Latin Extended Additional
+   with `fonttools subset`, then compressed to woff2 with `fonttools
+   ttLib.woff2`. Source:
+   https://github.com/google/fonts/tree/main/ofl/agudisplay (OFL). */
+@font-face {
+  font-family: 'Agu Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/AguDisplay-Regular-subset.woff2) format('woff2');
   unicode-range: U+0020-007E, U+00A0-024F, U+1E00-1EFF, U+2018, U+2019, U+201C, U+201D, U+2013, U+2014, U+2026;
 }
 

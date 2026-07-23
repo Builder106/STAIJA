@@ -87,6 +87,13 @@
       accent rather than a headline. */
    --font-accent-african: 'Madimi One', 'Madimi One Fallback', var(--font-display);
    --font-accent-african-secondary: 'Ojuju', 'Ojuju Fallback', var(--font-mono);
+   /* Tertiary: Agu Display (OFL), by Nigerian designer Seun Badejo —
+      a serif display face. Instanced at a single static weight (its
+      MORF axis default), reserved strictly for standalone
+      wordmark-scale words (never a flexible label role the way Ojuju
+      is). Replaced Matemasie in this slot after a live side-by-side
+      font comparison. See docs/TYPOGRAPHY-SYSTEM.md. */
+   --font-accent-african-tertiary: 'Agu Display', 'Agu Display Fallback', var(--font-display);
    /* African-designed monospace face — a fonttools-built variant, not a
       typeface anyone shipped as-is. No credible African-designed
       monospace exists on Google Fonts today. Built by re-metricing Tac

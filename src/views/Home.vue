@@ -20,6 +20,22 @@ import { getBlogPosts, getEvents, type BlogPost, type EventItem } from '../servi
 
 const { t, locale } = useI18n()
 
+// Split the lead word into 3 contiguous letter groups, stacked as 3
+// lines — reproduces the Pan-African flag's actual 3-horizontal-band
+// structure using whole legible letters per band, not a pixel-height
+// slice through each glyph (see .flag-line-* below for why that
+// in-glyph version was dropped) and not a per-letter color cycle
+// (tried in between — read as noisy/random rather than "the flag").
+const headlineLeadLines = computed(() => {
+  const chars = Array.from(t('home.hero.headlineLead'))
+  const size = Math.ceil(chars.length / 3)
+  return [
+    chars.slice(0, size).join(''),
+    chars.slice(size, size * 2).join(''),
+    chars.slice(size * 2).join(''),
+  ]
+})
+
 // Stats: numbers stay hardcoded (they're data, not language) but the
 // eyebrow + caption flow through i18n. Recomputed on locale change.
 const stats = computed(() => [
@@ -142,7 +158,13 @@ onMounted(async () => {
                    with the language. -->
               <i18n-t keypath="home.hero.headline" tag="span">
                 <template #lead>
-                  <span class="font-accent-african africa-gradient-text">{{ t('home.hero.headlineLead') }}</span>
+                  <span class="font-accent-african-tertiary">
+                    <span
+                      v-for="(line, i) in headlineLeadLines"
+                      :key="i"
+                      :class="`flag-line-${i}`"
+                    >{{ line }}</span>
+                  </span>
                 </template>
                 <template #accent>
                   <span class="italic text-brand-sky">{{ t('home.hero.headlineAccent') }}</span>
@@ -436,26 +458,38 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Pan-African flag colors (red/gold/green — the palette shared by the
-   majority of the continent's flags, also used by the African Union
-   emblem), not the site's brand violet→sky gradient — this is the one
-   place on the homepage meant to read as a deliberate reference to
-   pan-African identity rather than the STAIJA brand mark itself. Same
-   gradient-clip-text technique as the Dynamerge marquee's country
-   names (DynamergeDetailView.vue) — see that file's .marquee-name and
-   forced-colors notes for why the fallback below is needed. */
-.africa-gradient-text {
-  background-image: linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #007A3D 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
+/* The actual Pan-African flag (Marcus Garvey/UNIA, 1920) — red, black,
+   green — not the African Union's red/gold/green, which an earlier
+   version of this mistakenly used instead. Three earlier approaches
+   were tried and dropped:
+   1. A banded gradient (each color as a horizontal third of the glyph
+      height) cut straight through each letter's most identifying
+      strokes on this serif display face, and black-on-violet lost
+      definition instead of standing out — the word stopped reading as
+      "Africa's" and started reading as an abstract color-block
+      pattern.
+   2. Cycling one color per individual letter kept every glyph legible
+      but read as noisy/random rather than "the flag."
+   3. Splitting the word into 3 letter groups stacked as 3 separate
+      lines matched the flag's band structure but broke the word out
+      of normal horizontal reading flow.
+   This version keeps the word on one normal horizontal line and
+   splits it into the same 3 contiguous letter groups, each a solid
+   flag color, sitting inline left to right — legible per letter,
+   reads as one word, and still visibly cycles through all three flag
+   colors across the word.
+
+   A desaturated variant (deep maroon/warm charcoal/muted forest) was
+   tried and reverted — the actual flag's pure red/black/green is the
+   point of this treatment. */
+.flag-line-0 { color: #CE1126; }
+.flag-line-1 { color: #000000; }
+.flag-line-2 { color: #007A3D; }
 
 @media (forced-colors: active) {
-  .africa-gradient-text {
-    background-image: none;
-    -webkit-text-fill-color: CanvasText;
+  .flag-line-0,
+  .flag-line-1,
+  .flag-line-2 {
     color: CanvasText;
     forced-color-adjust: none;
   }

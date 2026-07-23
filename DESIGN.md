@@ -23,8 +23,9 @@ Light/dark is driven by `[data-theme="dark"]` on `<html>`, not a class — this 
 | `font-display` | IBM Plex Sans | Headings only |
 | `font-sans` | Inter | Body |
 | `font-mono` | IBM Plex Mono | Data labels, slugs |
-| `font-accent-african` | Madimi One | Program wordmarks (Dynamerge hero) and the homepage hero's lead word ("Africa's" in `home.hero.headline`) — one weight (400) |
+| `font-accent-african` | Madimi One | Program wordmarks (Dynamerge hero) — one weight (400) |
 | `font-accent-african-secondary` | Ojuju | Short labels only (eyebrows, stat callouts) at wght=500 — too heavy at hero/headline scale |
+| `font-accent-african-tertiary` | Agu Display | Single-word wordmark-scale accents only — currently the homepage hero's lead word ("Africa's" in `home.hero.headline`). Instanced at a single static weight even though the source ships a variable axis, so treat it as fixed-weight — don't reach for it outside a standalone word at display size |
 | `font-mono-african` | STAIJA Tac Mono | In-house re-metriced Tac One variant; treat as the house mono face wherever `font-mono` would otherwise go on African-program surfaces |
 
 Full derivation and OFL compliance notes for the two African-designed faces live in `docs/TYPOGRAPHY-SYSTEM.md`.
