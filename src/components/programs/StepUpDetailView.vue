@@ -29,14 +29,18 @@ const SLUG = 'stepup-scholars' as const
 
 const { program, isApplyOpen, closedReason } = useProgram(SLUG)
 
-// 2025 cohort project areas, as published on STAIJA's own LinkedIn page.
-// Prototype seam: if this section survives review, these belong on the
-// Firestore Program doc (admin-editable per cohort) rather than here.
-const RESEARCH_AREAS = [
-  { name: 'Cardiology', icon: 'lucide:heart-pulse' },
-  { name: 'Robotics', icon: 'lucide:bot' },
-  { name: 'Artificial Intelligence', icon: 'lucide:brain-circuit' },
-]
+// Deliverable each phase of the arc leaves behind — the tangible
+// artifact that makes the "first question → first paper" progression
+// legible. Every value is surfaced from the matching timeline
+// description (no invented content); keyed by month so it renders
+// whether the timeline comes from the fallback dict or a Firestore doc
+// seeded before this waypoint treatment existed.
+const TIMELINE_OUTPUTS: Record<string, string> = {
+  'Month 1': 'Lab safety certification',
+  'Month 2–4': 'Original dataset',
+  'Month 5': 'Drafted abstract',
+  'Month 6': 'Submitted manuscript',
+}
 
 const FAQS = [
   { q: 'Do I need prior research experience?', a: 'Not at all. We are looking for curiosity and a willingness to learn.' },
@@ -65,7 +69,7 @@ const FAQS = [
         <div class="grid lg:grid-cols-[1fr_auto] gap-12 lg:gap-20 items-center">
           <div class="max-w-2xl flex flex-col gap-6 text-paper-static">
             <Motion :initial="{ opacity: 0, y: 14 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.55 }">
-              <Eyebrow accent class="text-brand-sky">Research incubator — {{ program.eligibility }}</Eyebrow>
+              <Eyebrow accent class="text-brand-sky">Research incubator — {{ program.eligibility }}<span class="ml-1.5 tracking-normal align-middle" role="img" aria-label="Nigeria">🇳🇬</span></Eyebrow>
             </Motion>
 
             <Motion
@@ -124,21 +128,20 @@ const FAQS = [
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.6, delay: 0.35 }"
           >
-            <div class="w-full lg:w-80 border border-brand-violet/25 bg-white/[0.06] backdrop-blur-sm rounded-2xl p-6 font-mono-african cursor-pin">
-              <div class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-violet/80">
+            <div class="w-full lg:w-80 border border-brand-violet/25 bg-gradient-to-b from-brand-violet/[0.12] via-white/[0.05] to-white/[0.02] backdrop-blur-sm rounded-2xl p-6 font-mono-african cursor-pin">
+              <div class="text-lg font-semibold uppercase tracking-[0.16em] text-brand-violet">
                 Program record
               </div>
               <dl class="m-0 mt-2">
                 <div
                   v-for="stat in program.stats"
                   :key="stat.label"
-                  class="flex items-baseline justify-between gap-6 py-3 border-b border-dotted border-paper-static/25 last:border-0"
+                  class="flex items-baseline justify-between gap-6 py-3 border-b border-dotted border-brand-violet/25 last:border-0"
                 >
                   <dt class="text-sm uppercase tracking-[0.14em] text-paper-static/60">{{ stat.label }}</dt>
-                  <dd class="m-0 text-lg text-white">{{ stat.value }}</dd>
+                  <dd class="m-0 text-lg text-violet-100">{{ stat.value }}</dd>
                 </div>
               </dl>
-              <div class="mt-4 text-xs uppercase tracking-[0.16em] text-paper-static/40">Ref № stepup-scholars</div>
             </div>
           </Motion>
         </div>
@@ -168,7 +171,7 @@ const FAQS = [
                 <img :src="feature.img" :alt="feature.title" width="600" height="400" class="w-full h-full object-cover" loading="lazy" />
               </div>
               <div>
-                <div class="font-mono-african text-sm text-brand-violet mb-3">{{ String(i + 1).padStart(2, '0') }}</div>
+                <div class="font-mono-african text-3xl md:text-4xl font-semibold text-brand-violet mb-3">{{ String(i + 1).padStart(2, '0') }}</div>
                 <Heading :level="3" class="mb-3">{{ feature.title }}</Heading>
                 <Body large>{{ feature.desc }}</Body>
               </div>
@@ -187,6 +190,18 @@ const FAQS = [
           <Eyebrow accent class="text-brand-violet mb-4 block">The arc</Eyebrow>
           <Heading :level="2" class="mb-12">From first question to first paper.</Heading>
 
+          <!-- Shared gradient for the deliverable glyphs — violet→sky,
+               matching the spine dots. (Hex mirrors --color-brand-* since
+               SVG stop-color can't reliably read CSS custom properties.) -->
+          <svg width="0" height="0" class="absolute" aria-hidden="true">
+            <defs>
+              <linearGradient id="arcGlyphGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#8B55FF" />
+                <stop offset="1" stop-color="#5EDBE7" />
+              </linearGradient>
+            </defs>
+          </svg>
+
           <ol class="list-none p-0 m-0 grid grid-cols-[auto_28px_1fr] md:grid-cols-[180px_28px_1fr] gap-x-5 md:gap-x-8">
             <Motion
               v-for="(step, i) in program.timeline"
@@ -198,99 +213,94 @@ const FAQS = [
               :viewport="{ once: true, margin: '-50px' }"
               :transition="{ duration: 0.5, delay: i * 0.08 }"
             >
-              <!-- Date column. The Month label IS the sequence — the
-                   spine dot deliberately doesn't repeat a step number. -->
+              <!-- Date column — mono ledger type (STAIJA Tac Mono) so the
+                   month stamps read as data, echoing the hero's program
+                   record. The Month label IS the sequence. -->
               <div
-                class="font-display text-lg md:text-2xl font-semibold text-ink md:text-right pt-2 self-start"
-                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-14'"
+                class="font-mono-african text-lg md:text-2xl font-semibold text-ink md:text-right pt-1.5 self-start"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-16'"
               >
                 {{ step.date }}
               </div>
 
-              <!-- Spine: gradient dot anchors the row; the connecting
-                   line runs behind it and is hidden on the last row. -->
+              <!-- Spine: the connector draws itself downward on scroll
+                   (scaleY, sky→violet), each dot igniting with a glow as
+                   it enters — the section literally advances as you read. -->
               <div class="relative flex flex-col items-center self-stretch">
-                <span
+                <Motion
                   v-if="i !== program.timeline.length - 1"
-                  class="absolute top-7 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-brand-violet/20"
+                  as="span"
                   aria-hidden="true"
+                  class="absolute top-7 bottom-0 left-1/2 -translate-x-1/2 w-[2px] origin-top rounded-full bg-gradient-to-b from-brand-sky to-brand-violet"
+                  :initial="{ scaleY: 0 }"
+                  :while-in-view="{ scaleY: 1 }"
+                  :viewport="{ once: true, margin: '-50px' }"
+                  :transition="{ duration: 0.6, delay: 0.15 + i * 0.12, ease: 'easeInOut' }"
                 />
-                <span
-                  class="relative z-10 mt-2 w-7 h-7 rounded-full bg-gradient-to-br from-brand-violet to-brand-sky shadow-lg shadow-brand-violet/25 ring-4 ring-surface"
+                <Motion
+                  as="span"
                   aria-hidden="true"
-                />
+                  class="relative z-10 mt-2 grid place-items-center"
+                  :initial="{ scale: 0, opacity: 0 }"
+                  :while-in-view="{ scale: 1, opacity: 1 }"
+                  :viewport="{ once: true, margin: '-50px' }"
+                  :transition="{ duration: 0.4, delay: i * 0.12, ease: 'easeOut' }"
+                >
+                  <span class="absolute w-7 h-7 rounded-full bg-brand-violet/40 blur-md" />
+                  <span class="relative w-7 h-7 rounded-full bg-gradient-to-br from-brand-violet to-brand-sky shadow-lg shadow-brand-violet/30 ring-4 ring-surface" />
+                </Motion>
               </div>
 
               <div
-                class="self-start pt-2"
-                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-14'"
+                class="self-start pt-1.5"
+                :class="i === program.timeline.length - 1 ? 'pb-0' : 'pb-16'"
               >
                 <Body large class="text-ink/80 leading-relaxed">{{ step.desc }}</Body>
+                <!-- Deliverable glyph — a hand-built line-art mark of the
+                     artifact each phase leaves behind (award → dataset →
+                     abstract → submitted paper), drawn in the page's Lucide
+                     stroke voice with a violet→sky gradient stroke that
+                     echoes the spine dots. The caption keeps the meaning. -->
+                <div class="mt-4 flex items-center gap-3">
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-12 h-12 shrink-0"
+                    fill="none"
+                    stroke="url(#arcGlyphGrad)"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <template v-if="step.date === 'Month 1'">
+                      <circle cx="12" cy="8" r="6" />
+                      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                    </template>
+                    <template v-else-if="step.date === 'Month 2–4'">
+                      <ellipse cx="12" cy="5" rx="9" ry="3" />
+                      <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+                      <path d="M3 12a9 3 0 0 0 18 0" />
+                    </template>
+                    <template v-else-if="step.date === 'Month 5'">
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
+                      <path d="M14 2v5h5" />
+                      <path d="M8 18v-3" />
+                      <path d="M12 18v-5" />
+                      <path d="M16 18v-2" />
+                    </template>
+                    <template v-else>
+                      <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+                      <path d="m21.854 2.147-10.94 10.939" />
+                    </template>
+                  </svg>
+                  <div v-if="TIMELINE_OUTPUTS[step.date]" class="leading-tight">
+                    <div class="font-mono-african text-xs uppercase tracking-[0.2em] text-brand-violet/60">Output</div>
+                    <div class="font-sans text-lg font-medium text-ink mt-0.5">{{ TIMELINE_OUTPUTS[step.date] }}</div>
+                  </div>
+                </div>
               </div>
             </Motion>
           </ol>
-        </div>
-      </Container>
-    </Section>
-
-    <!-- The record — what a finished cohort leaves behind. Content is
-         limited to claims STAIJA has published itself; no invented
-         numbers (see JOURNAL 2026-05-02 on fabricated stats). -->
-    <Section class="bg-paper border-y hairline-ink">
-      <Container>
-        <div class="max-w-4xl mx-auto">
-          <Eyebrow accent class="text-brand-violet mb-4 block">The record</Eyebrow>
-          <Heading :level="2" class="mb-6">Work that leaves a paper trail.</Heading>
-          <Body large class="max-w-2xl">
-            Scholars close the program with a symposium presentation and a manuscript
-            submitted to a youth science journal. The 2025 cohort's projects ran through
-            cardiology, robotics, and artificial intelligence.
-          </Body>
-
-          <div class="grid sm:grid-cols-3 gap-4 mt-12">
-            <Motion
-              v-for="(area, i) in RESEARCH_AREAS"
-              :key="area.name"
-              :initial="{ opacity: 0, y: 16 }"
-              :while-in-view="{ opacity: 1, y: 0 }"
-              :viewport="{ once: true }"
-              :transition="{ duration: 0.5, delay: i * 0.1 }"
-            >
-              <UiCard class="p-6 h-full !bg-surface">
-                <Icon :icon="area.icon" width="24" class="text-brand-violet mb-4" />
-                <div class="font-mono-african text-[11px] uppercase tracking-[0.18em] text-ink/60">2025 cohort</div>
-                <div class="font-semibold text-ink mt-1">{{ area.name }}</div>
-              </UiCard>
-            </Motion>
-          </div>
-        </div>
-      </Container>
-    </Section>
-
-    <!-- Mentor bench — person-forward, because for StepUp the mentor IS
-         the product: one scholar, one working researcher, weekly
-         check-ins. Dynamerge treats mentors as a network; this page
-         treats them as a roster. -->
-    <Section class="bg-surface">
-      <Container>
-        <div class="max-w-4xl mx-auto">
-          <Eyebrow accent class="text-brand-violet mb-4 block">Mentorship</Eyebrow>
-          <Heading :level="2" class="mb-6">One scholar, one researcher.</Heading>
-          <Body large class="max-w-2xl mb-12">
-            Every scholar works 1:1 with a postdoctoral researcher or industry scientist,
-            with weekly check-ins on the calendar from week one.
-          </Body>
-
-          <div class="grid md:grid-cols-3 gap-6">
-            <UiCard v-for="mentor in program.mentors" :key="mentor.name" class="p-5 flex items-center gap-4 !bg-paper">
-              <img :src="mentor.img" :alt="mentor.name" width="300" height="300" class="w-16 h-16 rounded-full object-cover shrink-0" loading="lazy" />
-              <div class="min-w-0">
-                <h4 class="font-semibold text-ink m-0 truncate">{{ mentor.name }}</h4>
-                <p class="text-sm text-ink/60 m-0">{{ mentor.title }}</p>
-                <p class="font-mono-african text-[11px] uppercase tracking-[0.14em] text-brand-violet mt-1 m-0">{{ mentor.institution }}</p>
-              </div>
-            </UiCard>
-          </div>
         </div>
       </Container>
     </Section>
@@ -301,10 +311,10 @@ const FAQS = [
         <div class="max-w-4xl mx-auto bg-surface rounded-3xl p-8 md:p-12 shadow-sm border hairline-ink flex flex-col md:flex-row gap-12">
           <div class="md:w-1/3">
             <Heading :level="2" class="mb-4">Who it's for</Heading>
-            <p class="text-ink/60 text-sm">
+            <Body class="text-ink/60">
               We evaluate applications based on curiosity, resilience, and potential for growth.
               We actively encourage students from underrepresented backgrounds to apply.
-            </p>
+            </Body>
           </div>
           <div class="md:w-2/3 flex flex-col gap-4">
             <div v-for="req in program.eligibilityList" :key="req" class="flex items-start gap-3">

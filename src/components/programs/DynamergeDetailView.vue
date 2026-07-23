@@ -282,11 +282,13 @@ function onMarqueePointerRelease(e: PointerEvent) {
             :transition="{ duration: 0.3, delay: i * 0.06 }"
             class="h-full"
           >
-            <!-- Final card gets the gradient: Demo Day is the payoff. -->
+            <!-- Final card gets the gradient: Demo Day is the payoff. Deep
+                 violet→indigo (not the brand violet→sky) so white body text
+                 keeps ≥4.5:1 contrast — the sky end is too light for text. -->
             <div
               class="h-full rounded-2xl p-6 flex flex-col gap-3"
               :class="i === program.timeline.length - 1
-                ? 'bg-gradient-brand text-white'
+                ? 'bg-gradient-to-br from-[#6B3FE0] to-[#3f1f8a] text-white'
                 : 'bg-surface border hairline-ink'"
             >
               <div
@@ -298,7 +300,7 @@ function onMarqueePointerRelease(e: PointerEvent) {
               <div v-if="splitStep(step.desc).kicker" class="font-display text-xl font-semibold">
                 {{ splitStep(step.desc).kicker }}
               </div>
-              <p class="m-0 text-sm leading-relaxed" :class="i === program.timeline.length - 1 ? 'text-white/90' : 'text-ink/70'">
+              <p class="m-0 text-sm leading-relaxed" :class="i === program.timeline.length - 1 ? 'text-white' : 'text-ink/70'">
                 {{ splitStep(step.desc).body }}
               </p>
             </div>
