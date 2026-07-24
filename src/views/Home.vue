@@ -188,10 +188,14 @@ onMounted(async () => {
                        closer to the phrase's actual width. -->
                   <span class="italic text-brand-sky accent-hover-group" tabindex="0">
                     <span class="accent-text">{{ t('home.hero.headlineAccent') }}</span>
+                    <!-- Enter stagger (arrive left to right) is set in CSS
+                         via :hover …:nth-child rules, not inline here, so
+                         it applies only on the way in and the exit stays
+                         un-staggered. -->
                     <span class="science-pop-in" aria-hidden="true">
-                      <Icon icon="lucide:flask-conical" class="science-icon" style="transition-delay: 60ms" />
-                      <Icon icon="lucide:atom" class="science-icon" style="transition-delay: 140ms" />
-                      <Icon icon="lucide:lightbulb" class="science-icon" style="transition-delay: 220ms" />
+                      <Icon icon="lucide:flask-conical" class="science-icon" />
+                      <Icon icon="lucide:atom" class="science-icon" />
+                      <Icon icon="lucide:lightbulb" class="science-icon" />
                     </span>
                   </span>
                 </template>
@@ -512,6 +516,115 @@ onMounted(async () => {
 .flag-line-1 { color: #000000; }
 .flag-line-2 { color: #007A3D; }
 
+/* Idle cues for "Africa's" and "scientist-leaders", running whether or
+   not the device can hover — touch visitors get no benefit from the
+   :hover pop-swap above, so this is the only signal they get that these
+   words do something.
+
+   "Africa's": each flag-colored group does a little hop with a rotational
+   wiggle on the way down, then rests. Staggered across the three groups,
+   the hop travels left→right as a wave and then pauses before repeating,
+   which reads far more alive than a constant sine bob. Transform-only, so
+   the flag colors are untouched and it doesn't preview the pop-swap.
+
+   "scientist-leaders": a light glances across the cyan letters — a narrow
+   highlight band sweeping through the fill (animated background-position
+   on a background-clipped gradient), parked off-screen between passes so
+   it glints periodically rather than shimmering nonstop. Because it drives
+   background-position, not opacity or transform, it can't collide with the
+   pop-swap's fade/scale at all; a gentle float rides underneath for life.
+   The whole thing drops to a solid cyan fill under reduced-motion and
+   forced-colors (see those blocks below). */
+@keyframes idle-hop {
+  0%, 48%, 100% { transform: translateY(0) rotate(0deg); }
+  16% { transform: translateY(-0.22em) rotate(-4deg); }
+  30% { transform: translateY(0) rotate(2.5deg); }
+  38% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes idle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.1em); }
+}
+
+/* Sweeps one full period of the (tiling) gradient. The fill tiles rather
+   than clipping to a finite image, so the cyan always covers every glyph —
+   a no-repeat image slid off the text box mid-sweep, leaving letters with
+   no background and therefore an invisible transparent fill. Endpoints
+   land with the highlight off the text, so the loop restarts seamlessly. */
+@keyframes idle-sheen {
+  from { background-position: 200% 50%; }
+  to { background-position: 0% 50%; }
+}
+
+.flag-line-0,
+.flag-line-1,
+.flag-line-2 {
+  display: inline-block;
+  transform-origin: bottom center;
+  animation: idle-hop 2.8s ease-in-out infinite;
+}
+.flag-line-0 { animation-delay: 0ms; }
+.flag-line-1 { animation-delay: 150ms; }
+.flag-line-2 { animation-delay: 300ms; }
+
+.accent-text {
+  /* Cyan fill delivered as a background-clipped gradient so the sheen has
+     something to sweep through; `color` stays brand-sky (from the utility
+     class) as the fallback and for currentColor. */
+  background-image: linear-gradient(
+    100deg,
+    var(--color-brand-sky) 0%,
+    var(--color-brand-sky) 43%,
+    #eafdff 50%,
+    var(--color-brand-sky) 57%,
+    var(--color-brand-sky) 100%
+  );
+  background-size: 200% 100%;
+  /* background-repeat left at its default (repeat) on purpose: the tiling
+     cyan guarantees full coverage so no glyph ever falls on an empty area
+     and vanishes. Endpoints of both ends of the gradient are the same cyan,
+     so the tiled seams are invisible. */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* The 0.8s start delay is load-bearing for the hover-exit, not cosmetic:
+     when the pointer leaves, the hover rule's `animation: none` is dropped
+     and these restart from their delay phase. With fill-mode:none nothing
+     is applied during that 0.8s, so the float's transform-return
+     transition runs cleanly instead of snapping the word back over the
+     still-exiting icons. (The sheen touches only background-position, so
+     it has nothing to snap.) */
+  animation: idle-float 3s ease-in-out 0.8s infinite,
+             idle-sheen 4.5s linear 0.8s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-line-0,
+  .flag-line-1,
+  .flag-line-2,
+  .accent-text {
+    animation: none;
+  }
+  /* Drop the clipped gradient back to a plain cyan fill so a parked sheen
+     highlight doesn't sit frozen mid-word. */
+  .accent-text {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+@media (forced-colors: active) {
+  /* background-clip:text + transparent fill would render the phrase
+     invisible in high-contrast mode — restore a system-colored solid
+     fill and stop the sweep. */
+  .accent-text {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+  }
+}
+
 /* Both hover/pop swaps below are gated to devices with real hover
    (a mouse/trackpad), not just any :hover/:focus-visible match. Touch
    browsers often fake :hover on the first tap and don't clear it until
@@ -550,6 +663,18 @@ onMounted(async () => {
 .lead-hover-group:focus-visible .lead-text {
   transform: scale(1.15);
   opacity: 0;
+}
+
+.lead-hover-group:hover .flag-line-0,
+.lead-hover-group:hover .flag-line-1,
+.lead-hover-group:hover .flag-line-2,
+.lead-hover-group:focus-visible .flag-line-0,
+.lead-hover-group:focus-visible .flag-line-1,
+.lead-hover-group:focus-visible .flag-line-2 {
+  /* Drop (not pause) the idle bob so the trailing "'s", which stays
+     visible during the swap, snaps back to the baseline instead of
+     freezing mid-bob. */
+  animation: none;
 }
 
 .africa-pop-in {
@@ -649,13 +774,25 @@ onMounted(async () => {
 
 .accent-text {
   display: inline-flex;
-  transition: transform 220ms ease-in, opacity 220ms ease-in;
+  /* Governs the EXIT (return to rest): hold 150ms so the icons are
+     mostly gone before the word fades back, then a soft ease-out
+     return — otherwise the word and the icons cross over each other
+     mid-swap. Enter timing is set on the :hover rule below. */
+  transition: transform 240ms ease-out 150ms, opacity 240ms ease-out 150ms;
 }
 
 .accent-hover-group:hover .accent-text,
 .accent-hover-group:focus-visible .accent-text {
   transform: scale(1.15);
   opacity: 0;
+  /* Enter: quick pop-out, no hold — the word needs to clear first so
+     the icons have somewhere to land. */
+  transition: transform 200ms ease-in, opacity 200ms ease-in;
+  /* Fully drop the idle-breathe animation here, not just pause it:
+     a paused animation still applies its current opacity keyframe,
+     which outranks this rule's opacity:0 and leaves the phrase
+     visible through the popped-in icons. */
+  animation: none;
 }
 
 .science-pop-in {
@@ -674,14 +811,30 @@ onMounted(async () => {
   height: 1.15em;
   opacity: 0;
   transform: scale(0.3);
-  transition: opacity 250ms ease-out, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Governs the EXIT: all three collapse together (no stagger) and
+     fast, shrinking back into scale(0.3) as they fade, so they're clear
+     of the word before it returns. The springy enter transition and its
+     left-to-right stagger live on the :hover rules below, so they only
+     apply on the way in — the previous inline `transition-delay` leaked
+     the stagger onto the exit too, leaving icons hanging up to ~570ms. */
+  transition: opacity 150ms ease-in, transform 190ms ease-in;
 }
 
 .accent-hover-group:hover .science-icon,
 .accent-hover-group:focus-visible .science-icon {
   opacity: 1;
   transform: scale(1);
+  transition: opacity 250ms ease-out, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* Enter-only stagger: arrives left to right. Kept off the base rule so
+   the exit stays un-staggered. */
+.accent-hover-group:hover .science-icon:nth-child(1),
+.accent-hover-group:focus-visible .science-icon:nth-child(1) { transition-delay: 60ms; }
+.accent-hover-group:hover .science-icon:nth-child(2),
+.accent-hover-group:focus-visible .science-icon:nth-child(2) { transition-delay: 140ms; }
+.accent-hover-group:hover .science-icon:nth-child(3),
+.accent-hover-group:focus-visible .science-icon:nth-child(3) { transition-delay: 220ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .accent-text {
