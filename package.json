@@ -17,6 +17,7 @@
       "deploy:prod:functions": "firebase deploy --project prod --only functions",
       "test": "vitest run",
       "test:watch": "vitest",
+      "test:coverage": "vitest run --coverage",
       "avatars:generate": "tsx tools/avatars/generate.ts",
       "avatars:label": "tsx tools/avatars/parse-and-label.ts",
       "avatars:clean": "tsx tools/avatars/clean.ts",
@@ -70,6 +71,7 @@
       "typescript": "~6.0.3",
       "vite": "^8.1.4",
       "vitest": "^4.1.10",
+      "@vitest/coverage-v8": "^4.1.10",
       "vue-tsc": "latest"
    },
    "overrides": {
